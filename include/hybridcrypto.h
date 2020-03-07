@@ -14,9 +14,9 @@
 namespace XLib
 {
     using namespace CryptoPP;
-    using bytes = std::vector<byte>;
+    using bytes = std::vector< byte >;
 
-    template <int RSAKeySize = 0x1000>
+    template < int RSAKeySize = 0x1000 >
     /**
      * @brief The HybridCrypt class
      * This class permits to have a AES and RSA combined powered with CryptoPP.
@@ -39,12 +39,12 @@ namespace XLib
          */
         struct AESData_t
         {
-            byte iv[AESIVSize];
-            byte key[AESKeySize];
+            byte iv[ AESIVSize ];
+            byte key[ AESKeySize ];
             bool encrypted;
         };
 
-       public:
+        public:
         /**
          * @brief generateRSAKeys
          */
@@ -69,13 +69,13 @@ namespace XLib
          * @param bs
          * @return
          */
-        auto encrypt(bytes& bs);
+        auto encrypt( bytes& bs );
         /**
          * @brief decrypt
          * @param bs
          * @return
          */
-        auto decrypt(bytes& bs);
+        auto decrypt( bytes& bs );
         /**
          * @brief privateKey
          * @return
@@ -85,7 +85,7 @@ namespace XLib
          * @brief setPrivateKey
          * @param privateKey
          */
-        auto setPrivateKey(const RSA::PrivateKey& privateKey) -> void;
+        auto setPrivateKey( const RSA::PrivateKey& privateKey ) -> void;
         /**
          * @brief publicKey
          * @return
@@ -95,7 +95,7 @@ namespace XLib
          * @brief setPublicKey
          * @param publicKey
          */
-        auto setPublicKey(const RSA::PublicKey& publicKey) -> void;
+        auto setPublicKey( const RSA::PublicKey& publicKey ) -> void;
         /**
          * @brief AESData
          * @return
@@ -105,9 +105,9 @@ namespace XLib
          * @brief setAESData
          * @param AESData_t
          */
-        auto setAESData(const AESData_t& AESData_t) -> void;
+        auto setAESData( const AESData_t& AESData_t ) -> void;
 
-       private:
+        private:
         /**
          * @brief _privateKey
          */
@@ -122,39 +122,40 @@ namespace XLib
         AESData_t _AESData;
     };
 
-    template <int RSAKeySize>
-    auto HybridCrypt<RSAKeySize>::generateRSAKeys() -> void
+    template < int RSAKeySize >
+    auto HybridCrypt< RSAKeySize >::generateRSAKeys() -> void
     {
         AutoSeededRandomPool rng;
 
-        _privateKey.GenerateRandomWithKeySize(rng, RSAKeySize);
-        _publicKey = RSA::PublicKey(_privateKey);
+        _privateKey.GenerateRandomWithKeySize( rng, RSAKeySize );
+        _publicKey = RSA::PublicKey( _privateKey );
     }
 
-    template <int RSAKeySize>
-    auto HybridCrypt<RSAKeySize>::generateAESKey()
+    template < int RSAKeySize >
+    auto HybridCrypt< RSAKeySize >::generateAESKey()
     {
         AutoSeededRandomPool rnd;
 
-        rnd.GenerateBlock(_AESData.key, AESKeySize);
-        rnd.GenerateBlock(_AESData.iv, AESIVSize);
+        rnd.GenerateBlock( _AESData.key, AESKeySize );
+        rnd.GenerateBlock( _AESData.iv, AESIVSize );
 
         _AESData.encrypted = false;
 
         return _AESData;
     }
 
-    template <int RSAKeySize>
-    auto HybridCrypt<RSAKeySize>::decryptAESKey()
+    template < int RSAKeySize >
+    auto HybridCrypt< RSAKeySize >::decryptAESKey()
     {
-        if (_AESData.encrypted)
+        if ( _AESData.encrypted )
         {
-            Integer intAESData(_AESData, sizeof(AESData_t));
+            Integer intAESData( _AESData, sizeof( AESData_t ) );
 
             RandomNumberGenerator rng;
 
-            auto decryptAESKey = _privateKey.CalculateInverse(rng, intAESData);
-            decryptAESKey.Encode(_AESData, decryptAESKey.MinEncodedSize());
+            auto decryptAESKey = _privateKey.CalculateInverse( rng,
+                                                               intAESData );
+            decryptAESKey.Encode( _AESData, decryptAESKey.MinEncodedSize() );
 
             _AESData.encrypted = false;
 
@@ -164,15 +165,15 @@ namespace XLib
         return false;
     }
 
-    template <int RSAKeySize>
-    auto HybridCrypt<RSAKeySize>::encryptAESKey()
+    template < int RSAKeySize >
+    auto HybridCrypt< RSAKeySize >::encryptAESKey()
     {
-        if (!_AESData.encrypted)
+        if ( !_AESData.encrypted )
         {
-            Integer intAESData(_AESData, sizeof(AESData_t));
+            Integer intAESData( _AESData, sizeof( AESData_t ) );
 
-            auto encryptAESKey = _privateKey.ApplyFunction(intAESData);
-            encryptAESKey.Encode(_AESData, encryptAESKey.MinEncodedSize());
+            auto encryptAESKey = _privateKey.ApplyFunction( intAESData );
+            encryptAESKey.Encode( _AESData, encryptAESKey.MinEncodedSize() );
 
             _AESData.encrypted = true;
 
@@ -182,73 +183,74 @@ namespace XLib
         return false;
     }
 
-    template <int RSAKeySize>
-    auto HybridCrypt<RSAKeySize>::encrypt(bytes& bs)
+    template < int RSAKeySize >
+    auto HybridCrypt< RSAKeySize >::encrypt( bytes& bs )
     {
-        if (!_AESData.encrypted)
+        if ( !_AESData.encrypted )
         {
-            CFB_Mode<AES>::Decryption cfbDecryption(_AESData.key,
-                                                    AESKeySize,
-                                                    _AESData.iv);
+            CFB_Mode< AES >::Decryption cfbDecryption( _AESData.key,
+                                                       AESKeySize,
+                                                       _AESData.iv );
 
-            cfbDecryption.ProcessData(bs.data(), bs.data(), bs.size());
+            cfbDecryption.ProcessData( bs.data(), bs.data(), bs.size() );
             return true;
         }
 
         return false;
     }
 
-    template <int RSAKeySize>
-    auto HybridCrypt<RSAKeySize>::decrypt(bytes& bs)
+    template < int RSAKeySize >
+    auto HybridCrypt< RSAKeySize >::decrypt( bytes& bs )
     {
-        if (!_AESData.encrypted)
+        if ( !_AESData.encrypted )
         {
-            CFB_Mode<AES>::Encryption cfbEcryption(_AESData.key,
-                                                   AESKeySize,
-                                                   _AESData.iv);
+            CFB_Mode< AES >::Encryption cfbEcryption( _AESData.key,
+                                                      AESKeySize,
+                                                      _AESData.iv );
 
-            cfbEcryption.ProcessData(bs.data(), bs.data(), bs.size());
+            cfbEcryption.ProcessData( bs.data(), bs.data(), bs.size() );
             return true;
         }
 
         return false;
     }
 
-    template <int RSAKeySize>
-    auto HybridCrypt<RSAKeySize>::AESData() const
+    template < int RSAKeySize >
+    auto HybridCrypt< RSAKeySize >::AESData() const
     {
         return _AESData;
     }
 
-    template <int RSAKeySize>
-    auto HybridCrypt<RSAKeySize>::setAESData(const AESData_t& AESData_t) -> void
+    template < int RSAKeySize >
+    auto HybridCrypt< RSAKeySize >::setAESData( const AESData_t& AESData_t )
+      -> void
     {
         _AESData = AESData_t;
     }
 
-    template <int RSAKeySize>
-    auto HybridCrypt<RSAKeySize>::publicKey() const
+    template < int RSAKeySize >
+    auto HybridCrypt< RSAKeySize >::publicKey() const
     {
         return _publicKey;
     }
 
-    template <int RSAKeySize>
-    auto HybridCrypt<RSAKeySize>::setPublicKey(const RSA::PublicKey& publicKey)
-        -> void
+    template < int RSAKeySize >
+    auto
+    HybridCrypt< RSAKeySize >::setPublicKey( const RSA::PublicKey& publicKey )
+      -> void
     {
         _publicKey = publicKey;
     }
 
-    template <int RSAKeySize>
-    auto HybridCrypt<RSAKeySize>::privateKey() const
+    template < int RSAKeySize >
+    auto HybridCrypt< RSAKeySize >::privateKey() const
     {
         return _privateKey;
     }
 
-    template <int RSAKeySize>
-    auto
-    HybridCrypt<RSAKeySize>::setPrivateKey(const RSA::PrivateKey& privateKey)
-        -> void
+    template < int RSAKeySize >
+    auto HybridCrypt< RSAKeySize >::setPrivateKey(
+      const RSA::PrivateKey& privateKey ) -> void
     {
         _privateKey = privateKey;
     }
