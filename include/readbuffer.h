@@ -7,8 +7,8 @@
 namespace XLib
 {
     template <safesize_t max_size = 0>
-    /*!
-     * \brief The ReadBuffer class
+    /**
+     * @brief The ReadBuffer class
      * This class permits to read a buffer easily.
      * Example:
      * ReadBuffer<1024> readBuffer;
@@ -17,16 +17,16 @@ namespace XLib
     class ReadBuffer : public Buffer<max_size>
     {
        public:
-        /*!
-         * \brief ReadBuffer
+        /**
+         * @brief ReadBuffer
          */
         ReadBuffer();
-        /*!
-         * \brief ReadBuffer
-         * \param pData
-         * \param allocated
-         * \param readSize
-         * \param maxSize
+        /**
+         * @brief ReadBuffer
+         * @param pData
+         * @param allocated
+         * @param readSize
+         * @param maxSize
          */
         explicit ReadBuffer(array_t pData,
                             bool allocated = false,
@@ -37,9 +37,9 @@ namespace XLib
 
        public:
         template <typesize_t typeSize = type_32>
-        /*!
-         * \brief readVar
-         * \param pSize
+        /**
+         * @brief readVar
+         * @param pSize
          */
         constexpr inline auto readVar(safesize_t* pSize = nullptr)
         {
@@ -89,9 +89,9 @@ namespace XLib
         }
 
         template <typename cast_t = ptr_t>
-        /*!
-         * \brief shift
-         * \param size
+        /**
+         * @brief shift
+         * @param size
          */
         constexpr inline auto shift(safesize_t size = 0)
         {
@@ -108,28 +108,28 @@ namespace XLib
         }
 
        public:
-        /*!
-         * \brief reset
+        /**
+         * @brief reset
          */
         void reset();
-        /*!
-         * \brief advance
-         * \param size
+        /**
+         * @brief advance
+         * @param size
          */
         void advance(safesize_t size);
-        /*!
-         * \brief readSize
+        /**
+         * @brief readSize
          */
         auto readSize() const;
-        /*!
-         * \brief setReadSize
-         * \param readSize
+        /**
+         * @brief setReadSize
+         * @param readSize
          */
         auto setReadSize(const safesize_t& readSize);
 
        private:
-        /*!
-         * \brief _readSize
+        /**
+         * @brief _readSize
          */
         safesize_t _readSize {};
     };
@@ -175,4 +175,3 @@ namespace XLib
 }
 
 #endif
-

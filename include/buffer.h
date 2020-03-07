@@ -7,8 +7,8 @@
 
 namespace XLib
 {
-    /*!
-     * \brief UDPSize
+    /**
+     * @brief UDPSize
      * UDPSize is the maximum size theorically that we can send over network on
      * UDP protocol without fragmentation
      */
@@ -30,26 +30,26 @@ namespace XLib
     inline constexpr type_wrapper_t<T> _type {};
 
     template <typename T>
-    /*!
-     * \brief alloc
-     * \param size
+    /**
+     * @brief alloc
+     * @param size
      */
     constexpr inline auto alloc(safesize_t size)
     {
         return reinterpret_cast<T>(::operator new(size));
     }
-    
+
     template <typename T>
-    /*!
-     * \brief free
-     * \param pBuf
+    /**
+     * @brief free
+     * @param pBuf
      */
     constexpr inline void free(T& pBuf)
     {
         ::operator delete(reinterpret_cast<ptr_t>(pBuf));
     }
-    /*!
-     * \brief The typesize_t enum
+    /**
+     * @brief The typesize_t enum
      * Enumerate all kind of primitive types that could be possibly used in a
      * buffer.
      */
@@ -67,8 +67,8 @@ namespace XLib
     };
 
     template <typesize_t type>
-    /*!
-     * \brief _gvt
+    /**
+     * @brief _gvt
      * _gvt (get variable type) permits to get variable type from typesize_t.
      */
     constexpr inline auto _gvt()
@@ -92,10 +92,10 @@ namespace XLib
         else
             return _type<void>;
     }
-    /*!
-     * \brief gvtStr
-     * \param typeSize
-     * \return Returns the string of the variable type.
+    /**
+     * @brief gvtStr
+     * @param typeSize
+     * @return Returns the string of the variable type.
      */
     std::string gvtStr(typesize_t typeSize);
 
@@ -105,65 +105,65 @@ namespace XLib
     using gvt = gvt<_type>;
 
     template <safesize_t max_size = 0>
-    /*!
-     * \brief The Buffer class
+    /**
+     * @brief The Buffer class
      * Just a simple class for allocating bytes and buffer purposes.
      * usage: Buffer<1100> buffer;
      */
     class Buffer
     {
        public:
-        /*!
-         * \brief Buffer
+        /**
+         * @brief Buffer
          */
         Buffer();
-        /*!
-         * \brief Buffer
-         * \param pData
-         * \param allocated
-         * \param maxSize
+        /**
+         * @brief Buffer
+         * @param pData
+         * @param allocated
+         * @param maxSize
          */
         Buffer(array_t pData, bool allocated, safesize_t maxSize = 0);
 
         ~Buffer();
 
        public:
-        /*!
-         * \brief operator []
-         * \param size
-         * \return
+        /**
+         * @brief operator []
+         * @param size
+         * @return
          */
         auto& operator[](safesize_t size);
-        /*!
-         * \brief pData
-         * \return
+        /**
+         * @brief pData
+         * @return
          */
         array_t pData() const;
-        /*!
-         * \brief setPData
-         * \param pData
+        /**
+         * @brief setPData
+         * @param pData
          */
         auto setPData(const array_t& pData);
-        /*!
-         * \brief maxSize
-         * \return
+        /**
+         * @brief maxSize
+         * @return
          */
         auto maxSize() const;
-        /*!
-         * \brief setMaxSize
-         * \param maxSize
+        /**
+         * @brief setMaxSize
+         * @param maxSize
          */
         auto setMaxSize(const safesize_t& maxSize);
-        /*!
-         * \brief toBytes
+        /**
+         * @brief toBytes
          */
         bytes_t toBytes();
 
        public:
         template <typename cast_t = ptr_t>
-        /*!
-         * \brief shift
-         * \param size
+        /**
+         * @brief shift
+         * @param size
          * Gets a pointer from data + size.
          */
         constexpr inline auto shift(safesize_t size)
@@ -180,16 +180,16 @@ namespace XLib
         }
 
        protected:
-        /*!
-         * \brief _pData
+        /**
+         * @brief _pData
          */
         array_t _pData {};
-        /*!
-         * \brief _maxSize
+        /**
+         * @brief _maxSize
          */
         safesize_t _maxSize;
-        /*!
-         * \brief _allocated
+        /**
+         * @brief _allocated
          */
         bool _allocated;
     };
@@ -250,7 +250,7 @@ namespace XLib
     {
         bytes_t bs(max_size);
         copy(this->_pData, this->_pData + max_size, bs.begin());
-        
+
         return bs;
     }
 

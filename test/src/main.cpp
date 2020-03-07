@@ -38,6 +38,7 @@ int main()
         reinterpret_cast<gvt<type_array>>(str.data()), strSize);
     writeBuffer.addVar<type_array>(
         reinterpret_cast<gvt<type_array>>(str.data()), strSize);
+
     writeBuffer.addVar<type_8>(1);
     writeBuffer.addVar<type_16>(3);
     writeBuffer.addVar<type_32>(3);

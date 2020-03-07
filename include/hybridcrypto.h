@@ -17,25 +17,25 @@ namespace XLib
     using bytes = std::vector<byte>;
 
     template <int RSAKeySize = 0x1000>
-    /*!
-     * \brief The HybridCrypt class
+    /**
+     * @brief The HybridCrypt class
      * This class permits to have a AES and RSA combined powered with CryptoPP.
      * The RSAKeySize field permits to have a custom RSA key size.
      */
     class HybridCrypt
     {
-        /*! HybridCrypt data /*/
+        /** HybridCrypt data /*/
 
-        /*!
-         * \brief AESKeySize
+        /**
+         * @brief AESKeySize
          */
         static constexpr auto AESKeySize = AES::MAX_KEYLENGTH;
-        /*!
-         * \brief AESIVSize
+        /**
+         * @brief AESIVSize
          */
         static constexpr auto AESIVSize = AES::BLOCKSIZE;
-        /*!
-         * \brief The AESData_t struct
+        /**
+         * @brief The AESData_t struct
          */
         struct AESData_t
         {
@@ -45,79 +45,79 @@ namespace XLib
         };
 
        public:
-        /*!
-         * \brief generateRSAKeys
+        /**
+         * @brief generateRSAKeys
          */
         void generateRSAKeys();
-        /*!
-         * \brief generateAESKey
-         * \return
+        /**
+         * @brief generateAESKey
+         * @return
          */
         AESData_t generateAESKey();
-        /*!
-         * \brief decryptAESKey
-         * \return
+        /**
+         * @brief decryptAESKey
+         * @return
          */
         bool decryptAESKey();
-        /*!
-         * \brief encryptAESKey
-         * \return
+        /**
+         * @brief encryptAESKey
+         * @return
          */
         bool encryptAESKey();
-        /*!
-         * \brief encrypt
-         * \param bs
-         * \return
+        /**
+         * @brief encrypt
+         * @param bs
+         * @return
          */
         bool encrypt(bytes& bs);
-        /*!
-         * \brief decrypt
-         * \param bs
-         * \return
+        /**
+         * @brief decrypt
+         * @param bs
+         * @return
          */
         bool decrypt(bytes& bs);
-        /*!
-         * \brief privateKey
-         * \return
+        /**
+         * @brief privateKey
+         * @return
          */
         RSA::PrivateKey privateKey() const;
-        /*!
-         * \brief setPrivateKey
-         * \param privateKey
+        /**
+         * @brief setPrivateKey
+         * @param privateKey
          */
         void setPrivateKey(const RSA::PrivateKey& privateKey);
-        /*!
-         * \brief publicKey
-         * \return
+        /**
+         * @brief publicKey
+         * @return
          */
         RSA::PublicKey publicKey() const;
-        /*!
-         * \brief setPublicKey
-         * \param publicKey
+        /**
+         * @brief setPublicKey
+         * @param publicKey
          */
         void setPublicKey(const RSA::PublicKey& publicKey);
-        /*!
-         * \brief AESData
-         * \return
+        /**
+         * @brief AESData
+         * @return
          */
         AESData_t AESData() const;
-        /*!
-         * \brief setAESData
-         * \param AESData_t
+        /**
+         * @brief setAESData
+         * @param AESData_t
          */
         void setAESData(const AESData_t& AESData_t);
 
        private:
-        /*!
-         * \brief _privateKey
+        /**
+         * @brief _privateKey
          */
         RSA::PrivateKey _privateKey;
-        /*!
-         * \brief _publicKey
+        /**
+         * @brief _publicKey
          */
         RSA::PublicKey _publicKey;
-        /*!
-         * \brief _AESData
+        /**
+         * @brief _AESData
          */
         AESData_t _AESData;
     };
@@ -126,7 +126,7 @@ namespace XLib
     void HybridCrypt<RSAKeySize>::generateRSAKeys()
     {
         AutoSeededRandomPool rng;
-        
+
         _privateKey.GenerateRandomWithKeySize(rng, RSAKeySize);
         _publicKey = RSA::PublicKey(_privateKey);
     }

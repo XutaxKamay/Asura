@@ -8,8 +8,8 @@ namespace XLib
     using namespace std;
 
     template <safesize_t max_size = 0>
-    /*!
-     * \brief The WriteBuffer class
+    /**
+     * @brief The WriteBuffer class
      * Write types and data to the buffer.
      * max_size stands for maximum size for the buffer.
      * Example
@@ -19,16 +19,16 @@ namespace XLib
     class WriteBuffer : public Buffer<max_size>
     {
        public:
-        /*!
-         * \brief WriteBuffer
+        /**
+         * @brief WriteBuffer
          */
         WriteBuffer();
-        /*!
-         * \brief WriteBuffer
-         * \param pData
-         * \param bAllocated
-         * \param writeSize
-         * \param maxSize
+        /**
+         * @brief WriteBuffer
+         * @param pData
+         * @param bAllocated
+         * @param writeSize
+         * @param maxSize
          */
         explicit WriteBuffer(array_t pData,
                              bool allocated = false,
@@ -38,48 +38,48 @@ namespace XLib
         ~WriteBuffer() = default;
 
        public:
-        /*!
-         * \brief addType
-         * \param typeSize
+        /**
+         * @brief addType
+         * @param typeSize
          */
         void addType(typesize_t typeSize);
-        /*!
-         * \brief reset
+        /**
+         * @brief reset
          */
         void reset();
-        /*!
-         * \brief addData
-         * \param pData
-         * \param size
+        /**
+         * @brief addData
+         * @param pData
+         * @param size
          */
         void addData(ptr_t pData, safesize_t size);
-        /*!
-         * \brief advance
-         * \param size
+        /**
+         * @brief advance
+         * @param size
          */
         void advance(safesize_t size);
-        /*!
-         * \brief writeSize
-         * \return
+        /**
+         * @brief writeSize
+         * @return
          */
         auto writeSize() const;
-        /*!
-         * \brief setWriteSize
-         * \param writeSize
+        /**
+         * @brief setWriteSize
+         * @param writeSize
          */
         auto setWriteSize(const safesize_t& writeSize);
-        /*!
-         * \brief toBytes
+        /**
+         * @brief toBytes
          */
         bytes_t toBytes();
 
-        /*! templates */
+        /** templates */
        public:
         template <typesize_t typeSize = type_32>
-        /*!
-         * \brief addVar
-         * \param value
-         * \param size
+        /**
+         * @brief addVar
+         * @param value
+         * @param size
          */
         constexpr inline auto addVar(gvt<typeSize> value, safesize_t size = 0)
         {
@@ -99,9 +99,9 @@ namespace XLib
         }
 
         template <typename cast_t = ptr_t>
-        /*!
-         * \brief shift
-         * \param size
+        /**
+         * @brief shift
+         * @param size
          */
         constexpr inline auto shift(safesize_t size = 0)
         {
@@ -118,8 +118,8 @@ namespace XLib
         }
 
        private:
-        /*!
-         * \brief m_writeSize
+        /**
+         * @brief m_writeSize
          */
         safesize_t _writeSize {};
     };
@@ -180,11 +180,10 @@ namespace XLib
     {
         bytes_t bs(_writeSize);
         copy(this->_pData, this->_pData + _writeSize, bs.begin());
-        
+
         return bs;
     }
 
 }
 
 #endif // WRITEBUFFER_H
-
