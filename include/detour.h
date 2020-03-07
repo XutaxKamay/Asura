@@ -73,6 +73,8 @@ namespace XLib
 
       public:
       private:
+        cbfunc_t _callBackFunc;
+        func_t _newFunc;
     };
 }
 
