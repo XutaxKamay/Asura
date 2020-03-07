@@ -1,6 +1,8 @@
 #ifndef DETOUR_H
 #define DETOUR_H
 
+#include "types.h"
+
 #if defined _WIN32 || defined _WIN64
     #define WINDOWS
 #endif
@@ -24,18 +26,14 @@ namespace XLib
     class Detour
     {
       private:
-#ifdef WINDOWS
+        /* This case is only for windows 32 bits program */
+#ifdef _WIN32
         constexpr auto GenCallBackFunc()
         {
             if constexpr ( TCC == cc_fastcall )
             {
-    #ifdef _WIN64
-                /* RDX, RCX, stack params */
-                return TRetType( __fastcall* )( ptr_t, ptr_t, TArgs... );
-    #else
-                /* RDX, stack params */
+                /* thisptr - EDX, stack params */
                 return TRetType( __thiscall* )( ptr_t, TArgs... );
-    #endif
             }
             else if constexpr ( TCC == cc_stdcall )
             {
@@ -49,7 +47,7 @@ namespace XLib
 
       public:
         using func_t = typename decltype( GenCallBackFunc() );
-#else
+#else /* Otherwhise it should be always the same convention */
         using func_t = TRetType ( * )( TArgs... );
 #endif
 
