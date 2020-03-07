@@ -28,7 +28,7 @@ namespace XLib
       private:
         /* This case is only for windows 32 bits program */
 #ifdef _WIN32
-        constexpr auto GenCallBackFunc()
+        constexpr auto GenCallBackFuncType()
         {
             if constexpr ( TCC == cc_fastcall )
             {
@@ -45,10 +45,30 @@ namespace XLib
             }
         }
 
+        constexpr auto GenNewFuncType()
+        {
+            if constexpr ( TCC == cc_fastcall )
+            {
+                /* EDX, ECX, stack params */
+                return TRetType( __fastcall* )( ptr_t, ptr_t, TArgs... );
+            }
+            else if constexpr ( TCC == cc_stdcall )
+            {
+                return TRetType( __stdcall* )( TArgs... );
+            }
+            else
+            {
+                return TRetType( * )( TArgs... );
+            }
+        }
+
       public:
-        using func_t = typename decltype( GenCallBackFunc() );
+        using cbfunc_t = typename decltype( GenCallBackFuncType() );
+        using func_t   = typename decltype( GenNewFuncType() );
+
 #else /* Otherwhise it should be always the same convention */
-        using func_t = TRetType ( * )( TArgs... );
+        using cbfunc_t = TRetType ( * )( TArgs... );
+        using func_t   = cbfunc_t;
 #endif
 
       public:
