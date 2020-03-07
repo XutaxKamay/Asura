@@ -88,25 +88,25 @@ constexpr auto& Buffer<max_size>::operator[](safesize_t size)
 }
 
 template <safesize_t max_size>
-constexpr inline array_t Buffer<max_size>::pData() const
+constexpr inline auto Buffer<max_size>::pData() const
 {
     return _pData;
 }
 
 template <safesize_t max_size>
-constexpr inline void Buffer<max_size>::setPData(const array_t& pData)
+constexpr inline auto Buffer<max_size>::setPData(const array_t& pData)
 {
     _pData = pData;
 }
 
 template <safesize_t max_size>
-constexpr inline safesize_t Buffer<max_size>::maxSize() const
+constexpr inline auto Buffer<max_size>::maxSize() const
 {
     return _maxSize;
 }
 
 template <safesize_t max_size>
-constexpr inline void Buffer<max_size>::setMaxSize(const safesize_t& maxSize)
+constexpr inline auto Buffer<max_size>::setMaxSize(const safesize_t& maxSize)
 {
     _maxSize = maxSize;
 }

@@ -109,22 +109,22 @@ namespace XLib
          * \brief pData
          * \return
          */
-        constexpr inline array_t pData() const;
+        constexpr inline auto pData() const;
         /*!
          * \brief setPData
          * \param pData
          */
-        constexpr inline void setPData(const array_t& pData);
+        constexpr inline auto setPData(const array_t& pData);
         /*!
          * \brief maxSize
          * \return
          */
-        constexpr inline safesize_t maxSize() const;
+        constexpr inline auto maxSize() const;
         /*!
          * \brief setMaxSize
          * \param maxSize
          */
-        constexpr inline void setMaxSize(const safesize_t& maxSize);
+        constexpr inline auto setMaxSize(const safesize_t& maxSize);
 
        public:
         template <typename cast_t = ptr_t>
