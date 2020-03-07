@@ -48,64 +48,64 @@ namespace XLib
         /**
          * @brief generateRSAKeys
          */
-        void generateRSAKeys();
+        auto generateRSAKeys() -> void;
         /**
          * @brief generateAESKey
          * @return
          */
-        AESData_t generateAESKey();
+        auto generateAESKey();
         /**
          * @brief decryptAESKey
          * @return
          */
-        bool decryptAESKey();
+        auto decryptAESKey();
         /**
          * @brief encryptAESKey
          * @return
          */
-        bool encryptAESKey();
+        auto encryptAESKey();
         /**
          * @brief encrypt
          * @param bs
          * @return
          */
-        bool encrypt(bytes& bs);
+        auto encrypt(bytes& bs);
         /**
          * @brief decrypt
          * @param bs
          * @return
          */
-        bool decrypt(bytes& bs);
+        auto decrypt(bytes& bs);
         /**
          * @brief privateKey
          * @return
          */
-        RSA::PrivateKey privateKey() const;
+        auto privateKey() const;
         /**
          * @brief setPrivateKey
          * @param privateKey
          */
-        void setPrivateKey(const RSA::PrivateKey& privateKey);
+        auto setPrivateKey(const RSA::PrivateKey& privateKey) -> void;
         /**
          * @brief publicKey
          * @return
          */
-        RSA::PublicKey publicKey() const;
+        auto publicKey() const;
         /**
          * @brief setPublicKey
          * @param publicKey
          */
-        void setPublicKey(const RSA::PublicKey& publicKey);
+        auto setPublicKey(const RSA::PublicKey& publicKey) -> void;
         /**
          * @brief AESData
          * @return
          */
-        AESData_t AESData() const;
+        auto AESData() const;
         /**
          * @brief setAESData
          * @param AESData_t
          */
-        void setAESData(const AESData_t& AESData_t);
+        auto setAESData(const AESData_t& AESData_t) -> void;
 
        private:
         /**
@@ -123,7 +123,7 @@ namespace XLib
     };
 
     template <int RSAKeySize>
-    void HybridCrypt<RSAKeySize>::generateRSAKeys()
+    auto HybridCrypt<RSAKeySize>::generateRSAKeys() -> void
     {
         AutoSeededRandomPool rng;
 
@@ -132,8 +132,7 @@ namespace XLib
     }
 
     template <int RSAKeySize>
-    typename HybridCrypt<RSAKeySize>::AESData_t
-    HybridCrypt<RSAKeySize>::generateAESKey()
+    auto HybridCrypt<RSAKeySize>::generateAESKey()
     {
         AutoSeededRandomPool rnd;
 
@@ -146,7 +145,7 @@ namespace XLib
     }
 
     template <int RSAKeySize>
-    bool HybridCrypt<RSAKeySize>::decryptAESKey()
+    auto HybridCrypt<RSAKeySize>::decryptAESKey()
     {
         if (_AESData.encrypted)
         {
@@ -166,7 +165,7 @@ namespace XLib
     }
 
     template <int RSAKeySize>
-    bool HybridCrypt<RSAKeySize>::encryptAESKey()
+    auto HybridCrypt<RSAKeySize>::encryptAESKey()
     {
         if (!_AESData.encrypted)
         {
@@ -184,7 +183,7 @@ namespace XLib
     }
 
     template <int RSAKeySize>
-    bool HybridCrypt<RSAKeySize>::encrypt(bytes& bs)
+    auto HybridCrypt<RSAKeySize>::encrypt(bytes& bs)
     {
         if (!_AESData.encrypted)
         {
@@ -200,7 +199,7 @@ namespace XLib
     }
 
     template <int RSAKeySize>
-    bool HybridCrypt<RSAKeySize>::decrypt(bytes& bs)
+    auto HybridCrypt<RSAKeySize>::decrypt(bytes& bs)
     {
         if (!_AESData.encrypted)
         {
@@ -216,39 +215,40 @@ namespace XLib
     }
 
     template <int RSAKeySize>
-    typename HybridCrypt<RSAKeySize>::AESData_t
-    HybridCrypt<RSAKeySize>::AESData() const
+    auto HybridCrypt<RSAKeySize>::AESData() const
     {
         return _AESData;
     }
 
     template <int RSAKeySize>
-    void HybridCrypt<RSAKeySize>::setAESData(const AESData_t& AESData_t)
+    auto HybridCrypt<RSAKeySize>::setAESData(const AESData_t& AESData_t) -> void
     {
         _AESData = AESData_t;
     }
 
     template <int RSAKeySize>
-    RSA::PublicKey HybridCrypt<RSAKeySize>::publicKey() const
+    auto HybridCrypt<RSAKeySize>::publicKey() const
     {
         return _publicKey;
     }
 
     template <int RSAKeySize>
-    void HybridCrypt<RSAKeySize>::setPublicKey(const RSA::PublicKey& publicKey)
+    auto HybridCrypt<RSAKeySize>::setPublicKey(const RSA::PublicKey& publicKey)
+        -> void
     {
         _publicKey = publicKey;
     }
 
     template <int RSAKeySize>
-    RSA::PrivateKey HybridCrypt<RSAKeySize>::privateKey() const
+    auto HybridCrypt<RSAKeySize>::privateKey() const
     {
         return _privateKey;
     }
 
     template <int RSAKeySize>
-    void
+    auto
     HybridCrypt<RSAKeySize>::setPrivateKey(const RSA::PrivateKey& privateKey)
+        -> void
     {
         _privateKey = privateKey;
     }

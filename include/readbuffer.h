@@ -111,12 +111,12 @@ namespace XLib
         /**
          * @brief reset
          */
-        void reset();
+        auto reset() -> void;
         /**
          * @brief advance
          * @param size
          */
-        void advance(safesize_t size);
+        auto advance(safesize_t size) -> void;
         /**
          * @brief readSize
          */
@@ -149,13 +149,13 @@ namespace XLib
     }
 
     template <safesize_t max_size>
-    inline void ReadBuffer<max_size>::reset()
+    inline auto ReadBuffer<max_size>::reset() -> void
     {
         _readSize = 0;
     }
 
     template <safesize_t max_size>
-    inline void ReadBuffer<max_size>::advance(safesize_t size)
+    inline auto ReadBuffer<max_size>::advance(safesize_t size) -> void
     {
         _readSize += size;
     }

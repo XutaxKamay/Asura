@@ -138,7 +138,7 @@ namespace XLib
          * @brief pData
          * @return
          */
-        array_t pData() const;
+        auto pData() const;
         /**
          * @brief setPData
          * @param pData
@@ -156,8 +156,9 @@ namespace XLib
         auto setMaxSize(const safesize_t& maxSize);
         /**
          * @brief toBytes
+         * @return bytes_t
          */
-        bytes_t toBytes();
+        auto toBytes();
 
        public:
         template <typename cast_t = ptr_t>
@@ -222,7 +223,7 @@ namespace XLib
     }
 
     template <safesize_t max_size>
-    inline array_t Buffer<max_size>::pData() const
+    inline auto Buffer<max_size>::pData() const
     {
         return _pData;
     }
@@ -246,7 +247,7 @@ namespace XLib
     }
 
     template <safesize_t max_size>
-    inline bytes_t Buffer<max_size>::toBytes()
+    inline auto Buffer<max_size>::toBytes()
     {
         bytes_t bs(max_size);
         copy(this->_pData, this->_pData + max_size, bs.begin());

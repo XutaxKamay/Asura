@@ -42,22 +42,22 @@ namespace XLib
          * @brief addType
          * @param typeSize
          */
-        void addType(typesize_t typeSize);
+        auto addType(typesize_t typeSize) -> void;
         /**
          * @brief reset
          */
-        void reset();
+        auto reset() -> void;
         /**
          * @brief addData
          * @param pData
          * @param size
          */
-        void addData(ptr_t pData, safesize_t size);
+        auto addData(ptr_t pData, safesize_t size) -> void;
         /**
          * @brief advance
          * @param size
          */
-        void advance(safesize_t size);
+        auto advance(safesize_t size) -> void;
         /**
          * @brief writeSize
          * @return
@@ -67,11 +67,11 @@ namespace XLib
          * @brief setWriteSize
          * @param writeSize
          */
-        auto setWriteSize(const safesize_t& writeSize);
+        auto setWriteSize(const safesize_t& writeSize) -> void;
         /**
          * @brief toBytes
          */
-        bytes_t toBytes();
+        auto toBytes();
 
         /** templates */
        public:
@@ -139,26 +139,27 @@ namespace XLib
     }
 
     template <safesize_t max_size>
-    inline void WriteBuffer<max_size>::addType(typesize_t typeSize)
+    inline auto WriteBuffer<max_size>::addType(typesize_t typeSize) -> void
     {
         addData(&typeSize, static_cast<safesize_t>(sizeof(typeSize)));
     }
 
     template <safesize_t max_size>
-    inline void WriteBuffer<max_size>::reset()
+    inline auto WriteBuffer<max_size>::reset() -> void
     {
         _writeSize = 0;
     }
 
     template <safesize_t max_size>
-    inline void WriteBuffer<max_size>::addData(ptr_t pData, safesize_t size)
+    inline auto WriteBuffer<max_size>::addData(ptr_t pData, safesize_t size)
+        -> void
     {
         memcpy(shift(_writeSize), pData, static_cast<size_t>(size));
         advance(size);
     }
 
     template <safesize_t max_size>
-    inline void WriteBuffer<max_size>::advance(safesize_t size)
+    inline auto WriteBuffer<max_size>::advance(safesize_t size) -> void
     {
         _writeSize += size;
     }
@@ -171,12 +172,13 @@ namespace XLib
 
     template <safesize_t max_size>
     inline auto WriteBuffer<max_size>::setWriteSize(const safesize_t& writeSize)
+        -> void
     {
         _writeSize = writeSize;
     }
 
     template <safesize_t max_size>
-    inline bytes_t WriteBuffer<max_size>::toBytes()
+    inline auto WriteBuffer<max_size>::toBytes()
     {
         bytes_t bs(_writeSize);
         copy(this->_pData, this->_pData + _writeSize, bs.begin());
