@@ -18,7 +18,7 @@ enum calling_conventions_t
 
 namespace XLib
 {
-#ifdef WINDOWS
+#ifdef _WIN32
     template < calling_conventions_t TCC, typename TRetType, typename... TArgs >
 #else
     template < typename TRetType, typename... TArgs >
