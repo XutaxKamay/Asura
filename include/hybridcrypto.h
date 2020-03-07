@@ -125,7 +125,8 @@ namespace XLib
     template <int RSAKeySize>
     void HybridCrypt<RSAKeySize>::generateRSAKeys()
     {
-        RandomNumberGenerator rng;
+        AutoSeededRandomPool rng;
+        
         _privateKey.GenerateRandomWithKeySize(rng, RSAKeySize);
         _publicKey = RSA::PublicKey(_privateKey);
     }

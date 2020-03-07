@@ -2,6 +2,7 @@
 #define READBUFFER_H
 
 #include "buffer.h"
+#include <assert.h>
 
 namespace XLib
 {
@@ -48,8 +49,9 @@ namespace XLib
             /* Read type first */
             if (type != typeSize)
                 /* Blame programmer for not writing the buffer correctly. */
-                throw std::string("Expected type: " + gvtStr(typeSize) +
-                                  "when type is instead " + gvtStr(type));
+                assert(std::string("Expected type: " + gvtStr(typeSize) +
+                                   "when type is instead " + gvtStr(type))
+                           .c_str());
 
             using varType = gvt<typeSize>;
 
@@ -173,3 +175,4 @@ namespace XLib
 }
 
 #endif
+

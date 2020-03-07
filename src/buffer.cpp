@@ -1,6 +1,6 @@
 #include "buffer.h"
 
-inline std::string XLib::gvtStr(typesize_t typeSize)
+std::string XLib::gvtStr(typesize_t typeSize)
 {
     if (typeSize == type_safesize)
         return "safesize (32 bits)";

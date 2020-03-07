@@ -95,28 +95,28 @@ $(XLIB_OBJ64_RELEASE): %.o64r: %.cpp
 
 
 $(XLIB_TEST32_DEBUG): $(XLIB_TEST_OBJ32_DEBUG) $(XLIB_OBJ32_DEBUG)
-				$(CXX) $(CPPFLAGS32_DEBUG) -o $@ $^
+				$(CXX) $(CPPFLAGS32_DEBUG) -o $@ $^ -lcryptopp32
 
 $(XLIB_TEST_OBJ32_DEBUG): %.o32d: %.cpp
 				$(CXX) -c $(CPPFLAGS32_DEBUG) $< -o $@
 
 
 $(XLIB_TEST64_DEBUG): $(XLIB_TEST_OBJ64_DEBUG) $(XLIB_OBJ64_DEBUG)
-				$(CXX) $(CPPFLAGS64_DEBUG) -o $@ $^
+				$(CXX) $(CPPFLAGS64_DEBUG) -o $@ $^ -lcryptopp
 
 $(XLIB_TEST_OBJ64_DEBUG): %.o64d: %.cpp
 				$(CXX) -c $(CPPFLAGS64_DEBUG) $< -o $@
 
 
 $(XLIB_TEST32_RELEASE): $(XLIB_TEST_OBJ32_RELEASE) $(XLIB_OBJ32_RELEASE)
-				$(CXX) $(CPPFLAGS32_RELEASE) -o $@ $^
+				$(CXX) $(CPPFLAGS32_RELEASE) -o $@ $^ -lcryptopp32
 
 $(XLIB_TEST_OBJ32_RELEASE): %.o32r: %.cpp
 				$(CXX) -c $(CPPFLAGS32_RELEASE) $< -o $@
 
 
 $(XLIB_TEST64_RELEASE): $(XLIB_TEST_OBJ64_RELEASE) $(XLIB_OBJ64_RELEASE)
-				$(CXX) $(CPPFLAGS64_RELEASE) -o $@ $^
+				$(CXX) $(CPPFLAGS64_RELEASE) -o $@ $^ -lcryptopp
 
 $(XLIB_TEST_OBJ64_RELEASE): %.o64r: %.cpp
 				$(CXX) -c $(CPPFLAGS64_RELEASE) $< -o $@
