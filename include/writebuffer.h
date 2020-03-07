@@ -5,6 +5,8 @@
 
 namespace XLib
 {
+    using namespace std;
+
     template <safesize_t max_size = 0>
     /*!
      * \brief The WriteBuffer class
@@ -12,7 +14,7 @@ namespace XLib
      * max_size stands for maximum size for the buffer.
      * Example
      * WriteBuffer<1024> writeBuffer;
-     * writeBuffer.addType<type_32>(1337);
+     * writeBuffer.addVar<type_32>(1337);
      */
     class WriteBuffer : public Buffer<max_size>
     {
@@ -40,32 +42,36 @@ namespace XLib
          * \brief addType
          * \param typeSize
          */
-        constexpr inline auto addType(typesize_t typeSize);
+        void addType(typesize_t typeSize);
         /*!
          * \brief reset
          */
-        constexpr inline auto reset();
+        void reset();
         /*!
          * \brief addData
          * \param pData
          * \param size
          */
-        constexpr inline auto addData(ptr_t pData, safesize_t size);
+        void addData(ptr_t pData, safesize_t size);
         /*!
          * \brief advance
          * \param size
          */
-        constexpr inline auto advance(safesize_t size);
+        void advance(safesize_t size);
         /*!
          * \brief writeSize
          * \return
          */
-        constexpr inline auto writeSize() const;
+        auto writeSize() const;
         /*!
          * \brief setWriteSize
          * \param writeSize
          */
-        constexpr inline auto setWriteSize(const safesize_t& writeSize);
+        auto setWriteSize(const safesize_t& writeSize);
+        /*!
+         * \brief toBytes
+         */
+        bytes_t toBytes();
 
         /*! templates */
        public:
@@ -117,6 +123,68 @@ namespace XLib
          */
         safesize_t _writeSize {};
     };
+
+    template <safesize_t max_size>
+    WriteBuffer<max_size>::WriteBuffer() : Buffer<max_size>()
+    {}
+
+    template <safesize_t max_size>
+    WriteBuffer<max_size>::WriteBuffer(array_t pData,
+                                       bool allocated,
+                                       safesize_t writeSize,
+                                       safesize_t maxSize) :
+        Buffer<max_size>(pData, allocated, maxSize)
+    {
+        _writeSize = writeSize;
+    }
+
+    template <safesize_t max_size>
+    inline void WriteBuffer<max_size>::addType(typesize_t typeSize)
+    {
+        addData(&typeSize, static_cast<safesize_t>(sizeof(typeSize)));
+    }
+
+    template <safesize_t max_size>
+    inline void WriteBuffer<max_size>::reset()
+    {
+        _writeSize = 0;
+    }
+
+    template <safesize_t max_size>
+    inline void WriteBuffer<max_size>::addData(ptr_t pData, safesize_t size)
+    {
+        memcpy(shift(_writeSize), pData, static_cast<size_t>(size));
+        advance(size);
+    }
+
+    template <safesize_t max_size>
+    inline void WriteBuffer<max_size>::advance(safesize_t size)
+    {
+        _writeSize += size;
+    }
+
+    template <safesize_t max_size>
+    inline auto WriteBuffer<max_size>::writeSize() const
+    {
+        return _writeSize;
+    }
+
+    template <safesize_t max_size>
+    inline auto WriteBuffer<max_size>::setWriteSize(const safesize_t& writeSize)
+    {
+        _writeSize = writeSize;
+    }
+
+    template <safesize_t max_size>
+    inline bytes_t WriteBuffer<max_size>::toBytes()
+    {
+        bytes_t bs(_writeSize);
+        copy(this->_pData, this->_pData + _writeSize, bs.begin());
+        
+        return bs;
+    }
+
 }
 
 #endif // WRITEBUFFER_H
+

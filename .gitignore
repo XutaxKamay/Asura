@@ -3,3 +3,5 @@
 *.rel
 *.user
 *.o*
+*.kdev*
+XLib.*

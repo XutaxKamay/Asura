@@ -1,5 +1,3 @@
-CXX = g++
-
 ifeq ($(PREFIX),)
 		PREFIX := /usr/local
 endif
@@ -27,13 +25,13 @@ XLIB_OBJ32_RELEASE=$(subst .cpp,.o32r,$(wildcard src/*.cpp))
 XLIB_OBJ64_RELEASE=$(subst .cpp,.o64r,$(wildcard src/*.cpp))
 
 
-CPPFLAGS32_DEBUG=-m32 -std=c++17 -g -Wextra -W -Wall -Werror -Iinclude/ -Itest/include/
+CPPFLAGS32_DEBUG=-m32 -std=c++17 -g -Wextra -W -Wall -Werror -Wl,--no-undefined -Iinclude/ -Itest/include/
 
-CPPFLAGS64_DEBUG=-m64 -std=c++17 -g -Wextra -W -Wall -Werror -Iinclude/ -Itest/include/
+CPPFLAGS64_DEBUG=-m64 -std=c++17 -g -Wextra -W -Wall -Werror -Wl,--no-undefined -Iinclude/ -Itest/include/
 
-CPPFLAGS32_RELEASE=-m32 -std=c++17 -s -Wextra -W -Wall -Werror -Iinclude/ -Itest/include/
+CPPFLAGS32_RELEASE=-m32 -std=c++17 -s -Wextra -W -Wall -Werror -Wl,--no-undefined -Iinclude/ -Itest/include/
 
-CPPFLAGS64_RELEASE=-m64 -std=c++17 -s -Wextra -W -Wall -Werror -Iinclude/ -Itest/include/
+CPPFLAGS64_RELEASE=-m64 -std=c++17 -s -Wextra -W -Wall -Werror -Wl,--no-undefined -Iinclude/ -Itest/include/
 
 all: xlib xlib_test
 
@@ -97,28 +95,28 @@ $(XLIB_OBJ64_RELEASE): %.o64r: %.cpp
 
 
 $(XLIB_TEST32_DEBUG): $(XLIB_TEST_OBJ32_DEBUG) $(XLIB_OBJ32_DEBUG)
-				$(CXX) $(CPPFLAGS32_DEBUG) -o $@ $^ 
+				$(CXX) $(CPPFLAGS32_DEBUG) -o $@ $^
 
 $(XLIB_TEST_OBJ32_DEBUG): %.o32d: %.cpp
 				$(CXX) -c $(CPPFLAGS32_DEBUG) $< -o $@
 
 
 $(XLIB_TEST64_DEBUG): $(XLIB_TEST_OBJ64_DEBUG) $(XLIB_OBJ64_DEBUG)
-				$(CXX) $(CPPFLAGS64_DEBUG) -o $@ $^ 
+				$(CXX) $(CPPFLAGS64_DEBUG) -o $@ $^
 
 $(XLIB_TEST_OBJ64_DEBUG): %.o64d: %.cpp
 				$(CXX) -c $(CPPFLAGS64_DEBUG) $< -o $@
 
 
 $(XLIB_TEST32_RELEASE): $(XLIB_TEST_OBJ32_RELEASE) $(XLIB_OBJ32_RELEASE)
-				$(CXX) $(CPPFLAGS32_RELEASE) -o $@ $^ 
+				$(CXX) $(CPPFLAGS32_RELEASE) -o $@ $^
 
 $(XLIB_TEST_OBJ32_RELEASE): %.o32r: %.cpp
 				$(CXX) -c $(CPPFLAGS32_RELEASE) $< -o $@
 
 
 $(XLIB_TEST64_RELEASE): $(XLIB_TEST_OBJ64_RELEASE) $(XLIB_OBJ64_RELEASE)
-				$(CXX) $(CPPFLAGS64_RELEASE) -o $@ $^ 
+				$(CXX) $(CPPFLAGS64_RELEASE) -o $@ $^
 
 $(XLIB_TEST_OBJ64_RELEASE): %.o64r: %.cpp
 				$(CXX) -c $(CPPFLAGS64_RELEASE) $< -o $@
