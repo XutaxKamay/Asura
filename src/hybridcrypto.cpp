@@ -25,7 +25,7 @@ HybridCrypt<RSAKeySize>::generateAESKey()
 }
 
 template <int RSAKeySize>
-bool HybridCrypt<RSAKeySize>::dencryptAESKey()
+bool HybridCrypt<RSAKeySize>::decryptAESKey()
 {
     if (_AESData.encrypted)
     {
@@ -35,9 +35,9 @@ bool HybridCrypt<RSAKeySize>::dencryptAESKey()
 
         RandomNumberGenerator rng;
 
-        auto dencryptAESKey = _privateKey.CalculateInverse(rng, intAESData);
+        auto decryptAESKey = _privateKey.CalculateInverse(rng, intAESData);
 
-        dencryptAESKey.Encode(byteAESKey, dencryptAESKey.MinEncodedSize());
+        decryptAESKey.Encode(byteAESKey, decryptAESKey.MinEncodedSize());
 
         _AESData.encrypted = false;
 
