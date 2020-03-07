@@ -190,5 +190,3 @@ namespace XLib
 }
 
 #endif // WRITEBUFFER_H
-
-

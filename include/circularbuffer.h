@@ -1,6 +1,8 @@
 #ifndef CIRCULARBUFFER_H
 #define CIRCULARBUFFER_H
 
+#include "types.h"
+
 namespace XLib
 {
     template < typename T, int max_history >

@@ -1,6 +1,8 @@
 #ifndef BUFFER_H
 #define BUFFER_H
 
+#include "types.h"
+
 namespace XLib
 {
     /**
@@ -9,7 +11,6 @@ namespace XLib
      * UDP protocol without fragmentation
      */
     constexpr auto UDPSize = 508;
-    using safesize_t = int32_t;
 
     template < typename T >
     struct type_wrapper_t
