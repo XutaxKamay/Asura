@@ -20,7 +20,6 @@ namespace XLib
          * \brief ReadBuffer
          */
         ReadBuffer();
-
         /*!
          * \brief ReadBuffer
          * \param pData
@@ -88,6 +87,10 @@ namespace XLib
         }
 
         template <typename cast_t = ptr_t>
+        /*!
+         * \brief shift
+         * \param size
+         */
         constexpr inline auto shift(safesize_t size = 0)
         {
             if (size == 0)
@@ -103,13 +106,29 @@ namespace XLib
         }
 
        public:
+        /*!
+         * \brief reset
+         */
         constexpr inline auto reset();
+        /*!
+         * \brief advance
+         * \param size
+         */
         constexpr inline auto advance(safesize_t size);
-
+        /*!
+         * \brief readSize
+         */
         constexpr inline auto readSize() const;
+        /*!
+         * \brief setReadSize
+         * \param readSize
+         */
         constexpr inline auto setReadSize(const safesize_t& readSize);
 
        private:
+        /*!
+         * \brief _readSize
+         */
         safesize_t _readSize {};
     };
 }

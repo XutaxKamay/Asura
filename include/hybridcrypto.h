@@ -30,12 +30,10 @@ namespace XLib
          * \brief AESKeySize
          */
         static constexpr auto AESKeySize = AES::MAX_KEYLENGTH;
-
         /*!
          * \brief AESIVSize
          */
         static constexpr auto AESIVSize = AES::BLOCKSIZE;
-
         /*!
          * \brief The AESData_t struct
          */
@@ -51,69 +49,58 @@ namespace XLib
          * \brief generateRSAKeys
          */
         void generateRSAKeys();
-
         /*!
          * \brief generateAESKey
          * \return
          */
         AESData_t generateAESKey();
-
         /*!
          * \brief decryptAESKey
          * \return
          */
         bool decryptAESKey();
-
         /*!
          * \brief encryptAESKey
          * \return
          */
         bool encryptAESKey();
-
         /*!
          * \brief encrypt
          * \param bs
          * \return
          */
         bool encrypt(bytes& bs);
-
         /*!
          * \brief decrypt
          * \param bs
          * \return
          */
         bool decrypt(bytes& bs);
-
         /*!
          * \brief privateKey
          * \return
          */
         RSA::PrivateKey privateKey() const;
-
         /*!
          * \brief setPrivateKey
          * \param privateKey
          */
         void setPrivateKey(const RSA::PrivateKey& privateKey);
-
         /*!
          * \brief publicKey
          * \return
          */
         RSA::PublicKey publicKey() const;
-
         /*!
          * \brief setPublicKey
          * \param publicKey
          */
         void setPublicKey(const RSA::PublicKey& publicKey);
-
         /*!
          * \brief AESData
          * \return
          */
         AESData_t AESData() const;
-
         /*!
          * \brief setAESData
          * \param AESData_t
@@ -125,12 +112,10 @@ namespace XLib
          * \brief _privateKey
          */
         RSA::PrivateKey _privateKey;
-
         /*!
          * \brief _publicKey
          */
         RSA::PublicKey _publicKey;
-
         /*!
          * \brief _AESData
          */

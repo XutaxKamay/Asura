@@ -21,7 +21,6 @@ namespace XLib
          * \brief WriteBuffer
          */
         WriteBuffer();
-
         /*!
          * \brief WriteBuffer
          * \param pData
@@ -42,31 +41,26 @@ namespace XLib
          * \param typeSize
          */
         constexpr inline auto addType(typesize_t typeSize);
-
         /*!
          * \brief reset
          */
         constexpr inline auto reset();
-
         /*!
          * \brief addData
          * \param pData
          * \param size
          */
         constexpr inline auto addData(ptr_t pData, safesize_t size);
-
         /*!
          * \brief advance
          * \param size
          */
         constexpr inline auto advance(safesize_t size);
-
         /*!
          * \brief writeSize
          * \return
          */
         constexpr inline auto writeSize() const;
-
         /*!
          * \brief setWriteSize
          * \param writeSize

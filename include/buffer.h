@@ -42,7 +42,6 @@ namespace XLib
      * \param pBuf
      */
     constexpr inline void free(T& pBuf);
-
     /*!
      * \brief The typesize_t enum
      * Enumerate all kind of primitive types that could be possibly used in a
@@ -67,7 +66,6 @@ namespace XLib
      * _gvt (get variable type) permits to get variable type from typesize_t.
      */
     constexpr inline auto _gvt();
-
     /*!
      * \brief gvtStr
      * \param typeSize
@@ -91,7 +89,6 @@ namespace XLib
          * \brief Buffer
          */
         Buffer();
-
         /*!
          * \brief Buffer
          * \param pData
@@ -101,7 +98,6 @@ namespace XLib
         Buffer(array_t pData, bool allocated, safesize_t maxSize = 0);
 
         ~Buffer();
-
        public:
         /*!
          * \brief operator []
@@ -109,25 +105,21 @@ namespace XLib
          * \return
          */
         constexpr inline auto& operator[](safesize_t size);
-
         /*!
          * \brief pData
          * \return
          */
         constexpr inline array_t pData() const;
-
         /*!
          * \brief setPData
          * \param pData
          */
         constexpr inline void setPData(const array_t& pData);
-
         /*!
          * \brief maxSize
          * \return
          */
         constexpr inline safesize_t maxSize() const;
-
         /*!
          * \brief setMaxSize
          * \param maxSize
