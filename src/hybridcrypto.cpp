@@ -11,7 +11,8 @@ void HybridCrypt<RSAKeySize>::generateRSAKeys()
 }
 
 template <int RSAKeySize>
-typename HybridCrypt<RSAKeySize>::AESData_t HybridCrypt<RSAKeySize>::generateAESKey()
+typename HybridCrypt<RSAKeySize>::AESData_t
+HybridCrypt<RSAKeySize>::generateAESKey()
 {
     AutoSeededRandomPool rnd;
 
@@ -24,7 +25,7 @@ typename HybridCrypt<RSAKeySize>::AESData_t HybridCrypt<RSAKeySize>::generateAES
 }
 
 template <int RSAKeySize>
-bool HybridCrypt<RSAKeySize>::decryptAESKey()
+bool HybridCrypt<RSAKeySize>::dencryptAESKey()
 {
     if (_AESData.encrypted)
     {
@@ -34,9 +35,9 @@ bool HybridCrypt<RSAKeySize>::decryptAESKey()
 
         RandomNumberGenerator rng;
 
-        auto decryptAESKey = _privateKey.CalculateInverse(rng, intAESData);
+        auto dencryptAESKey = _privateKey.CalculateInverse(rng, intAESData);
 
-        decryptAESKey.Encode(byteAESKey, decryptAESKey.MinEncodedSize());
+        dencryptAESKey.Encode(byteAESKey, dencryptAESKey.MinEncodedSize());
 
         _AESData.encrypted = false;
 
@@ -55,9 +56,9 @@ bool HybridCrypt<RSAKeySize>::encryptAESKey()
 
         Integer intAESData(byteAESKey, sizeof(AESData_t));
 
-        auto ecryptAESKey = _privateKey.ApplyFunction(intAESData);
+        auto encryptAESKey = _privateKey.ApplyFunction(intAESData);
 
-        ecryptAESKey.Encode(byteAESKey, ecryptAESKey.MinEncodedSize());
+        encryptAESKey.Encode(byteAESKey, encryptAESKey.MinEncodedSize());
 
         _AESData.encrypted = true;
 
@@ -68,15 +69,15 @@ bool HybridCrypt<RSAKeySize>::encryptAESKey()
 }
 
 template <int RSAKeySize>
-bool HybridCrypt<RSAKeySize>::encrypt(bytes& bytes)
+bool HybridCrypt<RSAKeySize>::encrypt(bytes& bs)
 {
     if (!_AESData.encrypted)
     {
         CFB_Mode<AES>::Decryption cfbDecryption(_AESData.key,
-                                                sizeof(_AESData.key),
+                                                AESKeySize,
                                                 _AESData.iv);
 
-        cfbDecryption.ProcessData(bytes.data(), bytes.data(), bytes.size());
+        cfbDecryption.ProcessData(bs.data(), bs.data(), bs.size());
         return true;
     }
 
@@ -84,15 +85,15 @@ bool HybridCrypt<RSAKeySize>::encrypt(bytes& bytes)
 }
 
 template <int RSAKeySize>
-bool HybridCrypt<RSAKeySize>::decrypt(bytes& bytes)
+bool HybridCrypt<RSAKeySize>::decrypt(bytes& bs)
 {
     if (!_AESData.encrypted)
     {
         CFB_Mode<AES>::Encryption cfbEcryption(_AESData.key,
-                                               sizeof(_AESData.key),
+                                               AESKeySize,
                                                _AESData.iv);
 
-        cfbEcryption.ProcessData(bytes.data(), bytes.data(), bytes.size());
+        cfbEcryption.ProcessData(bs.data(), bs.data(), bs.size());
         return true;
     }
 
@@ -100,7 +101,8 @@ bool HybridCrypt<RSAKeySize>::decrypt(bytes& bytes)
 }
 
 template <int RSAKeySize>
-typename HybridCrypt<RSAKeySize>::AESData_t HybridCrypt<RSAKeySize>::AESData() const
+typename HybridCrypt<RSAKeySize>::AESData_t
+HybridCrypt<RSAKeySize>::AESData() const
 {
     return _AESData;
 }
