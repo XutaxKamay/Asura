@@ -1,10 +1,6 @@
 #ifndef BUFFER_H
 #define BUFFER_H
 
-#include <cstddef>
-#include <iostream>
-#include <vector>
-
 namespace XLib
 {
     /**
@@ -13,11 +9,6 @@ namespace XLib
      * UDP protocol without fragmentation
      */
     constexpr auto UDPSize = 508;
-
-    using ptr_t      = void*;
-    using byte_t     = unsigned char;
-    using array_t    = byte_t*;
-    using bytes_t    = std::vector< byte_t >;
     using safesize_t = int32_t;
 
     template < typename T >
@@ -113,7 +104,7 @@ namespace XLib
      */
     class Buffer
     {
-        public:
+      public:
         /**
          * @brief Buffer
          */
@@ -128,7 +119,7 @@ namespace XLib
 
         ~Buffer();
 
-        public:
+      public:
         /**
          * @brief operator []
          * @param size
@@ -161,7 +152,7 @@ namespace XLib
          */
         auto toBytes();
 
-        public:
+      public:
         template < typename cast_t = ptr_t >
         /**
          * @brief shift
@@ -181,7 +172,7 @@ namespace XLib
             }
         }
 
-        protected:
+      protected:
         /**
          * @brief _pData
          */

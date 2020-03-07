@@ -44,7 +44,7 @@ namespace XLib
             bool encrypted;
         };
 
-        public:
+      public:
         /**
          * @brief generateRSAKeys
          */
@@ -107,7 +107,7 @@ namespace XLib
          */
         auto setAESData( const AESData_t& AESData_t ) -> void;
 
-        private:
+      private:
         /**
          * @brief _privateKey
          */

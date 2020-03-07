@@ -18,7 +18,7 @@ namespace XLib
      */
     class WriteBuffer : public Buffer< max_size >
     {
-        public:
+      public:
         /**
          * @brief WriteBuffer
          */
@@ -37,7 +37,7 @@ namespace XLib
 
         ~WriteBuffer() = default;
 
-        public:
+      public:
         /**
          * @brief addType
          * @param typeSize
@@ -74,7 +74,7 @@ namespace XLib
         auto toBytes();
 
         /** templates */
-        public:
+      public:
         template < typesize_t typeSize = type_32 >
         /**
          * @brief addVar
@@ -118,7 +118,7 @@ namespace XLib
             }
         }
 
-        private:
+      private:
         /**
          * @brief m_writeSize
          */
@@ -190,3 +190,5 @@ namespace XLib
 }
 
 #endif // WRITEBUFFER_H
+
+

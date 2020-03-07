@@ -16,7 +16,7 @@ namespace XLib
      */
     class ReadBuffer : public Buffer< max_size >
     {
-        public:
+      public:
         /**
          * @brief ReadBuffer
          */
@@ -35,7 +35,7 @@ namespace XLib
 
         ~ReadBuffer() = default;
 
-        public:
+      public:
         template < typesize_t typeSize = type_32 >
         /**
          * @brief readVar
@@ -108,7 +108,7 @@ namespace XLib
             }
         }
 
-        public:
+      public:
         /**
          * @brief reset
          */
@@ -128,7 +128,7 @@ namespace XLib
          */
         auto setReadSize( const safesize_t& readSize );
 
-        private:
+      private:
         /**
          * @brief _readSize
          */

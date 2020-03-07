@@ -10,7 +10,7 @@ namespace XLib
      */
     class CircularBuffer
     {
-        public:
+      public:
         using pT = T*;
 
         enum push_type_t
@@ -19,12 +19,13 @@ namespace XLib
             Updating
         };
 
-        public:
+      public:
         /**
          * @brief push
          * @param element
          * @return push_type_t
-         * Pushes your element as the first element into the history buffer.
+         * Pushes your element as the first element into the history
+         * buffer.
          */
         auto push( T element );
         /**
@@ -36,7 +37,7 @@ namespace XLib
          */
         auto get( int wantedSlot = 0 );
 
-        private:
+      private:
         /**
          * @brief _slot
          * @param wantedSlot
@@ -44,7 +45,7 @@ namespace XLib
          */
         auto _slot( int wantedSlot = 0 );
 
-        private:
+      private:
         /**
          * @brief _buffer
          * Buffer to the elements that will construct history.
@@ -110,7 +111,9 @@ namespace XLib
     {
         if ( wantedSlot >= _filled_history || wantedSlot < 0
              || _filled_history <= 0 )
+        {
             return -1;
+        }
 
         /* Check if the history has been filled yet */
         if ( _filled_history >= max_history )
@@ -126,8 +129,8 @@ namespace XLib
         else
         {
             /**
-             * If it has not been filled yet completely, we just return
-             * our slot.
+             * If it has not been filled yet completely, we just
+             * return our slot.
              */
             return ( _filled_history - 1 ) - wantedSlot;
         }
