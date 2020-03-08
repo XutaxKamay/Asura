@@ -7,18 +7,18 @@ namespace XLib
 {
     template < typename T >
     /**
-    * @brief MemoryMap
-    * Class that permits to handle the memory maps.
-    */
+     * @brief MemoryMap
+     * Class that permits to handle the memory maps.
+     */
     class MemoryMap
     {
       public:
         /**
-        * @brief protection_t
-        * Modern OS have generally protections on each memory maps,
-        * combined of these three flags:
-        * READ, WRITE, EXECUTE
-        */
+         * @brief protection_t
+         * Modern OS have generally protections on each memory maps,
+         * combined of these three flags:
+         * READ, WRITE, EXECUTE
+         */
         enum protection_t
         {
             READ,
@@ -27,67 +27,67 @@ namespace XLib
         };
 
         /**
-        * @brief begin
-        * 
-        * @return auto
-        */
+         * @brief begin
+         *
+         * @return auto
+         */
         auto begin();
         /**
-        * @brief begin
-        * 
-        * @return auto
-        */
+         * @brief begin
+         *
+         * @return auto
+         */
         auto end();
         /**
-        * @brief setAddress
-        * 
-        * @param address
-        */
+         * @brief setAddress
+         *
+         * @param address
+         */
         auto setAddress( const ptr_t& address ) -> void;
         /**
-        * @brief setSize
-        * 
-        * @param size
-        */
+         * @brief setSize
+         *
+         * @param size
+         */
         auto setSize( const size_t& size ) -> void;
         /**
-        * @brief protection
-        * 
-        * @return auto&
-        */
+         * @brief protection
+         *
+         * @return auto&
+         */
         auto& protection();
 
       private:
         /**
-        * @brief _address
-        * Address of the memory map
-        */
+         * @brief _address
+         * Address of the memory map
+         */
         ptr_t _address {};
         /**
-        * @brief _size
-        * Size of the memory map
-        */
+         * @brief _size
+         * Size of the memory map
+         */
         size_t _size {};
         /**
-        * @brief _protection
-        * Protection flags on the memory map.
-        */
+         * @brief _protection
+         * Protection flags on the memory map.
+         */
         protection_t _protection {};
     };
 
-    using map_t = MemoryMap< ptr_t >;
+    using map_t  = MemoryMap< ptr_t >;
+    using maps_t = std::vector< map_t >;
 
     template < typename T >
     auto MemoryMap< T >::begin()
     {
-        return reinterpret_cast< T >( _address );
+        return view_as< T >( _address );
     }
 
     template < typename T >
     auto MemoryMap< T >::end()
     {
-        reinterpret_cast< T >( reinterpret_cast< uintptr_t >( _address )
-                               + _size );
+        view_as< T >( view_as< uintptr_t >( _address ) + _size );
     }
 
     template < typename T >

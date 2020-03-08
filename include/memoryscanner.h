@@ -2,7 +2,7 @@
 #define MEMORYSCANNER_H
 
 #include "types.h"
-#include "memorymap.h"
+#include "memoryutils.h"
 
 namespace XLib
 {
@@ -21,34 +21,7 @@ namespace XLib
          */
         static auto Get();
 
-        /* Public methods */
-      public:
-        /**
-         * @brief fetchMaps
-         * Refresh/fetch the memory maps from the process.
-         */
-        auto fetchMaps() -> void;
-        /**
-         * @brief maps
-         *
-         * @return auto
-         */
-        auto maps();
-        /**
-         * @brief setMaps
-         *
-         * @param maps Replace the maps inside the memory scanner by this
-         * parameter
-         * @return auto
-         */
-        auto setMaps( const std::vector< map_t >& maps );
-
       private:
-        /**
-         * @brief _maps
-         * Contains vector of the memory maps inside the process
-         */
-        std::vector< map_t > _maps {};
         /**
          * @brief _pid
          * Process ID
@@ -57,11 +30,5 @@ namespace XLib
 
     } extern* g_pMemoryScanner;
 }
-
-class Car
-{
-  public:
-    std::string get_color() const;
-};
 
 #endif // MEMORYSCANNER_H

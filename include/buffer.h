@@ -19,8 +19,7 @@ namespace XLib
      */
     constexpr inline auto alloc( safesize_t size )
     {
-        return reinterpret_cast< T >(
-          ::operator new( static_cast< size_t >( size ) ) );
+        return view_as< T >( ::operator new( static_cast< size_t >( size ) ) );
     }
 
     template < typename T >
@@ -30,7 +29,7 @@ namespace XLib
      */
     constexpr inline void free( T& pBuf )
     {
-        ::operator delete( reinterpret_cast< ptr_t >( pBuf ) );
+        ::operator delete( view_as< ptr_t >( pBuf ) );
     }
     /**
      * @brief The typesize_t enum
@@ -155,12 +154,12 @@ namespace XLib
         {
             if ( size == 0 )
             {
-                return reinterpret_cast< cast_t >( _pData );
+                return view_as< cast_t >( _pData );
             }
             else
             {
-                return reinterpret_cast< cast_t >(
-                  reinterpret_cast< uintptr_t >( _pData ) + size );
+                return view_as< cast_t >( view_as< uintptr_t >( _pData )
+                                          + size );
             }
         }
 

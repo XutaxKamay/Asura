@@ -12,6 +12,7 @@ namespace XLib
     using array_t    = byte_t*;
     using bytes_t    = std::vector< byte_t >;
     using safesize_t = int32_t;
+    using pid_t      = uint32_t;
 
     template < typename T >
     struct type_wrapper_t
@@ -22,6 +23,12 @@ namespace XLib
     template < typename T >
     inline constexpr type_wrapper_t< T > type_wrapper {};
 
+    template < typename T1, typename T2 >
+    auto view_as( T2 var )
+    {
+        return reinterpret_cast< T1 >( var );
+    }
+
     template < typename T = ptr_t >
     /**
      * @brief VTable
@@ -30,7 +37,7 @@ namespace XLib
      */
     constexpr auto VTable( T classPtr )
     {
-        return *reinterpret_cast< ptr_t** >( classPtr );
+        return *view_as< ptr_t** >( classPtr );
     }
 
     template < safesize_t index, typename T = ptr_t >

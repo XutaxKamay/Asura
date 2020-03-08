@@ -108,13 +108,12 @@ namespace XLib
         {
             if ( size == 0 )
             {
-                return reinterpret_cast< cast_t >( this->pData() );
+                return view_as< cast_t >( this->pData() );
             }
             else
             {
-                return reinterpret_cast< cast_t >(
-                  reinterpret_cast< uintptr_t >( this->pData() )
-                  + static_cast< uintptr_t >( size ) );
+                return view_as< cast_t >( view_as< uintptr_t >( this->pData() )
+                                          + static_cast< uintptr_t >( size ) );
             }
         }
 
