@@ -83,7 +83,8 @@ namespace XLib
      * in order to call back the original function when detoured. It is not
      * needed on others architectures/os because the calling conventions are
      * always the same (64 bits is fastcall on Windows, same for Linux), and 32
-     * bits on Linux the parameters are always pushed to the stack.
+     * bits on Linux the parameters are always pushed to the stack, except for
+     * methods and virtual functions.
      */
 #ifdef _WIN32
     template < calling_conventions_t TCC, typename TRetType, typename... TArgs >
