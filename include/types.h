@@ -13,6 +13,15 @@ namespace XLib
     using bytes_t    = std::vector< byte_t >;
     using safesize_t = int32_t;
 
+    template < typename T >
+    struct type_wrapper_t
+    {
+        using type = T;
+    };
+
+    template < typename T >
+    inline constexpr type_wrapper_t< T > type_wrapper {};
+
     template < typename T = ptr_t >
     /**
      * @brief VTable
@@ -35,7 +44,7 @@ namespace XLib
         return VTable< T >( classPtr )[ index ];
     }
 
-    template < safesize_t index, typename TRetValue = void, typename... TArgs >
+    template < safesize_t index, typename TRetType = void, typename... TArgs >
     /**
      * @brief VFunc
      * @param classPtr
@@ -44,10 +53,10 @@ namespace XLib
      */
     constexpr inline auto VFunc( ptr_t classPtr )
     {
-        return VFunc< index, TRetValue ( * )( TArgs... ) >( classPtr );
+        return VFunc< index, TRetType ( * )( TArgs... ) >( classPtr );
     }
 
-    template < safesize_t index, typename TRetValue = void, typename... TArgs >
+    template < safesize_t index, typename TRetType = void, typename... TArgs >
     /**
      * @brief CVFunc
      * @param classPtr
@@ -56,7 +65,7 @@ namespace XLib
      */
     constexpr inline auto CVFunc( ptr_t classPtr, TArgs... Args )
     {
-        return VFunc< index, TRetValue, TArgs... >( classPtr )( Args... );
+        return VFunc< index, TRetType, TArgs... >( classPtr )( Args... );
     }
 }
 

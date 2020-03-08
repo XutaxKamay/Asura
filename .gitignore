@@ -1,7 +1,8 @@
 *.a
-*.dbg
-*.rel
+*.dbg*
+*.rel*
 *.user
 *.o*
 *.kdev*
 XLib.*
+*.exe

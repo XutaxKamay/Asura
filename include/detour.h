@@ -33,15 +33,15 @@ namespace XLib
             if constexpr ( TCC == cc_fastcall )
             {
                 /* thisptr - EDX, stack params */
-                return TRetType( __thiscall* )( ptr_t, TArgs... );
+                return type_wrapper< TRetType( __thiscall* )( ptr_t, TArgs... ) >;
             }
             else if constexpr ( TCC == cc_stdcall )
             {
-                return TRetType( __stdcall* )( TArgs... );
+                return type_wrapper< TRetType( __stdcall* )( TArgs... ) >;
             }
             else
             {
-                return TRetType( * )( TArgs... );
+                return type_wrapper< TRetType ( * )( TArgs... ) >;
             }
         }
 
@@ -50,21 +50,22 @@ namespace XLib
             if constexpr ( TCC == cc_fastcall )
             {
                 /* EDX, ECX, stack params */
-                return TRetType( __fastcall* )( ptr_t, ptr_t, TArgs... );
+                return type_wrapper< TRetType(
+                  __fastcall* )( ptr_t, ptr_t, TArgs... ) >;
             }
             else if constexpr ( TCC == cc_stdcall )
             {
-                return TRetType( __stdcall* )( TArgs... );
+                return type_wrapper< TRetType( __stdcall* )( TArgs... ) >;
             }
             else
             {
-                return TRetType( * )( TArgs... );
+                return type_wrapper< TRetType ( * )( TArgs... ) >;
             }
         }
 
       public:
-        using cbfunc_t = typename decltype( GenCallBackFuncType() );
-        using func_t   = typename decltype( GenNewFuncType() );
+        using cbfunc_t = typename decltype( GenCallBackFuncType() )::type;
+        using func_t   = typename decltype( GenNewFuncType() )::type;
 
 #else /* Otherwhise it should be always the same convention */
         using cbfunc_t = TRetType ( * )( TArgs... );

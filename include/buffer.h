@@ -13,15 +13,6 @@ namespace XLib
     constexpr auto UDPSize = 508;
 
     template < typename T >
-    struct type_wrapper_t
-    {
-        using type = T;
-    };
-
-    template < typename T >
-    inline constexpr type_wrapper_t< T > _type {};
-
-    template < typename T >
     /**
      * @brief alloc
      * @param size
@@ -67,23 +58,23 @@ namespace XLib
     constexpr inline auto _gvt()
     {
         if constexpr ( type == type_safesize )
-            return _type< safesize_t >;
+            return type_wrapper< safesize_t >;
         else if constexpr ( type == type_8 )
-            return _type< byte_t >;
+            return type_wrapper< byte_t >;
         else if constexpr ( type == type_16 )
-            return _type< uint16_t >;
+            return type_wrapper< uint16_t >;
         else if constexpr ( type == type_32 )
-            return _type< uint32_t >;
+            return type_wrapper< uint32_t >;
         else if constexpr ( type == type_64 )
-            return _type< uint64_t >;
+            return type_wrapper< uint64_t >;
         else if constexpr ( type == type_array )
-            return _type< array_t >;
+            return type_wrapper< array_t >;
         else if constexpr ( type == type_float )
-            return _type< float >;
+            return type_wrapper< float >;
         else if constexpr ( type == type_double )
-            return _type< double >;
+            return type_wrapper< double >;
         else
-            return _type< void >;
+            return type_wrapper< void >;
     }
     /**
      * @brief gvtStr
@@ -92,10 +83,10 @@ namespace XLib
      */
     std::string gvtStr( typesize_t typeSize );
 
-    template < typesize_t _type >
-    using gvt = typename decltype( _gvt< _type >() )::type;
-    template < typesize_t _type >
-    using gvt = gvt< _type >;
+    template < typesize_t typesize >
+    using gvt = typename decltype( _gvt< typesize >() )::type;
+    template < typesize_t typesize >
+    using gvt = gvt< typesize >;
 
     template < safesize_t max_size = 0 >
     /**

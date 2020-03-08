@@ -1,61 +1,102 @@
-ifeq ($(PREFIX),)
-		PREFIX := /usr/local
-endif
+
+
+
+
+#ifneq ($(PREFIX),)
+	PREFIX := /usr/local
+#endif
 
 # XLIB_TEST
-XLIB_TEST32_DEBUG=x_test32.dbg
-XLIB_TEST64_DEBUG=x_test64.dbg
-XLIB_TEST32_RELEASE=x_test32.rel
-XLIB_TEST64_RELEASE=x_test64.rel
+XLIB_TEST_DEBUG:=xlib_test.dbg
+XLIB_TEST_RELEASE:=xlib_test.rel
 
-XLIB_TEST_OBJ32_DEBUG=$(subst .cpp,.o32d,$(wildcard test/src/*.cpp))
-XLIB_TEST_OBJ64_DEBUG=$(subst .cpp,.o64d,$(wildcard test/src/*.cpp))
-XLIB_TEST_OBJ32_RELEASE=$(subst .cpp,.o32r,$(wildcard test/src/*.cpp))
-XLIB_TEST_OBJ64_RELEASE=$(subst .cpp,.o64r,$(wildcard test/src/*.cpp))
+XLIB_OBJ_DEBUG_OUT:=.od
+XLIB_OBJ_RELEASE_OUT:=.or
 
 # XLIB
-XLIB32_DEBUG=xlib32.dbg.a
-XLIB64_DEBUG=xlib64.dbg.a
-XLIB32_RELEASE=xlib32.rel.a
-XLIB64_RELEASE=xlib64.rel.a
+XLIB_DEBUG:=xlib.dbg
+XLIB_RELEASE:=xlib.rel
 
-XLIB_OBJ32_DEBUG=$(subst .cpp,.o32d,$(wildcard src/*.cpp))
-XLIB_OBJ64_DEBUG=$(subst .cpp,.o64d,$(wildcard src/*.cpp))
-XLIB_OBJ32_RELEASE=$(subst .cpp,.o32r,$(wildcard src/*.cpp))
-XLIB_OBJ64_RELEASE=$(subst .cpp,.o64r,$(wildcard src/*.cpp))
+# CRYPTOPP
+CRYPTOPP_LIB:=cryptopp
 
+# Let's see if it's asked us to compile in 32 bits.
+ifneq (,$(findstring -m32, $(CXX)))
+	CRYPTOPP_LIB:=$(CRYPTOPP_LIB)32
+	XLIB_DEBUG:=$(XLIB_DEBUG)32
+	XLIB_RELEASE:=$(XLIB_RELEASE)32
+	XLIB_TEST_DEBUG:=$(XLIB_TEST_DEBUG)32
+	XLIB_TEST_RELEASE:=$(XLIB_TEST_RELEASE)32
+	XLIB_OBJ_DEBUG_OUT:=$(XLIB_OBJ_DEBUG_OUT)32
+	XLIB_OBJ_RELEASE_OUT:=$(XLIB_OBJ_RELEASE_OUT)32
+else ifneq (,$(findstring i686, $(CXX)))
+	CRYPTOPP_LIB:=$(CRYPTOPP_LIB)32
+	XLIB_DEBUG:=$(XLIB_DEBUG)32
+	XLIB_RELEASE:=$(XLIB_RELEASE)32
+	XLIB_TEST_DEBUG:=$(XLIB_TEST_DEBUG)32
+	XLIB_TEST_RELEASE:=$(XLIB_TEST_RELEASE)32
+	XLIB_OBJ_DEBUG_OUT:=$(XLIB_OBJ_DEBUG_OUT)32
+	XLIB_OBJ_RELEASE_OUT:=$(XLIB_OBJ_RELEASE_OUT)32
+else ifneq (,$(findstring i386, $(CXX)))
+	CRYPTOPP_LIB:=$(CRYPTOPP_LIB)32
+	XLIB_DEBUG:=$(XLIB_DEBUG)32
+	XLIB_RELEASE:=$(XLIB_RELEASE)32
+	XLIB_TEST_DEBUG:=$(XLIB_TEST_DEBUG)32
+	XLIB_TEST_RELEASE:=$(XLIB_TEST_RELEASE)32
+	XLIB_OBJ_DEBUG_OUT:=$(XLIB_OBJ_DEBUG_OUT)32
+	XLIB_OBJ_RELEASE_OUT:=$(XLIB_OBJ_RELEASE_OUT)32
+else
+	CRYPTOPP_LIB:=$(CRYPTOPP_LIB)
+	XLIB_DEBUG:=$(XLIB_DEBUG)64
+	XLIB_RELEASE:=$(XLIB_RELEASE)64
+	XLIB_TEST_DEBUG:=$(XLIB_TEST_DEBUG)64
+	XLIB_TEST_RELEASE:=$(XLIB_TEST_RELEASE)64
+	XLIB_OBJ_DEBUG_OUT:=$(XLIB_OBJ_DEBUG_OUT)64
+	XLIB_OBJ_RELEASE_OUT:=$(XLIB_OBJ_RELEASE_OUT)64
+endif
 
-CPPFLAGS32_DEBUG=-m32 -std=c++17 -g -Wextra -W -Wall -Werror -Wl,--no-undefined -Iinclude/ -Itest/include/
+ifneq (,$(findstring mingw, $(CXX)))
+	CRYPTOPP_LIB:=$(CRYPTOPP_LIB)win
+	XLIB_DEBUG:=$(XLIB_DEBUG).win
+	XLIB_RELEASE:=$(XLIB_RELEASE).win
+	XLIB_TEST_DEBUG:=$(XLIB_TEST_DEBUG).exe
+	XLIB_TEST_RELEASE:=$(XLIB_TEST_RELEASE).exe
+	XLIB_OBJ_DEBUG_OUT:=$(XLIB_OBJ_DEBUG_OUT)win
+	XLIB_OBJ_RELEASE_OUT:=$(XLIB_OBJ_RELEASE_OUT)win
+endif
 
-CPPFLAGS64_DEBUG=-m64 -std=c++17 -g -Wextra -W -Wall -Werror -Wl,--no-undefined -Iinclude/ -Itest/include/
+XLIB_OBJ_DEBUG=$(subst .cpp,$(XLIB_OBJ_DEBUG_OUT),$(wildcard src/*.cpp))
+XLIB_OBJ_RELEASE=$(subst .cpp,$(XLIB_OBJ_RELEASE_OUT),$(wildcard src/*.cpp))
 
-CPPFLAGS32_RELEASE=-m32 -std=c++17 -s -Wextra -W -Wall -Werror -Wl,--no-undefined -Iinclude/ -Itest/include/
+XLIB_TEST_OBJ_DEBUG=$(subst .cpp,$(XLIB_OBJ_DEBUG_OUT),$(wildcard test/src/*.cpp))
+XLIB_TEST_OBJ_RELEASE=$(subst .cpp,$(XLIB_OBJ_RELEASE_OUT),$(wildcard test/src/*.cpp))
 
-CPPFLAGS64_RELEASE=-m64 -std=c++17 -s -Wextra -W -Wall -Werror -Wl,--no-undefined -Iinclude/ -Itest/include/
+XLIB_DEBUG:=$(XLIB_DEBUG).a
+XLIB_RELEASE:=$(XLIB_RELEASE).a
+
+CPPFLAGS_DEBUG:= -static-libstdc++ -static-libgcc -std=c++17 -g -Wextra -W -Wall -Werror -Wl,--no-undefined -Iinclude/ -Itest/include/ -I$(PREFIX)/include/ -L$(PREFIX)/lib/
+
+CPPFLAGS_RELEASE:= -static-libstdc++ -static-libgcc -std=c++17 -s -Wextra -W -Wall -Werror -Wl,--no-undefined -Iinclude/ -Itest/include/ -I$(PREFIX)/include/ -L$(PREFIX)/lib/
 
 all: xlib xlib_test
 
-xlib: xlib32dbg xlib64dbg xlib32rel xlib64rel
-xlib_test: xlib_test32dbg xlib_test64dbg xlib_test32rel xlib_test64rel
+xlib: xlibdbg xlibrel
+xlib_test: xlib_testdbg xlib_testrel
 
-xlib32dbg: $(XLIB32_DEBUG)
-xlib64dbg: $(XLIB64_DEBUG)
-xlib32rel: $(XLIB32_RELEASE)
-xlib64rel: $(XLIB64_RELEASE)
+xlibdbg: $(XLIB_DEBUG)
+xlibrel: $(XLIB_RELEASE)
 
-xlib_test32dbg: $(XLIB_TEST32_DEBUG)
-xlib_test64dbg: $(XLIB_TEST64_DEBUG)
-xlib_test32rel: $(XLIB_TEST32_RELEASE)
-xlib_test64rel: $(XLIB_TEST64_RELEASE)
+xlib_testdbg: $(XLIB_TEST_DEBUG)
+xlib_testrel: $(XLIB_TEST_RELEASE)
 
 install:
 		# Static libraries.
 		install -d $(DESTDIR)$(PREFIX)/lib/
 		install -d $(DESTDIR)$(PREFIX)/lib/xlib/
-		install -m 644 $(XLIB32_DEBUG) $(DESTDIR)$(PREFIX)/lib/xlib/
-		install -m 644 $(XLIB64_DEBUG) $(DESTDIR)$(PREFIX)/lib/xlib/
-		install -m 644 $(XLIB32_RELEASE) $(DESTDIR)$(PREFIX)/lib/xlib/
-		install -m 644 $(XLIB64_RELEASE) $(DESTDIR)$(PREFIX)/lib/xlib/
+		install -m 4 $(XLIB_DEBUG) $(DESTDIR)$(PREFIX)/lib/xlib/
+		install -m 4 $(XLIB_DEBUG) $(DESTDIR)$(PREFIX)/lib/xlib/
+		install -m 4 $(XLIB_RELEASE) $(DESTDIR)$(PREFIX)/lib/xlib/
+		install -m 4 $(XLIB_RELEASE) $(DESTDIR)$(PREFIX)/lib/xlib/
 
 		# Headers.
 		install -d $(DESTDIR)$(PREFIX)/include/
@@ -65,69 +106,38 @@ install:
 
 .PHONY: all clean
 
-$(XLIB32_DEBUG): $(XLIB_OBJ32_DEBUG)
+$(XLIB_DEBUG): $(XLIB_OBJ_DEBUG)
 				ar rcs $@ $^
 
-$(XLIB_OBJ32_DEBUG): %.o32d: %.cpp
-				$(CXX) -c $(CPPFLAGS32_DEBUG) $< -o $@
-
-
-$(XLIB64_DEBUG): $(XLIB_OBJ64_DEBUG)
+$(XLIB_OBJ_DEBUG): %$(XLIB_OBJ_DEBUG_OUT): %.cpp
+				$(CXX) -c $(CPPFLAGS_DEBUG) $< -o $@
+				
+$(XLIB_RELEASE): $(XLIB_OBJ_RELEASE)
 				ar rcs -o $@ $^
 
-$(XLIB_OBJ64_DEBUG): %.o64d: %.cpp
-				$(CXX) -c $(CPPFLAGS64_DEBUG) $< -o $@
+$(XLIB_OBJ_RELEASE): %$(XLIB_OBJ_RELEASE_OUT): %.cpp
+				$(CXX) -c $(CPPFLAGS_RELEASE) $< -o $@
 
+# TEST
 
-$(XLIB32_RELEASE): $(XLIB_OBJ32_RELEASE)
-				ar rcs -o $@ $^
+$(XLIB_TEST_DEBUG): $(XLIB_TEST_OBJ_DEBUG) $(XLIB_OBJ_DEBUG)
+				$(CXX) $(CPPFLAGS_DEBUG) -o $@ $^ -l$(CRYPTOPP_LIB)
 
-$(XLIB_OBJ32_RELEASE): %.o32r: %.cpp
-				$(CXX) -c $(CPPFLAGS32_RELEASE) $< -o $@
+$(XLIB_TEST_OBJ_DEBUG): %$(XLIB_OBJ_DEBUG_OUT): %.cpp
+				$(CXX) -c $(CPPFLAGS_DEBUG) $< -o $@
 
+$(XLIB_TEST_RELEASE): $(XLIB_TEST_OBJ_RELEASE) $(XLIB_OBJ_RELEASE)
+				$(CXX) $(CPPFLAGS_RELEASE) -o $@ $^ -l$(CRYPTOPP_LIB)
 
-$(XLIB64_RELEASE): $(XLIB_OBJ64_RELEASE)
-				ar rcs -o $@ $^
-
-$(XLIB_OBJ64_RELEASE): %.o64r: %.cpp
-				$(CXX) -c $(CPPFLAGS64_RELEASE) $< -o $@
-
-
-
-$(XLIB_TEST32_DEBUG): $(XLIB_TEST_OBJ32_DEBUG) $(XLIB_OBJ32_DEBUG)
-				$(CXX) $(CPPFLAGS32_DEBUG) -o $@ $^ -lcryptopp32
-
-$(XLIB_TEST_OBJ32_DEBUG): %.o32d: %.cpp
-				$(CXX) -c $(CPPFLAGS32_DEBUG) $< -o $@
-
-
-$(XLIB_TEST64_DEBUG): $(XLIB_TEST_OBJ64_DEBUG) $(XLIB_OBJ64_DEBUG)
-				$(CXX) $(CPPFLAGS64_DEBUG) -o $@ $^ -lcryptopp
-
-$(XLIB_TEST_OBJ64_DEBUG): %.o64d: %.cpp
-				$(CXX) -c $(CPPFLAGS64_DEBUG) $< -o $@
-
-
-$(XLIB_TEST32_RELEASE): $(XLIB_TEST_OBJ32_RELEASE) $(XLIB_OBJ32_RELEASE)
-				$(CXX) $(CPPFLAGS32_RELEASE) -o $@ $^ -lcryptopp32
-
-$(XLIB_TEST_OBJ32_RELEASE): %.o32r: %.cpp
-				$(CXX) -c $(CPPFLAGS32_RELEASE) $< -o $@
-
-
-$(XLIB_TEST64_RELEASE): $(XLIB_TEST_OBJ64_RELEASE) $(XLIB_OBJ64_RELEASE)
-				$(CXX) $(CPPFLAGS64_RELEASE) -o $@ $^ -lcryptopp
-
-$(XLIB_TEST_OBJ64_RELEASE): %.o64r: %.cpp
-				$(CXX) -c $(CPPFLAGS64_RELEASE) $< -o $@
-
+$(XLIB_TEST_OBJ_RELEASE): %$(XLIB_OBJ_RELEASE_OUT): %.cpp
+				$(CXX) -c $(CPPFLAGS_RELEASE) $< -o $@
 
 clean:
-				${RM} $(XLIB32_DEBUG) $(XLIB64_DEBUG)
-				${RM} $(XLIB32_RELEASE) $(XLIB64_RELEASE)
-				${RM} $(XLIB_OBJ32_DEBUG) $(XLIB_OBJ64_DEBUG)
-				${RM} $(XLIB_OBJ32_RELEASE) $(XLIB_OBJ64_RELEASE)
-				${RM} $(XLIB_TEST32_DEBUG) $(XLIB_TEST64_DEBUG)
-				${RM} $(XLIB_TEST32_RELEASE) $(XLIB_TEST64_RELEASE)
-				${RM} $(XLIB_TEST_OBJ32_DEBUG) $(XLIB_TEST_OBJ64_DEBUG)
-				${RM} $(XLIB_TEST_OBJ32_RELEASE) $(XLIB_TEST_OBJ64_RELEASE)
+				${RM} $(XLIB_DEBUG)
+				${RM} $(XLIB_RELEASE)
+				${RM} $(XLIB_OBJ_DEBUG)
+				${RM} $(XLIB_OBJ_RELEASE)
+				${RM} $(XLIB_TEST_DEBUG)
+				${RM} $(XLIB_TEST_RELEASE)
+				${RM} $(XLIB_TEST_OBJ_DEBUG)
+				${RM} $(XLIB_TEST_OBJ_RELEASE)

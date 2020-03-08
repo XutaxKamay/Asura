@@ -11,8 +11,6 @@
 #include <cryptopp/sha.h>
 #include <cryptopp/zlib.h>
 
-#include "types.h"
-
 namespace XLib
 {
     using namespace CryptoPP;
