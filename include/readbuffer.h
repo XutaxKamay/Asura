@@ -49,9 +49,10 @@ namespace XLib
             /* Read type first */
             if ( type != typeSize )
                 /* Blame programmer for not writing the buffer correctly. */
-                assert( std::string( "Expected type: " + gvtStr( typeSize )
+                assert( std::string( "Expected type: "
+                                     + GetVariableTypeStr( typeSize )
                                      + "when type is instead "
-                                     + gvtStr( type ) )
+                                     + GetVariableTypeStr( type ) )
                           .c_str() );
 
             using varType = gvt< typeSize >;

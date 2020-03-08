@@ -28,40 +28,8 @@ namespace XLib
       private:
         /* This case is only for windows 32 bits program */
 #ifdef _WIN32
-        constexpr auto GenCallBackFuncType()
-        {
-            if constexpr ( TCC == cc_fastcall )
-            {
-                /* thisptr - EDX, stack params */
-                return type_wrapper< TRetType( __thiscall* )( ptr_t, TArgs... ) >;
-            }
-            else if constexpr ( TCC == cc_stdcall )
-            {
-                return type_wrapper< TRetType( __stdcall* )( TArgs... ) >;
-            }
-            else
-            {
-                return type_wrapper< TRetType ( * )( TArgs... ) >;
-            }
-        }
-
-        constexpr auto GenNewFuncType()
-        {
-            if constexpr ( TCC == cc_fastcall )
-            {
-                /* EDX, ECX, stack params */
-                return type_wrapper< TRetType(
-                  __fastcall* )( ptr_t, ptr_t, TArgs... ) >;
-            }
-            else if constexpr ( TCC == cc_stdcall )
-            {
-                return type_wrapper< TRetType( __stdcall* )( TArgs... ) >;
-            }
-            else
-            {
-                return type_wrapper< TRetType ( * )( TArgs... ) >;
-            }
-        }
+        constexpr auto GenCallBackFuncType();
+        constexpr auto GenNewFuncType();
 
       public:
         using cbfunc_t = typename decltype( GenCallBackFuncType() )::type;
@@ -74,9 +42,48 @@ namespace XLib
 
       public:
       private:
-        cbfunc_t _callBackFunc;
-        func_t _newFunc;
+        cbfunc_t _callBackFunc {};
+        func_t _newFunc {};
     };
+
+#ifdef _WIN32
+    template < calling_conventions_t TCC, typename TRetType, typename... TArgs >
+    constexpr auto Detour< TCC, TRetType, TArgs... >::GenCallBackFuncType()
+    {
+        if constexpr ( TCC == cc_fastcall )
+        {
+            /* thisptr - EDX, stack params */
+            return type_wrapper< TRetType( __thiscall* )( ptr_t, TArgs... ) >;
+        }
+        else if constexpr ( TCC == cc_stdcall )
+        {
+            return type_wrapper< TRetType( __stdcall* )( TArgs... ) >;
+        }
+        else
+        {
+            return type_wrapper< TRetType ( * )( TArgs... ) >;
+        }
+    }
+
+    template < calling_conventions_t TCC, typename TRetType, typename... TArgs >
+    constexpr auto Detour< TCC, TRetType, TArgs... >::GenNewFuncType()
+    {
+        if constexpr ( TCC == cc_fastcall )
+        {
+            /* EDX, ECX, stack params */
+            return type_wrapper< TRetType(
+              __fastcall* )( ptr_t, ptr_t, TArgs... ) >;
+        }
+        else if constexpr ( TCC == cc_stdcall )
+        {
+            return type_wrapper< TRetType( __stdcall* )( TArgs... ) >;
+        }
+        else
+        {
+            return type_wrapper< TRetType ( * )( TArgs... ) >;
+        }
+    }
+#endif
 }
 
 #endif // DETOUR_H

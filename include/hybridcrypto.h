@@ -111,15 +111,15 @@ namespace XLib
         /**
          * @brief _privateKey
          */
-        RSA::PrivateKey _privateKey;
+        RSA::PrivateKey _privateKey {};
         /**
          * @brief _publicKey
          */
-        RSA::PublicKey _publicKey;
+        RSA::PublicKey _publicKey {};
         /**
          * @brief _AESData
          */
-        AESData_t _AESData;
+        AESData_t _AESData {};
     };
 
     template < int RSAKeySize >

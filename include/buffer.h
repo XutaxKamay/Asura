@@ -77,11 +77,11 @@ namespace XLib
             return type_wrapper< void >;
     }
     /**
-     * @brief gvtStr
+     * @brief GetVariableTypeStr
      * @param typeSize
      * @return Returns the string of the variable type.
      */
-    std::string gvtStr( typesize_t typeSize );
+    std::string GetVariableTypeStr( typesize_t typeSize );
 
     template < typesize_t typesize >
     using gvt = typename decltype( _gvt< typesize >() )::type;
