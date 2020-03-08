@@ -6,9 +6,19 @@
 namespace XLib
 {
     template < typename T >
+    /**
+    * @brief MemoryMap
+    * Class that permits to handle the memory maps.
+    */
     class MemoryMap
     {
       public:
+        /**
+        * @brief protection_t
+        * Modern OS have generally protections on each memory maps,
+        * combined of these three flags:
+        * READ, WRITE, EXECUTE
+        */
         enum protection_t
         {
             READ,
@@ -16,15 +26,52 @@ namespace XLib
             EXECUTE
         };
 
+        /**
+        * @brief begin
+        * 
+        * @return auto
+        */
         auto begin();
+        /**
+        * @brief begin
+        * 
+        * @return auto
+        */
         auto end();
+        /**
+        * @brief setAddress
+        * 
+        * @param address
+        */
         auto setAddress( const ptr_t& address ) -> void;
+        /**
+        * @brief setSize
+        * 
+        * @param size
+        */
         auto setSize( const size_t& size ) -> void;
+        /**
+        * @brief protection
+        * 
+        * @return auto&
+        */
         auto& protection();
 
       private:
+        /**
+        * @brief _address
+        * Address of the memory map
+        */
         ptr_t _address {};
+        /**
+        * @brief _size
+        * Size of the memory map
+        */
         size_t _size {};
+        /**
+        * @brief _protection
+        * Protection flags on the memory map.
+        */
         protection_t _protection {};
     };
 
