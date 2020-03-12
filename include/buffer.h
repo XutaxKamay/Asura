@@ -7,8 +7,8 @@ namespace XLib
 {
     /**
      * @brief UDPSize
-     * UDPSize is the maximum size theorically that we can send over network on
-     * UDP protocol without fragmentation
+     * UDPSize is the maximum size theorically that we can send over
+     * network on UDP protocol without fragmentation
      */
     constexpr auto UDPSize = 508;
 
@@ -19,7 +19,8 @@ namespace XLib
      */
     constexpr inline auto alloc( safesize_t size )
     {
-        return view_as< T >( ::operator new( static_cast< size_t >( size ) ) );
+        return view_as< T >(
+          ::operator new( static_cast< size_t >( size ) ) );
     }
 
     template < typename T >
@@ -33,8 +34,8 @@ namespace XLib
     }
     /**
      * @brief The typesize_t enum
-     * Enumerate all kind of primitive types that could be possibly used in a
-     * buffer.
+     * Enumerate all kind of primitive types that could be possibly used
+     * in a buffer.
      */
     enum typesize_t : byte_t
     {
@@ -52,7 +53,8 @@ namespace XLib
     template < typesize_t type >
     /**
      * @brief _gvt
-     * _gvt (get variable type) permits to get variable type from typesize_t.
+     * _gvt (get variable type) permits to get variable type from
+     * typesize_t.
      */
     constexpr inline auto _gvt()
     {

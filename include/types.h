@@ -5,6 +5,10 @@
 #include <vector>
 #include <cstddef>
 
+#if defined _WIN32 || defined _WIN64
+    #define WINDOWS
+#endif
+
 namespace XLib
 {
     using ptr_t      = void*;
@@ -46,21 +50,28 @@ namespace XLib
      * @param classPtr
      * Gets a virtual function type from a virtual table and an index.
      */
-    constexpr inline auto VFunc( T classPtr )
+    constexpr inline auto VFuncPtr( ptr_t classPtr )
     {
-        return VTable< T >( classPtr )[ index ];
+        return view_as< T >( VTable< ptr_t >( classPtr )[ index ] );
     }
 
     template < safesize_t index, typename TRetType = void, typename... TArgs >
     /**
      * @brief VFunc
      * @param classPtr
-     * Gets a virtual function type for calling process from a virtual table and
-     * an index.
+     * Gets a virtual function type for calling process from a virtual
+     * table and an index.view_as
      */
     constexpr inline auto VFunc( ptr_t classPtr )
     {
-        return VFunc< index, TRetType ( * )( TArgs... ) >( classPtr );
+#ifdef WINDOWS
+        return VFuncPtr< index,
+                         TRetType( __thiscall* )( ptr_t, TArgs... ) >(
+          classPtr );
+#else
+        return VFuncPtr< index, TRetType ( * )( ptr_t, TArgs... ) >(
+          classPtr );
+#endif
     }
 
     template < safesize_t index, typename TRetType = void, typename... TArgs >
@@ -72,12 +83,11 @@ namespace XLib
      */
     constexpr inline auto CVFunc( ptr_t classPtr, TArgs... Args )
     {
-        return VFunc< index, TRetType, TArgs... >( classPtr )( Args... );
+        return VFunc< index, TRetType, TArgs... >( classPtr )( classPtr,
+                                                               Args... );
     }
 }
 
-#define ConsoleOutput( format, ... )                                            \
-    std::cout << ( std::string( std::string( "[XLib] -> " ) + format ).c_str(), \
-                   ##__VA_ARGS__ )
+#define ConsoleOutput( format ) std::cout << "[XLib] -> " << format
 
 #endif // TYPES_H

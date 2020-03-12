@@ -1,14 +1,14 @@
 #ifndef MEMORYSCANNER_H
 #define MEMORYSCANNER_H
 
-#include "types.h"
 #include "memoryutils.h"
 
 namespace XLib
 {
     /**
      * @brief MemoryScanner
-     * Permits to scan the memory and retrieve offsets, memory pointers etc.
+     * Permits to scan the memory and retrieve offsets, memory pointers
+     * etc.
      */
     class MemoryScanner
     {

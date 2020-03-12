@@ -90,12 +90,14 @@ namespace XLib
             if constexpr ( typeSize == type_array )
             {
                 /* Add the size of the array if it's an array */
-                addData( &size, static_cast< safesize_t >( sizeof( size ) ) );
+                addData( &size,
+                         static_cast< safesize_t >( sizeof( size ) ) );
                 addData( value, static_cast< safesize_t >( size ) );
             }
             else
             {
-                addData( &value, static_cast< safesize_t >( sizeof( value ) ) );
+                addData( &value,
+                         static_cast< safesize_t >( sizeof( value ) ) );
             }
         }
 
@@ -112,8 +114,9 @@ namespace XLib
             }
             else
             {
-                return view_as< cast_t >( view_as< uintptr_t >( this->pData() )
-                                          + static_cast< uintptr_t >( size ) );
+                return view_as< cast_t >(
+                  view_as< uintptr_t >( this->pData() )
+                  + static_cast< uintptr_t >( size ) );
             }
         }
 
@@ -139,9 +142,11 @@ namespace XLib
     }
 
     template < safesize_t max_size >
-    inline auto WriteBuffer< max_size >::addType( typesize_t typeSize ) -> void
+    inline auto WriteBuffer< max_size >::addType( typesize_t typeSize )
+      -> void
     {
-        addData( &typeSize, static_cast< safesize_t >( sizeof( typeSize ) ) );
+        addData( &typeSize,
+                 static_cast< safesize_t >( sizeof( typeSize ) ) );
     }
 
     template < safesize_t max_size >
@@ -151,15 +156,19 @@ namespace XLib
     }
 
     template < safesize_t max_size >
-    inline auto WriteBuffer< max_size >::addData( ptr_t pData, safesize_t size )
+    inline auto WriteBuffer< max_size >::addData( ptr_t pData,
+                                                  safesize_t size )
       -> void
     {
-        memcpy( shift( _writeSize ), pData, static_cast< size_t >( size ) );
+        memcpy( shift( _writeSize ),
+                pData,
+                static_cast< size_t >( size ) );
         advance( size );
     }
 
     template < safesize_t max_size >
-    inline auto WriteBuffer< max_size >::advance( safesize_t size ) -> void
+    inline auto WriteBuffer< max_size >::advance( safesize_t size )
+      -> void
     {
         _writeSize += size;
     }
@@ -172,7 +181,8 @@ namespace XLib
 
     template < safesize_t max_size >
     inline auto
-    WriteBuffer< max_size >::setWriteSize( const safesize_t& writeSize ) -> void
+    WriteBuffer< max_size >::setWriteSize( const safesize_t& writeSize )
+      -> void
     {
         _writeSize = writeSize;
     }

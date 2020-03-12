@@ -2,7 +2,10 @@
 
 using namespace XLib;
 
-inline auto XLib::Test::run() -> void
+XLib::Test::API XLib::g_API;
+bool XLib::g_PassedTests = true;
+
+auto XLib::Test::run() -> void
 {
     ConsoleOutput( "Starting test" ) << std::endl;
 
@@ -30,14 +33,14 @@ inline auto XLib::Test::run() -> void
 
     auto strSize = static_cast< safesize_t >( str.size() );
 
-    writeBuffer.addVar< type_array >( view_as< gvt< type_array > >( str.data()
-),
+    writeBuffer.addVar< type_array >( view_as< gvt< type_array > >(
+                                        str.data() ),
                                       strSize );
-    writeBuffer.addVar< type_array >( view_as< gvt< type_array > >( str.data()
-),
+    writeBuffer.addVar< type_array >( view_as< gvt< type_array > >(
+                                        str.data() ),
                                       strSize );
-    writeBuffer.addVar< type_array >( view_as< gvt< type_array > >( str.data()
-),
+    writeBuffer.addVar< type_array >( view_as< gvt< type_array > >(
+                                        str.data() ),
                                       strSize );
 
     writeBuffer.addVar< type_8 >( 1 );
@@ -131,7 +134,13 @@ inline auto XLib::Test::run() -> void
 
     /* Virtual Functions Tests */
 
-    CVFunc<0, void>()
+    CVFunc< 0, void >( static_cast< ptr_t >( &g_API ) );
+    auto ret1 = CVFunc< 1, std::vector< int >, const char*, int >(
+      static_cast< ptr_t >( &g_API ),
+      "test",
+      1337 );
+
+    std::cout << ret1[ 0 ] << std::endl;
 }
 
 void XLib::Test::API::func1()
@@ -155,7 +164,7 @@ std::vector< int > XLib::Test::API::func2( const char* str, ... )
 
     std::vector< int > result;
 
-    for ( auto i = 0; i < sizeof( buffer ) / sizeof( int ); i++ )
+    for ( size_t i = 0; i < sizeof( buffer ) / sizeof( int ); i++ )
     {
         result.push_back( ints[ i ] );
     }

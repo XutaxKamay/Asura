@@ -7,5 +7,6 @@
 #include "writebuffer.h"
 #include "circularbuffer.h"
 #include "detour.h"
+#include "memoryscanner.h"
 
 #endif // XLIB_H

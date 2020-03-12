@@ -48,7 +48,8 @@ namespace XLib
 
             /* Read type first */
             if ( type != typeSize )
-                /* Blame programmer for not writing the buffer correctly. */
+                /* Blame programmer for not writing the buffer correctly.
+                 */
                 assert( std::string( "Expected type: "
                                      + GetVariableTypeStr( typeSize )
                                      + "when type is instead "
@@ -69,7 +70,8 @@ namespace XLib
                 data = this->shift< varType >( _readSize );
                 advance( dataSize );
 
-                /* If it the parameter isn't null we give the array size */
+                /* If it the parameter isn't null we give the array size
+                 */
                 if ( pSize != nullptr )
                 {
                     *pSize = dataSize;
@@ -103,8 +105,9 @@ namespace XLib
             }
             else
             {
-                return view_as< cast_t >( view_as< uintptr_t >( this->pData() )
-                                          + static_cast< uintptr_t >( size ) );
+                return view_as< cast_t >(
+                  view_as< uintptr_t >( this->pData() )
+                  + static_cast< uintptr_t >( size ) );
             }
         }
 
@@ -168,7 +171,8 @@ namespace XLib
     }
 
     template < safesize_t max_size >
-    inline auto ReadBuffer< max_size >::setReadSize( const safesize_t& readSize )
+    inline auto
+    ReadBuffer< max_size >::setReadSize( const safesize_t& readSize )
     {
         _readSize = readSize;
     }

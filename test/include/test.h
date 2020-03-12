@@ -1,8 +1,8 @@
 #ifndef TEST_H
 #define TEST_H
 
-#include <xlib.h>
 #include <stdarg.h>
+#include <xlib.h>
 
 namespace XLib
 {
@@ -24,10 +24,10 @@ namespace XLib
 
       public:
         static auto run() -> void;
-        API m_API;
-
-        static bool g_PassedTests;
     };
+
+    extern Test::API g_API;
+    extern bool g_PassedTests;
 }
 
 #endif

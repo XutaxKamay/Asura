@@ -19,8 +19,9 @@ namespace XLib
     template < int RSAKeySize = 0x1000 >
     /**
      * @brief The HybridCrypt class
-     * This class permits to have a AES and RSA combined powered with CryptoPP.
-     * The RSAKeySize field permits to have a custom RSA key size.
+     * This class permits to have a AES and RSA combined powered with
+     * CryptoPP. The RSAKeySize field permits to have a custom RSA key
+     * size.
      */
     class HybridCrypt
     {
@@ -153,9 +154,10 @@ namespace XLib
 
             RandomNumberGenerator rng;
 
-            auto decryptAESKey = _privateKey.CalculateInverse( rng,
-                                                               intAESData );
-            decryptAESKey.Encode( _AESData, decryptAESKey.MinEncodedSize() );
+            auto decryptAESKey
+              = _privateKey.CalculateInverse( rng, intAESData );
+            decryptAESKey.Encode( _AESData,
+                                  decryptAESKey.MinEncodedSize() );
 
             _AESData.encrypted = false;
 
@@ -173,7 +175,8 @@ namespace XLib
             Integer intAESData( _AESData, sizeof( AESData_t ) );
 
             auto encryptAESKey = _privateKey.ApplyFunction( intAESData );
-            encryptAESKey.Encode( _AESData, encryptAESKey.MinEncodedSize() );
+            encryptAESKey.Encode( _AESData,
+                                  encryptAESKey.MinEncodedSize() );
 
             _AESData.encrypted = true;
 
@@ -222,7 +225,8 @@ namespace XLib
     }
 
     template < int RSAKeySize >
-    auto HybridCrypt< RSAKeySize >::setAESData( const AESData_t& AESData_t )
+    auto
+    HybridCrypt< RSAKeySize >::setAESData( const AESData_t& AESData_t )
       -> void
     {
         _AESData = AESData_t;
@@ -235,9 +239,8 @@ namespace XLib
     }
 
     template < int RSAKeySize >
-    auto
-    HybridCrypt< RSAKeySize >::setPublicKey( const RSA::PublicKey& publicKey )
-      -> void
+    auto HybridCrypt< RSAKeySize >::setPublicKey(
+      const RSA::PublicKey& publicKey ) -> void
     {
         _publicKey = publicKey;
     }
