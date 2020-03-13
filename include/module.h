@@ -10,9 +10,8 @@ namespace XLib
      */
     class Module
     {
-    public:
-
-    private:
+      public:
+      private:
         maps_t _maps;
         std::string _fullName;
     };

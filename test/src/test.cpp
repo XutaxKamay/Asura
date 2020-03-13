@@ -27,7 +27,7 @@ auto XLib::Test::run() -> void
     ConsoleOutput( "Starting test" ) << std::endl;
 
     /* Let's do the tests */
-    HybridCrypt<8192> hybridCrypt;
+    HybridCrypt< 8192 > hybridCrypt;
 
     ConsoleOutput( "Generating AES keys" ) << std::endl;
 
@@ -84,6 +84,9 @@ auto XLib::Test::run() -> void
 
     /* Let's test the hybrid crypto */
     hybridCrypt.encrypt( bs );
+    hybridCrypt.debugKeys();
+    hybridCrypt.encryptAESKey();
+    hybridCrypt.debugKeys();
 
     ConsoleOutput( "Raw bytes:" ) << std::endl;
     for ( auto&& b : bs )
@@ -94,6 +97,9 @@ auto XLib::Test::run() -> void
     std::cout << std::endl;
 
     ConsoleOutput( "Decrypting..." ) << std::endl;
+    hybridCrypt.debugKeys();
+    hybridCrypt.decryptAESKey();
+    hybridCrypt.debugKeys();
     hybridCrypt.decrypt( bs );
 
     ConsoleOutput( "Raw bytes:" ) << std::endl;
@@ -106,9 +112,9 @@ auto XLib::Test::run() -> void
 
     ReadBuffer readBuffer( bs.data() );
 
-    if ( memcmp( readBuffer.pData(),
-                 writeBuffer.pData(),
-                 static_cast< size_t >( writeBuffer.writeSize() ) )
+    if ( std::memcmp( readBuffer.pData(),
+                      writeBuffer.pData(),
+                      static_cast< size_t >( writeBuffer.writeSize() ) )
          == 0 )
     {
         ConsoleOutput( "Passed decryption test" ) << std::endl;
@@ -163,7 +169,9 @@ auto XLib::Test::run() -> void
 
     VAPI_t* api = static_cast< VAPI_t* >( &g_API );
     api->callVFunc< 0, void >();
-    api->hook< 0 >( vfunc_hook, []( auto funcPtr, auto ) -> void {
+
+    auto unprotect = []( auto funcPtr, auto ) -> void
+    {
 #ifndef WINDOWS
         auto funcPtrAlign = view_as< uintptr_t >( funcPtr );
 
@@ -179,9 +187,32 @@ auto XLib::Test::run() -> void
                         PAGE_EXECUTE_READWRITE,
                         &dwOld );
 #endif
-    } );
+    };
+
+    auto protect = []( auto funcPtr, auto ) -> void
+    {
+#ifndef WINDOWS
+        auto funcPtrAlign = view_as< uintptr_t >( funcPtr );
+
+        funcPtrAlign -= funcPtrAlign % 4096;
+
+        mprotect( view_as< ptr_t >( funcPtrAlign ),
+                  4096,
+                  PROT_EXEC | PROT_READ );
+#else
+        DWORD dwOld;
+        VirtualProtect( funcPtr,
+                        sizeof( funcPtr ),
+                        PAGE_EXECUTE_READ,
+                        &dwOld );
+#endif
+    };
+
+    api->hook< 0 >( vfunc_hook, unprotect, protect );
 
     api->callVFunc< 0, void >();
+    std::cout << "Number of virtual funcs: " << api->countVFuncs()
+              << std::endl;
 
     // std::cout << ret1[ 0 ] << std::endl;
 }
