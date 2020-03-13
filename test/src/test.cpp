@@ -80,15 +80,16 @@ auto XLib::Test::run() -> void
 
     std::cout << std::endl;
 
-    ConsoleOutput( "Encrypting..." ) << std::endl;
-
     /* Let's test the hybrid crypto */
+    ConsoleOutput( "Encrypting..." ) << std::endl << std::endl;
     hybridCrypt.encrypt( bs );
+
     hybridCrypt.debugKeys();
+    ConsoleOutput( "Encrypting AES Key..." ) << std::endl << std::endl;
     hybridCrypt.encryptAESKey();
     hybridCrypt.debugKeys();
 
-    ConsoleOutput( "Raw bytes:" ) << std::endl;
+    ConsoleOutput( "Raw encrypted bytes:" ) << std::endl;
     for ( auto&& b : bs )
     {
         std::cout << std::hex << static_cast< int >( b );
@@ -96,13 +97,14 @@ auto XLib::Test::run() -> void
 
     std::cout << std::endl;
 
-    ConsoleOutput( "Decrypting..." ) << std::endl;
     hybridCrypt.debugKeys();
+    ConsoleOutput( "Decrypting AES Key..." ) << std::endl << std::endl;
     hybridCrypt.decryptAESKey();
     hybridCrypt.debugKeys();
+    ConsoleOutput( "Decrypting..." ) << std::endl << std::endl;
     hybridCrypt.decrypt( bs );
 
-    ConsoleOutput( "Raw bytes:" ) << std::endl;
+    ConsoleOutput( "Raw decrypted bytes:" ) << std::endl;
     for ( auto&& b : bs )
     {
         std::cout << std::hex << static_cast< int >( b );

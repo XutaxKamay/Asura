@@ -1,6 +1,8 @@
 #ifndef HYBRIDCRYPT_H
 #define HYBRIDCRYPT_H
 
+#include <sstream>
+
 #include <cryptopp/aes.h>
 #include <cryptopp/modes.h>
 #include <cryptopp/osrng.h>
@@ -10,8 +12,8 @@
 #include <cryptopp/rsa.h>
 #include <cryptopp/sha.h>
 #include <cryptopp/zlib.h>
+
 #include "types.h"
-#include <sstream>
 
 namespace XLib
 {
@@ -114,6 +116,15 @@ namespace XLib
          */
         auto debugKeys() -> void;
 
+        auto isAESDataEncrypted() const;
+        auto setIsAESDataEncrypted( bool isAESDataEncrypted ) -> void;
+
+        auto encodedAESDataSize() const -> int;
+        auto setEncodedAESDataSize( int encodedAESDataSize ) -> void;
+
+        auto rng() const;
+        auto setRng( const AutoSeededRandomPool& rng ) -> void;
+
       private:
         /**
          * @brief _privateKey
@@ -126,8 +137,7 @@ namespace XLib
         /**
          * @brief _AESData
          */
-        AESData_t _AESData {};
-        byte _encryptedAESData[ RSAKeySize ];
+        byte _AESData[ RSAKeySize ];
         bool _isAESDataEncrypted;
         int _encodedAESDataSize;
         AutoSeededRandomPool _rng;
@@ -143,8 +153,9 @@ namespace XLib
     template < int RSAKeySize >
     auto HybridCrypt< RSAKeySize >::generateAESKey()
     {
-        _rng.GenerateBlock( _AESData.key, AESKeySize );
-        _rng.GenerateBlock( _AESData.iv, AESIVSize );
+        auto AESData = XLib::view_as< AESData_t* >( _AESData );
+        _rng.GenerateBlock( AESData->key, AESKeySize );
+        _rng.GenerateBlock( AESData->iv, AESIVSize );
 
         _isAESDataEncrypted = false;
 
@@ -156,18 +167,13 @@ namespace XLib
     {
         if ( _isAESDataEncrypted )
         {
-            auto bytes = reinterpret_cast< byte* >( &_encryptedAESData );
-            Integer intAESData( bytes, _encodedAESDataSize );
+            Integer intAESData( _AESData, _encodedAESDataSize );
 
             auto decryptAESKey
               = _privateKey.CalculateInverse( _rng, intAESData );
 
-            byte decodedBytes[ decryptAESKey.MinEncodedSize() ];
-
-            decryptAESKey.Encode( decodedBytes,
+            decryptAESKey.Encode( _AESData,
                                   decryptAESKey.MinEncodedSize() );
-
-            std::memcpy( &_AESData, decodedBytes, sizeof( AESData_t ) );
 
             _isAESDataEncrypted = false;
 
@@ -182,15 +188,13 @@ namespace XLib
     {
         if ( !_isAESDataEncrypted )
         {
-            Integer intAESData( reinterpret_cast< byte* >( &_AESData ),
-                                sizeof( AESData_t ) );
+            Integer intAESData( _AESData, sizeof( AESData_t ) );
 
             auto encryptAESKey = _publicKey.ApplyFunction( intAESData );
 
             _encodedAESDataSize = encryptAESKey.MinEncodedSize();
 
-            encryptAESKey.Encode( _encryptedAESData,
-                                  _encodedAESDataSize );
+            encryptAESKey.Encode( _AESData, _encodedAESDataSize );
 
             _isAESDataEncrypted = true;
 
@@ -205,9 +209,10 @@ namespace XLib
     {
         if ( !_isAESDataEncrypted )
         {
-            CFB_Mode< AES >::Decryption cfbDecryption( _AESData.key,
+            auto AESData = XLib::view_as< AESData_t* >( _AESData );
+            CFB_Mode< AES >::Decryption cfbDecryption( AESData->key,
                                                        AESKeySize,
-                                                       _AESData.iv );
+                                                       AESData->iv );
 
             cfbDecryption.ProcessData( bs.data(), bs.data(), bs.size() );
             return true;
@@ -221,9 +226,10 @@ namespace XLib
     {
         if ( !_isAESDataEncrypted )
         {
-            CFB_Mode< AES >::Encryption cfbEcryption( _AESData.key,
+            auto AESData = XLib::view_as< AESData_t* >( _AESData );
+            CFB_Mode< AES >::Encryption cfbEcryption( AESData->key,
                                                       AESKeySize,
-                                                      _AESData.iv );
+                                                      AESData->iv );
 
             cfbEcryption.ProcessData( bs.data(), bs.data(), bs.size() );
             return true;
@@ -239,11 +245,10 @@ namespace XLib
     }
 
     template < int RSAKeySize >
-    auto
-    HybridCrypt< RSAKeySize >::setAESData( const AESData_t& AESData_t )
+    auto HybridCrypt< RSAKeySize >::setAESData( const AESData_t& AESData )
       -> void
     {
-        _AESData = AESData_t;
+        std::memcpy( _AESData, &AESData, sizeof( AESData_t ) );
     }
 
     template < int RSAKeySize >
@@ -297,7 +302,9 @@ namespace XLib
 
         ConsoleOutput( "AES IV:\n" );
 
-        for ( auto b : _AESData.iv )
+        auto AESData = XLib::view_as< AESData_t* >( _AESData );
+
+        for ( auto b : AESData->iv )
         {
             std::cout << std::hex << static_cast< int >( b );
         }
@@ -306,21 +313,51 @@ namespace XLib
 
         ConsoleOutput( "AES Key:\n" );
 
-        for ( auto b : _AESData.key )
+        for ( auto b : AESData->key )
         {
             std::cout << std::hex << static_cast< int >( b );
         }
 
         std::cout << std::endl;
+    }
 
-        ConsoleOutput( "AES Encrypted:\n" );
+    template < int RSAKeySize >
+    auto HybridCrypt< RSAKeySize >::isAESDataEncrypted() const
+    {
+        return _isAESDataEncrypted;
+    }
 
-        for ( auto b : _encryptedAESData )
-        {
-            std::cout << std::hex << static_cast< int >( b );
-        }
+    template < int RSAKeySize >
+    auto HybridCrypt< RSAKeySize >::setIsAESDataEncrypted(
+      bool isAESDataEncrypted ) -> void
+    {
+        _isAESDataEncrypted = isAESDataEncrypted;
+    }
 
-        std::cout << std::endl;
+    template < int RSAKeySize >
+    auto HybridCrypt< RSAKeySize >::encodedAESDataSize() const -> int
+    {
+        return _encodedAESDataSize;
+    }
+
+    template < int RSAKeySize >
+    auto HybridCrypt< RSAKeySize >::setEncodedAESDataSize(
+      int encodedAESDataSize ) -> void
+    {
+        _encodedAESDataSize = encodedAESDataSize;
+    }
+
+    template < int RSAKeySize >
+    auto HybridCrypt< RSAKeySize >::rng() const
+    {
+        return _rng;
+    }
+    template < int RSAKeySize >
+    auto
+    HybridCrypt< RSAKeySize >::setRng( const AutoSeededRandomPool& rng )
+      -> void
+    {
+        _rng = rng;
     }
 
 }
