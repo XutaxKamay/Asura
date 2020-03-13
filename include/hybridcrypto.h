@@ -44,8 +44,8 @@ namespace XLib
          */
         struct AESData_t
         {
-            byte iv[ AESIVSize ];
-            byte key[ AESKeySize ];
+            byte iv[AESIVSize];
+            byte key[AESKeySize];
         };
 
       public:
@@ -137,7 +137,7 @@ namespace XLib
         /**
          * @brief _AESData
          */
-        byte _AESData[ RSAKeySize ];
+        byte _AESData[RSAKeySize];
         bool _isAESDataEncrypted;
         int _encodedAESDataSize;
         AutoSeededRandomPool _rng;

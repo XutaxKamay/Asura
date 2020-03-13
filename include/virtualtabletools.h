@@ -26,7 +26,7 @@ namespace XLib
      */
     constexpr inline auto VFuncPtr( ptr_t classPtr )
     {
-        return view_as< T >( VTable( classPtr )[ index ] );
+        return view_as< T >( VTable( classPtr )[index] );
     }
 
     template < safesize_t index, typename T = ptr_t >
@@ -37,7 +37,7 @@ namespace XLib
      */
     constexpr inline auto GetVFuncPtr( ptr_t classPtr )
     {
-        return view_as< T >( &VTable( classPtr )[ index ] );
+        return view_as< T >( &VTable( classPtr )[index] );
     }
 
     template < safesize_t index, typename TRetType = void, typename... TArgs >
@@ -105,7 +105,7 @@ namespace XLib
         {
             auto funcPtr = getVFuncPtr< index, T2* >();
 
-            if ( *funcPtr && newFuncPtr )
+            if ( funcPtr && *funcPtr && newFuncPtr )
             {
                 if ( before )
                     before( view_as< ptr_t >( funcPtr ),
@@ -141,7 +141,7 @@ namespace XLib
 
         safesize_t count = 0;
 
-        while ( vtable[ count ] )
+        while ( vtable[count] )
             count++;
 
         return count;

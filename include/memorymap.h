@@ -87,7 +87,7 @@ namespace XLib
     template < typename T >
     auto MemoryMap< T >::end()
     {
-        view_as< T >( view_as< uintptr_t >( _address ) + _size );
+        return view_as< T >( view_as< uintptr_t >( _address ) + _size );
     }
 
     template < typename T >

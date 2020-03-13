@@ -52,7 +52,7 @@ namespace XLib
          * @brief _buffer
          * Buffer to the elements that will construct history.
          */
-        T _buffer[ max_history ] {};
+        T _buffer[max_history] {};
         /**
          * @brief _filled_history
          * Counts the elements filled into history.
@@ -74,7 +74,7 @@ namespace XLib
          */
         if ( _filled_history >= max_history )
         {
-            _buffer[ _index ] = element;
+            _buffer[_index] = element;
 
             if ( _index >= ( max_history - 1 ) )
             {
@@ -88,7 +88,7 @@ namespace XLib
             return Updating;
         }
 
-        _buffer[ _filled_history ] = element;
+        _buffer[_filled_history] = element;
 
         /**
          * Don't forget to keep track
@@ -105,7 +105,7 @@ namespace XLib
     {
         auto realSlot = _slot( wantedSlot );
 
-        return ( realSlot == -1 ) ? nullptr : &_buffer[ realSlot ];
+        return ( realSlot == -1 ) ? nullptr : &_buffer[realSlot];
     }
 
     template < typename T, int max_history >

@@ -172,44 +172,6 @@ auto XLib::Test::run() -> void
     VAPI_t* api = static_cast< VAPI_t* >( &g_API );
     api->callVFunc< 0, void >();
 
-    auto unprotect = []( auto funcPtr, auto ) -> void
-    {
-#ifndef WINDOWS
-        auto funcPtrAlign = view_as< uintptr_t >( funcPtr );
-
-        funcPtrAlign -= funcPtrAlign % 4096;
-
-        mprotect( view_as< ptr_t >( funcPtrAlign ),
-                  4096,
-                  PROT_EXEC | PROT_READ | PROT_WRITE );
-#else
-        DWORD dwOld;
-        VirtualProtect( funcPtr,
-                        sizeof( funcPtr ),
-                        PAGE_EXECUTE_READWRITE,
-                        &dwOld );
-#endif
-    };
-
-    auto protect = []( auto funcPtr, auto ) -> void
-    {
-#ifndef WINDOWS
-        auto funcPtrAlign = view_as< uintptr_t >( funcPtr );
-
-        funcPtrAlign -= funcPtrAlign % 4096;
-
-        mprotect( view_as< ptr_t >( funcPtrAlign ),
-                  4096,
-                  PROT_EXEC | PROT_READ );
-#else
-        DWORD dwOld;
-        VirtualProtect( funcPtr,
-                        sizeof( funcPtr ),
-                        PAGE_EXECUTE_READ,
-                        &dwOld );
-#endif
-    };
-
     api->hook< 0 >( vfunc_hook, unprotect, protect );
 
     api->callVFunc< 0, void >();
@@ -229,7 +191,7 @@ std::vector< int > XLib::Test::API::func2( const char* str, ... )
     va_list parameterInfos;
     va_start( parameterInfos, str );
 
-    char buffer[ 0x1000 ];
+    char buffer[0x1000];
     sprintf( buffer, str, parameterInfos );
 
     std::cout << buffer << std::endl;
@@ -242,7 +204,7 @@ std::vector< int > XLib::Test::API::func2( const char* str, ... )
 
     for ( size_t i = 0; i < sizeof( buffer ) / sizeof( int ); i++ )
     {
-        result.push_back( ints[ i ] );
+        result.push_back( ints[i] );
     }
 
     return result;
