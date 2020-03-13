@@ -62,7 +62,7 @@ int vm_prot_to_flags(int prot)
 {
 	int flags;
 
-	flags = PROT_NONE;
+	flags = VM_NONE;
 
 	if (prot & PROT_READ) {
 		flags |= VM_READ;
