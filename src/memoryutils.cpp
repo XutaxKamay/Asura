@@ -1,7 +1,7 @@
 #ifdef WINDOWS
     #include <windows.h>
 #else
-    #include <sys/mman.h>
+    #include <asm/unistd.h>
 #endif
 #include "memoryutils.h"
 #include <unistd.h>
@@ -37,6 +37,23 @@ auto protect( pid_t pid,
           << std::endl;
     }
 #else
+
+    auto mprotect_syscall =
+      []( ptr_t address, size_t alignedSize, int flags )
+    {
+        int ret;
+
+        /* clang-format off */
+        asm volatile
+        (
+            "\n\t"
+            "int 0x80\n\t"
+        );
+        /* clang-format on */
+
+        return ret;
+    };
+
     auto alignedSize = ( ( size + g_pageSize ) / g_pageSize )
                        * g_pageSize;
 
@@ -45,7 +62,7 @@ auto protect( pid_t pid,
     /* We might need a kernel module for ioctl */
     if ( getpid() == pid )
     {
-        auto ret = mprotect( address, alignedSize, newFlags );
+        auto ret = mprotect_syscall( address, alignedSize, newFlags );
 
         if ( ret != -1 )
         {

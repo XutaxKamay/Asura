@@ -21,9 +21,9 @@ namespace XLib
          */
         enum protection_t
         {
-            READ,
-            WRITE,
-            EXECUTE
+            READ    = 0x1,
+            WRITE   = 0x2,
+            EXECUTE = 0x4
         };
 
         /**
