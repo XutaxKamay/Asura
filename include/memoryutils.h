@@ -14,6 +14,10 @@ namespace XLib
     class MemoryUtils
     {
       public:
+        static auto queryMaps( pid_t pid );
+        static auto searchMap( pid_t pid, ptr_t address );
+        template < typename T = ptr_t >
+        static auto searchModule( T name );
     };
 }
 

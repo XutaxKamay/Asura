@@ -1,16 +1,33 @@
 #include "test.h"
+#ifndef WINDOWS
+    #include <sys/mman.h>
+#else
+    #include <windows.h>
+#endif
 
 using namespace XLib;
 
 XLib::Test::API XLib::g_API;
 bool XLib::g_PassedTests = true;
 
+#ifndef WINDOWS
+auto vfunc_hook( ptr_t thisptr ) -> void
+{
+    std::cout << "hooked " << thisptr << std::endl;
+}
+#else
+auto __fastcall vfunc_hook( ptr_t thisptr, ptr_t /* edx */ ) -> void
+{
+    std::cout << "hooked " << thisptr << std::endl;
+}
+#endif
+
 auto XLib::Test::run() -> void
 {
     ConsoleOutput( "Starting test" ) << std::endl;
 
     /* Let's do the tests */
-    HybridCrypt hybridCrypt;
+    HybridCrypt<8192> hybridCrypt;
 
     ConsoleOutput( "Generating AES keys" ) << std::endl;
 
@@ -134,13 +151,39 @@ auto XLib::Test::run() -> void
 
     /* Virtual Functions Tests */
 
-    CVFunc< 0, void >( static_cast< ptr_t >( &g_API ) );
-    auto ret1 = CVFunc< 1, std::vector< int >, const char*, int >(
-      static_cast< ptr_t >( &g_API ),
-      "test",
-      1337 );
+    /* CallVFunc< 0, void >( static_cast< ptr_t >( &g_API ) );
+     *
+     * auto ret1 = CallVFunc< 1, std::vector< int >, const char*, int >(
+     *     static_cast< ptr_t >( &g_API ),
+     *    "test",
+     * 1337 );
+     */
 
-    std::cout << ret1[ 0 ] << std::endl;
+    using VAPI_t = VirtualTable< Test::API >;
+
+    VAPI_t* api = static_cast< VAPI_t* >( &g_API );
+    api->callVFunc< 0, void >();
+    api->hook< 0 >( vfunc_hook, []( auto funcPtr, auto ) -> void {
+#ifndef WINDOWS
+        auto funcPtrAlign = view_as< uintptr_t >( funcPtr );
+
+        funcPtrAlign -= funcPtrAlign % 4096;
+
+        mprotect( view_as< ptr_t >( funcPtrAlign ),
+                  4096,
+                  PROT_EXEC | PROT_READ | PROT_WRITE );
+#else
+        DWORD dwOld;
+        VirtualProtect( funcPtr,
+                        sizeof( funcPtr ),
+                        PAGE_EXECUTE_READWRITE,
+                        &dwOld );
+#endif
+    } );
+
+    api->callVFunc< 0, void >();
+
+    // std::cout << ret1[ 0 ] << std::endl;
 }
 
 void XLib::Test::API::func1()
