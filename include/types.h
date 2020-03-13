@@ -17,10 +17,8 @@ namespace XLib
     using bytes_t    = std::vector< byte_t >;
     using safesize_t = int32_t;
     /* linux pid_t */
-#ifndef __pid_t_defined
     using pid_t = uint32_t;
     #define __pid_t_defined
-#endif
 
     template < typename T >
     struct type_wrapper_t
