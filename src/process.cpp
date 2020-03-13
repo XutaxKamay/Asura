@@ -1,7 +1,5 @@
 #include "process.h"
 
-#include "process.h"
-
 using namespace XLib;
 
 XLib::Process::Process( const XLib::maps_t& maps,
@@ -10,9 +8,9 @@ XLib::Process::Process( const XLib::maps_t& maps,
  : _maps( maps ), _fullName( fullName ), _pid( pid )
 {}
 
-auto XLib::Process::refreshMaps() -> void
+auto XLib::Process::refresh() -> void
 {
-    _maps = MemoryUtils::queryMaps( pid );
+    _maps = MemoryUtils::queryMaps( _pid );
 }
 
 auto XLib::Process::maps()
@@ -31,7 +29,7 @@ auto XLib::Process::fullName() const
     return _fullName;
 }
 
-auto XLib::Process::setPID( XLib::pid_t pid )
+auto XLib::Process::setPID( pid_t pid )
 {
     _pid = pid;
     refresh();

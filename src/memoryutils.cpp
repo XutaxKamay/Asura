@@ -1,21 +1,21 @@
 #ifdef WINDOWS
     #include <windows.h>
-#else
-    #include <asm/unistd.h>
 #endif
 #include "memoryutils.h"
 #include <unistd.h>
 
 using namespace XLib;
 
+#ifndef WINDOWS
 static auto g_pageSize = sysconf( _SC_PAGESIZE );
+#endif
 
 /* TODO: replace by syscalls for being stealth */
-auto protect( pid_t pid,
-              ptr_t address,
-              size_t size,
-              map_t::protection_t newFlags,
-              map_t::protection_t* pFlags = nullptr )
+auto protect( pid_t /*pid*/,
+              ptr_t /*address*/,
+              size_t /*size*/,
+              map_t::protection_t /*newFlags*/,
+              map_t::protection_t* /*pFlags = nullptr*/ )
 {
 #ifdef WINDOWS
     /* TODO: Find a proper way to get stealth handles for remote pids */
@@ -38,48 +38,21 @@ auto protect( pid_t pid,
     }
 #else
 
-    auto mprotect_syscall =
-      []( ptr_t address, size_t alignedSize, int flags )
-    {
-        int ret;
+    /**
+     * auto alignedSize = ( ( size + g_pageSize ) / g_pageSize )
+     *                 * g_pageSize;
+     *
+     * auto alignedAddress = align( address, g_pageSize );
+     */
 
-        /* clang-format off */
-        asm volatile
-        (
-            "\n\t"
-            "int 0x80\n\t"
-        );
-        /* clang-format on */
-
-        return ret;
-    };
-
-    auto alignedSize = ( ( size + g_pageSize ) / g_pageSize )
-                       * g_pageSize;
-
-    auto alignedAddress = align( address, g_pageSize );
-
-    /* We might need a kernel module for ioctl */
-    if ( getpid() == pid )
-    {
-        auto ret = mprotect_syscall( address, alignedSize, newFlags );
-
-        if ( ret != -1 )
-        {
-            return true;
-        }
-    }
-    else
-    {
-        ConsoleOutput( "Cannot mprotect from a remote pid yet..." )
-          << std::endl;
-    }
+    ConsoleOutput( "Cannot mprotect from a remote pid yet..." )
+      << std::endl;
 #endif
 
     return false;
 }
 
-maps_t XLib::MemoryUtils::queryMaps( pid_t pid )
+maps_t XLib::MemoryUtils::queryMaps( pid_t /*pid*/ )
 {
     maps_t maps;
 

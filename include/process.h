@@ -1,7 +1,7 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
-#include "memorymap.h"
+#include "memoryutils.h"
 
 namespace XLib
 {

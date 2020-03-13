@@ -58,7 +58,7 @@ int vm_flags_to_prot(struct vm_area_struct *vma)
 	return prot;
 }
 
-int vm_prot_to_flags(int prot)
+int prot_to_vm_flags(int prot)
 {
 	int flags;
 
@@ -383,7 +383,7 @@ unsigned long kernel_offset(void)
 	return kallsyms_lookup_name("_text") - 0xffffffff81000000;
 }
 
-void vm_change_flags(struct vm_area_struct *vma, int new_flags, int *old_flags)
+void change_vm_flags(struct vm_area_struct *vma, int new_flags, int *old_flags)
 {
 	int all_prot_to_flags;
 
@@ -396,7 +396,7 @@ void vm_change_flags(struct vm_area_struct *vma, int new_flags, int *old_flags)
 
 	// Do not delete special vm flags.
 	vma->vm_flags &= ~all_prot_to_flags;
-	vma->vm_flags |= vm_prot_to_flags(new_flags);
+    vma->vm_flags |= prot_to_vm_flags(new_flags);
 }
 
 void remote_mprotect(pid_t pid, uintptr_t address, int new_flags,
@@ -410,6 +410,6 @@ void remote_mprotect(pid_t pid, uintptr_t address, int new_flags,
 	vma_start = NULL;
 
 	if (c_find_vma_from_task(task, &vma_start, address)) {
-		vm_change_flags(vma_start, new_flags, old_flags);
+        change_vm_flags(vma_start, new_flags, old_flags);
 	}
 }

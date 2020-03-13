@@ -6,3 +6,7 @@
 *.kdev*
 XLib.*
 *.exe
+*.ko
+*.sym*
+*.cmd*
+*.mod*

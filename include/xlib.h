@@ -8,7 +8,6 @@
 #include "writebuffer.h"
 #include "circularbuffer.h"
 #include "detour.h"
-#include "module.h"
 #include "process.h"
 #include "memoryscanner.h"
 

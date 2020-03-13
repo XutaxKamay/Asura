@@ -11,8 +11,8 @@ struct buffer_struct {
 
 void vm_flags_to_string(struct vm_area_struct *vma, char *output, int size);
 int vm_flags_to_prot(struct vm_area_struct *vma);
-int vm_prot_to_flags(int prot);
-void vm_change_flags(struct vm_area_struct *vma, int new_flags, int *old_flags);
+int prot_to_vm_flags(int prot);
+void change_vm_flags(struct vm_area_struct *vma, int new_flags, int *old_flags);
 int c_find_vma_from_task(struct task_struct *task,
 			 struct vm_area_struct **vma_start,
 			 unsigned long wanted_addr);
