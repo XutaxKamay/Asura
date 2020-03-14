@@ -317,6 +317,7 @@ int scan_task(struct task_struct *task, char *pattern, int len,
 		}
 
 		vma = vma->vm_next;
+        kfree(copied_user_memory);
 
 		if (vma == NULL)
 			break;
