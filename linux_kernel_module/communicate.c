@@ -121,7 +121,7 @@ void communicate_kill_thread(void)
 	}
 }
 
-asmlinkage syscall_fork(void)
+asmlinkage int syscall_fork(void)
 {
 	struct mm_struct *mm;
 
