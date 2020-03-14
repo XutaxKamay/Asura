@@ -323,7 +323,6 @@ int scan_task(struct task_struct *task, char *pattern, int len,
 			break;
 	}
 
-	kfree(copied_user_memory);
 	return 0;
 }
 
