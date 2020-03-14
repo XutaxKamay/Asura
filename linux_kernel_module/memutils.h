@@ -26,8 +26,8 @@ int scan_pattern(unsigned long start, unsigned long end, char *pattern, int len,
 		 struct buffer_struct *buf);
 unsigned long map_base_task(struct task_struct *task);
 unsigned long kernel_offset(void);
-void remote_mprotect(pid_t pid, uintptr_t address, int new_flags,
+int remote_mprotect(pid_t pid, uintptr_t address, int new_flags,
 		     int *old_flags);
-void remote_mmap(pid_t pid, uintptr_t address, int prot);
+int remote_mmap(pid_t pid, uintptr_t address, int prot);
 
 #endif
