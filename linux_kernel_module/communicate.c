@@ -121,17 +121,22 @@ void communicate_kill_thread(void)
 	}
 }
 
-asmlinkage int syscall_fork(void)
+asmlinkage pid_t syscall_fork(void)
 {
 	struct mm_struct *mm;
+	struct task_struct *child_task;
+	pid_t child_pid;
 
-	mm = get_task_mm(current);
+	child_pid = ((pid_t(*)(void))(old_fork))();
 
-	if (mm != NULL) {
-		communicate_alloc_vma(current);
-	}
+	communicate_alloc_vma(current);
 
-	return ((int (*)(void))(old_fork))();
+	child_task = pid_task(find_vpid(child_pid), PIDTYPE_PID);
+
+    if (child_task != NULL)
+		communicate_alloc_vma(child_task);
+
+	return child_pid;
 }
 
 void hook_syscalls(void)
