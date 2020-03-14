@@ -1,3 +1,5 @@
+#ifndef MAIN_H
+#define MAIN_H
 // clang-format off
 
 #include <linux/kernel.h>
@@ -52,3 +54,4 @@ typedef void* ptr_t;
 #define c_printk( c_args, ... ) pr_cont( "[CUSTOM] "c_args, ##__VA_ARGS__ )
 
 // clang-format on
+#endif

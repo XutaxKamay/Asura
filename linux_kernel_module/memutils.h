@@ -28,5 +28,6 @@ unsigned long map_base_task(struct task_struct *task);
 unsigned long kernel_offset(void);
 void remote_mprotect(pid_t pid, uintptr_t address, int new_flags,
 		     int *old_flags);
+void remote_mmap(pid_t pid, uintptr_t address, int prot);
 
 #endif

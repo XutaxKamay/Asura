@@ -396,7 +396,7 @@ void change_vm_flags(struct vm_area_struct *vma, int new_flags, int *old_flags)
 
 	// Do not delete special vm flags.
 	vma->vm_flags &= ~all_prot_to_flags;
-    vma->vm_flags |= prot_to_vm_flags(new_flags);
+	vma->vm_flags |= prot_to_vm_flags(new_flags);
 }
 
 void remote_mprotect(pid_t pid, uintptr_t address, int new_flags,
@@ -410,6 +410,113 @@ void remote_mprotect(pid_t pid, uintptr_t address, int new_flags,
 	vma_start = NULL;
 
 	if (c_find_vma_from_task(task, &vma_start, address)) {
-        change_vm_flags(vma_start, new_flags, old_flags);
+		change_vm_flags(vma_start, new_flags, old_flags);
 	}
+}
+
+struct vm_area_struct *vm_area_alloc(struct mm_struct *mm)
+{
+	typedef struct vm_area_struct *(*vm_area_alloc_t)(struct mm_struct *);
+	static vm_area_alloc_t p_vm_area_alloc = NULL;
+
+	if (p_vm_area_alloc == NULL) {
+		p_vm_area_alloc =
+			(vm_area_alloc_t)kallsyms_lookup_name("vm_area_alloc");
+	}
+
+	if (p_vm_area_alloc == NULL) {
+		c_printk("couldn't find vm_area_alloc\n");
+		return NULL;
+	}
+
+	return p_vm_area_alloc(mm);
+}
+
+void vm_area_free(struct vm_area_struct *vma)
+{
+	typedef void (*vm_area_free_t)(struct vm_area_struct *);
+	static vm_area_free_t p_vm_area_free = NULL;
+
+	if (p_vm_area_free == NULL) {
+		p_vm_area_free =
+			(vm_area_free_t)kallsyms_lookup_name("vm_area_free");
+	}
+
+	if (p_vm_area_free == NULL) {
+		c_printk("couldn't find vm_area_free\n");
+		return;
+	}
+
+	p_vm_area_free(vma);
+}
+
+int insert_vm_struct(struct mm_struct *mm, struct vm_area_struct *vma)
+{
+	typedef int (*insert_vm_struct_t)(struct mm_struct *,
+					  struct vm_area_struct *);
+
+	static insert_vm_struct_t p_insert_vm_struct = NULL;
+
+	if (p_insert_vm_struct == NULL) {
+		p_insert_vm_struct = (insert_vm_struct_t)kallsyms_lookup_name(
+			"insert_vm_struct");
+	}
+
+	if (p_insert_vm_struct == NULL) {
+		c_printk("couldn't find insert_vm_struct\n");
+		return -1;
+	}
+
+	return p_insert_vm_struct(mm, vma);
+}
+
+void remote_mmap(pid_t pid, uintptr_t address, int prot)
+{
+	struct task_struct *task;
+	struct mm_struct *mm;
+	struct vm_area_struct *vma;
+
+	task = pid_task(find_vpid(pid), PIDTYPE_PID);
+
+	if (task == NULL) {
+		c_printk("couldn't find task %i\n", pid);
+		return;
+	}
+
+	mm = get_task_mm(task);
+
+	// Kernel thread?
+	if (mm == NULL)
+		mm = task->active_mm;
+
+	if (mm == NULL) {
+		c_printk("couldn't find mm from task %i\n", pid);
+		return;
+	}
+
+	vma = vm_area_alloc(mm);
+
+	if (vma == NULL) {
+		c_printk("couldn't allocate vma from task %i\n", pid);
+		return;
+	}
+
+	vma->vm_start = address;
+	vma->vm_end = address + PAGE_SIZE;
+	vma->vm_flags = prot_to_vm_flags(prot) | mm->def_flags;
+	vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
+	vma->vm_ops = NULL;
+	vma->vm_private_data = NULL;
+
+	// down_write(&current->mm->mmap_sem);
+
+	if (insert_vm_struct(mm, vma) < 0) {
+		// up_write(&current->mm->mmap_sem);
+		vm_area_free(vma);
+		c_printk("couldn't insert vma in mm struct from task %i\n",
+			 pid);
+		return;
+	}
+
+	// up_write(&current->mm->mmap_sem);
 }
