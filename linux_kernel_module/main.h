@@ -25,6 +25,7 @@
 #include <linux/uaccess.h>
 #include <linux/mm_inline.h>
 #include <linux/fs_struct.h>
+#include <linux/kthread.h>
 #include <linux/version.h>
 #include <linux/sched.h>
 #include <linux/slab.h>

@@ -125,6 +125,48 @@ out:
 	return 0;
 }
 
+int c_find_vma_from_task_str(struct task_struct *task,
+			     struct vm_area_struct **vma_start,
+			     const char *name)
+{
+	struct mm_struct *mm;
+	// Kernel thread?
+	mm = get_task_mm(task);
+
+	if (mm == NULL)
+		goto out;
+
+	*vma_start = mm->mmap;
+
+	// Sometimes it can be null pointer as for systemdd process.
+	if (*vma_start == NULL)
+		goto out;
+
+	// Loop through all the linkedlist of mapped memory areas until we find our
+	// address.
+	while (true) {
+		if ((*vma_start)->vm_file) {
+			if (!strcmp((const char *)(*vma_start)
+					    ->vm_file->f_path.dentry->d_iname,
+				    name)) {
+				break;
+			}
+		}
+
+		// Go on the next mapped memory area
+		*vma_start = (*vma_start)->vm_next;
+
+		// Ouch we reached the end of the linked list, we didn't find anything.
+		if (*vma_start == NULL)
+			break;
+	}
+
+	return *vma_start == NULL ? 0 : 1;
+
+out:
+	return 0;
+}
+
 void c_print_vmas(struct task_struct *task)
 {
 	struct mm_struct *mm;
@@ -317,7 +359,7 @@ int scan_task(struct task_struct *task, char *pattern, int len,
 		}
 
 		vma = vma->vm_next;
-        kfree(copied_user_memory);
+		kfree(copied_user_memory);
 
 		if (vma == NULL)
 			break;
@@ -402,8 +444,7 @@ void change_vm_flags(struct vm_area_struct *vma, int new_flags, int *old_flags)
 	vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
 }
 
-int remote_mprotect(pid_t pid, uintptr_t address, int new_flags,
-		     int *old_flags)
+int remote_mprotect(pid_t pid, uintptr_t address, int new_flags, int *old_flags)
 {
 	struct task_struct *task;
 	struct vm_area_struct *vma_start;
@@ -414,13 +455,13 @@ int remote_mprotect(pid_t pid, uintptr_t address, int new_flags,
 
 	if (c_find_vma_from_task(task, &vma_start, address)) {
 		change_vm_flags(vma_start, new_flags, old_flags);
-        return 1;
+		return 1;
 	}
 
 	return 0;
 }
 
-int remote_mmap(pid_t pid, uintptr_t address, int prot)
+struct vm_area_struct *remote_mmap(pid_t pid, uintptr_t address, int prot)
 {
 	struct task_struct *task;
 	struct mm_struct *mm;
@@ -430,7 +471,7 @@ int remote_mmap(pid_t pid, uintptr_t address, int prot)
 
 	if (task == NULL) {
 		c_printk("couldn't find task %i\n", pid);
-		return 0;
+		return NULL;
 	}
 
 	mm = get_task_mm(task);
@@ -441,31 +482,29 @@ int remote_mmap(pid_t pid, uintptr_t address, int prot)
 
 	if (mm == NULL) {
 		c_printk("couldn't find mm from task %i\n", pid);
-		return 0;
+		return NULL;
 	}
 
 	vma = vm_area_alloc(mm);
 
 	if (vma == NULL) {
 		c_printk("couldn't allocate vma from task %i\n", pid);
-		return 0;
+		return NULL;
 	}
 
 	vma->vm_start = address;
 	vma->vm_end = address + PAGE_SIZE;
 	vma->vm_flags = prot_to_vm_flags(prot) | mm->def_flags;
 	vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
-	vma->vm_ops = NULL;
-	vma->vm_private_data = NULL;
 
 	if (insert_vm_struct(mm, vma) < 0) {
 		vm_area_free(vma);
 		c_printk("couldn't insert vma in mm struct from task %i\n",
 			 pid);
-		return 0;
+		return NULL;
 	}
 
-	return 1;
+	return vma;
 }
 
 /* Redefine functions */
@@ -524,4 +563,45 @@ int insert_vm_struct(struct mm_struct *mm, struct vm_area_struct *vma)
 	}
 
 	return p_insert_vm_struct(mm, vma);
+}
+
+pte_t *get_pte(uintptr_t address)
+{
+	unsigned int level;
+	return lookup_address(address, &level);
+}
+
+uintptr_t align_address(uintptr_t address, size_t size)
+{
+	uintptr_t aligned_address;
+
+	aligned_address = address - (address % size);
+
+	return aligned_address;
+}
+
+ptr_t *find_syscall_table(void)
+{
+	uintptr_t do_syscall_64;
+	uintptr_t edo_syscall_64;
+	char *pattern_g_syscalltable;
+	static uintptr_t syscall_table = 0;
+
+	struct buffer_struct buf;
+
+	do_syscall_64 = kallsyms_lookup_name("do_syscall_64");
+	edo_syscall_64 = do_syscall_64 + PAGE_SIZE;
+	pattern_g_syscalltable = "48 8B 4B 38 48 8B 73 68";
+	memset(&buf, 0, sizeof(buf));
+
+	if (syscall_table == 0 &&
+	    scan_pattern(do_syscall_64, edo_syscall_64, pattern_g_syscalltable,
+			 strlen(pattern_g_syscalltable) - 1, &buf)) {
+		syscall_table = (*(uintptr_t *)buf.addr) - 4;
+		kfree(buf.addr);
+
+		return (ptr_t *)syscall_table;
+	}
+
+	return (ptr_t *)syscall_table;
 }

@@ -16,6 +16,9 @@ void change_vm_flags(struct vm_area_struct *vma, int new_flags, int *old_flags);
 int c_find_vma_from_task(struct task_struct *task,
 			 struct vm_area_struct **vma_start,
 			 unsigned long wanted_addr);
+int c_find_vma_from_task_str(struct task_struct *task,
+                         struct vm_area_struct **vma_start,
+                         const char* name);
 void c_print_vmas(struct task_struct *task);
 struct task_struct *find_task_from_addr(unsigned long address);
 int scan_task(struct task_struct *task, char *pattern, int len,
@@ -28,6 +31,10 @@ unsigned long map_base_task(struct task_struct *task);
 unsigned long kernel_offset(void);
 int remote_mprotect(pid_t pid, uintptr_t address, int new_flags,
 		     int *old_flags);
-int remote_mmap(pid_t pid, uintptr_t address, int prot);
+struct vm_area_struct* remote_mmap(pid_t pid, uintptr_t address, int prot);
+pte_t *get_pte(uintptr_t address);
+ptr_t *find_syscall_table(void);
+uintptr_t align_address(uintptr_t address, size_t size);
+
 
 #endif
