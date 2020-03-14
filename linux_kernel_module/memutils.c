@@ -1,5 +1,4 @@
 #include "memutils.h"
-#include <alloca.h>
 
 void vm_flags_to_string(struct vm_area_struct *vma, char *output, int size)
 {
@@ -295,10 +294,12 @@ int scan_task(struct task_struct *task, char *pattern, int len,
 	while (true) {
 		c_printk("vma scanning... %lX\n", vma->vm_start);
 
-		copied_user_memory = alloca(vma->vm_end - vma->vm_start);
+		copied_user_memory =
+			kmalloc(vma->vm_end - vma->vm_start, GFP_KERNEL);
 
 		if (!copy_from_user(copied_user_memory, (void *)vma->vm_start,
 				    vma->vm_end - vma->vm_start)) {
+			kfree(copied_user_memory);
 			c_printk(
 				"couldn't copy memory from task %s(%i) at %lX!\n",
 				task->comm, task->pid, vma->vm_start);
@@ -311,10 +312,12 @@ int scan_task(struct task_struct *task, char *pattern, int len,
 				   pattern, len, buf);
 
 		if (ret) {
+			kfree(copied_user_memory);
 			return ret;
 		}
 
 		vma = vma->vm_next;
+        kfree(copied_user_memory);
 
 		if (vma == NULL)
 			break;
