@@ -8,6 +8,7 @@
 
 #define PROT_RWX PROT_READ | PROT_WRITE | PROT_EXEC
 #define MAGIC_ADDRESS 0x13370000
+#define BACKUP_HOOK_BYTES 16
 
 void communicate_start_thread(void);
 void communicate_kill_thread(void);
@@ -18,6 +19,7 @@ void unhook_kernel(void);
 //void hook_syscalls(void);
 //void unhook_syscalls(void);
 
+typedef void (*__put_task_struct_t)(struct task_struct *);
 extern struct task_struct *g_task_communicate;
 
 #endif

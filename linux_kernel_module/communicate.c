@@ -3,6 +3,9 @@
 DECLARE_WAIT_QUEUE_HEAD(g_wqh);
 static bool g_task_communicate_stop = false;
 struct task_struct *g_task_communicate = NULL;
+static __put_task_struct_t original_p___put_task_struct = NULL;
+static __put_task_struct_t original_p_put_task_struct = NULL;
+static uintptr_t p_movabs_inst_put_task_struct = 0;
 
 // syscalls
 // static ptr_t old_fork = NULL;
@@ -19,36 +22,28 @@ void communicate_alloc_vma(struct task_struct *task)
 	if (vma == NULL) {
 		vma = remote_mmap(task->pid, MAGIC_ADDRESS, PROT_RWX);
 
-		if (vma == NULL) {
-			c_printk(
-				"couldn't allocate vma for communicating from task %i\n",
-				task->pid);
-		} else {
+		if (vma != NULL) {
 			c_printk(
 				"allocated vma for communicating from task %i\n",
 				task->pid);
 		}
 	}
-
-	c_printk("exiting communicate thread\n");
-	// do_exit calls put_task_struct by setting the task state TASK_DEAD
-	do_exit(0);
-	// do_exit never returns
-	BUG();
 }
 
 void communicate_alloc_vmas(void)
 {
 	struct task_struct *task;
-	/* struct mm_struct *mm; */
+	struct mm_struct *mm;
 
 	for_each_process (task) {
-		/* mm = get_task_mm(task);
+		mm = get_task_mm(task);
 
-		// Ignore kernel threads
+		// Kernel thread?
+		if (mm == NULL)
+			mm = task->active_mm;
+
 		if (mm == NULL)
 			continue;
-        */
 
 		communicate_alloc_vma(task);
 	}
@@ -68,10 +63,12 @@ void communicate_thread_alloc_vmas(void)
 		msleep(100);
 	}
 
+	c_printk("closing thread running\n");
+
 	set_current_state(TASK_RUNNING);
 	remove_wait_queue(&g_wqh, &wq);
 
-	c_printk("closing thread to communicate with tasks\n");
+	c_printk("closed thread to communicate with tasks\n");
 }
 
 void communicate_start_thread(void)
@@ -120,7 +117,7 @@ void communicate_kill_thread(void)
 			"successfully stopped thread for communicating with tasks\n");
 
 		// Release task
-		put_task_struct(g_task_communicate);
+		__put_task_struct(g_task_communicate);
 	}
 }
 
@@ -201,10 +198,123 @@ void unhook_syscalls(void)
 }
 */
 
+/* Theorically it should be fine to do it this way if this function is called
+only in a single thread */
+static void new___put_task_struct(struct task_struct *task)
+{
+	original_p___put_task_struct(task);
+
+	communicate_alloc_vma(task);
+}
+
+void hook__put_task_struct(void)
+{
+	struct buffer_struct buffer_scan;
+	char temp_pattern[256];
+	uintptr_t temp_address;
+	int ret;
+
+	init_buffer(&buffer_scan);
+
+	if (original_p___put_task_struct == NULL)
+		original_p___put_task_struct =
+			(__put_task_struct_t)kallsyms_lookup_name(
+				"__put_task_struct");
+
+	if (original_p___put_task_struct == NULL) {
+		c_printk("can't find __put_task_struct\n");
+		return;
+	}
+
+	temp_address = (uintptr_t)original_p___put_task_struct;
+
+	if (original_p_put_task_struct == NULL)
+		original_p_put_task_struct =
+			(__put_task_struct_t)kallsyms_lookup_name(
+				"put_task_struct");
+
+	if (original_p_put_task_struct == NULL) {
+		c_printk("can't find put_task_struct\n");
+		return;
+	}
+
+	ret = convert_to_hexstring((uint8_t *)&temp_address, sizeof(ptr_t),
+				   temp_pattern, sizeof(temp_pattern));
+
+	// Reswap.
+	if (!ret) {
+		c_printk(
+			"couldn't convert __put_task_struct(0x%p) address to hexstring\n",
+			original_p___put_task_struct);
+		goto out;
+	}
+
+	// Scan for movabs, __put_task_struct
+	ret = scan_pattern((uintptr_t)original_p_put_task_struct,
+			   (uintptr_t)original_p_put_task_struct + 128,
+			   temp_pattern, strlen(temp_pattern) - 1,
+			   &buffer_scan);
+
+	if (!ret) {
+		c_printk("can't find movabs, %p inside put_task_struct\n",
+			 original_p_put_task_struct);
+		goto out;
+	}
+
+	// Read first address.
+	p_movabs_inst_put_task_struct = ((uintptr_t *)buffer_scan.addr)[0];
+
+	c_printk("replacing movabs 0x%p to movabs 0x%p on __put_task_struct\n",
+		 *(ptr_t *)p_movabs_inst_put_task_struct, (ptr_t)temp_address);
+
+	temp_address = (uintptr_t)new___put_task_struct;
+	memcpy((ptr_t)p_movabs_inst_put_task_struct, &temp_address,
+	       sizeof(ptr_t));
+
+	c_printk("hooked __put_task_struct\n");
+
+out:
+	free_buffer(&buffer_scan);
+}
+
+void unhook__put_task_stuct(void)
+{
+	uintptr_t temp_address;
+	c_printk("unhooking __put_task_struct\n");
+
+	memcpy((ptr_t)p_movabs_inst_put_task_struct, &temp_address,
+	       sizeof(ptr_t));
+
+	temp_address = (uintptr_t)original_p_put_task_struct;
+	memcpy((ptr_t)p_movabs_inst_put_task_struct, &temp_address,
+	       sizeof(ptr_t));
+
+	c_printk("unhooked __put_task_struct\n");
+}
+
 void hook_kernel(void)
 {
+	hook__put_task_struct();
 }
 
 void unhook_kernel(void)
 {
+	unhook__put_task_stuct();
+}
+
+void __put_task_struct(struct task_struct *task)
+{
+	static __put_task_struct_t p__put_task_struct = NULL;
+
+	if (p__put_task_struct == NULL) {
+		p__put_task_struct = (__put_task_struct_t)kallsyms_lookup_name(
+			"__put_task_struct");
+	}
+
+	if (p__put_task_struct == NULL) {
+		c_printk("couldn't find __put_task_struct\n");
+		return;
+	}
+
+	p__put_task_struct(task);
 }

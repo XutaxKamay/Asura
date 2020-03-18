@@ -94,6 +94,10 @@ int c_find_vma_from_task(struct task_struct *task,
 	// Kernel thread?
 	mm = get_task_mm(task);
 
+	// Kernel thread?
+	if (mm == NULL)
+		mm = task->active_mm;
+
 	if (mm == NULL)
 		goto out;
 
@@ -130,8 +134,12 @@ int c_find_vma_from_task_str(struct task_struct *task,
 			     const char *name)
 {
 	struct mm_struct *mm;
-	// Kernel thread?
+
 	mm = get_task_mm(task);
+
+	// Kernel thread?
+	if (mm == NULL)
+		mm = task->active_mm;
 
 	if (mm == NULL)
 		goto out;
@@ -212,6 +220,7 @@ struct task_struct *find_task_from_addr(unsigned long address)
 {
 	struct task_struct *task;
 	struct vm_area_struct *vma;
+
 	task = NULL;
 	vma = NULL;
 
@@ -267,8 +276,7 @@ int scan_pattern(unsigned long start, unsigned long end, char *pattern, int len,
 		c_printk("found: %lX with pattern\n%s\n", iter, pattern);
 
 		if (buf->addr == NULL) {
-			buf->size = sizeof(void *);
-			buf->addr = kmalloc(buf->size, GFP_KERNEL);
+			alloc_buffer(sizeof(ptr_t), buf);
 
 			if (buf->addr == NULL) {
 				c_printk("kmalloc failed: with pattern\n%s\n",
@@ -278,8 +286,7 @@ int scan_pattern(unsigned long start, unsigned long end, char *pattern, int len,
 
 			*(unsigned long *)(buf->addr) = start;
 		} else {
-			buf->size += sizeof(void *);
-			buf->addr = krealloc(buf->addr, buf->size, GFP_KERNEL);
+			realloc_buffer(sizeof(ptr_t), buf);
 
 			if (buf->addr == NULL) {
 				c_printk("krealloc failed: with pattern \n%s\n",
@@ -288,7 +295,7 @@ int scan_pattern(unsigned long start, unsigned long end, char *pattern, int len,
 				return 0;
 			}
 
-			*(unsigned long *)(buf->addr - sizeof(void *)) = start;
+			*(unsigned long *)(buf->addr - sizeof(ptr_t)) = start;
 		}
 
 	dontmatch:
@@ -309,7 +316,7 @@ int scan_task(struct task_struct *task, char *pattern, int len,
 	struct vm_area_struct *vma;
 	struct mm_struct *mm;
 	int ret;
-	void *copied_user_memory;
+	ptr_t copied_user_memory;
 
 	copied_user_memory = NULL;
 
@@ -339,7 +346,7 @@ int scan_task(struct task_struct *task, char *pattern, int len,
 		copied_user_memory =
 			kmalloc(vma->vm_end - vma->vm_start, GFP_KERNEL);
 
-		if (!copy_from_user(copied_user_memory, (void *)vma->vm_start,
+		if (!copy_from_user(copied_user_memory, (ptr_t)vma->vm_start,
 				    vma->vm_end - vma->vm_start)) {
 			kfree(copied_user_memory);
 			c_printk(
@@ -626,4 +633,31 @@ ptr_t *find_sys_call_table(void)
 	}
 
 	return (ptr_t *)sys_call_table;
+}
+
+void alloc_buffer(size_t size, struct buffer_struct *buffer)
+{
+	buffer->addr = kmalloc(size, GFP_KERNEL);
+	buffer->size = size;
+}
+
+void free_buffer(struct buffer_struct *buffer)
+{
+	if (buffer->addr != NULL) {
+		kfree(buffer->addr);
+		buffer->addr = NULL;
+		buffer->size = 0;
+	}
+}
+
+void realloc_buffer(size_t size, struct buffer_struct *buffer)
+{
+	buffer->size += size;
+	buffer->addr = krealloc(buffer->addr, buffer->size, GFP_KERNEL);
+}
+
+void init_buffer(struct buffer_struct *buffer)
+{
+	buffer->size = 0;
+	buffer->addr = NULL;
 }

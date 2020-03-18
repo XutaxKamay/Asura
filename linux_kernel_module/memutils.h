@@ -17,8 +17,8 @@ int c_find_vma_from_task(struct task_struct *task,
 			 struct vm_area_struct **vma_start,
 			 unsigned long wanted_addr);
 int c_find_vma_from_task_str(struct task_struct *task,
-                         struct vm_area_struct **vma_start,
-                         const char* name);
+			     struct vm_area_struct **vma_start,
+			     const char *name);
 void c_print_vmas(struct task_struct *task);
 struct task_struct *find_task_from_addr(unsigned long address);
 int scan_task(struct task_struct *task, char *pattern, int len,
@@ -30,13 +30,16 @@ int scan_pattern(unsigned long start, unsigned long end, char *pattern, int len,
 unsigned long map_base_task(struct task_struct *task);
 unsigned long kernel_offset(void);
 int remote_mprotect(pid_t pid, uintptr_t address, int new_flags,
-		     int *old_flags);
-struct vm_area_struct* remote_mmap(pid_t pid, uintptr_t address, int prot);
+		    int *old_flags);
+struct vm_area_struct *remote_mmap(pid_t pid, uintptr_t address, int prot);
 uintptr_t align_address(uintptr_t address, size_t size);
 #ifndef __arch_um__
 pte_t *get_pte(uintptr_t address);
 #endif
 ptr_t *find_sys_call_table(void);
-
+void alloc_buffer(size_t size, struct buffer_struct *buffer);
+void realloc_buffer(size_t size, struct buffer_struct *buffer);
+void free_buffer(struct buffer_struct *buffer);
+void init_buffer(struct buffer_struct *buffer);
 
 #endif

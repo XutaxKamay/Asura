@@ -39,3 +39,29 @@ void swap_endian(unsigned char *addr, size_t len)
 		addr[(len - 1) - i] = backup_byte;
 	}
 }
+
+int convert_to_hexstring(uint8_t *array, size_t size, char output[],
+			 size_t output_size)
+{
+	int i, j;
+	const char *format;
+	format = "%02X ";
+
+	for (i = 0, j = 0; i < size; i++) {
+
+        if (j + 3 > output_size) {
+			return 0;
+		}
+
+		sprintf(&output[j], format, array[i]);
+		j += 3;
+	}
+
+	if (j > output_size) {
+		return 0;
+	}
+
+	output[j] = '\0';
+
+	return 1;
+}
