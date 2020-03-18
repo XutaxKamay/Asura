@@ -32,9 +32,11 @@ unsigned long kernel_offset(void);
 int remote_mprotect(pid_t pid, uintptr_t address, int new_flags,
 		     int *old_flags);
 struct vm_area_struct* remote_mmap(pid_t pid, uintptr_t address, int prot);
-pte_t *get_pte(uintptr_t address);
-ptr_t *find_syscall_table(void);
 uintptr_t align_address(uintptr_t address, size_t size);
+#ifndef __arch_um__
+pte_t *get_pte(uintptr_t address);
+#endif
+ptr_t *find_sys_call_table(void);
 
 
 #endif

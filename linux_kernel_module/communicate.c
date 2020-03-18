@@ -5,7 +5,7 @@ static bool g_task_communicate_stop = false;
 struct task_struct *g_task_communicate = NULL;
 
 // syscalls
-static ptr_t old_fork = NULL;
+// static ptr_t old_fork = NULL;
 
 void communicate_alloc_vma(struct task_struct *task)
 {
@@ -33,21 +33,22 @@ void communicate_alloc_vma(struct task_struct *task)
 	c_printk("exiting communicate thread\n");
 	// do_exit calls put_task_struct by setting the task state TASK_DEAD
 	do_exit(0);
-	// do_exit never returns;
+	// do_exit never returns
 	BUG();
 }
 
 void communicate_alloc_vmas(void)
 {
 	struct task_struct *task;
-	struct mm_struct *mm;
+	/* struct mm_struct *mm; */
 
 	for_each_process (task) {
-		mm = get_task_mm(task);
+		/* mm = get_task_mm(task);
 
 		// Ignore kernel threads
 		if (mm == NULL)
 			continue;
+        */
 
 		communicate_alloc_vma(task);
 	}
@@ -57,6 +58,8 @@ void communicate_thread_alloc_vmas(void)
 {
 	DECLARE_WAITQUEUE(wq, current);
 	add_wait_queue(&g_wqh, &wq);
+
+	c_printk("[communicate] entering into loop\n");
 
 	while (!g_task_communicate_stop) {
 		communicate_alloc_vmas();
@@ -121,9 +124,9 @@ void communicate_kill_thread(void)
 	}
 }
 
+/*
 asmlinkage pid_t syscall_fork(void)
 {
-	struct mm_struct *mm;
 	struct task_struct *child_task;
 	pid_t child_pid;
 
@@ -133,7 +136,7 @@ asmlinkage pid_t syscall_fork(void)
 
 	child_task = pid_task(find_vpid(child_pid), PIDTYPE_PID);
 
-    if (child_task != NULL)
+	if (child_task != NULL)
 		communicate_alloc_vma(child_task);
 
 	return child_pid;
@@ -141,42 +144,67 @@ asmlinkage pid_t syscall_fork(void)
 
 void hook_syscalls(void)
 {
-	ptr_t *syscall_table;
+	ptr_t *sys_call_table;
 	uintptr_t aligned_address;
 	pte_t *pte;
 	pteval_t pte_oldval;
 
-	syscall_table = find_syscall_table();
+	sys_call_table = find_sys_call_table();
 
-	old_fork = syscall_table[__NR_fork];
+	if (sys_call_table == NULL) {
+		c_printk("couldn't find system call table\n");
+		return;
+	}
+
+	old_fork = sys_call_table[__NR_fork];
 
 	aligned_address = align_address((uintptr_t)old_fork, PAGE_SIZE);
 
 	pte = get_pte(aligned_address);
-	pte_oldval = pte->pte;
-	pte->pte |= _PAGE_RW;
 
-	syscall_table[__NR_fork] = (ptr_t)syscall_fork;
+	if (pte != NULL) {
+		pte_oldval = pte->pte;
+		pte->pte |= _PAGE_RW;
 
-	pte->pte = pte_oldval;
+		sys_call_table[__NR_fork] = (ptr_t)syscall_fork;
+
+		pte->pte = pte_oldval;
+	}
 }
 
 void unhook_syscalls(void)
 {
-	ptr_t *syscall_table;
+	ptr_t *sys_call_table;
 	uintptr_t aligned_address;
 	pte_t *pte;
 	pteval_t pte_oldval;
 
-	syscall_table = find_syscall_table();
+	sys_call_table = find_sys_call_table();
+
+	if (sys_call_table == NULL) {
+		c_printk("couldn't find system call table\n");
+		return;
+	}
 
 	aligned_address = align_address((uintptr_t)old_fork, PAGE_SIZE);
 
 	pte = get_pte(aligned_address);
-	pte_oldval = pte->pte;
-	pte->pte |= _PAGE_RW;
 
-	syscall_table[__NR_fork] = (ptr_t)old_fork;
+	if (pte != NULL) {
+		pte_oldval = pte->pte;
+		pte->pte |= _PAGE_RW;
 
-	pte->pte = pte_oldval;
+		sys_call_table[__NR_fork] = (ptr_t)old_fork;
+
+		pte->pte = pte_oldval;
+	}
+}
+*/
+
+void hook_kernel(void)
+{
+}
+
+void unhook_kernel(void)
+{
 }

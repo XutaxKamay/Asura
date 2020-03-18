@@ -12,8 +12,11 @@
 void communicate_start_thread(void);
 void communicate_kill_thread(void);
 void communicate_alloc_vmas(void);
-void hook_syscalls(void);
-void unhook_syscalls(void);
+/* Let's hook the kernel directly to know when a task_struct is inserted */
+void hook_kernel(void);
+void unhook_kernel(void);
+//void hook_syscalls(void);
+//void unhook_syscalls(void);
 
 extern struct task_struct *g_task_communicate;
 

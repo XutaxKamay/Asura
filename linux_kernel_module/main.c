@@ -5,16 +5,18 @@ void free_mod(void);
 
 int init_mod(void)
 {
-    communicate_start_thread();
-    hook_syscalls();
+	communicate_start_thread();
+	hook_kernel();
+	// hook_syscalls();
 	c_printk("kernel module loaded.\n");
 	return 0;
 }
 
 void free_mod(void)
 {
-    communicate_kill_thread();
-    unhook_syscalls();
+	communicate_kill_thread();
+	unhook_kernel();
+	// unhook_syscalls();
 	c_printk("kernel module unloaded.\n");
 }
 

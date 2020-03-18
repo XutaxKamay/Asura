@@ -565,12 +565,6 @@ int insert_vm_struct(struct mm_struct *mm, struct vm_area_struct *vma)
 	return p_insert_vm_struct(mm, vma);
 }
 
-pte_t *get_pte(uintptr_t address)
-{
-	unsigned int level;
-	return lookup_address(address, &level);
-}
-
 uintptr_t align_address(uintptr_t address, size_t size)
 {
 	uintptr_t aligned_address;
@@ -580,28 +574,56 @@ uintptr_t align_address(uintptr_t address, size_t size)
 	return aligned_address;
 }
 
-ptr_t *find_syscall_table(void)
+#ifndef __arch_um__
+pte_t *get_pte(uintptr_t address)
 {
-	uintptr_t do_syscall_64;
-	uintptr_t edo_syscall_64;
-	char *pattern_g_syscalltable;
-	static uintptr_t syscall_table = 0;
+	unsigned int level;
+	return lookup_address(address, &level);
+}
+#endif
 
-	struct buffer_struct buf;
+ptr_t *find_sys_call_table(void)
+{
+	uintptr_t arch_syscall_addr;
+	static ptr_t *sys_call_table = NULL;
+#ifndef __arch_um__
+	uintptr_t aligned_address;
+	pte_t *pte;
+	pteval_t pte_oldval;
 
-	do_syscall_64 = kallsyms_lookup_name("do_syscall_64");
-	edo_syscall_64 = do_syscall_64 + PAGE_SIZE;
-	pattern_g_syscalltable = "48 8B 4B 38 48 8B 73 68";
-	memset(&buf, 0, sizeof(buf));
+	pte = NULL;
+#endif
 
-	if (syscall_table == 0 &&
-	    scan_pattern(do_syscall_64, edo_syscall_64, pattern_g_syscalltable,
-			 strlen(pattern_g_syscalltable) - 1, &buf)) {
-		syscall_table = (*(uintptr_t *)buf.addr) - 4;
-		kfree(buf.addr);
+	if (sys_call_table == NULL) {
+		arch_syscall_addr = kallsyms_lookup_name("arch_syscall_addr");
 
-		return (ptr_t *)syscall_table;
+		if (arch_syscall_addr == 0) {
+			return NULL;
+		}
+
+		// arch_syscall_addr + 8 contains the relative sys_call_table address
+		// in 32 bits
+		arch_syscall_addr += 8;
+
+#ifndef __arch_um__
+		aligned_address = align_address(arch_syscall_addr, PAGE_SIZE);
+
+		// We need to unprotect memory in order to read through it..
+		pte = get_pte(aligned_address);
+
+		if (pte != NULL) {
+			pte_oldval = pte->pte;
+			pte->pte |= _PAGE_RW;
+
+			sys_call_table =
+				(ptr_t *)((arch_syscall_addr &
+					   0xffffffff00000000) +
+					  *(uint32_t *)arch_syscall_addr);
+
+			pte->pte = pte_oldval;
+		}
+#endif
 	}
 
-	return (ptr_t *)syscall_table;
+	return (ptr_t *)sys_call_table;
 }
