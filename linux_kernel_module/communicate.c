@@ -191,7 +191,6 @@ int communicate_read_special_vma_cmd(struct vm_area_struct *vma, pid_t pid)
 		read_size += sizeof(int);
 
 		if (!communicate_process_cmd(vma, pid, cmd, &read_size)) {
-			ret = 0;
 			break;
 		}
 	}
@@ -201,6 +200,7 @@ int communicate_read_special_vma_cmd(struct vm_area_struct *vma, pid_t pid)
 	number_of_cmds = -((number_of_cmds - 1) - cmd_number);
 
 	if (!copy_to_user(&number_of_cmds, (ptr_t)vma->vm_start, sizeof(int))) {
+        // If failed we must reset the vma.
 		c_printk("couldn't notify task %i with copy_from_user\n", pid);
 		ret = 0;
 		goto out;
