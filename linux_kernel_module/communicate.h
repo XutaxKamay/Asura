@@ -16,10 +16,11 @@ void communicate_alloc_vmas(void);
 /* Let's hook the kernel directly to know when a task_struct is inserted */
 void hook_kernel(void);
 void unhook_kernel(void);
-//void hook_syscalls(void);
-//void unhook_syscalls(void);
+void hook_callsof_copy_process(void);
+void unhook_callsof_copy_process(void);
 
-typedef void (*__put_task_struct_t)(struct task_struct *);
+typedef struct task_struct *(*copy_process_t)(struct pid *, int, int,
+					      struct kernel_clone_args *);
 extern struct task_struct *g_task_communicate;
 
 #endif

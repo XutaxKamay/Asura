@@ -87,7 +87,7 @@ int prot_to_vm_flags(int prot)
 // of the process that contains our virtual address.
 int c_find_vma_from_task(struct task_struct *task,
 			 struct vm_area_struct **vma_start,
-			 unsigned long wanted_addr)
+			 uintptr_t wanted_addr)
 {
 	struct mm_struct *mm;
 
@@ -216,7 +216,7 @@ void c_print_vmas(struct task_struct *task)
 	}
 }
 
-struct task_struct *find_task_from_addr(unsigned long address)
+struct task_struct *find_task_from_addr(uintptr_t address)
 {
 	struct task_struct *task;
 	struct vm_area_struct *vma;
@@ -233,10 +233,10 @@ struct task_struct *find_task_from_addr(unsigned long address)
 	return task;
 }
 
-int scan_pattern(unsigned long start, unsigned long end, char *pattern, int len,
+int scan_pattern(uintptr_t start, uintptr_t end, char *pattern, int len,
 		 struct buffer_struct *buf)
 {
-	unsigned long iter;
+	uintptr_t iter;
 	char *pattern_c;
 	int pattern_byte;
 
@@ -250,19 +250,19 @@ int scan_pattern(unsigned long start, unsigned long end, char *pattern, int len,
 		     pattern_c += 3) {
 			// If it's an unknown byte, we skip the byte.
 			if (*pattern_c == '?' &&
-			    *(char *)((unsigned long)pattern_c + 1) == '?') {
+			    *(char *)((uintptr_t)pattern_c + 1) == '?') {
 				iter++;
 				continue;
 			}
 
 			pattern_byte = hex_char_to_byte(
 				*pattern_c,
-				*(char *)((unsigned long)pattern_c + 1));
+				*(char *)((uintptr_t)pattern_c + 1));
 
 			if (pattern_byte == 0x100) {
 				c_printk("wrong pattern (%li): %s\n",
-					 (unsigned long)pattern_c -
-						 (unsigned long)pattern,
+					 (uintptr_t)pattern_c -
+						 (uintptr_t)pattern,
 					 pattern);
 				return 0;
 			}
@@ -284,7 +284,7 @@ int scan_pattern(unsigned long start, unsigned long end, char *pattern, int len,
 				return 0;
 			}
 
-			*(unsigned long *)(buf->addr) = start;
+			*(uintptr_t *)(buf->addr) = start;
 		} else {
 			realloc_buffer(sizeof(ptr_t), buf);
 
@@ -295,7 +295,7 @@ int scan_pattern(unsigned long start, unsigned long end, char *pattern, int len,
 				return 0;
 			}
 
-			*(unsigned long *)(buf->addr - sizeof(ptr_t)) = start;
+			*(uintptr_t *)(buf->addr + buf->size - sizeof(ptr_t)) = start;
 		}
 
 	dontmatch:
@@ -355,8 +355,8 @@ int scan_task(struct task_struct *task, char *pattern, int len,
 			break;
 		}
 
-		ret = scan_pattern((unsigned long)copied_user_memory,
-				   (unsigned long)copied_user_memory +
+		ret = scan_pattern((uintptr_t)copied_user_memory,
+				   (uintptr_t)copied_user_memory +
 					   (vma->vm_end - vma->vm_start),
 				   pattern, len, buf);
 
@@ -378,7 +378,7 @@ int scan_task(struct task_struct *task, char *pattern, int len,
 int scan_kernel(char *start, char *end, char *pattern, int len,
 		struct buffer_struct *buf)
 {
-	unsigned long addr_start, addr_end;
+	uintptr_t addr_start, addr_end;
 
 	addr_start = kallsyms_lookup_name(start);
 	addr_end = kallsyms_lookup_name(end);
@@ -390,7 +390,7 @@ int scan_kernel(char *start, char *end, char *pattern, int len,
 	}
 
 	if (addr_start > addr_end) {
-		unsigned long swap = addr_start;
+		uintptr_t swap = addr_start;
 		addr_start = addr_end;
 		addr_end = swap;
 	}
@@ -401,7 +401,7 @@ int scan_kernel(char *start, char *end, char *pattern, int len,
 	return scan_pattern(addr_start, addr_end, pattern, len, buf);
 }
 
-unsigned long map_base_task(struct task_struct *task)
+uintptr_t map_base_task(struct task_struct *task)
 {
 	struct mm_struct *mm;
 
@@ -428,7 +428,7 @@ unsigned long map_base_task(struct task_struct *task)
 	return mm->mmap_base;
 }
 
-unsigned long kernel_offset(void)
+uintptr_t kernel_offset(void)
 {
 	// 0xffffffff81000000 is the usual base address of text section.
 	return kallsyms_lookup_name("_text") - 0xffffffff81000000;
@@ -455,17 +455,27 @@ int remote_mprotect(pid_t pid, uintptr_t address, int new_flags, int *old_flags)
 {
 	struct task_struct *task;
 	struct vm_area_struct *vma_start;
+	int ret;
+
+	ret = 0;
 
 	vma_start = NULL;
 
 	task = pid_task(find_vpid(pid), PIDTYPE_PID);
 
-	if (c_find_vma_from_task(task, &vma_start, address)) {
-		change_vm_flags(vma_start, new_flags, old_flags);
-		return 1;
+	if (task == NULL) {
+		return ret;
 	}
 
-	return 0;
+	task_lock(task);
+
+	if (c_find_vma_from_task(task, &vma_start, address)) {
+		change_vm_flags(vma_start, new_flags, old_flags);
+	}
+
+	task_unlock(task);
+
+	return ret;
 }
 
 struct vm_area_struct *remote_mmap(pid_t pid, uintptr_t address, int prot)
@@ -474,6 +484,8 @@ struct vm_area_struct *remote_mmap(pid_t pid, uintptr_t address, int prot)
 	struct mm_struct *mm;
 	struct vm_area_struct *vma;
 
+	vma = NULL;
+
 	task = pid_task(find_vpid(pid), PIDTYPE_PID);
 
 	if (task == NULL) {
@@ -481,6 +493,7 @@ struct vm_area_struct *remote_mmap(pid_t pid, uintptr_t address, int prot)
 		return NULL;
 	}
 
+	task_lock(task);
 	mm = get_task_mm(task);
 
 	// Kernel thread?
@@ -489,14 +502,14 @@ struct vm_area_struct *remote_mmap(pid_t pid, uintptr_t address, int prot)
 
 	if (mm == NULL) {
 		c_printk("couldn't find mm from task %i\n", pid);
-		return NULL;
+		goto out;
 	}
 
 	vma = vm_area_alloc(mm);
 
 	if (vma == NULL) {
 		c_printk("couldn't allocate vma from task %i\n", pid);
-		return NULL;
+		goto out;
 	}
 
 	vma->vm_start = address;
@@ -508,9 +521,11 @@ struct vm_area_struct *remote_mmap(pid_t pid, uintptr_t address, int prot)
 		vm_area_free(vma);
 		c_printk("couldn't insert vma in mm struct from task %i\n",
 			 pid);
-		return NULL;
+		goto out;
 	}
 
+out:
+	task_unlock(task);
 	return vma;
 }
 
@@ -581,60 +596,6 @@ uintptr_t align_address(uintptr_t address, size_t size)
 	return aligned_address;
 }
 
-#ifndef __arch_um__
-pte_t *get_pte(uintptr_t address)
-{
-	unsigned int level;
-	return lookup_address(address, &level);
-}
-#endif
-
-ptr_t *find_sys_call_table(void)
-{
-	uintptr_t arch_syscall_addr;
-	static ptr_t *sys_call_table = NULL;
-#ifndef __arch_um__
-	uintptr_t aligned_address;
-	pte_t *pte;
-	pteval_t pte_oldval;
-
-	pte = NULL;
-#endif
-
-	if (sys_call_table == NULL) {
-		arch_syscall_addr = kallsyms_lookup_name("arch_syscall_addr");
-
-		if (arch_syscall_addr == 0) {
-			return NULL;
-		}
-
-		// arch_syscall_addr + 8 contains the relative sys_call_table address
-		// in 32 bits
-		arch_syscall_addr += 8;
-
-#ifndef __arch_um__
-		aligned_address = align_address(arch_syscall_addr, PAGE_SIZE);
-
-		// We need to unprotect memory in order to read through it..
-		pte = get_pte(aligned_address);
-
-		if (pte != NULL) {
-			pte_oldval = pte->pte;
-			pte->pte |= _PAGE_RW;
-
-			sys_call_table =
-				(ptr_t *)((arch_syscall_addr &
-					   0xffffffff00000000) +
-					  *(uint32_t *)arch_syscall_addr);
-
-			pte->pte = pte_oldval;
-		}
-#endif
-	}
-
-	return (ptr_t *)sys_call_table;
-}
-
 void alloc_buffer(size_t size, struct buffer_struct *buffer)
 {
 	buffer->addr = kmalloc(size, GFP_KERNEL);
@@ -650,10 +611,17 @@ void free_buffer(struct buffer_struct *buffer)
 	}
 }
 
-void realloc_buffer(size_t size, struct buffer_struct *buffer)
+int realloc_buffer(size_t size, struct buffer_struct *buffer)
 {
 	buffer->size += size;
 	buffer->addr = krealloc(buffer->addr, buffer->size, GFP_KERNEL);
+
+	if (buffer->addr != NULL) {
+		return 1;
+	}
+
+	buffer->size -= size;
+	return 0;
 }
 
 void init_buffer(struct buffer_struct *buffer)
@@ -661,3 +629,11 @@ void init_buffer(struct buffer_struct *buffer)
 	buffer->size = 0;
 	buffer->addr = NULL;
 }
+
+#ifndef __arch_um__
+pte_t *get_pte(uintptr_t address)
+{
+	unsigned int level;
+	return lookup_address(address, &level);
+}
+#endif

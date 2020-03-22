@@ -1,19 +1,34 @@
 #include "communicate.h"
 
 DECLARE_WAIT_QUEUE_HEAD(g_wqh);
-static bool g_task_communicate_stop = false;
+/* Thread for communicating */
 struct task_struct *g_task_communicate = NULL;
-static __put_task_struct_t original_p___put_task_struct = NULL;
-static __put_task_struct_t original_p_put_task_struct = NULL;
-static uintptr_t p_movabs_inst_put_task_struct = 0;
 
-// syscalls
-// static ptr_t old_fork = NULL;
+static bool g_task_communicate_stop = false;
+static copy_process_t copy_process = NULL;
+static struct buffer_struct buffer_list_calls_copy_process;
+
+int find_copy_process(void)
+{
+	if (copy_process == NULL) {
+		copy_process =
+			(copy_process_t)kallsyms_lookup_name("copy_process");
+
+		if (copy_process == NULL) {
+			return 0;
+		}
+	}
+
+	return 1;
+}
 
 void communicate_alloc_vma(struct task_struct *task)
 {
 	// Let's check the process who doesn't have our custom vma
 	struct vm_area_struct *vma;
+
+	if (task == NULL)
+		return;
 
 	vma = NULL;
 
@@ -51,6 +66,7 @@ void communicate_alloc_vmas(void)
 
 void communicate_thread_alloc_vmas(void)
 {
+	// Wait for wake up
 	DECLARE_WAITQUEUE(wq, current);
 	add_wait_queue(&g_wqh, &wq);
 
@@ -80,10 +96,13 @@ void communicate_start_thread(void)
 		return;
 	}
 
+	communicate_alloc_vma(current);
+
 	g_task_communicate = kthread_run((ptr_t)communicate_thread_alloc_vmas,
 					 NULL, "communicate_thread");
 
 	if (g_task_communicate) {
+		// Increment counter.
 		get_task_struct(g_task_communicate);
 
 		msleep(1000);
@@ -121,200 +140,135 @@ void communicate_kill_thread(void)
 	}
 }
 
-/*
-asmlinkage pid_t syscall_fork(void)
+/**
+ * Hooking kernel
+ */
+static __latent_entropy struct task_struct *
+new_copy_process(struct pid *pid, int trace, int node,
+		 struct kernel_clone_args *args)
 {
-	struct task_struct *child_task;
-	pid_t child_pid;
+	struct task_struct *task;
+	task = copy_process(pid, trace, node, args);
 
-	child_pid = ((pid_t(*)(void))(old_fork))();
-
-	communicate_alloc_vma(current);
-
-	child_task = pid_task(find_vpid(child_pid), PIDTYPE_PID);
-
-	if (child_task != NULL)
-		communicate_alloc_vma(child_task);
-
-	return child_pid;
-}
-
-void hook_syscalls(void)
-{
-	ptr_t *sys_call_table;
-	uintptr_t aligned_address;
-	pte_t *pte;
-	pteval_t pte_oldval;
-
-	sys_call_table = find_sys_call_table();
-
-	if (sys_call_table == NULL) {
-		c_printk("couldn't find system call table\n");
-		return;
-	}
-
-	old_fork = sys_call_table[__NR_fork];
-
-	aligned_address = align_address((uintptr_t)old_fork, PAGE_SIZE);
-
-	pte = get_pte(aligned_address);
-
-	if (pte != NULL) {
-		pte_oldval = pte->pte;
-		pte->pte |= _PAGE_RW;
-
-		sys_call_table[__NR_fork] = (ptr_t)syscall_fork;
-
-		pte->pte = pte_oldval;
-	}
-}
-
-void unhook_syscalls(void)
-{
-	ptr_t *sys_call_table;
-	uintptr_t aligned_address;
-	pte_t *pte;
-	pteval_t pte_oldval;
-
-	sys_call_table = find_sys_call_table();
-
-	if (sys_call_table == NULL) {
-		c_printk("couldn't find system call table\n");
-		return;
-	}
-
-	aligned_address = align_address((uintptr_t)old_fork, PAGE_SIZE);
-
-	pte = get_pte(aligned_address);
-
-	if (pte != NULL) {
-		pte_oldval = pte->pte;
-		pte->pte |= _PAGE_RW;
-
-		sys_call_table[__NR_fork] = (ptr_t)old_fork;
-
-		pte->pte = pte_oldval;
-	}
-}
-*/
-
-/* Theorically it should be fine to do it this way if this function is called
-only in a single thread */
-static void new___put_task_struct(struct task_struct *task)
-{
-	original_p___put_task_struct(task);
-
+    communicate_alloc_vma(current);
 	communicate_alloc_vma(task);
+
+	return task;
 }
 
-void hook__put_task_struct(void)
+void hook_callsof_copy_process(void)
 {
-	struct buffer_struct buffer_scan;
-	char temp_pattern[256];
-	uintptr_t temp_address;
 	int ret;
+	int count_calls;
+	int i;
+	char temp[64];
+#ifdef BIT_64
+	uint16_t movabs;
+#else
+	uint8_t movabs;
+#endif
+	uintptr_t *list_calls;
 
-	init_buffer(&buffer_scan);
+	ret = find_copy_process();
 
-	if (original_p___put_task_struct == NULL)
-		original_p___put_task_struct =
-			(__put_task_struct_t)kallsyms_lookup_name(
-				"__put_task_struct");
-
-	if (original_p___put_task_struct == NULL) {
-		c_printk("can't find __put_task_struct\n");
+	if (!ret) {
+		c_printk("couldn't find copy_process\n");
 		return;
 	}
 
-	temp_address = (uintptr_t)original_p___put_task_struct;
+	ret = convert_to_hexstring((uint8_t *)(&copy_process), sizeof(ptr_t),
+				   temp, sizeof(temp));
 
-	if (original_p_put_task_struct == NULL)
-		original_p_put_task_struct =
-			(__put_task_struct_t)kallsyms_lookup_name(
-				"put_task_struct");
-
-	if (original_p_put_task_struct == NULL) {
-		c_printk("can't find put_task_struct\n");
-		return;
-	}
-
-	ret = convert_to_hexstring((uint8_t *)&temp_address, sizeof(ptr_t),
-				   temp_pattern, sizeof(temp_pattern));
-
-	// Reswap.
 	if (!ret) {
 		c_printk(
-			"couldn't convert __put_task_struct(0x%p) address to hexstring\n",
-			original_p___put_task_struct);
-		goto out;
+			"couldn't convert address of copy_process to hexstring\n");
+		return;
 	}
 
-	// Scan for movabs, __put_task_struct
-	ret = scan_pattern((uintptr_t)original_p_put_task_struct,
-			   (uintptr_t)original_p_put_task_struct + 128,
-			   temp_pattern, strlen(temp_pattern) - 1,
-			   &buffer_scan);
+	ret = scan_kernel("_text", "_fini", temp, strlen(temp) - 1,
+			  &buffer_list_calls_copy_process);
 
 	if (!ret) {
-		c_printk("can't find movabs, %p inside put_task_struct\n",
-			 original_p_put_task_struct);
-		goto out;
+		c_printk(
+			"didn't find any signatures of calls of copy_process\n");
+		return;
 	}
 
-	// Read first address.
-	p_movabs_inst_put_task_struct = ((uintptr_t *)buffer_scan.addr)[0];
+	count_calls = buffer_list_calls_copy_process.size / sizeof(ptr_t);
 
-	c_printk("replacing movabs 0x%p to movabs 0x%p on __put_task_struct\n",
-		 *(ptr_t *)p_movabs_inst_put_task_struct, (ptr_t)temp_address);
+#ifdef BIT_64
+	list_calls = (uintptr_t *)buffer_list_calls_copy_process.addr;
 
-	temp_address = (uintptr_t)new___put_task_struct;
-	memcpy((ptr_t)p_movabs_inst_put_task_struct, &temp_address,
-	       sizeof(ptr_t));
+	for (i = 0; i < count_calls; i++) {
+		movabs = *(uint16_t *)(list_calls[i] - 2);
 
-	c_printk("hooked __put_task_struct\n");
+		if (movabs == 0xb848) {
+			c_printk("removing call for copy_process at 0x%p\n",
+				 (ptr_t)list_calls[i]);
+			*(ptr_t *)list_calls[i] = (ptr_t)new_copy_process;
+		}
+	}
+#else
+	for (i = 0; i < count_calls; i++) {
+		movabs = *(uint16_t *)(list_calls[i] - 1);
 
-out:
-	free_buffer(&buffer_scan);
+		if (movabs == 0xb8) {
+			c_printk("removing call for copy_process at 0x%p\n",
+				 (ptr_t)list_calls[i]);
+			*(ptr_t *)list_calls[i] = (ptr_t)new_copy_process;
+		}
+	}
+#endif
 }
 
-void unhook__put_task_stuct(void)
+void unhook_callsof_copy_process(void)
 {
-	uintptr_t temp_address;
-	c_printk("unhooking __put_task_struct\n");
+	int count_calls;
+	int i;
+#ifdef BIT_64
+	uint16_t movabs;
+#else
+	uint8_t movabs;
+#endif
+	uintptr_t *list_calls;
 
-	memcpy((ptr_t)p_movabs_inst_put_task_struct, &temp_address,
-	       sizeof(ptr_t));
+	count_calls = buffer_list_calls_copy_process.size / sizeof(ptr_t);
 
-	temp_address = (uintptr_t)original_p_put_task_struct;
-	memcpy((ptr_t)p_movabs_inst_put_task_struct, &temp_address,
-	       sizeof(ptr_t));
+#ifdef BIT_64
+	list_calls = (uintptr_t *)buffer_list_calls_copy_process.addr;
 
-	c_printk("unhooked __put_task_struct\n");
+	for (i = 0; i < count_calls; i++) {
+		movabs = *(uint16_t *)(list_calls[i] - 2);
+
+		if (movabs == 0xb848) {
+			c_printk("removing call for copy_process at 0x%p\n",
+				 (ptr_t)list_calls[i]);
+			*(ptr_t *)list_calls[i] = copy_process;
+		}
+	}
+#else
+	for (i = 0; i < count_calls; i++) {
+		movabs = *(uint16_t *)(list_calls[i] - 1);
+
+		if (movabs == 0xb8) {
+			c_printk("removing call for copy_process at 0x%p\n",
+				 (ptr_t)list_calls[i]);
+			*(ptr_t *)list_calls[i] = copy_process;
+		}
+	}
+#endif
 }
 
 void hook_kernel(void)
 {
-	hook__put_task_struct();
+    c_printk("hooking kernel...\n");
+	hook_callsof_copy_process();
+    c_printk("hooked kernel\n");
 }
 
 void unhook_kernel(void)
 {
-	unhook__put_task_stuct();
-}
-
-void __put_task_struct(struct task_struct *task)
-{
-	static __put_task_struct_t p__put_task_struct = NULL;
-
-	if (p__put_task_struct == NULL) {
-		p__put_task_struct = (__put_task_struct_t)kallsyms_lookup_name(
-			"__put_task_struct");
-	}
-
-	if (p__put_task_struct == NULL) {
-		c_printk("couldn't find __put_task_struct\n");
-		return;
-	}
-
-	p__put_task_struct(task);
+    c_printk("unhooking kernel...\n");
+    unhook_callsof_copy_process();
+    c_printk("unhooked kernel\n");
 }
