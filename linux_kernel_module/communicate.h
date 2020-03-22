@@ -6,13 +6,33 @@
 #include <linux/wait.h>
 #include <linux/delay.h>
 
-#define PROT_RWX PROT_READ | PROT_WRITE | PROT_EXEC
+#define PROT_COMMUNICATE PROT_READ | PROT_WRITE
 #define MAGIC_ADDRESS 0x13370000
-#define BACKUP_HOOK_BYTES 16
+#define MAX_COMMANDS 0x100
+#define COMMUNCIATE_ZERO_CMDS 0
+
+enum communicate_cmd {
+	COMMUNICATE_READ,
+	COMMUNICATE_WRITE,
+	COMMUNCIATE_THREAD,
+	COMMUNICATE_LIST_VMA
+};
+
+struct communicate_write_struct {
+	uintptr_t vm_local_address;
+	uintptr_t vm_remote_address;
+	uintptr_t vm_size;
+};
+
+struct communicate_read_struct {
+	uintptr_t vm_local_address;
+	uintptr_t vm_remote_address;
+	uintptr_t vm_size;
+};
 
 void communicate_start_thread(void);
 void communicate_kill_thread(void);
-void communicate_alloc_vmas(void);
+void communicate_with_tasks(void);
 /* Let's hook the kernel directly to know when a task_struct is inserted */
 void hook_kernel(void);
 void unhook_kernel(void);
