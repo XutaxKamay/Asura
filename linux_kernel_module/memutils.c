@@ -91,12 +91,7 @@ int c_find_vma_from_task(struct task_struct *task,
 {
 	struct mm_struct *mm;
 
-	// Kernel thread?
-	mm = get_task_mm(task);
-
-	// Kernel thread?
-	if (mm == NULL)
-		mm = task->active_mm;
+	mm = get_task_mm_kthread(task);
 
 	if (mm == NULL)
 		goto out;
@@ -135,11 +130,7 @@ int c_find_vma_from_task_str(struct task_struct *task,
 {
 	struct mm_struct *mm;
 
-	mm = get_task_mm(task);
-
-	// Kernel thread?
-	if (mm == NULL)
-		mm = task->active_mm;
+	mm = get_task_mm_kthread(task);
 
 	if (mm == NULL)
 		goto out;
@@ -182,11 +173,7 @@ void c_print_vmas(struct task_struct *task)
 	// Protect flags translated...
 	char strflags[7];
 
-	mm = get_task_mm(task);
-
-	// Kernel thread?
-	if (mm == NULL)
-		mm = task->active_mm;
+	mm = get_task_mm_kthread(task);
 
 	if (mm == NULL)
 		return;
@@ -321,11 +308,7 @@ int scan_task(struct task_struct *task, char *pattern, int len,
 
 	copied_user_memory = NULL;
 
-	mm = get_task_mm(task);
-
-	// Kernel thread?
-	if (mm == NULL)
-		mm = task->active_mm;
+	mm = get_task_mm_kthread(task);
 
 	if (mm == NULL) {
 		c_printk("task %s(%i) has no mm struct!\n", task->comm,
@@ -347,9 +330,9 @@ int scan_task(struct task_struct *task, char *pattern, int len,
 		copied_user_memory =
 			kmalloc(vma->vm_end - vma->vm_start, GFP_KERNEL);
 
-		if (!c_copy_from_user(task, copied_user_memory,
-				      (ptr_t)vma->vm_start,
-				      vma->vm_end - vma->vm_start)) {
+		if (c_copy_from_user(task, copied_user_memory,
+				     (ptr_t)vma->vm_start,
+				     vma->vm_end - vma->vm_start)) {
 			kfree(copied_user_memory);
 			c_printk(
 				"couldn't copy memory from task %s(%i) at %lX!\n",
@@ -412,11 +395,7 @@ uintptr_t map_base_task(struct task_struct *task)
 		return 0;
 	}
 
-	mm = get_task_mm(task);
-
-	// Kernel thread?
-	if (mm == NULL)
-		mm = task->active_mm;
+	mm = get_task_mm_kthread(task);
 
 	if (mm == NULL) {
 		c_printk("couldn't find base address of %s(%i)\n", task->comm,
@@ -488,16 +467,10 @@ struct vm_area_struct *remote_mmap(pid_t pid, uintptr_t address, int prot)
 
 	if (task == NULL) {
 		c_printk("couldn't find task %i\n", pid);
-		return NULL;
+		goto out;
 	}
 
-	// In case it doesn't try to allocate memory at the same time.
-
-	mm = get_task_mm(task);
-
-	// Kernel thread?
-	if (mm == NULL)
-		mm = task->active_mm;
+	mm = get_task_mm_kthread(task);
 
 	if (mm == NULL) {
 		c_printk("couldn't find mm from task %i\n", pid);

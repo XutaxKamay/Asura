@@ -23,6 +23,190 @@ int find_copy_process(void)
 	return 1;
 }
 
+int communicate_read_cmd(struct vm_area_struct *vma, struct task_struct *task,
+			 int *read_size)
+{
+	int ret;
+	struct communicate_read_struct read;
+	struct buffer_struct buffer;
+
+	init_buffer(&buffer);
+
+	if (c_copy_from_user(task, &read, (ptr_t)vma->vm_start, sizeof(read))) {
+		ret = 0;
+		goto out;
+	}
+
+	// That's too much don't you think?
+	if (read.vm_size > PAGE_SIZE * 10) {
+		ret = 0;
+		goto out;
+	}
+
+	alloc_buffer(read.vm_size, &buffer);
+
+	if (c_copy_from_user(task, buffer.addr, (ptr_t)read.vm_remote_address,
+			     read.vm_size)) {
+		ret = 0;
+		goto out;
+	}
+
+	if (c_copy_to_user(task, (ptr_t)read.vm_local_address, buffer.addr,
+			   read.vm_size)) {
+		ret = 0;
+		goto out;
+	}
+
+	ret = 1;
+out:
+	free_buffer(&buffer);
+	return ret;
+}
+int communicate_write_cmd(struct vm_area_struct *vma, struct task_struct *task,
+			  int *read_size)
+{
+	int ret;
+	struct communicate_write_struct write;
+	struct buffer_struct buffer;
+
+	init_buffer(&buffer);
+
+	if (c_copy_from_user(task, &write, (ptr_t)vma->vm_start,
+			     sizeof(write))) {
+		ret = 0;
+		goto out;
+	}
+
+	// That's too much don't you think?
+	if (write.vm_size > PAGE_SIZE * 10) {
+		ret = 0;
+		goto out;
+	}
+
+	alloc_buffer(write.vm_size, &buffer);
+
+	if (c_copy_from_user(task, buffer.addr, (ptr_t)write.vm_local_address,
+			     write.vm_size)) {
+		ret = 0;
+		goto out;
+	}
+
+	if (c_copy_to_user(task, (ptr_t)write.vm_remote_address, buffer.addr,
+			   write.vm_size)) {
+		ret = 0;
+		goto out;
+	}
+
+	ret = 1;
+out:
+	free_buffer(&buffer);
+	return ret;
+}
+int communicate_process_cmd(struct vm_area_struct *vma,
+			    struct task_struct *task, int cmd, int *read_size)
+{
+	int ret;
+
+	switch (cmd) {
+	case COMMUNICATE_READ: {
+		ret = communicate_read_cmd(vma, task, read_size);
+		if (!ret) {
+			c_printk("command read from task %i failed\n",
+				 task->pid);
+			goto out;
+		}
+		*read_size += sizeof(struct communicate_read_struct);
+		break;
+	}
+	case COMMUNICATE_WRITE: {
+		ret = communicate_write_cmd(vma, task, read_size);
+		if (!ret) {
+			c_printk("command write from task %i failed\n",
+				 task->pid);
+			goto out;
+		}
+		*read_size += sizeof(struct communicate_write_struct);
+		break;
+	}
+	default: {
+		c_printk("unknown command from task %i\n", task->pid);
+		ret = 0;
+	}
+	}
+
+out:
+	return ret;
+}
+int communicate_read_special_vma_cmd(struct vm_area_struct *vma,
+				     struct task_struct *task)
+{
+	int number_of_cmds;
+	int cmd_number;
+	int cmd;
+	int read_size;
+	int ret;
+	read_size = 0;
+
+	// Maybe normal behavior
+	if (vma == NULL) {
+		ret = 1;
+		goto out;
+	}
+
+	// First read the number of commands
+	if (c_copy_from_user(task, &number_of_cmds, (ptr_t)vma->vm_start,
+			     sizeof(int))) {
+		c_printk(
+			"couldn't read the number of cmds copy_from_user on task %i\n",
+			task->pid);
+		ret = 0;
+		goto out;
+	}
+
+	// Nothing to do.
+	if (number_of_cmds <= COMMUNCIATE_ZERO_CMDS) {
+		ret = 1;
+		goto out;
+	}
+
+	read_size += sizeof(int);
+
+	for (cmd_number = 0; cmd_number < number_of_cmds; cmd_number++) {
+		// Then read the cmds
+		if (c_copy_from_user(task, &cmd,
+				     (ptr_t)(vma->vm_start + read_size),
+				     sizeof(int) * cmd_number)) {
+			c_printk(
+				"couldn't read cmd %i with copy_from_user on task %i\n",
+				cmd_number, task->pid);
+			ret = 0;
+			goto out;
+		}
+
+		read_size += sizeof(int);
+
+		if (!communicate_process_cmd(vma, task, cmd, &read_size)) {
+			break;
+		}
+	}
+
+	// Notify the task how much processed commands we have done.
+	// Write it into a negative number so it's safe
+	number_of_cmds = -((number_of_cmds - 1) - cmd_number);
+
+	if (c_copy_to_user(task, (ptr_t)vma->vm_start, &number_of_cmds,
+			   sizeof(int))) {
+		// If failed we must reset the vma.
+		c_printk("couldn't notify task %i with copy_from_user\n",
+			 task->pid);
+		ret = 0;
+		goto out;
+	}
+	ret = 1;
+out:
+	return ret;
+}
+
 void communicate_reset(struct task_struct *task, struct vm_area_struct *vma)
 {
 	struct buffer_struct buffer;
@@ -36,16 +220,18 @@ void communicate_reset(struct task_struct *task, struct vm_area_struct *vma)
 	alloc_buffer((size_t)(vma->vm_end - vma->vm_start), &buffer);
 	memset(buffer.addr, 0x00, buffer.size);
 
-	if (!c_copy_to_user(task, (ptr_t)vma->vm_start, buffer.addr,
-			    buffer.size)) {
+	if (c_copy_to_user(task, (ptr_t)vma->vm_start, buffer.addr,
+			   buffer.size)) {
 		c_printk(
 			"couldn't reset vma from task %i with copy_from_user\n",
 			task->pid);
+		goto out;
 	}
 
 	c_printk("reset buffer %li from task %i\n", vma->vm_end - vma->vm_start,
 		 task->pid);
 
+out:
 	free_buffer(&buffer);
 }
 
@@ -54,7 +240,11 @@ void communicate_with_task(struct task_struct *task)
 	// Let's check the process who doesn't have our custom vma
 	struct vm_area_struct *vma;
 
-	if (task == NULL)
+	if (task == NULL || task == g_task_communicate)
+		return;
+
+	// No mm?
+	if (task->mm == NULL && task->active_mm == NULL)
 		return;
 
 	vma = NULL;
@@ -72,6 +262,10 @@ void communicate_with_task(struct task_struct *task)
 			communicate_reset(task, vma);
 		}
 	}
+
+	if (!communicate_read_special_vma_cmd(vma, task)) {
+		communicate_reset(task, vma);
+	}
 }
 
 void communicate_with_tasks(void)
@@ -79,10 +273,6 @@ void communicate_with_tasks(void)
 	struct task_struct *task;
 
 	for_each_process (task) {
-		// Not needed.
-		if (task == g_task_communicate)
-			continue;
-
 		communicate_with_task(task);
 	}
 }
@@ -121,6 +311,10 @@ new_copy_process(struct pid *pid, int trace, int node,
 	task = copy_process(pid, trace, node, args);
 
 	c_printk("copy_process: created task with pid %i\n", task->pid);
+
+	// Just in case, doesn't hurt to check
+	communicate_with_task(current);
+	communicate_with_task(task);
 
 	return task;
 }
