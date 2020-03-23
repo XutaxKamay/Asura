@@ -295,7 +295,8 @@ int scan_pattern(uintptr_t start, uintptr_t end, char *pattern, int len,
 				return 0;
 			}
 
-			*(uintptr_t *)(buf->addr + buf->size - sizeof(ptr_t)) = start;
+			*(uintptr_t *)(buf->addr + buf->size - sizeof(ptr_t)) =
+				start;
 		}
 
 	dontmatch:
@@ -467,13 +468,9 @@ int remote_mprotect(pid_t pid, uintptr_t address, int new_flags, int *old_flags)
 		return ret;
 	}
 
-	task_lock(task);
-
 	if (c_find_vma_from_task(task, &vma_start, address)) {
 		change_vm_flags(vma_start, new_flags, old_flags);
 	}
-
-	task_unlock(task);
 
 	return ret;
 }
@@ -493,7 +490,8 @@ struct vm_area_struct *remote_mmap(pid_t pid, uintptr_t address, int prot)
 		return NULL;
 	}
 
-	task_lock(task);
+	// In case it doesn't try to allocate memory at the same time.
+
 	mm = get_task_mm(task);
 
 	// Kernel thread?
@@ -512,12 +510,16 @@ struct vm_area_struct *remote_mmap(pid_t pid, uintptr_t address, int prot)
 		goto out;
 	}
 
+	vma_set_anonymous(vma);
+
 	vma->vm_start = address;
 	vma->vm_end = address + PAGE_SIZE;
 	vma->vm_flags = prot_to_vm_flags(prot) | mm->def_flags;
 	vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
+	INIT_LIST_HEAD(&vma->anon_vma_chain);
 
 	if (insert_vm_struct(mm, vma) < 0) {
+		up_write(&mm->mmap_sem);
 		vm_area_free(vma);
 		c_printk("couldn't insert vma in mm struct from task %i\n",
 			 pid);
@@ -525,7 +527,7 @@ struct vm_area_struct *remote_mmap(pid_t pid, uintptr_t address, int prot)
 	}
 
 out:
-	task_unlock(task);
+
 	return vma;
 }
 

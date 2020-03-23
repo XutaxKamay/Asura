@@ -7,8 +7,7 @@ struct task_struct *g_task_communicate = NULL;
 static bool g_task_communicate_stop = false;
 static copy_process_t copy_process = NULL;
 static struct buffer_struct buffer_list_calls_copy_process;
-// Just to initialize vma memory
-static uint8_t g_zeros[PAGE_SIZE];
+static bool g_unhook_kernel = false;
 
 int find_copy_process(void)
 {
@@ -24,7 +23,8 @@ int find_copy_process(void)
 	return 1;
 }
 
-int communicate_read_cmd(struct vm_area_struct *vma, int *read_size)
+int communicate_read_cmd(struct vm_area_struct *vma, struct task_struct *task,
+			 int *read_size)
 {
 	int ret;
 	struct communicate_read_struct read;
@@ -40,7 +40,7 @@ int communicate_read_cmd(struct vm_area_struct *vma, int *read_size)
 	// That's too much don't you think?
 	if (read.vm_size > PAGE_SIZE * 10) {
 		ret = 0;
-        goto out;
+		goto out;
 	}
 
 	alloc_buffer(read.vm_size, &buffer);
@@ -60,11 +60,13 @@ int communicate_read_cmd(struct vm_area_struct *vma, int *read_size)
 	ret = 1;
 
 out:
+
 	free_buffer(&buffer);
 	return ret;
 }
 
-int communicate_write_cmd(struct vm_area_struct *vma, int *read_size)
+int communicate_write_cmd(struct vm_area_struct *vma, struct task_struct *task,
+			  int *read_size)
 {
 	int ret;
 	struct communicate_write_struct write;
@@ -79,10 +81,9 @@ int communicate_write_cmd(struct vm_area_struct *vma, int *read_size)
 
 	// That's too much don't you think?
 	if (write.vm_size > PAGE_SIZE * 10) {
-        ret = 0;
-        goto out;
-    }
-
+		ret = 0;
+		goto out;
+	}
 
 	alloc_buffer(write.vm_size, &buffer);
 
@@ -105,17 +106,18 @@ out:
 	return ret;
 }
 
-int communicate_process_cmd(struct vm_area_struct *vma, pid_t pid, int cmd,
-			    int *read_size)
+int communicate_process_cmd(struct vm_area_struct *vma,
+			    struct task_struct *task, int cmd, int *read_size)
 {
 	int ret;
 
 	switch (cmd) {
 	case COMMUNICATE_READ: {
-		ret = communicate_read_cmd(vma, read_size);
+		ret = communicate_read_cmd(vma, task, read_size);
 
 		if (!ret) {
-			c_printk("command read from task %i failed\n", pid);
+			c_printk("command read from task %i failed\n",
+				 task->pid);
 			goto out;
 		}
 
@@ -123,10 +125,11 @@ int communicate_process_cmd(struct vm_area_struct *vma, pid_t pid, int cmd,
 		break;
 	}
 	case COMMUNICATE_WRITE: {
-		ret = communicate_write_cmd(vma, read_size);
+		ret = communicate_write_cmd(vma, task, read_size);
 
 		if (!ret) {
-			c_printk("command write from task %i failed\n", pid);
+			c_printk("command write from task %i failed\n",
+				 task->pid);
 			goto out;
 		}
 
@@ -134,7 +137,7 @@ int communicate_process_cmd(struct vm_area_struct *vma, pid_t pid, int cmd,
 		break;
 	}
 	default: {
-		c_printk("unknown command from task %i\n", pid);
+		c_printk("unknown command from task %i\n", task->pid);
 		ret = 0;
 	}
 	}
@@ -143,7 +146,8 @@ out:
 	return ret;
 }
 
-int communicate_read_special_vma_cmd(struct vm_area_struct *vma, pid_t pid)
+int communicate_read_special_vma_cmd(struct vm_area_struct *vma,
+				     struct task_struct *task)
 {
 	int number_of_cmds;
 	int cmd_number;
@@ -164,7 +168,7 @@ int communicate_read_special_vma_cmd(struct vm_area_struct *vma, pid_t pid)
 			    sizeof(int))) {
 		c_printk(
 			"couldn't read the number of cmds copy_from_user on task %i\n",
-			pid);
+			task->pid);
 		ret = 0;
 		goto out;
 	}
@@ -183,14 +187,14 @@ int communicate_read_special_vma_cmd(struct vm_area_struct *vma, pid_t pid)
 				    sizeof(int) * cmd_number)) {
 			c_printk(
 				"couldn't read cmd %i with copy_from_user on task %i\n",
-				cmd_number, pid);
+				cmd_number, task->pid);
 			ret = 0;
 			goto out;
 		}
 
 		read_size += sizeof(int);
 
-		if (!communicate_process_cmd(vma, pid, cmd, &read_size)) {
+		if (!communicate_process_cmd(vma, task, cmd, &read_size)) {
 			break;
 		}
 	}
@@ -200,35 +204,57 @@ int communicate_read_special_vma_cmd(struct vm_area_struct *vma, pid_t pid)
 	number_of_cmds = -((number_of_cmds - 1) - cmd_number);
 
 	if (!copy_to_user(&number_of_cmds, (ptr_t)vma->vm_start, sizeof(int))) {
-        // If failed we must reset the vma.
-		c_printk("couldn't notify task %i with copy_from_user\n", pid);
+		// If failed we must reset the vma.
+		c_printk("couldn't notify task %i with copy_from_user\n",
+			 task->pid);
 		ret = 0;
 		goto out;
 	}
+
+	ret = 1;
 
 out:
 	return ret;
 }
 
-void communicate_reset(struct vm_area_struct *vma, pid_t pid)
+void communicate_reset(struct task_struct *task, struct mm_struct *mm,
+		       struct vm_area_struct *vma)
 {
+	struct buffer_struct buffer;
+
+	init_buffer(&buffer);
+
 	if (vma == NULL) {
 		return;
 	}
 
-	if (!copy_to_user((ptr_t)vma->vm_start, g_zeros, sizeof(g_zeros))) {
+	alloc_buffer((size_t)(vma->vm_end - vma->vm_start), &buffer);
+	memset(buffer.addr, 0x13, buffer.size);
+
+	c_printk("reset buffer %li from task %i\n", vma->vm_end - vma->vm_start,
+		 task->pid);
+
+    down_write(&mm->mmap_sem);
+
+	if (!copy_to_user((ptr_t)vma->vm_start, buffer.addr, buffer.size)) {
 		c_printk(
 			"couldn't reset vma from task %i with copy_from_user\n",
-			pid);
+			task->pid);
+
+        down_write(&mm->mmap_sem);
 	}
+
+	up_write(&mm->mmap_sem);
+
+	free_buffer(&buffer);
 }
 
-void communicate_with_task(struct task_struct *task)
+void communicate_with_task(struct task_struct *task, struct mm_struct *mm)
 {
 	// Let's check the process who doesn't have our custom vma
 	struct vm_area_struct *vma;
 
-	if (task == NULL)
+	if (task == NULL || mm == NULL)
 		return;
 
 	vma = NULL;
@@ -243,13 +269,26 @@ void communicate_with_task(struct task_struct *task)
 				"allocated vma for communicating from task %i\n",
 				task->pid);
 
-			communicate_reset(vma, task->pid);
+			communicate_reset(task, mm, vma);
 		}
 	}
 
-	if (!communicate_read_special_vma_cmd(vma, task->pid)) {
-		communicate_reset(vma, task->pid);
-	}
+	/*if (!communicate_read_special_vma_cmd(vma, task)) {
+        communicate_reset(task,mm,vma);
+	}*/
+}
+
+struct mm_struct *get_task_mm_ignore_kthread(struct task_struct *task)
+{
+	struct mm_struct *mm;
+
+	mm = get_task_mm(task);
+
+	// Kernel thread?
+	if (mm == NULL)
+		mm = task->active_mm;
+
+	return mm;
 }
 
 void communicate_with_tasks(void)
@@ -258,16 +297,16 @@ void communicate_with_tasks(void)
 	struct mm_struct *mm;
 
 	for_each_process (task) {
-		mm = get_task_mm(task);
+		// Not needed.
+		if (task == g_task_communicate)
+			continue;
 
-		// Kernel thread?
-		if (mm == NULL)
-			mm = task->active_mm;
+		mm = get_task_mm_ignore_kthread(task);
 
 		if (mm == NULL)
 			continue;
 
-		communicate_with_task(task);
+		communicate_with_task(task, mm);
 	}
 }
 
@@ -304,8 +343,11 @@ new_copy_process(struct pid *pid, int trace, int node,
 	struct task_struct *task;
 	task = copy_process(pid, trace, node, args);
 
-	communicate_with_task(current);
-	communicate_with_task(task);
+	if (!g_unhook_kernel) {
+		communicate_with_task(current,
+				      get_task_mm_ignore_kthread(current));
+		communicate_with_task(task, get_task_mm_ignore_kthread(task));
+	}
 
 	return task;
 }
@@ -430,10 +472,6 @@ void unhook_kernel(void)
 
 void communicate_start_thread(void)
 {
-	memset(g_zeros, 0, sizeof(g_zeros));
-
-	hook_kernel();
-
 	if (g_task_communicate != NULL) {
 		c_printk(
 			"thread to communicate with others processes is already"
@@ -441,14 +479,12 @@ void communicate_start_thread(void)
 		return;
 	}
 
-	communicate_with_task(current);
-
 	g_task_communicate = kthread_run((ptr_t)communicate_thread_with_tasks,
 					 NULL, "communicate_thread");
 
 	if (g_task_communicate) {
-		// Increment counter.
-		get_task_struct(g_task_communicate);
+		// Increment counter
+		get_task_struct(current);
 
 		msleep(1000);
 
@@ -463,10 +499,15 @@ void communicate_start_thread(void)
 		c_printk(
 			"failed to create thread for communicating with tasks\n");
 	}
+
+	hook_kernel();
 }
 
 void communicate_kill_thread(void)
 {
+	g_unhook_kernel = true;
+	unhook_kernel();
+
 	// Stop communicate thread
 	if (g_task_communicate != NULL) {
 		g_task_communicate_stop = true;
@@ -483,6 +524,4 @@ void communicate_kill_thread(void)
 		// Release task
 		__put_task_struct(g_task_communicate);
 	}
-
-	unhook_kernel();
 }
