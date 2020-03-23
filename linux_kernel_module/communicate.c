@@ -23,6 +23,7 @@ int find_copy_process(void)
 	return 1;
 }
 
+/*
 int communicate_read_cmd(struct vm_area_struct *vma, struct task_struct *task,
 			 int *read_size)
 {
@@ -32,7 +33,7 @@ int communicate_read_cmd(struct vm_area_struct *vma, struct task_struct *task,
 
 	init_buffer(&buffer);
 
-	if (!copy_from_user(&read, (ptr_t)vma->vm_start, sizeof(read))) {
+	if (!c_copy_from_user(mm, &read, (ptr_t)vma->vm_start, sizeof(read))) {
 		ret = 0;
 		goto out;
 	}
@@ -45,14 +46,14 @@ int communicate_read_cmd(struct vm_area_struct *vma, struct task_struct *task,
 
 	alloc_buffer(read.vm_size, &buffer);
 
-	if (!copy_from_user(buffer.addr, (ptr_t)read.vm_remote_address,
-			    read.vm_size)) {
+	if (!c_copy_from_user(mm, buffer.addr, (ptr_t)read.vm_remote_address,
+			      read.vm_size)) {
 		ret = 0;
 		goto out;
 	}
 
-	if (!copy_to_user((ptr_t)read.vm_local_address, buffer.addr,
-			  read.vm_size)) {
+	if (!c_copy_to_user(mm, (ptr_t)read.vm_local_address, buffer.addr,
+			    read.vm_size)) {
 		ret = 0;
 		goto out;
 	}
@@ -74,7 +75,8 @@ int communicate_write_cmd(struct vm_area_struct *vma, struct task_struct *task,
 
 	init_buffer(&buffer);
 
-	if (!copy_from_user(&write, (ptr_t)vma->vm_start, sizeof(write))) {
+	if (!c_copy_from_user(mm, &write, (ptr_t)vma->vm_start,
+			      sizeof(write))) {
 		ret = 0;
 		goto out;
 	}
@@ -87,14 +89,14 @@ int communicate_write_cmd(struct vm_area_struct *vma, struct task_struct *task,
 
 	alloc_buffer(write.vm_size, &buffer);
 
-	if (!copy_from_user(buffer.addr, (ptr_t)write.vm_local_address,
-			    write.vm_size)) {
+	if (!c_copy_from_user(mm, buffer.addr, (ptr_t)write.vm_local_address,
+			      write.vm_size)) {
 		ret = 0;
 		goto out;
 	}
 
-	if (!copy_to_user((ptr_t)write.vm_remote_address, buffer.addr,
-			  write.vm_size)) {
+	if (!c_copy_to_user(mm, (ptr_t)write.vm_remote_address, buffer.addr,
+			    write.vm_size)) {
 		ret = 0;
 		goto out;
 	}
@@ -164,8 +166,8 @@ int communicate_read_special_vma_cmd(struct vm_area_struct *vma,
 	}
 
 	// First read the number of commands
-	if (!copy_from_user(&number_of_cmds, (ptr_t)vma->vm_start,
-			    sizeof(int))) {
+	if (!c_copy_from_user(mm, &number_of_cmds, (ptr_t)vma->vm_start,
+			      sizeof(int))) {
 		c_printk(
 			"couldn't read the number of cmds copy_from_user on task %i\n",
 			task->pid);
@@ -183,8 +185,9 @@ int communicate_read_special_vma_cmd(struct vm_area_struct *vma,
 
 	for (cmd_number = 0; cmd_number < number_of_cmds; cmd_number++) {
 		// Then read the cmds
-		if (!copy_from_user(&cmd, (ptr_t)(vma->vm_start + read_size),
-				    sizeof(int) * cmd_number)) {
+		if (!c_copy_from_user(mm, &cmd,
+				      (ptr_t)(vma->vm_start + read_size),
+				      sizeof(int) * cmd_number)) {
 			c_printk(
 				"couldn't read cmd %i with copy_from_user on task %i\n",
 				cmd_number, task->pid);
@@ -203,7 +206,8 @@ int communicate_read_special_vma_cmd(struct vm_area_struct *vma,
 	// Write it into a negative number so it's safe
 	number_of_cmds = -((number_of_cmds - 1) - cmd_number);
 
-	if (!copy_to_user(&number_of_cmds, (ptr_t)vma->vm_start, sizeof(int))) {
+	if (!c_copy_to_user(mm, (ptr_t)vma->vm_start, &number_of_cmds,
+			    sizeof(int))) {
 		// If failed we must reset the vma.
 		c_printk("couldn't notify task %i with copy_from_user\n",
 			 task->pid);
@@ -216,6 +220,7 @@ int communicate_read_special_vma_cmd(struct vm_area_struct *vma,
 out:
 	return ret;
 }
+*/
 
 void communicate_reset(struct task_struct *task, struct mm_struct *mm,
 		       struct vm_area_struct *vma)
@@ -229,22 +234,17 @@ void communicate_reset(struct task_struct *task, struct mm_struct *mm,
 	}
 
 	alloc_buffer((size_t)(vma->vm_end - vma->vm_start), &buffer);
-	memset(buffer.addr, 0x13, buffer.size);
+	memset(buffer.addr, 0x00, buffer.size);
 
 	c_printk("reset buffer %li from task %i\n", vma->vm_end - vma->vm_start,
 		 task->pid);
 
-    down_write(&mm->mmap_sem);
-
-	if (!copy_to_user((ptr_t)vma->vm_start, buffer.addr, buffer.size)) {
+	if (!c_copy_to_user(mm, (ptr_t)vma->vm_start, buffer.addr,
+			    buffer.size)) {
 		c_printk(
 			"couldn't reset vma from task %i with copy_from_user\n",
 			task->pid);
-
-        down_write(&mm->mmap_sem);
 	}
-
-	up_write(&mm->mmap_sem);
 
 	free_buffer(&buffer);
 }
@@ -427,6 +427,11 @@ void unhook_callsof_copy_process(void)
 	uint8_t movabs;
 #endif
 	uintptr_t *list_calls;
+
+	if (buffer_list_calls_copy_process.addr == NULL) {
+		c_printk("nothing to unhook for copy_process\n");
+		return;
+	}
 
 	count_calls = buffer_list_calls_copy_process.size / sizeof(ptr_t);
 

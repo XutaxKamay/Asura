@@ -347,8 +347,9 @@ int scan_task(struct task_struct *task, char *pattern, int len,
 		copied_user_memory =
 			kmalloc(vma->vm_end - vma->vm_start, GFP_KERNEL);
 
-		if (!copy_from_user(copied_user_memory, (ptr_t)vma->vm_start,
-				    vma->vm_end - vma->vm_start)) {
+		if (!c_copy_from_user(mm, copied_user_memory,
+				      (ptr_t)vma->vm_start,
+				      vma->vm_end - vma->vm_start)) {
 			kfree(copied_user_memory);
 			c_printk(
 				"couldn't copy memory from task %s(%i) at %lX!\n",
@@ -519,7 +520,6 @@ struct vm_area_struct *remote_mmap(pid_t pid, uintptr_t address, int prot)
 	INIT_LIST_HEAD(&vma->anon_vma_chain);
 
 	if (insert_vm_struct(mm, vma) < 0) {
-		up_write(&mm->mmap_sem);
 		vm_area_free(vma);
 		c_printk("couldn't insert vma in mm struct from task %i\n",
 			 pid);
@@ -639,3 +639,31 @@ pte_t *get_pte(uintptr_t address)
 	return lookup_address(address, &level);
 }
 #endif
+
+unsigned long c_copy_to_user(struct mm_struct *mm, ptr_t to, ptr_t from,
+			     size_t size)
+{
+	unsigned long result;
+
+	down_write(&mm->mmap_sem);
+
+	result = copy_to_user(to, from, size);
+
+	up_write(&mm->mmap_sem);
+
+	return result;
+}
+
+unsigned long c_copy_from_user(struct mm_struct *mm, ptr_t to, ptr_t from,
+			       size_t size)
+{
+	unsigned long result;
+
+	down_read(&mm->mmap_sem);
+
+	result = copy_from_user(to, from, size);
+
+	up_read(&mm->mmap_sem);
+
+	return result;
+}
