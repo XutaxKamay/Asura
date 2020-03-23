@@ -38,10 +38,11 @@ void alloc_buffer(size_t size, struct buffer_struct *buffer);
 int realloc_buffer(size_t size, struct buffer_struct *buffer);
 void free_buffer(struct buffer_struct *buffer);
 void init_buffer(struct buffer_struct *buffer);
-unsigned long c_copy_to_user(struct mm_struct *mm, ptr_t to, ptr_t from,
-			     size_t size);
-unsigned long c_copy_from_user(struct mm_struct *mm, ptr_t to, ptr_t from,
+unsigned long c_copy_from_user(struct task_struct *task, ptr_t to, ptr_t from,
 			       size_t size);
+unsigned long c_copy_to_user(struct task_struct *task, ptr_t to, ptr_t from,
+			     size_t size);
+struct mm_struct *get_task_mm_kthread(struct task_struct *task);
 
 /* Kernels that have RWX strict protection */
 #ifndef __arch_um__

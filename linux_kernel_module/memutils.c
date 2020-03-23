@@ -347,7 +347,7 @@ int scan_task(struct task_struct *task, char *pattern, int len,
 		copied_user_memory =
 			kmalloc(vma->vm_end - vma->vm_start, GFP_KERNEL);
 
-		if (!c_copy_from_user(mm, copied_user_memory,
+		if (!c_copy_from_user(task, copied_user_memory,
 				      (ptr_t)vma->vm_start,
 				      vma->vm_end - vma->vm_start)) {
 			kfree(copied_user_memory);
@@ -517,6 +517,7 @@ struct vm_area_struct *remote_mmap(pid_t pid, uintptr_t address, int prot)
 	vma->vm_end = address + PAGE_SIZE;
 	vma->vm_flags = prot_to_vm_flags(prot) | mm->def_flags;
 	vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
+
 	INIT_LIST_HEAD(&vma->anon_vma_chain);
 
 	if (insert_vm_struct(mm, vma) < 0) {
@@ -527,7 +528,6 @@ struct vm_area_struct *remote_mmap(pid_t pid, uintptr_t address, int prot)
 	}
 
 out:
-
 	return vma;
 }
 
@@ -640,30 +640,92 @@ pte_t *get_pte(uintptr_t address)
 }
 #endif
 
-unsigned long c_copy_to_user(struct mm_struct *mm, ptr_t to, ptr_t from,
+struct mm_struct *get_task_mm_kthread(struct task_struct *task)
+{
+	struct mm_struct *mm;
+
+	mm = get_task_mm(task);
+
+	// Kernel thread?
+	if (mm == NULL)
+		mm = task->active_mm;
+
+	return mm;
+}
+
+unsigned long c_copy_to_user(struct task_struct *task, ptr_t to, ptr_t from,
 			     size_t size)
 {
+	struct mm_struct *mm;
+	struct page *page;
+
 	unsigned long result;
+	int ret;
+	ptr_t realaddr;
+
+	result = 0;
+
+	mm = get_task_mm_kthread(task);
+
+	if (mm == NULL) {
+		goto out;
+	}
 
 	down_write(&mm->mmap_sem);
 
-	result = copy_to_user(to, from, size);
+	ret = get_user_pages_remote(task, mm, (uintptr_t)to, 1,
+				    FOLL_REMOTE | FOLL_FORCE, &page, NULL,
+				    NULL);
 
+	if (ret <= 0) {
+		goto out_up;
+	}
+
+	realaddr = page_address(page);
+
+	result = copy_to_user(realaddr, from, size);
+
+out_up:
 	up_write(&mm->mmap_sem);
 
+out:
 	return result;
 }
 
-unsigned long c_copy_from_user(struct mm_struct *mm, ptr_t to, ptr_t from,
+unsigned long c_copy_from_user(struct task_struct *task, ptr_t to, ptr_t from,
 			       size_t size)
 {
+	struct mm_struct *mm;
+	struct page *page;
+
 	unsigned long result;
+	int ret;
+	ptr_t realaddr;
+
+	result = 0;
+
+	mm = get_task_mm_kthread(task);
+
+	if (mm == NULL) {
+		goto out;
+	}
 
 	down_read(&mm->mmap_sem);
 
-	result = copy_from_user(to, from, size);
+	ret = get_user_pages_remote(task, mm, (uintptr_t)to, 1,
+				    FOLL_REMOTE | FOLL_FORCE, &page, NULL,
+				    NULL);
 
+	if (ret <= 0) {
+		goto out_up;
+	}
+
+	realaddr = page_address(page);
+
+	result = copy_from_user(to, realaddr, size);
+
+out_up:
 	up_read(&mm->mmap_sem);
-
+out:
 	return result;
 }
