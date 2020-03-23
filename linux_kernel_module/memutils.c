@@ -685,7 +685,7 @@ unsigned long c_copy_from_user(struct task_struct *task, ptr_t to, ptr_t from,
 
 	down_read(&mm->mmap_sem);
 
-	ret = get_user_pages_remote(task, mm, (uintptr_t)to, 1,
+	ret = get_user_pages_remote(task, mm, (uintptr_t)from, 1,
 				    FOLL_REMOTE | FOLL_FORCE, &page, NULL,
 				    NULL);
 
