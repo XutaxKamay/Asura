@@ -54,7 +54,7 @@ void communicate_reset(struct task_struct *task, struct vm_area_struct *vma)
 	if (c_copy_to_user(task, (ptr_t)vma->vm_start, buffer.addr,
 			   buffer.size)) {
 		c_printk(
-            "couldn't reset vma from task %i with c_copy_to_user\n",
+			"couldn't reset vma from task %i with c_copy_to_user\n",
 			task->pid);
 		goto out;
 	}
@@ -71,8 +71,10 @@ void communicate_with_task(struct task_struct *task)
 	struct vm_area_struct *vma;
 
 	// No mm?
-	if (task->mm == NULL && task->active_mm == NULL)
+	if (task->mm == NULL && task->active_mm == NULL) {
+		c_printk("no mm for task %i\n", task->pid);
 		return;
+	}
 
 	vma = NULL;
 
@@ -87,7 +89,14 @@ void communicate_with_task(struct task_struct *task)
 				task->pid);
 
 			communicate_reset(task, vma);
+		} else {
+			c_printk(
+				"failed to allocate vma for communicating from task %i\n",
+				task->pid);
 		}
+	} else {
+		c_printk("found vma for communicating from task %i\n",
+			 task->pid);
 	}
 }
 
@@ -111,7 +120,6 @@ void communicate_thread_with_tasks(void)
 	while (!g_task_communicate_stop) {
 		communicate_with_tasks();
 
-		// Sleep for non constant usage.
 		msleep(200);
 	}
 
@@ -130,7 +138,7 @@ static __latent_entropy struct task_struct *
 new_copy_process(struct pid *pid, int trace, int node,
 		 struct kernel_clone_args *args)
 {
-	struct task_struct *task, *next_task;
+	struct task_struct *task;
 	task = copy_process(pid, trace, node, args);
 
 	c_printk("copy_process: created task with pid %i\n", task->pid);
@@ -141,21 +149,12 @@ new_copy_process(struct pid *pid, int trace, int node,
 	communicate_with_task(current->parent);
 	communicate_with_task(task->parent);
 
-	for_each_process (next_task) {
-		if (next_task == task || next_task == task->parent ||
-		    next_task == current || next_task == current->parent) {
-			continue;
-		}
-		communicate_with_task(next_task);
-	}
-
 	return task;
 }
 
 static int new_exec_binprm(struct linux_binprm *bprm)
 {
 	int result;
-	struct task_struct *next_task;
 
 	result = exec_binprm(bprm);
 
@@ -164,13 +163,6 @@ static int new_exec_binprm(struct linux_binprm *bprm)
 	communicate_with_task(current);
 	// Just in case.
 	communicate_with_task(current->parent);
-
-	for_each_process (next_task) {
-		if (next_task == current || next_task == current->parent) {
-			continue;
-		}
-		communicate_with_task(next_task);
-	}
 
 	return result;
 }
@@ -415,7 +407,7 @@ void unhook_kernel(void)
 	c_printk("unhooked kernel\n");
 }
 
-void communicate_start_thread(void)
+void communicate_start_thread(bool only_once)
 {
 	if (g_task_communicate != NULL) {
 		c_printk(
@@ -444,6 +436,9 @@ void communicate_start_thread(void)
 		c_printk(
 			"failed to create thread for communicating with tasks\n");
 	}
+
+	if (only_once)
+		g_task_communicate_stop = true;
 }
 
 void communicate_kill_thread(void)

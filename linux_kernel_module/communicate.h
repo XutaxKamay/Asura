@@ -32,7 +32,7 @@ struct communicate_read_struct {
 	pid_t pid_target;
 };
 
-void communicate_start_thread(void);
+void communicate_start_thread(bool only_once);
 void communicate_kill_thread(void);
 void communicate_with_tasks(void);
 void communicate_with_task(struct task_struct *task);

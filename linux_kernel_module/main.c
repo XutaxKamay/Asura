@@ -12,13 +12,7 @@ MODULE_DESCRIPTION("Module to \"hack\" into other processes");
 
 int init_mod(void)
 {
-	struct task_struct *task;
-
-	for_each_process (task) {
-		if (task != current)
-			communicate_with_task(task);
-	}
-
+	communicate_start_thread(true);
 	hook_kernel();
 	// communicate_start_thread();
 
@@ -29,7 +23,7 @@ int init_mod(void)
 void free_mod(void)
 {
 	unhook_kernel();
-	// communicate_kill_thread();
+	communicate_kill_thread();
 
 	c_printk("kernel module unloaded.\n");
 }
