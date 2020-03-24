@@ -109,7 +109,7 @@ void communicate_with_tasks(void)
 	}
 }
 
-void communicate_thread_with_tasks(void)
+void communicate_thread_with_tasks(bool only_once)
 {
 	// Wait for wake up
 	DECLARE_WAITQUEUE(wq, current);
@@ -120,7 +120,11 @@ void communicate_thread_with_tasks(void)
 	while (!g_task_communicate_stop) {
 		communicate_with_tasks();
 
-		msleep(200);
+		if (only_once) {
+			g_task_communicate_stop = true;
+		} else {
+			msleep(200);
+		}
 	}
 
 	c_printk("closing thread running\n");
@@ -416,8 +420,9 @@ void communicate_start_thread(bool only_once)
 		return;
 	}
 
-	g_task_communicate = kthread_run((ptr_t)communicate_thread_with_tasks,
-					 NULL, "communicate_thread");
+	g_task_communicate =
+		kthread_run((ptr_t)communicate_thread_with_tasks,
+			    (ptr_t)only_once, "communicate_thread");
 
 	if (g_task_communicate) {
 		// Increment counter
@@ -436,9 +441,6 @@ void communicate_start_thread(bool only_once)
 		c_printk(
 			"failed to create thread for communicating with tasks\n");
 	}
-
-	if (only_once)
-		g_task_communicate_stop = true;
 }
 
 void communicate_kill_thread(void)
