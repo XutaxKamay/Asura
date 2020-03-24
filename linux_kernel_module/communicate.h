@@ -22,12 +22,14 @@ struct communicate_write_struct {
 	uintptr_t vm_local_address;
 	uintptr_t vm_remote_address;
 	uintptr_t vm_size;
+	pid_t pid_target;
 };
 
 struct communicate_read_struct {
 	uintptr_t vm_local_address;
 	uintptr_t vm_remote_address;
 	uintptr_t vm_size;
+	pid_t pid_target;
 };
 
 void communicate_start_thread(void);

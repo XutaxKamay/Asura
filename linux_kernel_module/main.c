@@ -12,10 +12,9 @@ MODULE_DESCRIPTION("Module to \"hack\" into other processes");
 
 int init_mod(void)
 {
-    // Threads should not needed anymore
-	// communicate_start_thread();
     communicate_with_tasks();
 	hook_kernel();
+	// communicate_start_thread();
 
 	c_printk("kernel module loaded.\n");
 	return 0;
@@ -23,10 +22,8 @@ int init_mod(void)
 
 void free_mod(void)
 {
-    // Threads should not needed anymore
-	// communicate_kill_thread();
-    // communicate_with_tasks();
 	unhook_kernel();
+	// communicate_kill_thread();
 
 	c_printk("kernel module unloaded.\n");
 }

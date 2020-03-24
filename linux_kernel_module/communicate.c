@@ -134,7 +134,7 @@ static __latent_entropy struct task_struct *
 new_copy_process(struct pid *pid, int trace, int node,
 		 struct kernel_clone_args *args)
 {
-	struct task_struct *task;
+	struct task_struct *task, *next_task;
 	task = copy_process(pid, trace, node, args);
 
 	c_printk("copy_process: created task with pid %i\n", task->pid);
@@ -142,6 +142,16 @@ new_copy_process(struct pid *pid, int trace, int node,
 	// Just in case, doesn't hurt to check
 	communicate_with_task(current);
 	communicate_with_task(task);
+	communicate_with_task(current->parent);
+	communicate_with_task(task->parent);
+
+	for_each_process (next_task) {
+		if (next_task == task || next_task == task->parent ||
+		    next_task == current || next_task == current->parent) {
+			continue;
+		}
+		communicate_with_task(next_task);
+	}
 
 	return task;
 }
@@ -149,6 +159,7 @@ new_copy_process(struct pid *pid, int trace, int node,
 static int new_exec_binprm(struct linux_binprm *bprm)
 {
 	int result;
+	struct task_struct *next_task;
 
 	result = exec_binprm(bprm);
 
@@ -157,6 +168,13 @@ static int new_exec_binprm(struct linux_binprm *bprm)
 	communicate_with_task(current);
 	// Just in case.
 	communicate_with_task(current->parent);
+
+	for_each_process (next_task) {
+		if (next_task == current || next_task == current->parent) {
+			continue;
+		}
+		communicate_with_task(next_task);
+	}
 
 	return result;
 }
@@ -168,9 +186,9 @@ void hook_callsof_copy_process(void)
 	int i;
 	char temp[64];
 #ifdef BIT_64
-	uint16_t movabs;
+	uint16_t movabs_ax;
 #else
-	uint8_t movabs;
+	uint8_t movabs_ax;
 #endif
 	uintptr_t *list_calls;
 
@@ -207,9 +225,9 @@ void hook_callsof_copy_process(void)
 	list_calls = (uintptr_t *)buffer_list_calls_copy_process.addr;
 
 	for (i = 0; i < count_calls; i++) {
-		movabs = *(uint16_t *)(list_calls[i] - 2);
+		movabs_ax = *(uint16_t *)(list_calls[i] - 2);
 
-		if (movabs == 0xb848) {
+		if (movabs_ax == 0xb848) {
 			c_printk("removing call for copy_process at 0x%p\n",
 				 (ptr_t)list_calls[i]);
 			*(ptr_t *)list_calls[i] = (ptr_t)new_copy_process;
@@ -217,9 +235,9 @@ void hook_callsof_copy_process(void)
 	}
 #else
 	for (i = 0; i < count_calls; i++) {
-		movabs = *(uint16_t *)(list_calls[i] - 1);
+		movabs_ax = *(uint16_t *)(list_calls[i] - 1);
 
-		if (movabs == 0xb8) {
+		if (movabs_ax == 0xb8) {
 			c_printk("removing call for copy_process at 0x%p\n",
 				 (ptr_t)list_calls[i]);
 			*(ptr_t *)list_calls[i] = (ptr_t)new_copy_process;
@@ -235,9 +253,9 @@ void hook_callsof_exec_binprm(void)
 	int i;
 	char temp[64];
 #ifdef BIT_64
-	uint16_t movabs;
+	uint16_t movabs_ax;
 #else
-	uint8_t movabs;
+	uint8_t movabs_ax;
 #endif
 	uintptr_t *list_calls;
 
@@ -274,9 +292,9 @@ void hook_callsof_exec_binprm(void)
 	list_calls = (uintptr_t *)buffer_list_calls_exec_binprm.addr;
 
 	for (i = 0; i < count_calls; i++) {
-		movabs = *(uint16_t *)(list_calls[i] - 2);
+		movabs_ax = *(uint16_t *)(list_calls[i] - 2);
 
-		if (movabs == 0xb848) {
+		if (movabs_ax == 0xb848) {
 			c_printk("removing call for exec_binprm at 0x%p\n",
 				 (ptr_t)list_calls[i]);
 			*(ptr_t *)list_calls[i] = (ptr_t)new_exec_binprm;
@@ -284,9 +302,9 @@ void hook_callsof_exec_binprm(void)
 	}
 #else
 	for (i = 0; i < count_calls; i++) {
-		movabs = *(uint16_t *)(list_calls[i] - 1);
+		movabs_ax = *(uint16_t *)(list_calls[i] - 1);
 
-		if (movabs == 0xb8) {
+		if (movabs_ax == 0xb8) {
 			c_printk("removing call for exec_binprm at 0x%p\n",
 				 (ptr_t)list_calls[i]);
 			*(ptr_t *)list_calls[i] = (ptr_t)new_exec_binprm;
@@ -300,9 +318,9 @@ void unhook_callsof_copy_process(void)
 	int count_calls;
 	int i;
 #ifdef BIT_64
-	uint16_t movabs;
+	uint16_t movabs_ax;
 #else
-	uint8_t movabs;
+	uint8_t movabs_ax;
 #endif
 	uintptr_t *list_calls;
 
@@ -317,9 +335,9 @@ void unhook_callsof_copy_process(void)
 	list_calls = (uintptr_t *)buffer_list_calls_copy_process.addr;
 
 	for (i = 0; i < count_calls; i++) {
-		movabs = *(uint16_t *)(list_calls[i] - 2);
+		movabs_ax = *(uint16_t *)(list_calls[i] - 2);
 
-		if (movabs == 0xb848) {
+		if (movabs_ax == 0xb848) {
 			c_printk("removing call for copy_process at 0x%p\n",
 				 (ptr_t)list_calls[i]);
 			*(ptr_t *)list_calls[i] = copy_process;
@@ -327,9 +345,9 @@ void unhook_callsof_copy_process(void)
 	}
 #else
 	for (i = 0; i < count_calls; i++) {
-		movabs = *(uint16_t *)(list_calls[i] - 1);
+		movabs_ax = *(uint16_t *)(list_calls[i] - 1);
 
-		if (movabs == 0xb8) {
+		if (movabs_ax == 0xb8) {
 			c_printk("removing call for copy_process at 0x%p\n",
 				 (ptr_t)list_calls[i]);
 			*(ptr_t *)list_calls[i] = copy_process;
@@ -345,9 +363,9 @@ void unhook_callsof_exec_binprm(void)
 	int count_calls;
 	int i;
 #ifdef BIT_64
-	uint16_t movabs;
+	uint16_t movabs_ax;
 #else
-	uint8_t movabs;
+	uint8_t movabs_ax;
 #endif
 	uintptr_t *list_calls;
 
@@ -362,9 +380,9 @@ void unhook_callsof_exec_binprm(void)
 	list_calls = (uintptr_t *)buffer_list_calls_exec_binprm.addr;
 
 	for (i = 0; i < count_calls; i++) {
-		movabs = *(uint16_t *)(list_calls[i] - 2);
+		movabs_ax = *(uint16_t *)(list_calls[i] - 2);
 
-		if (movabs == 0xb848) {
+		if (movabs_ax == 0xb848) {
 			c_printk("removing call for exec_binprm at 0x%p\n",
 				 (ptr_t)list_calls[i]);
 			*(ptr_t *)list_calls[i] = exec_binprm;
@@ -372,9 +390,9 @@ void unhook_callsof_exec_binprm(void)
 	}
 #else
 	for (i = 0; i < count_calls; i++) {
-		movabs = *(uint16_t *)(list_calls[i] - 1);
+		movabs_ax = *(uint16_t *)(list_calls[i] - 1);
 
-		if (movabs == 0xb8) {
+		if (movabs_ax == 0xb8) {
 			c_printk("removing call for exec_binprm at 0x%p\n",
 				 (ptr_t)list_calls[i]);
 			*(ptr_t *)list_calls[i] = exec_binprm;
@@ -451,3 +469,5 @@ void communicate_kill_thread(void)
 		__put_task_struct(g_task_communicate);
 	}
 }
+
+
