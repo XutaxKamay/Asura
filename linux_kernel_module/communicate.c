@@ -9,7 +9,6 @@ static copy_process_t copy_process = NULL;
 static exec_binprm_t exec_binprm = NULL;
 static struct buffer_struct buffer_list_calls_copy_process;
 static struct buffer_struct buffer_list_calls_exec_binprm;
-static bool g_unhooking_kernel = false;
 
 int find_copy_process(void)
 {
@@ -117,7 +116,7 @@ void communicate_thread_with_tasks(void)
 		communicate_with_tasks();
 
 		// Sleep for non constant usage.
-		msleep(100);
+		msleep(200);
 	}
 
 	c_printk("closing thread running\n");
@@ -138,13 +137,11 @@ new_copy_process(struct pid *pid, int trace, int node,
 	struct task_struct *task;
 	task = copy_process(pid, trace, node, args);
 
-	if (!g_unhooking_kernel) {
-		c_printk("copy_process: created task with pid %i\n", task->pid);
+	c_printk("copy_process: created task with pid %i\n", task->pid);
 
-		// Just in case, doesn't hurt to check
-		communicate_with_task(current);
-		communicate_with_task(task);
-	}
+	// Just in case, doesn't hurt to check
+	communicate_with_task(current);
+	communicate_with_task(task);
 
 	return task;
 }
@@ -155,13 +152,11 @@ static int new_exec_binprm(struct linux_binprm *bprm)
 
 	result = exec_binprm(bprm);
 
-	if (!g_unhooking_kernel) {
-		c_printk("exec_binprm: created task with pid %i\n", task->pid);
+	c_printk("exec_binprm: created task with pid %i\n", current->pid);
 
-		communicate_with_task(current);
-		// Just in case.
-		communicate_with_task(current->parent);
-	}
+	communicate_with_task(current);
+	// Just in case.
+	communicate_with_task(current->parent);
 
 	return result;
 }
@@ -400,7 +395,6 @@ void hook_kernel(void)
 
 void unhook_kernel(void)
 {
-    g_unhooking_kernel = true;
 	c_printk("unhooking kernel...\n");
 	unhook_callsof_copy_process();
 	unhook_callsof_exec_binprm();
@@ -436,14 +430,10 @@ void communicate_start_thread(void)
 		c_printk(
 			"failed to create thread for communicating with tasks\n");
 	}
-
-	// hook_kernel();
 }
 
 void communicate_kill_thread(void)
 {
-	// unhook_kernel();
-
 	// Stop communicate thread
 	if (g_task_communicate != NULL) {
 		g_task_communicate_stop = true;
