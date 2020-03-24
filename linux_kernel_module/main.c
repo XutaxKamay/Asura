@@ -25,7 +25,7 @@ void free_mod(void)
 {
     // Threads should not needed anymore
 	// communicate_kill_thread();
-    communicate_with_tasks();
+    // communicate_with_tasks();
 	unhook_kernel();
 
 	c_printk("kernel module unloaded.\n");
