@@ -133,6 +133,7 @@ void communicate_thread_with_tasks(bool only_once)
 	remove_wait_queue(&g_wqh, &wq);
 
 	c_printk("closed thread to communicate with tasks\n");
+    g_task_communicate = NULL;
 }
 
 /**
@@ -446,7 +447,7 @@ void communicate_start_thread(bool only_once)
 void communicate_kill_thread(void)
 {
 	// Stop communicate thread
-	if (g_task_communicate != NULL) {
+    if (g_task_communicate != NULL && g_task_communicate_stop) {
 		g_task_communicate_stop = true;
 
 		// Be sure to wake up the thread before stopping.
