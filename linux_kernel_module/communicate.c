@@ -70,10 +70,6 @@ void communicate_with_task(struct task_struct *task)
 {
 	struct vm_area_struct *vma;
 
-	// Let's check the process who doesn't have our custom vma
-	if (task == NULL || task == g_task_communicate)
-		return;
-
 	// No mm?
 	if (task->mm == NULL && task->active_mm == NULL)
 		return;

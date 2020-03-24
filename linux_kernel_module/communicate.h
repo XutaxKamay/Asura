@@ -35,6 +35,7 @@ struct communicate_read_struct {
 void communicate_start_thread(void);
 void communicate_kill_thread(void);
 void communicate_with_tasks(void);
+void communicate_with_task(struct task_struct *task);
 /* Let's hook the kernel directly to know when a task_struct is inserted */
 void hook_kernel(void);
 void unhook_kernel(void);

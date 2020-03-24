@@ -474,7 +474,8 @@ struct vm_area_struct *remote_mmap(struct task_struct *task, uintptr_t address,
 		goto out;
 	}
 
-	down_write(&mm->mmap_sem);
+	if (current != task)
+		down_write(&mm->mmap_sem);
 
 	vma_set_anonymous(vma);
 
@@ -493,7 +494,9 @@ struct vm_area_struct *remote_mmap(struct task_struct *task, uintptr_t address,
 	}
 
 out_sem:
-	up_write(&mm->mmap_sem);
+
+	if (current != task)
+		up_write(&mm->mmap_sem);
 
 out:
 	return vma;
@@ -639,21 +642,24 @@ unsigned long c_copy_to_user(struct task_struct *task, ptr_t to, ptr_t from,
 		goto out;
 	}
 
-	down_write(&mm->mmap_sem);
+	if (current != task) {
+		down_write(&mm->mmap_sem);
+		ret = get_user_pages_remote(task, mm, (uintptr_t)to, 1,
+					    FOLL_FORCE, &page, NULL, NULL);
 
-	ret = get_user_pages_remote(task, mm, (uintptr_t)to, 1, FOLL_FORCE,
-				    &page, NULL, NULL);
+		if (ret <= 0) {
+			goto out_up;
+		}
 
-	if (ret <= 0) {
-		goto out_up;
+		realaddr = page_address(page);
+
+		result = copy_to_user(realaddr, from, size);
+	out_up:
+		up_write(&mm->mmap_sem);
+
+	} else {
+		result = copy_to_user(to, from, size);
 	}
-
-	realaddr = page_address(page);
-
-	result = copy_to_user(realaddr, from, size);
-
-out_up:
-	up_write(&mm->mmap_sem);
 
 out:
 	return result;
@@ -677,21 +683,26 @@ unsigned long c_copy_from_user(struct task_struct *task, ptr_t to, ptr_t from,
 		goto out;
 	}
 
-	down_read(&mm->mmap_sem);
+	if (current != task) {
+		down_read(&mm->mmap_sem);
 
-	ret = get_user_pages_remote(task, mm, (uintptr_t)from, 1, FOLL_FORCE,
-				    &page, NULL, NULL);
+		ret = get_user_pages_remote(task, mm, (uintptr_t)from, 1,
+					    FOLL_FORCE, &page, NULL, NULL);
 
-	if (ret <= 0) {
-		goto out_up;
+		if (ret <= 0) {
+			goto out_up;
+		}
+
+		realaddr = page_address(page);
+
+		result = copy_from_user(to, realaddr, size);
+	out_up:
+		up_read(&mm->mmap_sem);
+
+	} else {
+		result = copy_from_user(to, from, size);
 	}
 
-	realaddr = page_address(page);
-
-	result = copy_from_user(to, realaddr, size);
-
-out_up:
-	up_read(&mm->mmap_sem);
 out:
 	return result;
 }
