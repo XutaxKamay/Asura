@@ -54,7 +54,7 @@ void communicate_reset(struct task_struct *task, struct vm_area_struct *vma)
 	if (c_copy_to_user(task, (ptr_t)vma->vm_start, buffer.addr,
 			   buffer.size)) {
 		c_printk(
-			"couldn't reset vma from task %i with copy_from_user\n",
+            "couldn't reset vma from task %i with c_copy_to_user\n",
 			task->pid);
 		goto out;
 	}
@@ -68,9 +68,9 @@ out:
 
 void communicate_with_task(struct task_struct *task)
 {
-	// Let's check the process who doesn't have our custom vma
 	struct vm_area_struct *vma;
 
+	// Let's check the process who doesn't have our custom vma
 	if (task == NULL || task == g_task_communicate)
 		return;
 
@@ -83,7 +83,7 @@ void communicate_with_task(struct task_struct *task)
 	c_find_vma_from_task(task, &vma, MAGIC_ADDRESS);
 
 	if (vma == NULL) {
-		vma = remote_mmap(task->pid, MAGIC_ADDRESS, PROT_COMMUNICATE);
+		vma = remote_mmap(task, MAGIC_ADDRESS, PROT_COMMUNICATE);
 
 		if (vma != NULL) {
 			c_printk(
@@ -469,5 +469,3 @@ void communicate_kill_thread(void)
 		__put_task_struct(g_task_communicate);
 	}
 }
-
-

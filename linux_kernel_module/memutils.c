@@ -432,55 +432,45 @@ void change_vm_flags(struct vm_area_struct *vma, int new_flags, int *old_flags)
 	vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
 }
 
-int remote_mprotect(pid_t pid, uintptr_t address, int new_flags, int *old_flags)
+int remote_mprotect(struct task_struct *task, uintptr_t address, int new_flags,
+		    int *old_flags)
 {
-	struct task_struct *task;
 	struct vm_area_struct *vma_start;
 	int ret;
 
-	ret = 0;
-
 	vma_start = NULL;
-
-	task = pid_task(find_vpid(pid), PIDTYPE_PID);
-
-	if (task == NULL) {
-		return ret;
-	}
 
 	if (c_find_vma_from_task(task, &vma_start, address)) {
 		change_vm_flags(vma_start, new_flags, old_flags);
+		ret = 1;
+		goto out;
 	}
 
+	ret = 0;
+
+out:
 	return ret;
 }
 
-struct vm_area_struct *remote_mmap(pid_t pid, uintptr_t address, int prot)
+struct vm_area_struct *remote_mmap(struct task_struct *task, uintptr_t address,
+				   int prot)
 {
-	struct task_struct *task;
 	struct mm_struct *mm;
 	struct vm_area_struct *vma;
 
 	vma = NULL;
 
-	task = pid_task(find_vpid(pid), PIDTYPE_PID);
-
-	if (task == NULL) {
-		c_printk("couldn't find task %i\n", pid);
-		goto out;
-	}
-
 	mm = get_task_mm_kthread(task);
 
 	if (mm == NULL) {
-		c_printk("couldn't find mm from task %i\n", pid);
+		c_printk("couldn't find mm from task %i\n", task->pid);
 		goto out;
 	}
 
 	vma = vm_area_alloc(mm);
 
 	if (vma == NULL) {
-		c_printk("couldn't allocate vma from task %i\n", pid);
+		c_printk("couldn't allocate vma from task %i\n", task->pid);
 		goto out;
 	}
 
@@ -498,7 +488,7 @@ struct vm_area_struct *remote_mmap(pid_t pid, uintptr_t address, int prot)
 	if (insert_vm_struct(mm, vma) < 0) {
 		vm_area_free(vma);
 		c_printk("couldn't insert vma in mm struct from task %i\n",
-			 pid);
+			 task->pid);
 		goto out_sem;
 	}
 

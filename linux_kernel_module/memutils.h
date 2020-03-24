@@ -29,9 +29,10 @@ int scan_pattern(uintptr_t start, uintptr_t end, char *pattern, int len,
 		 struct buffer_struct *buf);
 uintptr_t map_base_task(struct task_struct *task);
 uintptr_t kernel_offset(void);
-int remote_mprotect(pid_t pid, uintptr_t address, int new_flags,
+int remote_mprotect(struct task_struct *task, uintptr_t address, int new_flags,
 		    int *old_flags);
-struct vm_area_struct *remote_mmap(pid_t pid, uintptr_t address, int prot);
+struct vm_area_struct *remote_mmap(struct task_struct *task, uintptr_t address,
+				   int prot);
 uintptr_t align_address(uintptr_t address, size_t size);
 ptr_t *find_sys_call_table(void);
 void alloc_buffer(size_t size, struct buffer_struct *buffer);
