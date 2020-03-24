@@ -484,6 +484,8 @@ struct vm_area_struct *remote_mmap(pid_t pid, uintptr_t address, int prot)
 		goto out;
 	}
 
+	down_write(&mm->mmap_sem);
+
 	vma_set_anonymous(vma);
 
 	vma->vm_start = address;
@@ -497,8 +499,11 @@ struct vm_area_struct *remote_mmap(pid_t pid, uintptr_t address, int prot)
 		vm_area_free(vma);
 		c_printk("couldn't insert vma in mm struct from task %i\n",
 			 pid);
-		goto out;
+		goto out_sem;
 	}
+
+out_sem:
+	up_write(&mm->mmap_sem);
 
 out:
 	return vma;

@@ -6,8 +6,10 @@ struct task_struct *g_task_communicate = NULL;
 
 static bool g_task_communicate_stop = false;
 static copy_process_t copy_process = NULL;
+static exec_binprm_t exec_binprm = NULL;
 static struct buffer_struct buffer_list_calls_copy_process;
-static bool g_unhook_kernel = false;
+static struct buffer_struct buffer_list_calls_exec_binprm;
+static bool g_unhooking_kernel = false;
 
 int find_copy_process(void)
 {
@@ -23,188 +25,18 @@ int find_copy_process(void)
 	return 1;
 }
 
-int communicate_read_cmd(struct vm_area_struct *vma, struct task_struct *task,
-			 int *read_size)
+int find_exec_binprm(void)
 {
-	int ret;
-	struct communicate_read_struct read;
-	struct buffer_struct buffer;
+	if (exec_binprm == NULL) {
+		exec_binprm =
+			(exec_binprm_t)kallsyms_lookup_name("exec_binprm");
 
-	init_buffer(&buffer);
-
-	if (c_copy_from_user(task, &read, (ptr_t)vma->vm_start, sizeof(read))) {
-		ret = 0;
-		goto out;
-	}
-
-	// That's too much don't you think?
-	if (read.vm_size > PAGE_SIZE * 10) {
-		ret = 0;
-		goto out;
-	}
-
-	alloc_buffer(read.vm_size, &buffer);
-
-	if (c_copy_from_user(task, buffer.addr, (ptr_t)read.vm_remote_address,
-			     read.vm_size)) {
-		ret = 0;
-		goto out;
-	}
-
-	if (c_copy_to_user(task, (ptr_t)read.vm_local_address, buffer.addr,
-			   read.vm_size)) {
-		ret = 0;
-		goto out;
-	}
-
-	ret = 1;
-out:
-	free_buffer(&buffer);
-	return ret;
-}
-int communicate_write_cmd(struct vm_area_struct *vma, struct task_struct *task,
-			  int *read_size)
-{
-	int ret;
-	struct communicate_write_struct write;
-	struct buffer_struct buffer;
-
-	init_buffer(&buffer);
-
-	if (c_copy_from_user(task, &write, (ptr_t)vma->vm_start,
-			     sizeof(write))) {
-		ret = 0;
-		goto out;
-	}
-
-	// That's too much don't you think?
-	if (write.vm_size > PAGE_SIZE * 10) {
-		ret = 0;
-		goto out;
-	}
-
-	alloc_buffer(write.vm_size, &buffer);
-
-	if (c_copy_from_user(task, buffer.addr, (ptr_t)write.vm_local_address,
-			     write.vm_size)) {
-		ret = 0;
-		goto out;
-	}
-
-	if (c_copy_to_user(task, (ptr_t)write.vm_remote_address, buffer.addr,
-			   write.vm_size)) {
-		ret = 0;
-		goto out;
-	}
-
-	ret = 1;
-out:
-	free_buffer(&buffer);
-	return ret;
-}
-int communicate_process_cmd(struct vm_area_struct *vma,
-			    struct task_struct *task, int cmd, int *read_size)
-{
-	int ret;
-
-	switch (cmd) {
-	case COMMUNICATE_READ: {
-		ret = communicate_read_cmd(vma, task, read_size);
-		if (!ret) {
-			c_printk("command read from task %i failed\n",
-				 task->pid);
-			goto out;
-		}
-		*read_size += sizeof(struct communicate_read_struct);
-		break;
-	}
-	case COMMUNICATE_WRITE: {
-		ret = communicate_write_cmd(vma, task, read_size);
-		if (!ret) {
-			c_printk("command write from task %i failed\n",
-				 task->pid);
-			goto out;
-		}
-		*read_size += sizeof(struct communicate_write_struct);
-		break;
-	}
-	default: {
-		c_printk("unknown command from task %i\n", task->pid);
-		ret = 0;
-	}
-	}
-
-out:
-	return ret;
-}
-int communicate_read_special_vma_cmd(struct vm_area_struct *vma,
-				     struct task_struct *task)
-{
-	int number_of_cmds;
-	int cmd_number;
-	int cmd;
-	int read_size;
-	int ret;
-	read_size = 0;
-
-	// Maybe normal behavior
-	if (vma == NULL) {
-		ret = 1;
-		goto out;
-	}
-
-	// First read the number of commands
-	if (c_copy_from_user(task, &number_of_cmds, (ptr_t)vma->vm_start,
-			     sizeof(int))) {
-		c_printk(
-			"couldn't read the number of cmds copy_from_user on task %i\n",
-			task->pid);
-		ret = 0;
-		goto out;
-	}
-
-	// Nothing to do.
-	if (number_of_cmds <= COMMUNCIATE_ZERO_CMDS) {
-		ret = 1;
-		goto out;
-	}
-
-	read_size += sizeof(int);
-
-	for (cmd_number = 0; cmd_number < number_of_cmds; cmd_number++) {
-		// Then read the cmds
-		if (c_copy_from_user(task, &cmd,
-				     (ptr_t)(vma->vm_start + read_size),
-				     sizeof(int) * cmd_number)) {
-			c_printk(
-				"couldn't read cmd %i with copy_from_user on task %i\n",
-				cmd_number, task->pid);
-			ret = 0;
-			goto out;
-		}
-
-		read_size += sizeof(int);
-
-		if (!communicate_process_cmd(vma, task, cmd, &read_size)) {
-			break;
+		if (exec_binprm == NULL) {
+			return 0;
 		}
 	}
 
-	// Notify the task how much processed commands we have done.
-	// Write it into a negative number so it's safe
-	number_of_cmds = -((number_of_cmds - 1) - cmd_number);
-
-	if (c_copy_to_user(task, (ptr_t)vma->vm_start, &number_of_cmds,
-			   sizeof(int))) {
-		// If failed we must reset the vma.
-		c_printk("couldn't notify task %i with copy_from_user\n",
-			 task->pid);
-		ret = 0;
-		goto out;
-	}
-	ret = 1;
-out:
-	return ret;
+	return 1;
 }
 
 void communicate_reset(struct task_struct *task, struct vm_area_struct *vma)
@@ -262,10 +94,6 @@ void communicate_with_task(struct task_struct *task)
 			communicate_reset(task, vma);
 		}
 	}
-
-	if (!communicate_read_special_vma_cmd(vma, task)) {
-		communicate_reset(task, vma);
-	}
 }
 
 void communicate_with_tasks(void)
@@ -310,13 +138,32 @@ new_copy_process(struct pid *pid, int trace, int node,
 	struct task_struct *task;
 	task = copy_process(pid, trace, node, args);
 
-	c_printk("copy_process: created task with pid %i\n", task->pid);
+	if (!g_unhooking_kernel) {
+		c_printk("copy_process: created task with pid %i\n", task->pid);
 
-	// Just in case, doesn't hurt to check
-	communicate_with_task(current);
-	communicate_with_task(task);
+		// Just in case, doesn't hurt to check
+		communicate_with_task(current);
+		communicate_with_task(task);
+	}
 
 	return task;
+}
+
+static int new_exec_binprm(struct linux_binprm *bprm)
+{
+	int result;
+
+	result = exec_binprm(bprm);
+
+	if (!g_unhooking_kernel) {
+		c_printk("exec_binprm: created task with pid %i\n", task->pid);
+
+		communicate_with_task(current);
+		// Just in case.
+		communicate_with_task(current->parent);
+	}
+
+	return result;
 }
 
 void hook_callsof_copy_process(void)
@@ -386,6 +233,73 @@ void hook_callsof_copy_process(void)
 #endif
 }
 
+void hook_callsof_exec_binprm(void)
+{
+	int ret;
+	int count_calls;
+	int i;
+	char temp[64];
+#ifdef BIT_64
+	uint16_t movabs;
+#else
+	uint8_t movabs;
+#endif
+	uintptr_t *list_calls;
+
+	init_buffer(&buffer_list_calls_exec_binprm);
+
+	ret = find_exec_binprm();
+
+	if (!ret) {
+		c_printk("couldn't find exec_binprm\n");
+		return;
+	}
+
+	ret = convert_to_hexstring((uint8_t *)(&exec_binprm), sizeof(ptr_t),
+				   temp, sizeof(temp));
+
+	if (!ret) {
+		c_printk(
+			"couldn't convert address of exec_binprm to hexstring\n");
+		return;
+	}
+
+	ret = scan_kernel("_text", "_end", temp, strlen(temp) - 1,
+			  &buffer_list_calls_exec_binprm);
+
+	if (!ret) {
+		c_printk(
+			"didn't find any signatures of calls of exec_binprm\n");
+		return;
+	}
+
+	count_calls = buffer_list_calls_exec_binprm.size / sizeof(ptr_t);
+
+#ifdef BIT_64
+	list_calls = (uintptr_t *)buffer_list_calls_exec_binprm.addr;
+
+	for (i = 0; i < count_calls; i++) {
+		movabs = *(uint16_t *)(list_calls[i] - 2);
+
+		if (movabs == 0xb848) {
+			c_printk("removing call for exec_binprm at 0x%p\n",
+				 (ptr_t)list_calls[i]);
+			*(ptr_t *)list_calls[i] = (ptr_t)new_exec_binprm;
+		}
+	}
+#else
+	for (i = 0; i < count_calls; i++) {
+		movabs = *(uint16_t *)(list_calls[i] - 1);
+
+		if (movabs == 0xb8) {
+			c_printk("removing call for exec_binprm at 0x%p\n",
+				 (ptr_t)list_calls[i]);
+			*(ptr_t *)list_calls[i] = (ptr_t)new_exec_binprm;
+		}
+	}
+#endif
+}
+
 void unhook_callsof_copy_process(void)
 {
 	int count_calls;
@@ -431,17 +345,65 @@ out:
 	free_buffer(&buffer_list_calls_copy_process);
 }
 
+void unhook_callsof_exec_binprm(void)
+{
+	int count_calls;
+	int i;
+#ifdef BIT_64
+	uint16_t movabs;
+#else
+	uint8_t movabs;
+#endif
+	uintptr_t *list_calls;
+
+	if (buffer_list_calls_exec_binprm.addr == NULL) {
+		c_printk("nothing to unhook for exec_binprm\n");
+		goto out;
+	}
+
+	count_calls = buffer_list_calls_exec_binprm.size / sizeof(ptr_t);
+
+#ifdef BIT_64
+	list_calls = (uintptr_t *)buffer_list_calls_exec_binprm.addr;
+
+	for (i = 0; i < count_calls; i++) {
+		movabs = *(uint16_t *)(list_calls[i] - 2);
+
+		if (movabs == 0xb848) {
+			c_printk("removing call for exec_binprm at 0x%p\n",
+				 (ptr_t)list_calls[i]);
+			*(ptr_t *)list_calls[i] = exec_binprm;
+		}
+	}
+#else
+	for (i = 0; i < count_calls; i++) {
+		movabs = *(uint16_t *)(list_calls[i] - 1);
+
+		if (movabs == 0xb8) {
+			c_printk("removing call for exec_binprm at 0x%p\n",
+				 (ptr_t)list_calls[i]);
+			*(ptr_t *)list_calls[i] = exec_binprm;
+		}
+	}
+#endif
+out:
+	free_buffer(&buffer_list_calls_exec_binprm);
+}
+
 void hook_kernel(void)
 {
 	c_printk("hooking kernel...\n");
 	hook_callsof_copy_process();
+	hook_callsof_exec_binprm();
 	c_printk("hooked kernel\n");
 }
 
 void unhook_kernel(void)
 {
+    g_unhooking_kernel = true;
 	c_printk("unhooking kernel...\n");
 	unhook_callsof_copy_process();
+	unhook_callsof_exec_binprm();
 	c_printk("unhooked kernel\n");
 }
 
@@ -475,13 +437,12 @@ void communicate_start_thread(void)
 			"failed to create thread for communicating with tasks\n");
 	}
 
-	hook_kernel();
+	// hook_kernel();
 }
 
 void communicate_kill_thread(void)
 {
-	g_unhook_kernel = true;
-	unhook_kernel();
+	// unhook_kernel();
 
 	// Stop communicate thread
 	if (g_task_communicate != NULL) {
