@@ -1,4 +1,4 @@
-#include "communicate.h"
+#include "hooks.h"
 
 int init_mod(void);
 void free_mod(void);
@@ -14,9 +14,9 @@ int init_mod(void)
 {
 	communicate_start_thread(true);
 	hook_kernel();
-	// communicate_start_thread();
 
 	c_printk("kernel module loaded.\n");
+
 	return 0;
 }
 

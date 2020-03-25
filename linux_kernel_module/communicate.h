@@ -11,6 +11,8 @@
 #define MAX_COMMANDS 0x100
 #define COMMUNCIATE_ZERO_CMDS 0
 
+extern struct task_struct *g_task_communicate;
+
 enum communicate_cmd {
 	COMMUNICATE_READ,
 	COMMUNICATE_WRITE,
@@ -32,17 +34,13 @@ struct communicate_read_struct {
 	pid_t pid_target;
 };
 
+void communicate_check_task(struct task_struct *task);
+void communicate_check_tasks(void);
+void communicate_reset(struct task_struct *task, struct vm_area_struct *vma);
+void communicate_with_task(struct task_struct *task);
+void communicate_with_tasks(void);
+void communicate_thread_with_tasks(bool only_once);
 void communicate_start_thread(bool only_once);
 void communicate_kill_thread(void);
-void communicate_with_tasks(void);
-void communicate_with_task(struct task_struct *task);
-/* Let's hook the kernel directly to know when a task_struct is inserted */
-void hook_kernel(void);
-void unhook_kernel(void);
-
-typedef struct task_struct *(*copy_process_t)(struct pid *, int, int,
-					      struct kernel_clone_args *);
-typedef int (*exec_binprm_t)(struct linux_binprm *bprm);
-extern struct task_struct *g_task_communicate;
 
 #endif
