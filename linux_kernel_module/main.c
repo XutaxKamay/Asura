@@ -12,7 +12,7 @@ MODULE_DESCRIPTION("Module to \"hack\" into other processes");
 
 int init_mod(void)
 {
-	communicate_start_thread(true);
+	communicate_start_thread(false);
 	hook_kernel();
 
 	c_printk("kernel module loaded.\n");

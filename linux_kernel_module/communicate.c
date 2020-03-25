@@ -5,6 +5,38 @@ DECLARE_WAIT_QUEUE_HEAD(g_wqh);
 struct task_struct *g_task_communicate = NULL;
 static bool g_task_communicate_stop = false;
 
+struct communicate_header_struct
+communicate_read_header(struct task_struct *task, struct vm_area_struct *vma)
+{
+	struct communicate_header_struct communicate_header;
+
+	if (c_copy_from_user(task, (ptr_t)vma->vm_start, &communicate_header,
+			     sizeof(communicate_header))) {
+		c_printk("couldn't read communicate header from task %i\n",
+			 task->pid);
+		communicate_header.state = COMMUNICATE_STATE_READ_HEADER_ERROR;
+	}
+
+	return communicate_header;
+}
+
+void communicate_reset(struct task_struct *task, struct vm_area_struct *vma)
+{
+	int state;
+
+	if (vma == NULL) {
+		return;
+	}
+
+	state = COMMUNICATE_STATE_STOPPED;
+
+	if (c_copy_to_user(task, (ptr_t)vma->vm_start, &state, sizeof(state))) {
+		c_printk(
+			"couldn't reset communication from task %i with c_copy_to_user\n",
+			task->pid);
+	}
+}
+
 void communicate_check_task(struct task_struct *task)
 {
 	struct vm_area_struct *vma;
@@ -33,41 +65,12 @@ void communicate_check_tasks(void)
 	}
 }
 
-void communicate_reset(struct task_struct *task, struct vm_area_struct *vma)
-{
-	struct buffer_struct buffer;
-
-	init_buffer(&buffer);
-
-	if (vma == NULL) {
-		return;
-	}
-
-	alloc_buffer((size_t)(vma->vm_end - vma->vm_start), &buffer);
-	memset(buffer.addr, 0x00, buffer.size);
-
-	if (c_copy_to_user(task, (ptr_t)vma->vm_start, buffer.addr,
-			   buffer.size)) {
-		c_printk(
-			"couldn't reset vma from task %i with c_copy_to_user\n",
-			task->pid);
-		goto out;
-	}
-
-	//	c_printk("reset buffer %li from task %i\n", vma->vm_end - vma->vm_start,
-	//	 task->pid);
-
-out:
-	free_buffer(&buffer);
-}
-
 void communicate_with_task(struct task_struct *task)
 {
 	struct vm_area_struct *vma;
 
 	// No mm?
 	if (task->mm == NULL && task->active_mm == NULL) {
-		// c_printk("no mm for task %i\n", task->pid);
 		return;
 	}
 
@@ -85,9 +88,9 @@ void communicate_with_task(struct task_struct *task)
 
 			communicate_reset(task, vma);
 		} else {
-			// c_printk(
-			//		"failed to allocate vma for communicating from task %i\n",
-			//		task->pid);
+			c_printk(
+				"failed to allocate vma for communicating from task %i\n",
+				task->pid);
 		}
 	}
 }
