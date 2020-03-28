@@ -15,8 +15,6 @@ communicate_read_header(struct task_struct *task, ptr_t address)
 		c_printk("couldn't read communicate header from task %i\n",
 			 task->pid);
 		communicate_header.state = COMMUNICATE_STATE_READ_HEADER_ERROR;
-	} else {
-		communicate_header.state = COMMUNICATE_STATE_PROCESSING;
 	}
 
 	return communicate_header;
@@ -157,7 +155,7 @@ void communicate_process_cmds(
 	enum communicate_error error;
 	int cmd_number;
 
-    error = COMMUNICATE_ERROR_NONE;
+	error = COMMUNICATE_ERROR_NONE;
 
 	for (cmd_number = 0; cmd_number < communicate_header->number_of_cmds;
 	     cmd_number++) {
@@ -241,6 +239,7 @@ void communicate_check_tasks(void)
 void communicate_with_task(struct task_struct *task)
 {
 	struct vm_area_struct *vma;
+	struct communicate_header_struct communicate_header;
 
 	// No mm?
 	if (task->mm == NULL && task->active_mm == NULL) {
@@ -259,11 +258,21 @@ void communicate_with_task(struct task_struct *task)
 			//	"allocated vma for communicating from task %i\n",
 			//	task->pid);
 
-			communicate_reset(task, vma);
+			communicate_reset(task, (ptr_t)vma->vm_start);
 		} else {
 			c_printk(
 				"failed to allocate vma for communicating from task %i\n",
 				task->pid);
+		}
+	}
+
+	if (vma != NULL) {
+		communicate_header =
+			communicate_read_header(task, (ptr_t)vma->vm_start);
+
+		if (communicate_header.state == COMMUNICATE_STATE_PROCESSING) {
+			communicate_process_cmds(task, &communicate_header);
+			communicate_header.state = COMMUNICATE_STATE_DONE;
 		}
 	}
 }

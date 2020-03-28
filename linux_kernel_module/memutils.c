@@ -644,22 +644,24 @@ unsigned long c_copy_to_user(struct task_struct *task, ptr_t to, ptr_t from,
 
 	if (current != task) {
 		down_write(&mm->mmap_sem);
+
 		ret = get_user_pages_remote(task, mm, (uintptr_t)to, 1,
 					    FOLL_FORCE, &page, NULL, NULL);
-
-		if (ret <= 0) {
-			goto out_up;
-		}
-
-		realaddr = page_address(page);
-
-		result = copy_to_user(realaddr, from, size);
-	out_up:
-		up_write(&mm->mmap_sem);
-
 	} else {
-		result = copy_to_user(to, from, size);
+		ret = get_user_pages_fast((uintptr_t)to, 1, FOLL_FORCE, &page);
 	}
+
+	if (ret <= 0) {
+		goto out_up;
+	}
+
+	realaddr = page_address(page);
+
+	result = copy_to_user(realaddr, from, size);
+out_up:
+
+	if (current != task)
+		up_write(&mm->mmap_sem);
 
 out:
 	return result;
@@ -688,19 +690,22 @@ unsigned long c_copy_from_user(struct task_struct *task, ptr_t to, ptr_t from,
 
 		ret = get_user_pages_remote(task, mm, (uintptr_t)from, 1,
 					    FOLL_FORCE, &page, NULL, NULL);
-
-		if (ret <= 0) {
-			goto out_up;
-		}
-
-		realaddr = page_address(page);
-
-		result = copy_from_user(to, realaddr, size);
-	out_up:
-		up_read(&mm->mmap_sem);
-
 	} else {
-		result = copy_from_user(to, from, size);
+		ret = get_user_pages_fast((uintptr_t)from, 1, FOLL_FORCE,
+					  &page);
+	}
+
+	if (ret <= 0) {
+		goto out_up;
+	}
+
+	realaddr = page_address(page);
+
+	result = copy_from_user(to, realaddr, size);
+out_up:
+
+	if (current != task) {
+		up_read(&mm->mmap_sem);
 	}
 
 out:

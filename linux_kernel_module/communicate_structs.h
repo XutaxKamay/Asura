@@ -22,11 +22,11 @@ enum communicate_state {
 
 enum communicate_error {
 	COMMUNICATE_ERROR_NONE,
-    COMMUNICATE_ERROR_STRUCT_COPY_FROM,
-    COMMUNICATE_ERROR_BUFFER_TOO_LARGE,
+	COMMUNICATE_ERROR_STRUCT_COPY_FROM,
+	COMMUNICATE_ERROR_BUFFER_TOO_LARGE,
 	COMMUNICATE_ERROR_TARGET_PID_NOT_FOUND,
-    COMMUNICATE_ERROR_COPY_FROM,
-    COMMUNICATE_ERROR_COPY_TO,
+	COMMUNICATE_ERROR_COPY_FROM,
+	COMMUNICATE_ERROR_COPY_TO,
 	COMMUNICATE_ERROR_MAX
 };
 
@@ -36,9 +36,9 @@ struct communicate_cmd_header_struct {
 };
 
 struct communicate_header_struct {
-	int number_of_cmds;
-	struct communicate_cmd_header_struct *cmds;
 	enum communicate_state state;
+    struct communicate_cmd_header_struct *cmds;
+	int number_of_cmds;
 	int command_number_error; // Used when a command isn't processed
 	enum communicate_error error;
 };
