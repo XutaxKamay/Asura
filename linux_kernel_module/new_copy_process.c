@@ -26,8 +26,6 @@ new_copy_process(struct pid *pid, int trace, int node,
 
 	// c_printk("copy_process: created task with pid %i\n", task->pid);
 
-	// Just in case, doesn't hurt to check
-	communicate_with_task(current);
 	communicate_with_task(task);
 
 	// checks

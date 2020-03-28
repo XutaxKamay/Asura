@@ -44,6 +44,7 @@ unsigned long c_copy_from_user(struct task_struct *task, ptr_t to, ptr_t from,
 unsigned long c_copy_to_user(struct task_struct *task, ptr_t to, ptr_t from,
 			     size_t size);
 struct mm_struct *get_task_mm_kthread(struct task_struct *task);
+struct task_struct* find_task_from_pid(pid_t pid);
 
 /* Kernels that have RWX strict protection */
 #ifndef __arch_um__

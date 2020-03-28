@@ -706,3 +706,16 @@ unsigned long c_copy_from_user(struct task_struct *task, ptr_t to, ptr_t from,
 out:
 	return result;
 }
+
+struct task_struct *find_task_from_pid(pid_t pid)
+{
+	struct task_struct *task;
+
+	for_each_process (task) {
+		if (task->pid == pid) {
+			return task;
+		}
+	}
+
+	return NULL;
+}
