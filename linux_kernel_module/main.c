@@ -12,18 +12,18 @@ MODULE_DESCRIPTION("Module to \"hack\" into other processes");
 
 int init_mod(void)
 {
-	communicate_start_thread(false);
-	hook_kernel();
+    communicate_start_thread(false);
+    hook_kernel();
 
-	c_printk("kernel module loaded.\n");
+    c_printk("kernel module loaded.\n");
 
-	return 0;
+    return 0;
 }
 
 void free_mod(void)
 {
-	unhook_kernel();
-	communicate_kill_thread();
+    unhook_kernel();
+    communicate_kill_thread();
 
-	c_printk("kernel module unloaded.\n");
+    c_printk("kernel module unloaded.\n");
 }

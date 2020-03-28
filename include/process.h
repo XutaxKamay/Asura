@@ -9,17 +9,15 @@ namespace XLib
     {
       public:
         Process() = default;
-        Process( const maps_t& maps,
-                 const std::string fullName,
-                 pid_t pid );
+        Process(const maps_t& maps, const std::string fullName, pid_t pid);
 
         auto refresh() -> void;
         auto maps();
 
-        auto setFullName( const std::string& fullName ) -> void;
+        auto setFullName(const std::string& fullName) -> void;
         auto fullName() const;
 
-        auto setPID( pid_t pid );
+        auto setPID(pid_t pid);
         auto pid();
 
       private:

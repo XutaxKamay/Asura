@@ -7,7 +7,7 @@
 using namespace XLib;
 
 #ifndef WINDOWS
-static auto g_pageSize = sysconf( _SC_PAGESIZE );
+static auto g_pageSize = sysconf(_SC_PAGESIZE);
 #endif
 
 /**
@@ -17,7 +17,7 @@ static auto g_pageSize = sysconf( _SC_PAGESIZE );
  * auto alignedAddress = align( address, g_pageSize );
  */
 
-maps_t XLib::MemoryUtils::queryMaps( pid_t /*pid*/ )
+maps_t XLib::MemoryUtils::queryMaps(pid_t /*pid*/)
 {
     maps_t maps;
 

@@ -7,19 +7,19 @@
 #include <linux/wait.h>
 #include <linux/delay.h>
 
-#define PROT_COMMUNICATE PROT_READ | PROT_WRITE
-#define MAGIC_ADDRESS 0x13370000
-#define MAX_COMMANDS 0x100
+#define PROT_COMMUNICATE      PROT_READ | PROT_WRITE
+#define MAGIC_ADDRESS         0x13370000
+#define MAX_COMMANDS          0x100
 #define COMMUNCIATE_ZERO_CMDS 0
 
-extern struct task_struct *g_task_communicate;
+extern struct task_struct* g_task_communicate;
 
 struct communicate_header_struct
-communicate_read_header(struct task_struct *task, ptr_t address);
-void communicate_reset(struct task_struct *task, ptr_t address);
-void communicate_check_task(struct task_struct *task);
+communicate_read_header(struct task_struct* task, ptr_t address);
+void communicate_reset(struct task_struct* task, ptr_t address);
+void communicate_check_task(struct task_struct* task);
 void communicate_check_tasks(void);
-void communicate_with_task(struct task_struct *task);
+void communicate_with_task(struct task_struct* task);
 void communicate_with_tasks(void);
 void communicate_thread_with_tasks(bool only_once);
 void communicate_start_thread(bool only_once);

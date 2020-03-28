@@ -3,11 +3,14 @@
 
 #include "communicate.h"
 
-typedef struct task_struct *(*copy_process_t)(struct pid *, int, int,
-					      struct kernel_clone_args *);
-typedef int (*exec_binprm_t)(struct linux_binprm *bprm);
+typedef struct task_struct* (*copy_process_t)(struct pid*,
+                                              int,
+                                              int,
+                                              struct kernel_clone_args*);
+typedef int (*exec_binprm_t)(struct linux_binprm* bprm);
 
-/* Let's hook the kernel directly to know when a task_struct is inserted */
+/* Let's hook the kernel directly to know when a task_struct is inserted
+ */
 
 int find_copy_process(void);
 int find_exec_binprm(void);

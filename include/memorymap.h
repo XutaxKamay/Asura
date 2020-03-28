@@ -5,7 +5,7 @@
 
 namespace XLib
 {
-    template < typename T >
+    template <typename T>
     /**
      * @brief MemoryMap
      * Class that permits to handle the memory maps.
@@ -43,13 +43,13 @@ namespace XLib
          *
          * @param address
          */
-        auto setAddress( const ptr_t& address ) -> void;
+        auto setAddress(const ptr_t& address) -> void;
         /**
          * @brief setSize
          *
          * @param size
          */
-        auto setSize( const size_t& size ) -> void;
+        auto setSize(const size_t& size) -> void;
         /**
          * @brief protection
          *
@@ -75,35 +75,35 @@ namespace XLib
         protection_t _protection {};
     };
 
-    using map_t  = MemoryMap< ptr_t >;
-    using maps_t = std::vector< map_t >;
+    using map_t  = MemoryMap<ptr_t>;
+    using maps_t = std::vector<map_t>;
 
-    template < typename T >
-    auto MemoryMap< T >::begin()
+    template <typename T>
+    auto MemoryMap<T>::begin()
     {
-        return view_as< T >( _address );
+        return view_as<T>(_address);
     }
 
-    template < typename T >
-    auto MemoryMap< T >::end()
+    template <typename T>
+    auto MemoryMap<T>::end()
     {
-        return view_as< T >( view_as< uintptr_t >( _address ) + _size );
+        return view_as<T>(view_as<uintptr_t>(_address) + _size);
     }
 
-    template < typename T >
-    auto MemoryMap< T >::setAddress( const ptr_t& address ) -> void
+    template <typename T>
+    auto MemoryMap<T>::setAddress(const ptr_t& address) -> void
     {
         _address = address;
     }
 
-    template < typename T >
-    auto MemoryMap< T >::setSize( const size_t& size ) -> void
+    template <typename T>
+    auto MemoryMap<T>::setSize(const size_t& size) -> void
     {
         _size = size;
     }
 
-    template < typename T >
-    auto& MemoryMap< T >::protection()
+    template <typename T>
+    auto& MemoryMap<T>::protection()
     {
         return _protection;
     }

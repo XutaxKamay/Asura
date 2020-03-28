@@ -14,23 +14,22 @@ namespace XLib
     class MemoryUtils
     {
       public:
-        static maps_t queryMaps( pid_t pid );
+        static maps_t queryMaps(pid_t pid);
 
-        template < typename T >
-        static auto
-        searchMap( pid_t pid, T address, map_t* pMap = nullptr )
+        template <typename T>
+        static auto searchMap(pid_t pid, T address, map_t* pMap = nullptr)
         {
-            auto maps = queryMaps( pid );
+            auto maps = queryMaps(pid);
 
-            for ( auto&& map : maps )
+            for (auto&& map : maps)
             {
-                auto startPtr = view_as< uintptr_t >( map.begin() );
-                auto endPtr   = view_as< uintptr_t >( map.end() );
+                auto startPtr = view_as<uintptr_t>(map.begin());
+                auto endPtr   = view_as<uintptr_t>(map.end());
 
-                if ( view_as< uintptr_t >( address ) >= startPtr
-                     && view_as< uintptr_t >( address ) < endPtr )
+                if (view_as<uintptr_t>(address) >= startPtr
+                    && view_as<uintptr_t>(address) < endPtr)
                 {
-                    if ( pMap )
+                    if (pMap)
                         *pMap = map;
 
                     return true;
@@ -40,29 +39,29 @@ namespace XLib
             return false;
         }
 
-        static auto protectMap( pid_t pid,
-                                map_t& map,
-                                map_t::protection_t newFlags );
+        static auto protectMap(pid_t pid,
+                               map_t& map,
+                               map_t::protection_t newFlags);
 
-        template < typename T >
-        static auto protectMemory( pid_t pid,
-                                   T address,
-                                   size_t size,
-                                   map_t::protection_t newFlags,
-                                   map_t::protection_t* pFlags = nullptr )
+        template <typename T>
+        static auto protectMemory(pid_t pid,
+                                  T address,
+                                  size_t size,
+                                  map_t::protection_t newFlags,
+                                  map_t::protection_t* pFlags = nullptr)
         {}
 
-        static auto allocMap( ptr_t address,
-                              size_t size,
-                              map_t::protection_t newFlags );
+        static auto allocMap(ptr_t address,
+                             size_t size,
+                             map_t::protection_t newFlags);
     };
 
-    template < typename T >
-    constexpr inline auto align( T value, safesize_t size )
+    template <typename T>
+    constexpr inline auto align(T value, safesize_t size)
     {
-        auto originalValue = view_as< uintptr_t >( value );
+        auto originalValue = view_as<uintptr_t>(value);
         originalValue -= originalValue % size;
-        return view_as< T >( originalValue );
+        return view_as<T>(originalValue);
     }
 }
 
