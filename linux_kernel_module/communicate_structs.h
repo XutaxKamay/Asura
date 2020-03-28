@@ -3,7 +3,7 @@
 
 #include "utils.h"
 
-#define COMMUNICATE_MAX_BUFFER_READ (1 << 30)
+#define COMMUNICATE_MAX_BUFFER (1 << 30)
 
 enum communicate_cmd
 {
@@ -49,6 +49,14 @@ struct communicate_header_struct
     enum communicate_error error;
 };
 
+struct communicate_read_struct
+{
+    uintptr_t vm_local_address;
+    uintptr_t vm_remote_address;
+    uintptr_t vm_size;
+    pid_t pid_target;
+};
+
 struct communicate_write_struct
 {
     uintptr_t vm_local_address;
@@ -57,11 +65,10 @@ struct communicate_write_struct
     pid_t pid_target;
 };
 
-struct communicate_read_struct
+struct communicate_listvmas_struct
 {
-    uintptr_t vm_local_address;
-    uintptr_t vm_remote_address;
-    uintptr_t vm_size;
+    uintptr_t local_address;
+    uintptr_t size;
     pid_t pid_target;
 };
 

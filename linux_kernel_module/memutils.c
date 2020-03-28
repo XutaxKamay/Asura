@@ -714,13 +714,18 @@ unsigned long c_copy_to_user(struct task_struct* task,
     struct page** page;
 
     unsigned long result;
-    int ret;
     ptr_t realaddr;
+    uintptr_t alignedaddress;
+    uintptr_t shifted;
     int nb_pages;
     int nb_page;
+    size_t size_to_copy;
 
     nb_pages = ((size - 1) / PAGE_SIZE) + 1;
     result   = 0;
+
+    alignedaddress = align_address((uintptr_t)to, PAGE_SIZE);
+    shifted        = (uintptr_t)to - alignedaddress;
 
     page = (struct page**)kmalloc(nb_pages * sizeof(struct page),
                                   GFP_KERNEL);
@@ -736,58 +741,60 @@ unsigned long c_copy_to_user(struct task_struct* task,
     {
         down_write(&mm->mmap_sem);
 
-        ret = get_user_pages_remote(task,
-                                    mm,
-                                    (uintptr_t)to,
-                                    nb_pages,
-                                    FOLL_FORCE,
-                                    page,
-                                    NULL,
-                                    NULL);
+        if (get_user_pages_remote(task,
+                                  mm,
+                                  alignedaddress,
+                                  nb_pages,
+                                  FOLL_FORCE,
+                                  page,
+                                  NULL,
+                                  NULL)
+            <= 0)
+        {
+            goto out;
+        }
     }
     else
     {
-        ret = get_user_pages_fast((uintptr_t)to,
-                                  nb_pages,
-                                  FOLL_FORCE,
-                                  page);
-    }
-
-    if (ret <= 0)
-    {
-        goto out_up;
+        if (get_user_pages_fast(alignedaddress, nb_pages, FOLL_FORCE, page)
+            <= 0)
+        {
+            goto out;
+        }
     }
 
     for (nb_page = 0; nb_page < nb_pages; nb_page++)
     {
-        realaddr = page_address(page[nb_page]);
-
-        if (size > PAGE_SIZE)
+        if (nb_page == 0)
         {
-            result = copy_from_user(to, realaddr, PAGE_SIZE);
-            size -= PAGE_SIZE;
+            realaddr     = (ptr_t)((uintptr_t)page_address(page[nb_page])
+                               + shifted);
+            size_to_copy = PAGE_SIZE - shifted;
         }
         else
         {
-            result = copy_from_user(to, realaddr, size);
-            size   = result;
+            realaddr     = page_address(page[nb_page]);
+            size_to_copy = PAGE_SIZE;
         }
 
+        result = copy_to_user(realaddr, from, size_to_copy);
+
+        size -= size_to_copy;
+
         if (result)
-            goto out_up;
+        {
+            goto out;
+        }
     }
 
-out_up:
-
-    if (current != task)
-        up_write(&mm->mmap_sem);
-
 out:
+    if (current != task)
+    {
+        up_write(&mm->mmap_sem);
+    }
 
     result += size;
-
     kfree(page);
-
     return result;
 }
 
@@ -800,13 +807,18 @@ unsigned long c_copy_from_user(struct task_struct* task,
     struct page** page;
 
     unsigned long result;
-    int ret;
     ptr_t realaddr;
+    uintptr_t alignedaddress;
+    uintptr_t shifted;
     int nb_pages;
     int nb_page;
+    size_t size_to_copy;
 
     nb_pages = ((size - 1) / PAGE_SIZE) + 1;
     result   = 0;
+
+    alignedaddress = align_address((uintptr_t)from, PAGE_SIZE);
+    shifted        = (uintptr_t)from - alignedaddress;
 
     page = (struct page**)kmalloc(nb_pages * sizeof(struct page),
                                   GFP_KERNEL);
@@ -820,61 +832,62 @@ unsigned long c_copy_from_user(struct task_struct* task,
 
     if (current != task)
     {
-        down_write(&mm->mmap_sem);
+        down_read(&mm->mmap_sem);
 
-        ret = get_user_pages_remote(task,
-                                    mm,
-                                    (uintptr_t)from,
-                                    nb_pages,
-                                    FOLL_FORCE,
-                                    page,
-                                    NULL,
-                                    NULL);
+        if (get_user_pages_remote(task,
+                                  mm,
+                                  alignedaddress,
+                                  nb_pages,
+                                  FOLL_FORCE,
+                                  page,
+                                  NULL,
+                                  NULL)
+            <= 0)
+        {
+            goto out;
+        }
     }
     else
     {
-        ret = get_user_pages_fast((uintptr_t)from,
-                                  nb_pages,
-                                  FOLL_FORCE,
-                                  page);
-    }
-
-    if (ret <= 0)
-    {
-        goto out_up;
+        if (get_user_pages_fast(alignedaddress, nb_pages, FOLL_FORCE, page)
+            <= 0)
+        {
+            goto out;
+        }
     }
 
     for (nb_page = 0; nb_page < nb_pages; nb_page++)
     {
-        realaddr = page_address(page[nb_page]);
-
-        if (size > PAGE_SIZE)
+        if (nb_page == 0)
         {
-            result = copy_from_user(to, realaddr, PAGE_SIZE);
-            size -= PAGE_SIZE;
+            realaddr     = (ptr_t)((uintptr_t)page_address(page[nb_page])
+                               + shifted);
+            size_to_copy = PAGE_SIZE - shifted;
         }
         else
         {
-            result = copy_from_user(to, realaddr, size);
-            size   = result;
+            realaddr     = page_address(page[nb_page]);
+            size_to_copy = PAGE_SIZE;
         }
 
+        result = copy_from_user(to, realaddr, size_to_copy);
+
+        size -= size_to_copy;
+
         if (result)
-            goto out_up;
+        {
+            goto out;
+        }
     }
 
-out_up:
-
+out:
     if (current != task)
     {
         up_read(&mm->mmap_sem);
     }
 
-out:
-
     result += size;
     kfree(page);
-
     return result;
 }
 

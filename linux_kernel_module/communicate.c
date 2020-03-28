@@ -81,7 +81,7 @@ communicate_process_cmd_read(struct task_struct* task, ptr_t address)
         goto out;
     }
 
-    if (communicate_read.vm_size > COMMUNICATE_ERROR_BUFFER_TOO_LARGE)
+    if (communicate_read.vm_size > COMMUNICATE_MAX_BUFFER)
     {
         error = COMMUNICATE_ERROR_BUFFER_TOO_LARGE;
         goto out;
@@ -139,7 +139,7 @@ communicate_process_cmd_write(struct task_struct* task, ptr_t address)
         goto out;
     }
 
-    if (communicate_write.vm_size > COMMUNICATE_ERROR_BUFFER_TOO_LARGE)
+    if (communicate_write.vm_size > COMMUNICATE_MAX_BUFFER)
     {
         error = COMMUNICATE_ERROR_BUFFER_TOO_LARGE;
         goto out;
