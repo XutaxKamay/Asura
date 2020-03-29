@@ -22,8 +22,8 @@ int init_mod(void)
 
 void free_mod(void)
 {
-    unhook_kernel();
     communicate_kill_thread();
+    unhook_kernel();
 
     c_printk("kernel module unloaded.\n");
 }

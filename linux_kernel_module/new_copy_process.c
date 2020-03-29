@@ -2,6 +2,9 @@
 
 copy_process_t original_copy_process = NULL;
 struct buffer_struct buffer_list_calls_copy_process;
+static struct mutex g_mutex;
+static bool g_unhooking  = false;
+static bool g_infunction = false;
 
 int find_copy_process(void)
 {
@@ -26,6 +29,9 @@ new_copy_process(struct pid* pid,
                  struct kernel_clone_args* args)
 {
     struct task_struct* task;
+
+    g_infunction = true;
+
     task = original_copy_process(pid, trace, node, args);
 
     // c_printk("copy_process: created task with pid %i\n", task->pid);
@@ -34,6 +40,14 @@ new_copy_process(struct pid* pid,
 
     // checks
     communicate_check_tasks();
+
+    // In case we're unhooking
+    if (g_unhooking)
+    {
+        mutex_unlock(&g_mutex);
+    }
+
+    g_infunction = false;
 
     return task;
 }
@@ -50,6 +64,8 @@ void hook_callsof_copy_process(void)
     uint8_t movabs_ax;
 #endif
     uintptr_t* list_calls;
+
+    g_unhooking = false;
 
     init_buffer(&buffer_list_calls_copy_process);
 
@@ -126,6 +142,13 @@ void unhook_callsof_copy_process(void)
     uint8_t movabs_ax;
 #endif
     uintptr_t* list_calls;
+
+    g_unhooking = true;
+
+    if (g_infunction)
+    {
+        mutex_lock(&g_mutex);
+    }
 
     if (buffer_list_calls_copy_process.addr == NULL)
     {

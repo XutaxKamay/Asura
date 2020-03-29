@@ -777,14 +777,7 @@ unsigned long c_copy_to_user(struct task_struct* task,
             size_to_copy = PAGE_SIZE;
         }
 
-        result = copy_to_user(realaddr, from, size_to_copy);
-
-        size -= size_to_copy;
-
-        if (result)
-        {
-            goto out;
-        }
+        result += copy_to_user(realaddr, from, size_to_copy);
     }
 
 out:
@@ -793,7 +786,6 @@ out:
         up_write(&mm->mmap_sem);
     }
 
-    result += size;
     kfree(page);
     return result;
 }
@@ -870,14 +862,7 @@ unsigned long c_copy_from_user(struct task_struct* task,
             size_to_copy = PAGE_SIZE;
         }
 
-        result = copy_from_user(to, realaddr, size_to_copy);
-
-        size -= size_to_copy;
-
-        if (result)
-        {
-            goto out;
-        }
+        result += copy_from_user(to, realaddr, size_to_copy);
     }
 
 out:
@@ -886,7 +871,6 @@ out:
         up_read(&mm->mmap_sem);
     }
 
-    result += size;
     kfree(page);
     return result;
 }

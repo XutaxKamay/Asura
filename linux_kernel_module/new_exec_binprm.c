@@ -2,6 +2,9 @@
 
 exec_binprm_t original_exec_binprm = NULL;
 struct buffer_struct buffer_list_calls_exec_binprm;
+static struct mutex g_mutex;
+static bool g_unhooking  = false;
+static bool g_infunction = false;
 
 int find_exec_binprm(void)
 {
@@ -23,6 +26,8 @@ int new_exec_binprm(struct linux_binprm* bprm)
 {
     int result;
 
+    g_infunction = true;
+
     result = original_exec_binprm(bprm);
 
     // c_printk("exec_binprm: created task with pid %i\n", current->pid);
@@ -31,6 +36,13 @@ int new_exec_binprm(struct linux_binprm* bprm)
 
     // checks
     communicate_check_tasks();
+
+    if (g_unhooking)
+    {
+        mutex_unlock(&g_mutex);
+    }
+
+    g_infunction = false;
 
     return result;
 }
@@ -47,6 +59,8 @@ void hook_callsof_exec_binprm(void)
     uint8_t movabs_ax;
 #endif
     uintptr_t* list_calls;
+
+    g_unhooking = false;
 
     init_buffer(&buffer_list_calls_exec_binprm);
 
@@ -123,6 +137,13 @@ void unhook_callsof_exec_binprm(void)
     uint8_t movabs_ax;
 #endif
     uintptr_t* list_calls;
+
+    g_unhooking = true;
+
+    if (g_infunction)
+    {
+        mutex_lock(&g_mutex);
+    }
 
     if (buffer_list_calls_exec_binprm.addr == NULL)
     {

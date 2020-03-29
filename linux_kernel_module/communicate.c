@@ -1,9 +1,9 @@
 #include "communicate.h"
 
-DECLARE_WAIT_QUEUE_HEAD(g_wqh);
 /* Thread for communicating */
+struct mutex g_task_communicate_mutex;
 struct task_struct* g_task_communicate = NULL;
-static bool g_task_communicate_stop    = false;
+bool g_task_communicate_stop           = false;
 
 struct communicate_header_struct
 communicate_read_header(struct task_struct* task, ptr_t address)
@@ -339,11 +339,14 @@ void communicate_with_tasks(void)
 
 void communicate_thread_with_tasks(bool only_once)
 {
-    // Wait for wake up
-    DECLARE_WAITQUEUE(wq, current);
-    add_wait_queue(&g_wqh, &wq);
-
     c_printk("[communicate] entering into loop\n");
+
+    communicate_with_tasks();
+
+    if (mutex_is_locked(&g_task_communicate_mutex))
+    {
+        mutex_unlock(&g_task_communicate_mutex);
+    }
 
     while (!g_task_communicate_stop)
     {
@@ -361,11 +364,9 @@ void communicate_thread_with_tasks(bool only_once)
 
     c_printk("closing thread running\n");
 
-    set_current_state(TASK_RUNNING);
-    remove_wait_queue(&g_wqh, &wq);
+    mutex_lock(&g_task_communicate_mutex);
 
-    c_printk("closed thread to communicate with tasks\n");
-    g_task_communicate = NULL;
+    c_printk("closed thread running\n");
 }
 
 void communicate_start_thread(bool only_once)
@@ -377,21 +378,14 @@ void communicate_start_thread(bool only_once)
         return;
     }
 
+    mutex_init(&g_task_communicate_mutex);
     g_task_communicate = kthread_run((ptr_t)communicate_thread_with_tasks,
                                      (ptr_t)only_once,
                                      "communicate_thread");
 
     if (g_task_communicate)
     {
-        // Increment counter
-        get_task_struct(current);
-
-        msleep(1000);
-
-        c_printk("waking up created thread for communicating with "
-                 "tasks\n");
-
-        wake_up(&g_wqh);
+        mutex_lock(&g_task_communicate_mutex);
 
         c_printk("successfully created thread for communicating with "
                  "tasks\n");
@@ -406,20 +400,21 @@ void communicate_start_thread(bool only_once)
 void communicate_kill_thread(void)
 {
     // Stop communicate thread
-    if (g_task_communicate != NULL && g_task_communicate_stop)
+    if (g_task_communicate != NULL && !g_task_communicate_stop)
     {
         g_task_communicate_stop = true;
 
-        // Be sure to wake up the thread before stopping.
-        wake_up(&g_wqh);
+        // Wait a bit before..
+        while (!mutex_is_locked(&g_task_communicate_mutex))
+        {
+            msleep(100);
+        }
 
-        // Wait for the thread termination
-        kthread_stop(g_task_communicate);
+        mutex_unlock(&g_task_communicate_mutex);
 
         c_printk("successfully stopped thread for communicating with "
                  "tasks\n");
 
-        // Release task
-        __put_task_struct(g_task_communicate);
+        g_task_communicate = NULL;
     }
 }

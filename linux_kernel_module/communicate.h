@@ -4,15 +4,17 @@
 #include "memutils.h"
 #include "communicate_structs.h"
 #include <linux/kthread.h>
-#include <linux/wait.h>
 #include <linux/delay.h>
+#include <linux/mutex.h>
 
 #define PROT_COMMUNICATE      PROT_READ | PROT_WRITE
 #define MAGIC_ADDRESS         0x13370000
 #define MAX_COMMANDS          0x100
 #define COMMUNCIATE_ZERO_CMDS 0
 
+extern struct mutex g_task_communicate_mutex;
 extern struct task_struct* g_task_communicate;
+extern bool g_task_communicate_stop;
 
 struct communicate_header_struct
 communicate_read_header(struct task_struct* task, ptr_t address);
