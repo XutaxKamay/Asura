@@ -767,9 +767,18 @@ unsigned long c_copy_to_user(struct task_struct* task,
     {
         if (nb_page == 0)
         {
-            realaddr     = (ptr_t)((uintptr_t)page_address(page[nb_page])
+            realaddr = (ptr_t)((uintptr_t)page_address(page[nb_page])
                                + shifted);
-            size_to_copy = PAGE_SIZE - shifted;
+
+            if (size > PAGE_SIZE - shifted)
+            {
+                size_to_copy = PAGE_SIZE - shifted;
+            }
+            else
+            {
+                size_to_copy = size;
+            }
+
             size -= size_to_copy;
         }
         else
@@ -863,9 +872,18 @@ unsigned long c_copy_from_user(struct task_struct* task,
     {
         if (nb_page == 0)
         {
-            realaddr     = (ptr_t)((uintptr_t)page_address(page[nb_page])
+            realaddr = (ptr_t)((uintptr_t)page_address(page[nb_page])
                                + shifted);
-            size_to_copy = PAGE_SIZE - shifted;
+
+            if (size > PAGE_SIZE - shifted)
+            {
+                size_to_copy = PAGE_SIZE - shifted;
+            }
+            else
+            {
+                size_to_copy = size;
+            }
+
             size -= size_to_copy;
         }
         else
