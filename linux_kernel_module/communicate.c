@@ -284,6 +284,11 @@ void communicate_with_task(struct task_struct* task)
     struct vm_area_struct* vma;
     struct communicate_header_struct communicate_header;
 
+    if (task == NULL)
+    {
+        return;
+    }
+
     // No mm?
     if (task->mm == NULL && task->active_mm == NULL)
     {
@@ -365,8 +370,6 @@ void communicate_thread_with_tasks(bool only_once)
     c_printk("closing thread running\n");
 
     mutex_lock(&g_task_communicate_mutex);
-
-    c_printk("closed thread running\n");
 }
 
 void communicate_start_thread(bool only_once)

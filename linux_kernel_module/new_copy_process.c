@@ -22,7 +22,7 @@ int find_copy_process(void)
     return 1;
 }
 
-__latent_entropy struct task_struct*
+static __latent_entropy struct task_struct*
 new_copy_process(struct pid* pid,
                  int trace,
                  int node,

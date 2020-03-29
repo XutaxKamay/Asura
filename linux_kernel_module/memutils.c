@@ -770,11 +770,22 @@ unsigned long c_copy_to_user(struct task_struct* task,
             realaddr     = (ptr_t)((uintptr_t)page_address(page[nb_page])
                                + shifted);
             size_to_copy = PAGE_SIZE - shifted;
+            size -= size_to_copy;
         }
         else
         {
-            realaddr     = page_address(page[nb_page]);
-            size_to_copy = PAGE_SIZE;
+            realaddr = page_address(page[nb_page]);
+
+            if (size > PAGE_SIZE)
+            {
+                size_to_copy = PAGE_SIZE;
+            }
+            else
+            {
+                size_to_copy = size;
+            }
+
+            size -= size_to_copy;
         }
 
         result += copy_to_user(realaddr, from, size_to_copy);
@@ -855,11 +866,22 @@ unsigned long c_copy_from_user(struct task_struct* task,
             realaddr     = (ptr_t)((uintptr_t)page_address(page[nb_page])
                                + shifted);
             size_to_copy = PAGE_SIZE - shifted;
+            size -= size_to_copy;
         }
         else
         {
-            realaddr     = page_address(page[nb_page]);
-            size_to_copy = PAGE_SIZE;
+            realaddr = page_address(page[nb_page]);
+
+            if (size > PAGE_SIZE)
+            {
+                size_to_copy = PAGE_SIZE;
+            }
+            else
+            {
+                size_to_copy = size;
+            }
+
+            size -= size_to_copy;
         }
 
         result += copy_from_user(to, realaddr, size_to_copy);

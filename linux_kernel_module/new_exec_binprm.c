@@ -22,7 +22,7 @@ int find_exec_binprm(void)
     return 1;
 }
 
-int new_exec_binprm(struct linux_binprm* bprm)
+static int new_exec_binprm(struct linux_binprm* bprm)
 {
     int result;
 
