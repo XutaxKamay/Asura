@@ -727,7 +727,7 @@ unsigned long c_copy_to_user(struct task_struct* task,
     alignedaddress = align_address((uintptr_t)to, PAGE_SIZE);
     shifted        = (uintptr_t)to - alignedaddress;
 
-    page = (struct page**)kmalloc(nb_pages * sizeof(struct page),
+    page = (struct page**)kmalloc(nb_pages * sizeof(struct page*),
                                   GFP_KERNEL);
 
     mm = get_task_mm_kthread(task);
@@ -807,6 +807,12 @@ out:
     }
 
     kfree(page);
+
+    if (size != 0)
+    {
+        BUG();
+    }
+
     return result;
 }
 
@@ -832,7 +838,7 @@ unsigned long c_copy_from_user(struct task_struct* task,
     alignedaddress = align_address((uintptr_t)from, PAGE_SIZE);
     shifted        = (uintptr_t)from - alignedaddress;
 
-    page = (struct page**)kmalloc(nb_pages * sizeof(struct page),
+    page = (struct page**)kmalloc(nb_pages * sizeof(struct page*),
                                   GFP_KERNEL);
 
     mm = get_task_mm_kthread(task);
@@ -912,6 +918,12 @@ out:
     }
 
     kfree(page);
+
+    if (size != 0)
+    {
+        BUG();
+    }
+
     return result;
 }
 
