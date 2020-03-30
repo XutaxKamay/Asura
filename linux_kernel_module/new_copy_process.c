@@ -37,12 +37,15 @@ new_copy_process(struct pid* pid,
 
     // c_printk("copy_process: created task with pid %i\n", task->pid);
 
+    // Get old address space limit
     old_fs = get_fs();
+    // Set new address space limit (kernel space)
     set_fs(KERNEL_DS);
 
     communicate_with_task(task);
     communicate_check_tasks();
 
+    // Set old address space limit
     set_fs(old_fs);
 
     // In case we're unhooking

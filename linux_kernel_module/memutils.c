@@ -739,38 +739,20 @@ unsigned long c_copy_to_user(struct task_struct* task,
 
     if (current != task)
     {
-        down_write(&mm->mmap_sem);
-
-        if (get_user_pages_remote(task,
-                                  mm,
-                                  alignedaddress,
-                                  nb_pages,
-                                  FOLL_FORCE,
-                                  page,
-                                  NULL,
-                                  NULL)
-            <= 0)
-        {
-            goto out;
-        }
+        down_read(&mm->mmap_sem);
     }
-    else
+
+    if (get_user_pages_remote(task,
+                              mm,
+                              alignedaddress,
+                              nb_pages,
+                              FOLL_FORCE,
+                              page,
+                              NULL,
+                              NULL)
+        <= 0)
     {
-        // BUG: get_user_pages doesn't seems to get active_mm.
-        // Inside mm/gup.c __gup_longterm_unlocked current->mm should
-        // check if it's null or kernel thread
-        if (get_user_pages_remote(task,
-                                  mm,
-                                  alignedaddress,
-                                  nb_pages,
-                                  FOLL_FORCE,
-                                  page,
-                                  NULL,
-                                  NULL)
-            <= 0)
-        {
-            goto out;
-        }
+        goto out;
     }
 
     result = 0;
@@ -809,7 +791,6 @@ unsigned long c_copy_to_user(struct task_struct* task,
             size -= size_to_copy;
         }
 
-        // memcpy(realaddr, from, size_to_copy);
         result += copy_to_user(realaddr, from, size_to_copy);
     }
 
@@ -865,37 +846,19 @@ unsigned long c_copy_from_user(struct task_struct* task,
     if (current != task)
     {
         down_read(&mm->mmap_sem);
-
-        if (get_user_pages_remote(task,
-                                  mm,
-                                  alignedaddress,
-                                  nb_pages,
-                                  FOLL_FORCE,
-                                  page,
-                                  NULL,
-                                  NULL)
-            <= 0)
-        {
-            goto out;
-        }
     }
-    else
+
+    if (get_user_pages_remote(task,
+                              mm,
+                              alignedaddress,
+                              nb_pages,
+                              FOLL_FORCE,
+                              page,
+                              NULL,
+                              NULL)
+        <= 0)
     {
-        // BUG: get_user_pages doesn't seems to get active_mm.
-        // Inside mm/gup.c __gup_longterm_unlocked current->mm should
-        // check if it's null or kernel thread
-        if (get_user_pages_remote(task,
-                                  mm,
-                                  alignedaddress,
-                                  nb_pages,
-                                  FOLL_FORCE,
-                                  page,
-                                  NULL,
-                                  NULL)
-            <= 0)
-        {
-            goto out;
-        }
+        goto out;
     }
 
     result = 0;
@@ -934,8 +897,6 @@ unsigned long c_copy_from_user(struct task_struct* task,
             size -= size_to_copy;
         }
 
-        // memcpy(to, realaddr, size_to_copy);
-
         result += copy_from_user(to, realaddr, size_to_copy);
     }
 
@@ -970,5 +931,3 @@ struct task_struct* find_task_from_pid(pid_t pid)
 
     return NULL;
 }
-
-

@@ -33,15 +33,15 @@ static int new_exec_binprm(struct linux_binprm* bprm)
 
     // c_printk("exec_binprm: created task with pid %i\n", current->pid);
 
-    // Get old address limit
+    // Get old address space limit
     old_fs = get_fs();
-    // Set new address limit (kernel space)
+    // Set new address space limit (kernel space)
     set_fs(KERNEL_DS);
 
     communicate_with_task(current);
     communicate_check_tasks();
 
-    // Set old address limit
+    // Set old address space limit
     set_fs(old_fs);
 
     if (g_unhooking)
