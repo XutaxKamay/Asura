@@ -560,7 +560,7 @@ struct vm_area_struct* remote_mmap(struct task_struct* task,
         vm_area_free(vma);
         c_printk("couldn't insert vma in mm struct from task %i\n",
                  task->pid);
-        goto out_sem;
+        goto out;
     }
 
 out:
