@@ -7,6 +7,7 @@
 #include <linux/init.h>
 #include <linux/syscalls.h>
 #include <linux/mm.h>
+#include <linux/slab.h>
 #include <linux/mman.h>
 
 

@@ -546,9 +546,6 @@ struct vm_area_struct* remote_mmap(struct task_struct* task,
         goto out;
     }
 
-    if (current != task)
-        down_write(&mm->mmap_sem);
-
     vma_set_anonymous(vma);
 
     vma->vm_start     = address;
@@ -565,11 +562,6 @@ struct vm_area_struct* remote_mmap(struct task_struct* task,
                  task->pid);
         goto out_sem;
     }
-
-out_sem:
-
-    if (current != task)
-        up_write(&mm->mmap_sem);
 
 out:
     return vma;
@@ -734,12 +726,7 @@ unsigned long c_copy_to_user(struct task_struct* task,
 
     if (mm == NULL)
     {
-        goto out_nosem;
-    }
-
-    if (current != task)
-    {
-        down_read(&mm->mmap_sem);
+        goto out;
     }
 
     if (get_user_pages_remote(task,
@@ -799,13 +786,7 @@ unsigned long c_copy_to_user(struct task_struct* task,
         BUG();
     }
 
-out:
-    if (current != task)
-    {
-        up_write(&mm->mmap_sem);
-    }
-
-out_nosem:
+    out:
     kfree(page);
 
     return result;
@@ -840,12 +821,7 @@ unsigned long c_copy_from_user(struct task_struct* task,
 
     if (mm == NULL)
     {
-        goto out_nosem;
-    }
-
-    if (current != task)
-    {
-        down_read(&mm->mmap_sem);
+        goto out;
     }
 
     if (get_user_pages_remote(task,
@@ -906,12 +882,6 @@ unsigned long c_copy_from_user(struct task_struct* task,
     }
 
 out:
-    if (current != task)
-    {
-        up_read(&mm->mmap_sem);
-    }
-
-out_nosem:
     kfree(page);
 
     return result;
@@ -931,3 +901,5 @@ struct task_struct* find_task_from_pid(pid_t pid)
 
     return NULL;
 }
+
+
