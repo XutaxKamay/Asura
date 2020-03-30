@@ -30,7 +30,7 @@ enum communicate_error communicate_read__write_struct(
   struct communicate_write_struct* communicate_write)
 {
     if (c_copy_from_user(task,
-                         &communicate_write,
+                         communicate_write,
                          address,
                          sizeof(struct communicate_write_struct)))
     {
@@ -49,7 +49,7 @@ enum communicate_error communicate_read__read_struct(
   struct communicate_read_struct* communicate_read)
 {
     if (c_copy_from_user(task,
-                         &communicate_read,
+                         communicate_read,
                          address,
                          sizeof(struct communicate_read_struct)))
     {
@@ -164,10 +164,10 @@ communicate_process_cmd_write(struct task_struct* task, ptr_t address)
         goto out;
     }
 
-    if (c_copy_from_user(remote_task,
-                         (ptr_t)communicate_write.vm_remote_address,
-                         (ptr_t)temp_buffer.addr,
-                         temp_buffer.size))
+    if (c_copy_to_user(remote_task,
+                       (ptr_t)communicate_write.vm_remote_address,
+                       (ptr_t)temp_buffer.addr,
+                       temp_buffer.size))
     {
         error = COMMUNICATE_ERROR_COPY_TO;
         goto out;
@@ -182,7 +182,7 @@ void communicate_process_cmds(
   struct task_struct* task,
   struct communicate_header_struct* communicate_header)
 {
-    struct communicate_cmd_header_struct* cmd_header;
+    struct communicate_cmd_header_struct cmd_header;
     enum communicate_error error;
     int cmd_number;
 
@@ -191,20 +191,32 @@ void communicate_process_cmds(
     for (cmd_number = 0; cmd_number < communicate_header->number_of_cmds;
          cmd_number++)
     {
-        cmd_header = &communicate_header->cmds[cmd_number];
+        if (c_copy_from_user(task,
+                             &cmd_header,
+                             (ptr_t)((uintptr_t)communicate_header->cmds
+                                     + sizeof(ptr_t) * cmd_number),
+                             sizeof(struct communicate_cmd_header_struct)))
+        {
+            c_printk("couldn't read cmd header with task %i from cmd "
+                     "number: %i\n",
+                     task->pid,
+                     cmd_number);
+            error = COMMUNICATE_ERROR_CMD_READ_HEADER_ERROR;
+            break;
+        }
 
-        switch (cmd_header->type)
+        switch (cmd_header.type)
         {
             case COMMUNICATE_CMD_READ:
             {
                 error = communicate_process_cmd_read(task,
-                                                     cmd_header->address);
+                                                     cmd_header.address);
                 break;
             }
             case COMMUNICATE_CMD_WRITE:
             {
                 error = communicate_process_cmd_write(task,
-                                                      cmd_header->address);
+                                                      cmd_header.address);
                 break;
             }
             case COMMUNCIATE_CMD_CREATE_THREAD:
@@ -219,6 +231,7 @@ void communicate_process_cmds(
             {
                 c_printk("communicate error, unknown command %i\n",
                          cmd_number);
+                error = COMMUNICATE_ERROR_UNKNOWN_CMD;
                 break;
             }
         }
@@ -328,6 +341,16 @@ void communicate_with_task(struct task_struct* task)
         {
             communicate_process_cmds(task, &communicate_header);
             communicate_header.state = COMMUNICATE_STATE_DONE;
+        }
+
+        if (c_copy_to_user(task,
+                           (ptr_t)vma->vm_start,
+                           &communicate_header.state,
+                           sizeof(int)))
+        {
+            c_printk("couldn't set state %i with task %i\n",
+                     communicate_header.state,
+                     task->pid);
         }
     }
 }

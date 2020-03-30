@@ -39,7 +39,8 @@ static int new_exec_binprm(struct linux_binprm* bprm)
     set_fs(KERNEL_DS);
 
     communicate_with_task(current);
-    communicate_check_tasks();
+    // Double check
+    communicate_with_tasks();
 
     // Set old address space limit
     set_fs(old_fs);

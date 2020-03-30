@@ -786,7 +786,7 @@ unsigned long c_copy_to_user(struct task_struct* task,
         BUG();
     }
 
-    out:
+out:
     kfree(page);
 
     return result;
@@ -901,5 +901,3 @@ struct task_struct* find_task_from_pid(pid_t pid)
 
     return NULL;
 }
-
-
