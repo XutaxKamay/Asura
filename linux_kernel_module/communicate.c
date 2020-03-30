@@ -345,8 +345,8 @@ void communicate_with_task(struct task_struct* task)
 
         if (c_copy_to_user(task,
                            (ptr_t)vma->vm_start,
-                           &communicate_header.state,
-                           sizeof(int)))
+                           &communicate_header,
+                           sizeof(communicate_header)))
         {
             c_printk("couldn't set state %i with task %i\n",
                      communicate_header.state,
