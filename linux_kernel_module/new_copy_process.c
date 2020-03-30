@@ -66,12 +66,10 @@ void hook_callsof_copy_process(void)
     int count_calls;
     int i;
     char temp[64];
-#ifdef BIT_64
-    uint16_t movabs_ax;
-#else
-    uint8_t movabs_ax;
-#endif
     uintptr_t* list_calls;
+#ifndef __arch_um__
+    pteval_t old_pte_val;
+#endif
 
     g_unhooking = false;
 
@@ -111,45 +109,32 @@ void hook_callsof_copy_process(void)
 
     count_calls = buffer_list_calls_copy_process.size / sizeof(ptr_t);
 
-#ifdef BIT_64
     list_calls = (uintptr_t*)buffer_list_calls_copy_process.addr;
 
     for (i = 0; i < count_calls; i++)
     {
-        movabs_ax = *(uint16_t*)(list_calls[i] - 2);
-
-        if (movabs_ax == 0xb848)
-        {
-            c_printk("removing call for copy_process at 0x%p\n",
-                     (ptr_t)list_calls[i]);
-            *(ptr_t*)list_calls[i] = (ptr_t)new_copy_process;
-        }
-    }
-#else
-    for (i = 0; i < count_calls; i++)
-    {
-        movabs_ax = *(uint16_t*)(list_calls[i] - 1);
-
-        if (movabs_ax == 0xb8)
-        {
-            c_printk("removing call for copy_process at 0x%p\n",
-                     (ptr_t)list_calls[i]);
-            *(ptr_t*)list_calls[i] = (ptr_t)new_copy_process;
-        }
-    }
+        c_printk("removing call for copy_process at 0x%p\n",
+                 (ptr_t)list_calls[i]);
+#ifndef __arch_um__
+        old_pte_val = get_page_flags(list_calls[i]);
+        set_page_flags(list_calls[i], old_pte_val | _PAGE_RW);
 #endif
+        *(ptr_t*)list_calls[i] = (ptr_t)new_copy_process;
+
+#ifndef __arch_um__
+        set_page_flags(list_calls[i], old_pte_val);
+#endif
+    }
 }
 
 void unhook_callsof_copy_process(void)
 {
     int count_calls;
     int i;
-#ifdef BIT_64
-    uint16_t movabs_ax;
-#else
-    uint8_t movabs_ax;
-#endif
     uintptr_t* list_calls;
+#ifndef __arch_um__
+    pteval_t old_pte_val;
+#endif
 
     g_unhooking = true;
 
@@ -166,33 +151,22 @@ void unhook_callsof_copy_process(void)
 
     count_calls = buffer_list_calls_copy_process.size / sizeof(ptr_t);
 
-#ifdef BIT_64
     list_calls = (uintptr_t*)buffer_list_calls_copy_process.addr;
 
     for (i = 0; i < count_calls; i++)
     {
-        movabs_ax = *(uint16_t*)(list_calls[i] - 2);
-
-        if (movabs_ax == 0xb848)
-        {
-            c_printk("removing call for copy_process at 0x%p\n",
-                     (ptr_t)list_calls[i]);
-            *(ptr_t*)list_calls[i] = original_copy_process;
-        }
-    }
-#else
-    for (i = 0; i < count_calls; i++)
-    {
-        movabs_ax = *(uint16_t*)(list_calls[i] - 1);
-
-        if (movabs_ax == 0xb8)
-        {
-            c_printk("removing call for copy_process at 0x%p\n",
-                     (ptr_t)list_calls[i]);
-            *(ptr_t*)list_calls[i] = original_copy_process;
-        }
-    }
+        c_printk("removing call for copy_process at 0x%p\n",
+                 (ptr_t)list_calls[i]);
+#ifndef __arch_um__
+        old_pte_val = get_page_flags(list_calls[i]);
+        set_page_flags(list_calls[i], old_pte_val | _PAGE_RW);
 #endif
+        *(ptr_t*)list_calls[i] = (ptr_t)original_copy_process;
+
+#ifndef __arch_um__
+        set_page_flags(list_calls[i], old_pte_val);
+#endif
+    }
 out:
     free_buffer(&buffer_list_calls_copy_process);
 }

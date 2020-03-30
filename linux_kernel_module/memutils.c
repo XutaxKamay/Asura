@@ -676,14 +676,6 @@ void init_buffer(struct buffer_struct* buffer)
     buffer->addr = NULL;
 }
 
-#ifndef __arch_um__
-pte_t* get_pte(uintptr_t address)
-{
-    unsigned int level;
-    return lookup_address(address, &level);
-}
-#endif
-
 struct mm_struct* get_task_mm_kthread(struct task_struct* task)
 {
     struct mm_struct* mm;
@@ -901,3 +893,48 @@ struct task_struct* find_task_from_pid(pid_t pid)
 
     return NULL;
 }
+
+#ifndef __arch_um__
+
+pte_t* get_pte(uintptr_t address)
+{
+    unsigned int level;
+    return lookup_address(address, &level);
+}
+
+pteval_t get_page_flags(uintptr_t addr)
+{
+    pte_t* pte;
+
+    pte = get_pte(align_address(addr, PAGE_SIZE));
+
+    if (pte)
+    {
+        return pte->pte;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+pteval_t set_page_flags(uintptr_t addr, pteval_t val)
+{
+    pteval_t old_pte_val;
+    pte_t* pte;
+
+    pte = get_pte(align_address(addr, PAGE_SIZE));
+
+    if (pte)
+    {
+        old_pte_val = pte->pte;
+        pte->pte    = val;
+        return old_pte_val;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+#endif

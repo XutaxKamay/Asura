@@ -69,6 +69,8 @@ struct task_struct* find_task_from_pid(pid_t pid);
 /* Kernels that have RWX strict protection */
 #ifndef __arch_um__
 pte_t* get_pte(uintptr_t address);
+pteval_t get_page_flags(uintptr_t addr);
+pteval_t set_page_flags(uintptr_t addr, pteval_t val);
 #endif
 
 #endif
