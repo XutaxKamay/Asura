@@ -3,7 +3,7 @@
 #obj-y += main.o
 custom_module-y += ../utils.o ../memutils.o ../main.o ../communicate.o ../hooks.o ../new_copy_process.o ../new_exec_binprm.o
 obj-m += custom_module.o
-ccflags-y += -g -Wall #*-Wa,-a,-ad
+ccflags-y += -g -O0 -Wall #*-Wa,-a,-ad
 
 all:
 	make ARCH=um -C /lib/modules/`uname -r`-uml/build M=$(PWD) modules

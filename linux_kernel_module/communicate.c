@@ -11,9 +11,9 @@ communicate_read_header(struct task_struct* task, ptr_t address)
     struct communicate_header_struct communicate_header;
 
     if (c_copy_from_user(task,
-                         address,
                          &communicate_header,
-                         sizeof(communicate_header)))
+                         address,
+                         sizeof(struct communicate_header_struct)))
     {
         c_printk("couldn't read communicate header from task %i\n",
                  task->pid);
@@ -30,8 +30,8 @@ enum communicate_error communicate_read__write_struct(
   struct communicate_write_struct* communicate_write)
 {
     if (c_copy_from_user(task,
+                         &communicate_write,
                          address,
-                         communicate_write,
                          sizeof(struct communicate_write_struct)))
     {
         c_printk("couldn't read communicate write struct from task %i\n",
@@ -49,8 +49,8 @@ enum communicate_error communicate_read__read_struct(
   struct communicate_read_struct* communicate_read)
 {
     if (c_copy_from_user(task,
+                         &communicate_read,
                          address,
-                         communicate_read,
                          sizeof(struct communicate_read_struct)))
     {
         c_printk("couldn't read communicate read struct from task %i\n",

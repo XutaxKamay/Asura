@@ -722,7 +722,7 @@ unsigned long c_copy_to_user(struct task_struct* task,
     size_t size_to_copy;
 
     nb_pages = ((size - 1) / PAGE_SIZE) + 1;
-    result   = 0;
+    result   = size;
 
     alignedaddress = align_address((uintptr_t)to, PAGE_SIZE);
     shifted        = (uintptr_t)to - alignedaddress;
@@ -734,7 +734,7 @@ unsigned long c_copy_to_user(struct task_struct* task,
 
     if (mm == NULL)
     {
-        goto out;
+        goto out_nosem;
     }
 
     if (current != task)
@@ -756,12 +756,24 @@ unsigned long c_copy_to_user(struct task_struct* task,
     }
     else
     {
-        if (get_user_pages_fast(alignedaddress, nb_pages, FOLL_FORCE, page)
+        // BUG: get_user_pages doesn't seems to get active_mm.
+        // Inside mm/gup.c __gup_longterm_unlocked current->mm should
+        // check if it's null or kernel thread
+        if (get_user_pages_remote(task,
+                                  mm,
+                                  alignedaddress,
+                                  nb_pages,
+                                  FOLL_FORCE,
+                                  page,
+                                  NULL,
+                                  NULL)
             <= 0)
         {
             goto out;
         }
     }
+
+    result = 0;
 
     for (nb_page = 0; nb_page < nb_pages; nb_page++)
     {
@@ -797,7 +809,13 @@ unsigned long c_copy_to_user(struct task_struct* task,
             size -= size_to_copy;
         }
 
+        // memcpy(realaddr, from, size_to_copy);
         result += copy_to_user(realaddr, from, size_to_copy);
+    }
+
+    if (size != 0)
+    {
+        BUG();
     }
 
 out:
@@ -806,12 +824,8 @@ out:
         up_write(&mm->mmap_sem);
     }
 
+out_nosem:
     kfree(page);
-
-    if (size != 0)
-    {
-        BUG();
-    }
 
     return result;
 }
@@ -833,7 +847,7 @@ unsigned long c_copy_from_user(struct task_struct* task,
     size_t size_to_copy;
 
     nb_pages = ((size - 1) / PAGE_SIZE) + 1;
-    result   = 0;
+    result   = size;
 
     alignedaddress = align_address((uintptr_t)from, PAGE_SIZE);
     shifted        = (uintptr_t)from - alignedaddress;
@@ -845,7 +859,7 @@ unsigned long c_copy_from_user(struct task_struct* task,
 
     if (mm == NULL)
     {
-        goto out;
+        goto out_nosem;
     }
 
     if (current != task)
@@ -867,12 +881,24 @@ unsigned long c_copy_from_user(struct task_struct* task,
     }
     else
     {
-        if (get_user_pages_fast(alignedaddress, nb_pages, FOLL_FORCE, page)
+        // BUG: get_user_pages doesn't seems to get active_mm.
+        // Inside mm/gup.c __gup_longterm_unlocked current->mm should
+        // check if it's null or kernel thread
+        if (get_user_pages_remote(task,
+                                  mm,
+                                  alignedaddress,
+                                  nb_pages,
+                                  FOLL_FORCE,
+                                  page,
+                                  NULL,
+                                  NULL)
             <= 0)
         {
             goto out;
         }
     }
+
+    result = 0;
 
     for (nb_page = 0; nb_page < nb_pages; nb_page++)
     {
@@ -908,7 +934,14 @@ unsigned long c_copy_from_user(struct task_struct* task,
             size -= size_to_copy;
         }
 
+        // memcpy(to, realaddr, size_to_copy);
+
         result += copy_from_user(to, realaddr, size_to_copy);
+    }
+
+    if (size != 0)
+    {
+        BUG();
     }
 
 out:
@@ -917,12 +950,8 @@ out:
         up_read(&mm->mmap_sem);
     }
 
+out_nosem:
     kfree(page);
-
-    if (size != 0)
-    {
-        BUG();
-    }
 
     return result;
 }
@@ -941,3 +970,5 @@ struct task_struct* find_task_from_pid(pid_t pid)
 
     return NULL;
 }
+
+

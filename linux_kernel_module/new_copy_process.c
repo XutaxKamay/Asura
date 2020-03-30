@@ -28,6 +28,7 @@ new_copy_process(struct pid* pid,
                  int node,
                  struct kernel_clone_args* args)
 {
+    mm_segment_t old_fs;
     struct task_struct* task;
 
     g_infunction = true;
@@ -36,10 +37,13 @@ new_copy_process(struct pid* pid,
 
     // c_printk("copy_process: created task with pid %i\n", task->pid);
 
-    communicate_with_task(task);
+    old_fs = get_fs();
+    set_fs(KERNEL_DS);
 
-    // checks
+    communicate_with_task(task);
     communicate_check_tasks();
+
+    set_fs(old_fs);
 
     // In case we're unhooking
     if (g_unhooking)
