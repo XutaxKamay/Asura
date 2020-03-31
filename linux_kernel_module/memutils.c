@@ -553,8 +553,10 @@ struct vm_area_struct* remote_mmap(struct task_struct* task,
 {
     struct mm_struct* mm;
     struct vm_area_struct* vma;
+    bool should_up_write;
 
-    vma = NULL;
+    should_up_write = false;
+    vma             = NULL;
 
     mm = get_task_mm_kthread(task);
 
@@ -565,6 +567,7 @@ struct vm_area_struct* remote_mmap(struct task_struct* task,
     }
 
     down_write(&mm->mmap_sem);
+    should_up_write = true;
 
     vma = vm_area_alloc(mm);
 
@@ -592,7 +595,9 @@ struct vm_area_struct* remote_mmap(struct task_struct* task,
     }
 
 out:
-    up_write(&mm->mmap_sem);
+    if (should_up_write)
+        up_write(&mm->mmap_sem);
+
     return vma;
 }
 
@@ -815,6 +820,7 @@ unsigned long c_copy_to_user(struct task_struct* task,
 out:
     if (should_up_write)
         up_write(&mm->mmap_sem);
+
     kfree(page);
 
     return result;
