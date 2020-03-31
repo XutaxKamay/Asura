@@ -258,22 +258,41 @@ int scan_pattern(uintptr_t start,
     uintptr_t iter;
     char* pattern_c;
     int pattern_byte;
+    int val_iter;
+    mm_segment_t old_fs;
+
+    val_iter = 0;
+    old_fs   = get_fs();
 
     if (buf == NULL)
+    {
         return 0;
+    }
+
+    set_fs(KERNEL_DS);
 
     while (start < end)
     {
         iter = start;
 
-        for (pattern_c = pattern; pattern_c < pattern + len;
-             pattern_c += 3)
+        for (pattern_c = pattern; pattern_c < pattern + len;)
         {
             // If it's an unknown byte, we skip the byte.
             if (*pattern_c == '?'
                 && *(char*)((uintptr_t)pattern_c + 1) == '?')
             {
                 iter++;
+                // ??_
+                pattern_c += 3;
+                continue;
+            }
+
+            if (*pattern_c == '?'
+                && *(char*)((uintptr_t)pattern_c + 1) == ' ')
+            {
+                iter++;
+                // ?_
+                pattern_c += 2;
                 continue;
             }
 
@@ -281,15 +300,23 @@ int scan_pattern(uintptr_t start,
                                             *(char*)((uintptr_t)pattern_c
                                                      + 1));
 
+            // XX_
+            pattern_c += 3;
+
             if (pattern_byte == 0x100)
             {
+                set_fs(old_fs);
+
                 c_printk("wrong pattern (%li): %s\n",
                          (uintptr_t)pattern_c - (uintptr_t)pattern,
                          pattern);
                 return 0;
             }
 
-            if (pattern_byte != (int)(*(unsigned char*)iter))
+            if (copy_from_user(&val_iter, (ptr_t)iter, sizeof(char)))
+                goto dontmatch;
+
+            if (pattern_byte != val_iter)
                 goto dontmatch;
 
             iter++;
@@ -303,6 +330,8 @@ int scan_pattern(uintptr_t start,
 
             if (buf->addr == NULL)
             {
+                set_fs(old_fs);
+
                 c_printk("kmalloc failed: with pattern\n%s\n", pattern);
                 return 0;
             }
@@ -315,7 +344,9 @@ int scan_pattern(uintptr_t start,
 
             if (buf->addr == NULL)
             {
-                c_printk("krealloc failed: with pattern \n%s\n", pattern);
+                set_fs(old_fs);
+
+                c_printk("krealloc failed: with pattern\n%s\n", pattern);
 
                 return 0;
             }
@@ -326,6 +357,8 @@ int scan_pattern(uintptr_t start,
     dontmatch:
         start++;
     }
+
+    set_fs(old_fs);
 
     if (buf->addr == NULL)
     {
@@ -345,7 +378,6 @@ int scan_task(struct task_struct* task,
 {
     struct vm_area_struct* vma;
     struct mm_struct* mm;
-    int ret;
     ptr_t copied_user_memory;
 
     copied_user_memory = NULL;
@@ -388,18 +420,12 @@ int scan_task(struct task_struct* task,
             break;
         }
 
-        ret = scan_pattern((uintptr_t)copied_user_memory,
-                           (uintptr_t)copied_user_memory
-                             + (vma->vm_end - vma->vm_start),
-                           pattern,
-                           len,
-                           buf);
-
-        if (ret)
-        {
-            kfree(copied_user_memory);
-            return ret;
-        }
+        scan_pattern((uintptr_t)copied_user_memory,
+                     (uintptr_t)copied_user_memory
+                       + (vma->vm_end - vma->vm_start),
+                     pattern,
+                     len,
+                     buf);
 
         vma = vma->vm_next;
         kfree(copied_user_memory);
@@ -906,7 +932,7 @@ pteval_t get_page_flags(uintptr_t addr)
 {
     pte_t* pte;
 
-    pte = get_pte(align_address(addr, PAGE_SIZE));
+    pte = get_pte(addr);
 
     if (pte)
     {
@@ -923,7 +949,7 @@ pteval_t set_page_flags(uintptr_t addr, pteval_t val)
     pteval_t old_pte_val;
     pte_t* pte;
 
-    pte = get_pte(align_address(addr, PAGE_SIZE));
+    pte = get_pte(addr);
 
     if (pte)
     {
