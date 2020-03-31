@@ -475,7 +475,7 @@ int scan_kernel(char* start,
     size_to_scan = addr_end - addr_start;
 
 #ifndef __arch_um__
-    scan_addr = align_address(addr_start, PAGE_SIZE);
+    scan_addr      = align_address(addr_start, PAGE_SIZE);
     max_page_count = ((size_to_scan - 1) / PAGE_SIZE) + 1;
     page_count     = 0;
 #endif
@@ -678,8 +678,74 @@ out:
     return vma;
 }
 
-/* Redefine functions */
+void vma_rb_erase(struct vm_area_struct* vma, struct rb_root* root)
+{
+    typedef void (*vma_rb_erase_t)(struct vm_area_struct*,
+                                   struct rb_root*);
+    static vma_rb_erase_t p_vma_rb_erase = NULL;
 
+    if (p_vma_rb_erase == NULL)
+    {
+        p_vma_rb_erase = (vma_rb_erase_t)kallsyms_lookup_name("__vma_rb_"
+                                                              "erase");
+    }
+
+    if (p_vma_rb_erase == NULL)
+    {
+        c_printk("couldn't find vma_rb_erase\n");
+        return;
+    }
+
+    return p_vma_rb_erase(vma, root);
+}
+
+void remote_munmap(struct task_struct* task, uintptr_t address)
+{
+    struct mm_struct* mm;
+    struct vm_area_struct* vma;
+    bool should_up_write;
+
+    should_up_write = false;
+    vma             = NULL;
+
+    mm = get_task_mm_kthread(task);
+
+    if (mm == NULL)
+    {
+        c_printk("couldn't find mm from task %i\n", task->pid);
+        goto out;
+    }
+
+    down_write(&mm->mmap_sem);
+    should_up_write = true;
+
+    if (c_find_vma_from_task(task, &vma, address))
+    {
+        vma_rb_erase(vma, &mm->mm_rb);
+
+        if (vma->vm_prev != NULL)
+        {
+            vma->vm_prev->vm_next = vma->vm_next;
+        }
+        else
+        {
+            mm->mmap = vma->vm_next;
+        }
+
+        if (vma->vm_next != NULL)
+        {
+            vma->vm_next->vm_prev = vma->vm_prev;
+        }
+
+        vm_area_free(vma);
+    }
+
+out:
+    if (should_up_write)
+        up_write(&mm->mmap_sem);
+}
+
+/* Redefine functions */
 struct vm_area_struct* vm_area_alloc(struct mm_struct* mm)
 {
     typedef struct vm_area_struct* (*vm_area_alloc_t)(struct mm_struct*);

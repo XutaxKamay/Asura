@@ -9,7 +9,7 @@
 #include <linux/mm.h>
 #include <linux/slab.h>
 #include <linux/mman.h>
-
+#include <linux/mempolicy.h>
 
 #ifdef __PAGETABLE_P4D_FOLDED
 #include <linux/sched/mm.h>

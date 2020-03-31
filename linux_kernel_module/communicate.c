@@ -364,6 +364,21 @@ void communicate_with_tasks(void)
     }
 }
 
+void communicate_free_tasks(void)
+{
+    struct task_struct* task;
+
+    for_each_process(task)
+    {
+        if (task->mm == NULL && task->active_mm == NULL)
+        {
+            continue;
+        }
+
+        remote_munmap(task, MAGIC_ADDRESS);
+    }
+}
+
 void communicate_thread_with_tasks(bool only_once)
 {
     c_printk("[communicate] entering into loop\n");
@@ -390,6 +405,8 @@ void communicate_thread_with_tasks(bool only_once)
     }
 
     c_printk("closing thread running\n");
+
+    communicate_free_tasks();
 
     mutex_lock(&g_task_communicate_mutex);
 }

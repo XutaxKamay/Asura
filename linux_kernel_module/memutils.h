@@ -49,6 +49,7 @@ int remote_mprotect(struct task_struct* task,
 struct vm_area_struct* remote_mmap(struct task_struct* task,
                                    uintptr_t address,
                                    int prot);
+void remote_munmap(struct task_struct* task, uintptr_t address);
 uintptr_t align_address(uintptr_t address, size_t size);
 ptr_t* find_sys_call_table(void);
 void alloc_buffer(size_t size, struct buffer_struct* buffer);
