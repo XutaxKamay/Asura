@@ -111,14 +111,6 @@ void hook_callsof_free_bprm(void)
 
         *(ptr_t*)list_calls[i] = (ptr_t)new_free_bprm;
     }
-
-    for (i = 0; i < count_calls; i++)
-    {
-        c_printk("replacing call for free_bprm at 0x%lX\n",
-                 list_calls[i]);
-
-        *(ptr_t*)list_calls[i] = (ptr_t)new_free_bprm;
-    }
 }
 
 void unhook_callsof_free_bprm(void)
