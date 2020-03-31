@@ -438,11 +438,14 @@ int scan_kernel(char* start,
     uintptr_t swap;
     int ret;
     size_t size_to_scan;
+    mm_segment_t old_fs;
+
+#ifndef __arch_um__
     int max_page_count;
     int page_count;
     uintptr_t scan_addr, scan_end_addr;
-    mm_segment_t old_fs;
     pte_t* pte;
+#endif
 
     // If pattern is too large
     if (len > PAGE_SIZE * 2)
@@ -470,10 +473,12 @@ int scan_kernel(char* start,
     }
 
     size_to_scan = addr_end - addr_start;
-    scan_addr    = align_address(addr_start, PAGE_SIZE);
 
+#ifndef __arch_um__
+    scan_addr = align_address(addr_start, PAGE_SIZE);
     max_page_count = ((size_to_scan - 1) / PAGE_SIZE) + 1;
     page_count     = 0;
+#endif
 
     c_printk("scanning with start - end addr: %lX - %lX (%li)\n",
              addr_start,
@@ -483,6 +488,7 @@ int scan_kernel(char* start,
     old_fs = get_fs();
     set_fs(KERNEL_DS);
 
+#ifndef __arch_um__
     while (page_count < max_page_count)
     {
         // Find first present page.
@@ -532,6 +538,9 @@ out:
     {
         BUG();
     }
+#else
+    ret = scan_pattern(addr_start, addr_end, pattern, len, buf);
+#endif
 
     set_fs(old_fs);
 
