@@ -735,8 +735,9 @@ unsigned long c_copy_to_user(struct task_struct* task,
     size_t size_to_copy;
     bool should_up_write;
 
-    nb_pages = ((size - 1) / PAGE_SIZE) + 1;
-    result   = size;
+    should_up_write = false;
+    nb_pages        = ((size - 1) / PAGE_SIZE) + 1;
+    result          = size;
 
     alignedaddress = align_address((uintptr_t)to, PAGE_SIZE);
     shifted        = (uintptr_t)to - alignedaddress;
