@@ -29,7 +29,7 @@ static int new_free_bprm(struct linux_binprm* bprm)
 
     g_infunction = true;
 
-    // c_printk("free_bprm: created task with pid %i\n", current->pid);
+    c_printk("free_bprm: created task with pid %i\n", current->pid);
 
     // Get old address space limit
     old_fs = get_fs();
@@ -160,13 +160,17 @@ void hook_callsof_free_bprm(void)
 {
     int ret;
     char* pattern;
+    char* pattern2;
     uintptr_t* list_calls;
     int count_calls;
     int i;
     pteval_t old_pte_val;
 
+    // TODO: Might be better to convert those into an array.
     pattern = "E8 ? ? ? ? 48 89 DF E8 ? ? ? ? EB ? 41 BD F4 FF FF FF 48 "
               "8B 7D";
+    pattern2 = "E8 ? ? ? ? 55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F6 "
+               "41 52 4C 8D 55 ? 53 41 89 F5";
 
     g_unhooking = false;
 
@@ -189,6 +193,17 @@ void hook_callsof_free_bprm(void)
     if (!ret)
     {
         c_printk("didn't find first signature of call of free_bprm\n");
+    }
+
+    ret = scan_kernel("_text",
+                      "_end",
+                      pattern2,
+                      strlen(pattern2) - 1,
+                      &buffer_list_calls_free_bprm);
+
+    if (!ret)
+    {
+        c_printk("didn't find second signature of call of free_bprm\n");
     }
 
     if (buffer_list_calls_free_bprm.addr == NULL)

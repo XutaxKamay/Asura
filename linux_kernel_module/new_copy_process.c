@@ -35,7 +35,7 @@ new_copy_process(struct pid* pid,
 
     task = original_copy_process(pid, trace, node, args);
 
-    // c_printk("copy_process: created task with pid %i\n", task->pid);
+    c_printk("copy_process: copied task with pid %i\n", task->pid);
 
     // Get old address space limit
     old_fs = get_fs();
@@ -162,6 +162,7 @@ void hook_callsof_copy_process(void)
     int i;
     pteval_t old_pte_val;
 
+    // TODO: Might be better to convert those into an array.
     pattern  = "E8 ? ? ? ? 48 3D 00 F0 FF FF 48 89 C3 77 ? 48 8B 80";
     pattern2 = "E8 ? ? ? ? 48 3D 00 F0 FF FF 49 89 C4 0F 87 ? ? ? ? 65 "
                "48 8B 04 25";
@@ -273,3 +274,4 @@ out:
     free_buffer(&buffer_list_calls_copy_process);
 }
 #endif
+
