@@ -469,8 +469,11 @@ int scan_kernel(char* start,
         addr_end   = swap;
     }
 
-    size_to_scan   = addr_end - addr_start;
+    size_to_scan = addr_end - addr_start;
+    scan_addr    = align_address(addr_start, PAGE_SIZE);
+
     max_page_count = ((size_to_scan - 1) / PAGE_SIZE) + 1;
+    page_count     = 0;
 
     c_printk("scanning with start - end addr: %lX - %lX (%li)\n",
              addr_start,
@@ -479,10 +482,6 @@ int scan_kernel(char* start,
 
     old_fs = get_fs();
     set_fs(KERNEL_DS);
-
-    scan_addr = align_address(addr_start, PAGE_SIZE);
-
-    page_count = 0;
 
     while (page_count < max_page_count)
     {
@@ -506,7 +505,8 @@ int scan_kernel(char* start,
 
         scan_end_addr = scan_addr + PAGE_SIZE;
 
-        while (1)
+        // Stop if we reached our page count.
+        while (page_count < max_page_count)
         {
             pte = get_pte(scan_end_addr);
 
@@ -519,13 +519,8 @@ int scan_kernel(char* start,
 
             scan_end_addr += PAGE_SIZE;
             page_count++;
-
-            // Ouch we reached our page count.
-            if (page_count >= max_page_count)
-                goto scan;
         }
 
-    scan:
         // Let's scan now.
         ret = scan_pattern(scan_addr, scan_end_addr, pattern, len, buf);
         // Next pointer.
