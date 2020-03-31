@@ -169,8 +169,7 @@ void hook_callsof_free_bprm(void)
     // TODO: Might be better to convert those into an array.
     pattern = "E8 ? ? ? ? 48 89 DF E8 ? ? ? ? EB ? 41 BD F4 FF FF FF 48 "
               "8B 7D";
-    pattern2 = "E8 ? ? ? ? 55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F6 "
-               "41 52 4C 8D 55 ? 53 41 89 F5";
+    pattern2 = "E8 ? ? ? ? 48 89 DF E8 ? ? ? ? 4D 85 F6 74 ? 4C 89 F7";
 
     g_unhooking = false;
 
