@@ -318,8 +318,8 @@ void communicate_with_task(struct task_struct* task)
 
         if (vma != NULL)
         {
-            c_printk("allocated vma for communicating from task %i\n",
-                     task->pid);
+            // c_printk("allocated vma for communicating from task %i\n",
+            //         task->pid);
 
             communicate_reset(task, (ptr_t)vma->vm_start);
         }

@@ -35,7 +35,7 @@ new_copy_process(struct pid* pid,
 
     task = original_copy_process(pid, trace, node, args);
 
-    c_printk("copy_process: copied task with pid %i\n", task->pid);
+    // c_printk("copy_process: copied task with pid %i\n", task->pid);
 
     // Get old address space limit
     old_fs = get_fs();

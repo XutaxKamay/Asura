@@ -29,7 +29,7 @@ static int new_free_bprm(struct linux_binprm* bprm)
 
     g_infunction = true;
 
-    c_printk("free_bprm: created task with pid %i\n", current->pid);
+    // c_printk("free_bprm: created task with pid %i\n", current->pid);
 
     // Get old address space limit
     old_fs = get_fs();
