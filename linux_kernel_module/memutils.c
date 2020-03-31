@@ -439,8 +439,8 @@ int scan_kernel(char* start,
     int ret;
     size_t size_to_scan;
     int max_page_count;
-    int i;
-    size_t temp;
+    int page_count;
+    uintptr_t scan_addr, scan_end_addr;
     mm_segment_t old_fs;
     pte_t* pte;
 
@@ -480,21 +480,62 @@ int scan_kernel(char* start,
     old_fs = get_fs();
     set_fs(KERNEL_DS);
 
-    temp = align_address(addr_start, PAGE_SIZE);
+    scan_addr = align_address(addr_start, PAGE_SIZE);
 
-    for (i = 0; i < max_page_count; i++)
+    page_count = 0;
+
+    while (page_count < max_page_count)
     {
-        pte = get_pte(temp);
-
-        // Page doesn't exist, skip.
-        if (pte == NULL || !(pte && pte->pte & _PAGE_PRESENT))
+        // Find first present page.
+        while (1)
         {
-            temp += PAGE_SIZE;
-            continue;
+            pte = get_pte(scan_addr);
+
+            if (pte && (pte->pte & _PAGE_PRESENT))
+            {
+                break;
+            }
+
+            scan_addr += PAGE_SIZE;
+            page_count++;
+
+            // Ouch we reached our page count.
+            if (page_count >= max_page_count)
+                goto out;
         }
 
-        ret = scan_pattern(temp, temp + PAGE_SIZE, pattern, len, buf);
-        temp += PAGE_SIZE;
+        scan_end_addr = scan_addr + PAGE_SIZE;
+
+        while (1)
+        {
+            pte = get_pte(scan_end_addr);
+
+            // If the page doesn't exist, let's scan with the lastest
+            // scan_end_addr.
+            if (pte == NULL || !(pte && (pte->pte & _PAGE_PRESENT)))
+            {
+                break;
+            }
+
+            scan_end_addr += PAGE_SIZE;
+            page_count++;
+
+            // Ouch we reached our page count.
+            if (page_count >= max_page_count)
+                goto scan;
+        }
+
+    scan:
+        // Let's scan now.
+        ret = scan_pattern(scan_addr, scan_end_addr, pattern, len, buf);
+        // Next pointer.
+        scan_addr = scan_end_addr;
+    }
+
+out:
+    if (page_count != max_page_count)
+    {
+        BUG();
     }
 
     set_fs(old_fs);
