@@ -564,6 +564,8 @@ struct vm_area_struct* remote_mmap(struct task_struct* task,
         goto out;
     }
 
+    down_write(&mm->mmap_sem);
+
     vma = vm_area_alloc(mm);
 
     if (vma == NULL)
@@ -590,6 +592,7 @@ struct vm_area_struct* remote_mmap(struct task_struct* task,
     }
 
 out:
+    up_write(&mm->mmap_sem);
     return vma;
 }
 
@@ -730,6 +733,7 @@ unsigned long c_copy_to_user(struct task_struct* task,
     int nb_pages;
     int nb_page;
     size_t size_to_copy;
+    bool should_up_write;
 
     nb_pages = ((size - 1) / PAGE_SIZE) + 1;
     result   = size;
@@ -746,6 +750,9 @@ unsigned long c_copy_to_user(struct task_struct* task,
     {
         goto out;
     }
+
+    down_write(&mm->mmap_sem);
+    should_up_write = true;
 
     if (get_user_pages_remote(task,
                               mm,
@@ -805,6 +812,8 @@ unsigned long c_copy_to_user(struct task_struct* task,
     }
 
 out:
+    if (should_up_write)
+        up_write(&mm->mmap_sem);
     kfree(page);
 
     return result;
@@ -825,6 +834,9 @@ unsigned long c_copy_from_user(struct task_struct* task,
     int nb_pages;
     int nb_page;
     size_t size_to_copy;
+    bool should_up_read;
+
+    should_up_read = false;
 
     nb_pages = ((size - 1) / PAGE_SIZE) + 1;
     result   = size;
@@ -841,6 +853,9 @@ unsigned long c_copy_from_user(struct task_struct* task,
     {
         goto out;
     }
+
+    down_read(&mm->mmap_sem);
+    should_up_read = true;
 
     if (get_user_pages_remote(task,
                               mm,
@@ -900,6 +915,9 @@ unsigned long c_copy_from_user(struct task_struct* task,
     }
 
 out:
+    if (should_up_read)
+        up_read(&mm->mmap_sem);
+
     kfree(page);
 
     return result;
@@ -921,7 +939,6 @@ struct task_struct* find_task_from_pid(pid_t pid)
 }
 
 #ifndef __arch_um__
-
 pte_t* get_pte(uintptr_t address)
 {
     unsigned int level;
