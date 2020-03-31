@@ -259,17 +259,13 @@ int scan_pattern(uintptr_t start,
     char* pattern_c;
     int pattern_byte;
     int val_iter;
-    mm_segment_t old_fs;
 
     val_iter = 0;
-    old_fs   = get_fs();
 
     if (buf == NULL)
     {
         return 0;
     }
-
-    set_fs(KERNEL_DS);
 
     while (start < end)
     {
@@ -305,18 +301,13 @@ int scan_pattern(uintptr_t start,
 
             if (pattern_byte == 0x100)
             {
-                set_fs(old_fs);
-
                 c_printk("wrong pattern (%li): %s\n",
                          (uintptr_t)pattern_c - (uintptr_t)pattern,
                          pattern);
                 return 0;
             }
 
-            if (copy_from_user(&val_iter, (ptr_t)iter, sizeof(char)))
-                goto dontmatch;
-
-            if (pattern_byte != val_iter)
+            if (pattern_byte != (int)(*(unsigned char*)iter))
                 goto dontmatch;
 
             iter++;
@@ -330,8 +321,6 @@ int scan_pattern(uintptr_t start,
 
             if (buf->addr == NULL)
             {
-                set_fs(old_fs);
-
                 c_printk("kmalloc failed: with pattern\n%s\n", pattern);
                 return 0;
             }
@@ -344,8 +333,6 @@ int scan_pattern(uintptr_t start,
 
             if (buf->addr == NULL)
             {
-                set_fs(old_fs);
-
                 c_printk("krealloc failed: with pattern\n%s\n", pattern);
 
                 return 0;
@@ -358,11 +345,9 @@ int scan_pattern(uintptr_t start,
         start++;
     }
 
-    set_fs(old_fs);
-
     if (buf->addr == NULL)
     {
-        c_printk("didn't find pattern\n%s\n", pattern);
+        // c_printk("didn't find pattern\n%s\n", pattern);
         return 0;
     }
     else
@@ -379,6 +364,7 @@ int scan_task(struct task_struct* task,
     struct vm_area_struct* vma;
     struct mm_struct* mm;
     ptr_t copied_user_memory;
+    mm_segment_t old_fs;
 
     copied_user_memory = NULL;
 
@@ -399,6 +385,9 @@ int scan_task(struct task_struct* task,
                  task->pid);
         return 0;
     }
+
+    old_fs = get_fs();
+    set_fs(KERNEL_DS);
 
     while (true)
     {
@@ -434,7 +423,9 @@ int scan_task(struct task_struct* task,
             break;
     }
 
-    return 0;
+    set_fs(old_fs);
+
+    return buf->addr != NULL;
 }
 
 int scan_kernel(char* start,
@@ -444,6 +435,21 @@ int scan_kernel(char* start,
                 struct buffer_struct* buf)
 {
     uintptr_t addr_start, addr_end;
+    uintptr_t swap;
+    int ret;
+    size_t size_to_scan;
+    int max_page_count;
+    int i;
+    size_t temp;
+    mm_segment_t old_fs;
+    pte_t* pte;
+
+    // If pattern is too large
+    if (len > PAGE_SIZE * 2)
+    {
+        c_printk("pattern too large\n");
+        return 0;
+    }
 
     addr_start = kallsyms_lookup_name(start);
     addr_end   = kallsyms_lookup_name(end);
@@ -458,16 +464,42 @@ int scan_kernel(char* start,
 
     if (addr_start > addr_end)
     {
-        uintptr_t swap = addr_start;
-        addr_start     = addr_end;
-        addr_end       = swap;
+        swap       = addr_start;
+        addr_start = addr_end;
+        addr_end   = swap;
     }
 
-    c_printk("scanning with start - end addr: %lX - %lX\n",
-             addr_start,
-             addr_end);
+    size_to_scan   = addr_end - addr_start;
+    max_page_count = ((size_to_scan - 1) / PAGE_SIZE) + 1;
 
-    return scan_pattern(addr_start, addr_end, pattern, len, buf);
+    c_printk("scanning with start - end addr: %lX - %lX (%li)\n",
+             addr_start,
+             addr_end,
+             size_to_scan);
+
+    old_fs = get_fs();
+    set_fs(KERNEL_DS);
+
+    temp = align_address(addr_start, PAGE_SIZE);
+
+    for (i = 0; i < max_page_count; i++)
+    {
+        pte = get_pte(temp);
+
+        // Page doesn't exist, skip.
+        if (pte == NULL || !(pte && pte->pte & _PAGE_PRESENT))
+        {
+            temp += PAGE_SIZE;
+            continue;
+        }
+
+        ret = scan_pattern(temp, temp + PAGE_SIZE, pattern, len, buf);
+        temp += PAGE_SIZE;
+    }
+
+    set_fs(old_fs);
+
+    return buf->addr != NULL;
 }
 
 uintptr_t map_base_task(struct task_struct* task)

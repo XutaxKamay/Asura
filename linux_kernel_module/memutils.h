@@ -1,6 +1,8 @@
 #ifndef KERNEL_CUSTOM_MEMUTILS
 #define KERNEL_CUSTOM_MEMUTILS
 
+#define phys_to_page(phys) (pfn_to_page(__phys_to_pfn(phys)))
+
 #include "main.h"
 #include "utils.h"
 
