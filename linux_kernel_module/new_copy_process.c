@@ -4,7 +4,7 @@ copy_process_t original_copy_process = NULL;
 static struct mutex g_mutex;
 static bool g_unhooking  = false;
 static bool g_infunction = false;
-struct buffer_struct buffer_list_calls_copy_process;
+pattern_result_struct_t list_calls_copy_process;
 
 int find_copy_process(void)
 {
@@ -64,14 +64,12 @@ new_copy_process(struct pid* pid,
 void hook_callsof_copy_process(void)
 {
     int ret;
-    int count_calls;
     int i;
     char temp[64];
-    uintptr_t* list_calls;
 
     g_unhooking = false;
 
-    init_buffer(&buffer_list_calls_copy_process);
+    init_pattern_result(&list_calls_copy_process, 0);
 
     ret = find_copy_process();
 
@@ -97,7 +95,7 @@ void hook_callsof_copy_process(void)
                       "_end",
                       temp,
                       strlen(temp) - 1,
-                      &buffer_list_calls_copy_process);
+                      &list_calls_copy_process);
 
     if (!ret)
     {
@@ -105,24 +103,19 @@ void hook_callsof_copy_process(void)
         return;
     }
 
-    count_calls = buffer_list_calls_copy_process.size / sizeof(ptr_t);
-
-    list_calls = (uintptr_t*)buffer_list_calls_copy_process.addr;
-
-    for (i = 0; i < count_calls; i++)
+    for (i = 0; i < list_calls_copy_process.count; i++)
     {
         c_printk("replacing call for copy_process at 0x%lX\n",
-                 list_calls[i]);
+                 list_calls_copy_process.addrs[i]);
 
-        *(ptr_t*)list_calls[i] = (ptr_t)new_copy_process;
+        *(ptr_t*)list_calls_copy_process.addrs[i]
+          = (ptr_t)new_copy_process;
     }
 }
 
 void unhook_callsof_copy_process(void)
 {
-    int count_calls;
     int i;
-    uintptr_t* list_calls;
 
     g_unhooking = true;
 
@@ -131,25 +124,22 @@ void unhook_callsof_copy_process(void)
         mutex_lock(&g_mutex);
     }
 
-    if (buffer_list_calls_copy_process.addr == NULL)
+    if (list_calls_copy_process.count == 0)
     {
         c_printk("nothing to unhook for copy_process\n");
         goto out;
     }
 
-    count_calls = buffer_list_calls_copy_process.size / sizeof(ptr_t);
-
-    list_calls = (uintptr_t*)buffer_list_calls_copy_process.addr;
-
-    for (i = 0; i < count_calls; i++)
+    for (i = 0; i < list_calls_copy_process.count; i++)
     {
         c_printk("replacing call for copy_process at 0x%lX\n",
-                 list_calls[i]);
+                 list_calls_copy_process.addrs[i]);
 
-        *(ptr_t*)list_calls[i] = (ptr_t)original_copy_process;
+        *(ptr_t*)list_calls_copy_process.addrs[i]
+          = (ptr_t)original_copy_process;
     }
 out:
-    free_buffer(&buffer_list_calls_copy_process);
+    free_pattern_result(&list_calls_copy_process);
 }
 #else
 void hook_callsof_copy_process(void)
@@ -157,8 +147,6 @@ void hook_callsof_copy_process(void)
     int ret;
     char* pattern;
     char* pattern2;
-    uintptr_t* list_calls;
-    int count_calls;
     int i;
     pteval_t old_pte_val;
 
@@ -169,7 +157,7 @@ void hook_callsof_copy_process(void)
 
     g_unhooking = false;
 
-    init_buffer(&buffer_list_calls_copy_process);
+    init_pattern_result(&list_calls_copy_process, 0);
 
     ret = find_copy_process();
 
@@ -183,7 +171,7 @@ void hook_callsof_copy_process(void)
                       "_end",
                       pattern,
                       strlen(pattern) - 1,
-                      &buffer_list_calls_copy_process);
+                      &list_calls_copy_process);
 
     if (!ret)
     {
@@ -194,47 +182,44 @@ void hook_callsof_copy_process(void)
                       "_end",
                       pattern2,
                       strlen(pattern2) - 1,
-                      &buffer_list_calls_copy_process);
+                      &list_calls_copy_process);
     if (!ret)
     {
         c_printk("didn't find second signature of call of "
                  "copy_process\n");
     }
 
-    if (buffer_list_calls_copy_process.addr == NULL)
+    if (list_calls_copy_process.count == 0)
     {
         c_printk("didn't find any signatures of calls of copy_process\n");
         return;
     }
 
-    count_calls = buffer_list_calls_copy_process.size / sizeof(ptr_t);
-
-    list_calls = (uintptr_t*)buffer_list_calls_copy_process.addr;
-
     // This is safe to do as modules are always around the kernel
     // within its address space of 32 bits.
     // ((dst & 0xFFFFFFFF) - (src + 5) & 0xFFFFFFFF)
 
-    for (i = 0; i < count_calls; i++)
+    for (i = 0; i < list_calls_copy_process.count; i++)
     {
-        old_pte_val = get_page_flags(list_calls[i] + 1);
-        set_page_flags(list_calls[i] + 1, old_pte_val | _PAGE_RW);
+        old_pte_val = get_page_flags(list_calls_copy_process.addrs[i]
+                                     + 1);
+        set_page_flags(list_calls_copy_process.addrs[i] + 1,
+                       old_pte_val | _PAGE_RW);
 
         c_printk("replacing call for copy_process at 0x%lX\n",
-                 list_calls[i]);
+                 list_calls_copy_process.addrs[i]);
 
-        *(uint32_t*)(list_calls[i] + 1)
+        *(uint32_t*)(list_calls_copy_process.addrs[i] + 1)
           = ((uint32_t)((uintptr_t)new_copy_process & 0xFFFFFFFF))
-            - ((uint32_t)(list_calls[i] + 5) & 0xFFFFFFFF);
+            - ((uint32_t)(list_calls_copy_process.addrs[i] + 5)
+               & 0xFFFFFFFF);
 
-        set_page_flags(list_calls[i] + 1, old_pte_val);
+        set_page_flags(list_calls_copy_process.addrs[i] + 1, old_pte_val);
     }
 }
 
 void unhook_callsof_copy_process(void)
 {
-    uintptr_t* list_calls;
-    int count_calls;
     int i;
     pteval_t old_pte_val;
 
@@ -245,33 +230,31 @@ void unhook_callsof_copy_process(void)
         mutex_lock(&g_mutex);
     }
 
-    if (buffer_list_calls_copy_process.addr == NULL)
+    if (list_calls_copy_process.count == 0)
     {
         c_printk("nothing to unhook for copy_process\n");
         goto out;
     }
 
-    count_calls = buffer_list_calls_copy_process.size / sizeof(ptr_t);
-
-    list_calls = (uintptr_t*)buffer_list_calls_copy_process.addr;
-
-    for (i = 0; i < count_calls; i++)
+    for (i = 0; i < list_calls_copy_process.count; i++)
     {
-        old_pte_val = get_page_flags(list_calls[i] + 1);
-        set_page_flags(list_calls[i] + 1, old_pte_val | _PAGE_RW);
+        old_pte_val = get_page_flags(list_calls_copy_process.addrs[i]
+                                     + 1);
+        set_page_flags(list_calls_copy_process.addrs[i] + 1,
+                       old_pte_val | _PAGE_RW);
 
         c_printk("replacing call for copy_process at 0x%lX\n",
-                 list_calls[i]);
+                 list_calls_copy_process.addrs[i]);
 
-        *(uint32_t*)(list_calls[i] + 1)
+        *(uint32_t*)(list_calls_copy_process.addrs[i] + 1)
           = ((uint32_t)((uintptr_t)original_copy_process & 0xFFFFFFFF))
-            - ((uint32_t)(list_calls[i] + 5) & 0xFFFFFFFF);
+            - ((uint32_t)(list_calls_copy_process.addrs[i] + 5)
+               & 0xFFFFFFFF);
 
-        set_page_flags(list_calls[i] + 1, old_pte_val);
+        set_page_flags(list_calls_copy_process.addrs[i] + 1, old_pte_val);
     }
 
 out:
-    free_buffer(&buffer_list_calls_copy_process);
+    free_pattern_result(&list_calls_copy_process);
 }
 #endif
-

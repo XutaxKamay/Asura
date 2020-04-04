@@ -6,9 +6,21 @@
 
 struct buffer_struct
 {
-    void* addr;
+    ptr_t addr;
     size_t size;
 };
+
+typedef struct pattern_result_struct
+{
+    uintptr_t* addrs;
+    int count;
+} pattern_result_struct_t;
+
+void init_pattern_result(pattern_result_struct_t* pattern_result,
+                         size_t count);
+bool realloc_pattern_result(pattern_result_struct_t* pattern_result,
+                            size_t add_count);
+void free_pattern_result(pattern_result_struct_t* pattern_result);
 
 void vm_flags_to_string(struct vm_area_struct* vma,
                         char* output,
@@ -29,17 +41,17 @@ struct task_struct* find_task_from_addr(uintptr_t address);
 int scan_task(struct task_struct* task,
               char* pattern,
               int len,
-              struct buffer_struct* buf);
+              struct pattern_result_struct* pattern_result);
 int scan_kernel(char* start,
                 char* end,
                 char* pattern,
                 int len,
-                struct buffer_struct* buf);
+                struct pattern_result_struct* pattern_result);
 int scan_pattern(uintptr_t start,
                  uintptr_t end,
                  char* pattern,
                  int len,
-                 struct buffer_struct* buf);
+                 pattern_result_struct_t* pattern_result);
 uintptr_t map_base_task(struct task_struct* task);
 uintptr_t kernel_offset(void);
 int remote_mprotect(struct task_struct* task,

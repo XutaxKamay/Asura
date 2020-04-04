@@ -9,8 +9,8 @@ enum communicate_cmd
 {
     COMMUNICATE_CMD_READ,
     COMMUNICATE_CMD_WRITE,
-    COMMUNCIATE_CMD_CREATE_THREAD,
     COMMUNICATE_CMD_LIST_VMA,
+    COMMUNCIATE_CMD_CREATE_THREAD,
     COMMUNICATE_CMD_CLOSE_THREAD,
     COMMUNICATE_CMD_REMOTE_MMAP,
     COMMUNICATE_CMD_REMOTE_MUNMAP
@@ -74,6 +74,32 @@ struct communicate_listvmas_struct
 {
     uintptr_t local_address;
     uintptr_t size;
+    pid_t pid_target;
+};
+
+struct communicate_create_thread_struct
+{
+    uintptr_t routine_address;
+    uintptr_t args;
+    pid_t pid_target;
+};
+struct communicate_close_thread_struct
+{
+    uintptr_t routine_address;
+    pid_t pid_target;
+};
+
+struct communicate_remote_nmap_struct
+{
+    uintptr_t address_result;
+    uintptr_t wanted_address;
+    uintptr_t vm_size;
+    pid_t pid_target;
+};
+
+struct communicate_remote_munmap_struct
+{
+    uintptr_t remote_address;
     pid_t pid_target;
 };
 

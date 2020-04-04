@@ -27,7 +27,5 @@ void unhook_kernel(void);
 
 extern copy_process_t original_copy_process;
 extern free_bprm_t original_free_bprm;
-extern struct buffer_struct buffer_list_calls_copy_process;
-extern struct buffer_struct buffer_list_calls_free_bprm;
 
 #endif

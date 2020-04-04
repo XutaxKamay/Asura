@@ -4,7 +4,7 @@ free_bprm_t original_free_bprm = NULL;
 static struct mutex g_mutex;
 static bool g_unhooking  = false;
 static bool g_infunction = false;
-struct buffer_struct buffer_list_calls_free_bprm;
+pattern_result_struct_t list_calls_free_bprm;
 
 int find_free_bprm(void)
 {
@@ -59,14 +59,12 @@ static int new_free_bprm(struct linux_binprm* bprm)
 void hook_callsof_free_bprm(void)
 {
     int ret;
-    int count_calls;
     int i;
     char temp[64];
-    uintptr_t* list_calls;
 
     g_unhooking = false;
 
-    init_buffer(&buffer_list_calls_free_bprm);
+    init_pattern_result(&list_calls_free_bprm, 0);
 
     ret = find_free_bprm();
 
@@ -92,7 +90,7 @@ void hook_callsof_free_bprm(void)
                       "_end",
                       temp,
                       strlen(temp) - 1,
-                      &buffer_list_calls_free_bprm);
+                      &list_calls_free_bprm);
 
     if (!ret)
     {
@@ -100,24 +98,18 @@ void hook_callsof_free_bprm(void)
         return;
     }
 
-    count_calls = buffer_list_calls_free_bprm.size / sizeof(ptr_t);
-
-    list_calls = (uintptr_t*)buffer_list_calls_free_bprm.addr;
-
-    for (i = 0; i < count_calls; i++)
+    for (i = 0; i < list_calls_free_bprm.count; i++)
     {
         c_printk("replacing call for free_bprm at 0x%lX\n",
-                 list_calls[i]);
+                 list_calls_free_bprm.addrs[i]);
 
-        *(ptr_t*)list_calls[i] = (ptr_t)new_free_bprm;
+        *(ptr_t*)list_calls_free_bprm.addrs[i] = (ptr_t)new_free_bprm;
     }
 }
 
 void unhook_callsof_free_bprm(void)
 {
-    int count_calls;
     int i;
-    uintptr_t* list_calls;
 
     g_unhooking = true;
 
@@ -126,26 +118,22 @@ void unhook_callsof_free_bprm(void)
         mutex_lock(&g_mutex);
     }
 
-    if (buffer_list_calls_free_bprm.addr == NULL)
+    if (list_calls_free_bprm.count == 0)
     {
         c_printk("nothing to unhook for free_bprm\n");
         goto out;
     }
 
-    count_calls = buffer_list_calls_free_bprm.size / sizeof(ptr_t);
-
-    list_calls = (uintptr_t*)buffer_list_calls_free_bprm.addr;
-
-    for (i = 0; i < count_calls; i++)
+    for (i = 0; i < list_calls_free_bprm.count; i++)
     {
         c_printk("replacing call for free_bprm at 0x%lX\n",
-                 list_calls[i]);
+                 list_calls_free_bprm.addrs[i]);
 
-        *(ptr_t*)list_calls[i] = (ptr_t)original_free_bprm;
+        *(ptr_t*)list_calls_free_bprm.addrs[i] = (ptr_t)original_free_bprm;
     }
 
 out:
-    free_buffer(&buffer_list_calls_free_bprm);
+    free_pattern_result(&list_calls_free_bprm);
 }
 #else
 void hook_callsof_free_bprm(void)
@@ -153,8 +141,6 @@ void hook_callsof_free_bprm(void)
     int ret;
     char* pattern;
     char* pattern2;
-    uintptr_t* list_calls;
-    int count_calls;
     int i;
     pteval_t old_pte_val;
 
@@ -165,7 +151,7 @@ void hook_callsof_free_bprm(void)
 
     g_unhooking = false;
 
-    init_buffer(&buffer_list_calls_free_bprm);
+    init_pattern_result(&list_calls_free_bprm, 0);
 
     ret = find_free_bprm();
 
@@ -179,7 +165,7 @@ void hook_callsof_free_bprm(void)
                       "_end",
                       pattern,
                       strlen(pattern) - 1,
-                      &buffer_list_calls_free_bprm);
+                      &list_calls_free_bprm);
 
     if (!ret)
     {
@@ -190,47 +176,43 @@ void hook_callsof_free_bprm(void)
                       "_end",
                       pattern2,
                       strlen(pattern2) - 1,
-                      &buffer_list_calls_free_bprm);
+                      &list_calls_free_bprm);
 
     if (!ret)
     {
         c_printk("didn't find second signature of call of free_bprm\n");
     }
 
-    if (buffer_list_calls_free_bprm.addr == NULL)
+    if (list_calls_free_bprm.count == 0)
     {
         c_printk("didn't find any signatures of calls of free_bprm\n");
         return;
     }
 
-    count_calls = buffer_list_calls_free_bprm.size / sizeof(ptr_t);
-
-    list_calls = (uintptr_t*)buffer_list_calls_free_bprm.addr;
-
     // This is safe to do as modules are always around the kernel
     // within its address space of 32 bits.
     // ((dst & 0xFFFFFFFF) - (src + 5) & 0xFFFFFFFF)
 
-    for (i = 0; i < count_calls; i++)
+    for (i = 0; i < list_calls_free_bprm.count; i++)
     {
-        old_pte_val = get_page_flags(list_calls[i] + 1);
-        set_page_flags(list_calls[i] + 1, old_pte_val | _PAGE_RW);
+        old_pte_val = get_page_flags(list_calls_free_bprm.addrs[i] + 1);
+        set_page_flags(list_calls_free_bprm.addrs[i] + 1,
+                       old_pte_val | _PAGE_RW);
 
         c_printk("replacing call for free_bprm at 0x%lX\n",
-                 list_calls[i]);
+                 list_calls_free_bprm.addrs[i]);
 
-        *(uint32_t*)(list_calls[i] + 1)
+        *(uint32_t*)(list_calls_free_bprm.addrs[i] + 1)
           = ((uint32_t)((uintptr_t)new_free_bprm & 0xFFFFFFFF))
-            - ((uint32_t)(list_calls[i] + 5) & 0xFFFFFFFF);
+            - ((uint32_t)(list_calls_free_bprm.addrs[i] + 5)
+               & 0xFFFFFFFF);
 
-        set_page_flags(list_calls[i] + 1, old_pte_val);
+        set_page_flags(list_calls_free_bprm.addrs[i] + 1, old_pte_val);
     }
 }
 
 void unhook_callsof_free_bprm(void)
 {
-    uintptr_t* list_calls;
-    int count_calls;
     int i;
     pteval_t old_pte_val;
 
@@ -241,32 +223,30 @@ void unhook_callsof_free_bprm(void)
         mutex_lock(&g_mutex);
     }
 
-    if (buffer_list_calls_free_bprm.addr == NULL)
+    if (list_calls_free_bprm.count == 0)
     {
         c_printk("nothing to unhook for free_bprm\n");
         goto out;
     }
 
-    count_calls = buffer_list_calls_free_bprm.size / sizeof(ptr_t);
-
-    list_calls = (uintptr_t*)buffer_list_calls_free_bprm.addr;
-
-    for (i = 0; i < count_calls; i++)
+    for (i = 0; i < list_calls_free_bprm.count; i++)
     {
-        old_pte_val = get_page_flags(list_calls[i] + 1);
-        set_page_flags(list_calls[i] + 1, old_pte_val | _PAGE_RW);
+        old_pte_val = get_page_flags(list_calls_free_bprm.addrs[i] + 1);
+        set_page_flags(list_calls_free_bprm.addrs[i] + 1,
+                       old_pte_val | _PAGE_RW);
 
         c_printk("replacing call for free_bprm at 0x%lX\n",
-                 list_calls[i]);
+                 list_calls_free_bprm.addrs[i]);
 
-        *(uint32_t*)(list_calls[i] + 1)
+        *(uint32_t*)(list_calls_free_bprm.addrs[i] + 1)
           = ((uint32_t)((uintptr_t)original_free_bprm & 0xFFFFFFFF))
-            - ((uint32_t)(list_calls[i] + 5) & 0xFFFFFFFF);
+            - ((uint32_t)(list_calls_free_bprm.addrs[i] + 5)
+               & 0xFFFFFFFF);
 
-        set_page_flags(list_calls[i] + 1, old_pte_val);
+        set_page_flags(list_calls_free_bprm.addrs[i] + 1, old_pte_val);
     }
 
 out:
-    free_buffer(&buffer_list_calls_free_bprm);
+    free_pattern_result(&list_calls_free_bprm);
 }
 #endif

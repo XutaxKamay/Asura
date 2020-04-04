@@ -1,5 +1,58 @@
 #include "memutils.h"
 
+void init_pattern_result(pattern_result_struct_t* pattern_result,
+                         size_t count)
+{
+    if (count == 0)
+    {
+        pattern_result->addrs = NULL;
+    }
+    else
+    {
+        pattern_result->addrs = kmalloc(sizeof(uintptr_t) * count,
+                                        GFP_KERNEL);
+    }
+
+    pattern_result->count = count;
+}
+
+bool realloc_pattern_result(pattern_result_struct_t* pattern_result,
+                            size_t add_count)
+{
+    pattern_result->count += add_count;
+
+    if (pattern_result->addrs == NULL)
+    {
+        pattern_result->addrs = kmalloc(sizeof(uintptr_t)
+                                          * pattern_result->count,
+                                        GFP_KERNEL);
+    }
+    else
+    {
+        pattern_result->addrs = krealloc(pattern_result->addrs,
+                                         sizeof(uintptr_t)
+                                           * pattern_result->count,
+                                         GFP_KERNEL);
+    }
+
+    if (pattern_result->addrs == NULL)
+    {
+        pattern_result->count -= add_count;
+        return false;
+    }
+
+    return true;
+}
+
+void free_pattern_result(pattern_result_struct_t* pattern_result)
+{
+    if (pattern_result)
+    {
+        kfree(pattern_result->addrs);
+        pattern_result->addrs = NULL;
+    }
+}
+
 void vm_flags_to_string(struct vm_area_struct* vma, char* output, int size)
 {
     if (size < 7)
@@ -253,7 +306,7 @@ int scan_pattern(uintptr_t start,
                  uintptr_t end,
                  char* pattern,
                  int len,
-                 struct buffer_struct* buf)
+                 pattern_result_struct_t* pattern_result)
 {
     uintptr_t iter;
     char* pattern_c;
@@ -262,7 +315,7 @@ int scan_pattern(uintptr_t start,
 
     val_iter = 0;
 
-    if (buf == NULL)
+    if (pattern_result == NULL)
     {
         return 0;
     }
@@ -315,37 +368,13 @@ int scan_pattern(uintptr_t start,
 
         c_printk("found: %lX with pattern\n%s\n", iter, pattern);
 
-        if (buf->addr == NULL)
-        {
-            alloc_buffer(sizeof(ptr_t), buf);
-
-            if (buf->addr == NULL)
-            {
-                c_printk("kmalloc failed: with pattern\n%s\n", pattern);
-                return 0;
-            }
-
-            *(uintptr_t*)(buf->addr) = start;
-        }
-        else
-        {
-            realloc_buffer(sizeof(ptr_t), buf);
-
-            if (buf->addr == NULL)
-            {
-                c_printk("krealloc failed: with pattern\n%s\n", pattern);
-
-                return 0;
-            }
-
-            *(uintptr_t*)(buf->addr + buf->size - sizeof(ptr_t)) = start;
-        }
-
+        realloc_pattern_result(pattern_result, 1);
+        pattern_result->addrs[pattern_result->count - 1] = iter;
     dontmatch:
         start++;
     }
 
-    if (buf->addr == NULL)
+    if (pattern_result->count == 0)
     {
         // c_printk("didn't find pattern\n%s\n", pattern);
         return 0;
@@ -359,7 +388,7 @@ int scan_pattern(uintptr_t start,
 int scan_task(struct task_struct* task,
               char* pattern,
               int len,
-              struct buffer_struct* buf)
+              pattern_result_struct_t* pattern_result)
 {
     struct vm_area_struct* vma;
     struct mm_struct* mm;
@@ -414,7 +443,7 @@ int scan_task(struct task_struct* task,
                        + (vma->vm_end - vma->vm_start),
                      pattern,
                      len,
-                     buf);
+                     pattern_result);
 
         vma = vma->vm_next;
         kfree(copied_user_memory);
@@ -425,14 +454,14 @@ int scan_task(struct task_struct* task,
 
     set_fs(old_fs);
 
-    return buf->addr != NULL;
+    return pattern_result->count != 0;
 }
 
 int scan_kernel(char* start,
                 char* end,
                 char* pattern,
                 int len,
-                struct buffer_struct* buf)
+                pattern_result_struct_t* pattern_result)
 {
     uintptr_t addr_start, addr_end;
     uintptr_t swap;
@@ -528,7 +557,11 @@ int scan_kernel(char* start,
         }
 
         // Let's scan now.
-        ret = scan_pattern(scan_addr, scan_end_addr, pattern, len, buf);
+        ret = scan_pattern(scan_addr,
+                           scan_end_addr,
+                           pattern,
+                           len,
+                           pattern_result);
         // Next pointer.
         scan_addr = scan_end_addr;
     }
@@ -539,12 +572,12 @@ out:
         BUG();
     }
 #else
-    ret = scan_pattern(addr_start, addr_end, pattern, len, buf);
+    ret = scan_pattern(addr_start, addr_end, pattern, len, pattern_result);
 #endif
 
     set_fs(old_fs);
 
-    return buf->addr != NULL;
+    return pattern_result->count != 0;
 }
 
 uintptr_t map_base_task(struct task_struct* task)
@@ -702,7 +735,7 @@ void vma_rb_erase(struct vm_area_struct* vma, struct rb_root* root)
 void remote_munmap(struct task_struct* task, uintptr_t address)
 {
     struct mm_struct* mm;
-    struct vm_area_struct* vma;
+    struct vm_area_struct *vma, *prev_vma, *next_vma;
     bool should_up_write;
 
     should_up_write = false;
@@ -721,20 +754,23 @@ void remote_munmap(struct task_struct* task, uintptr_t address)
 
     if (c_find_vma_from_task(task, &vma, address))
     {
+        prev_vma = vma->vm_prev;
+        next_vma = vma->vm_next;
+
         vma_rb_erase(vma, &mm->mm_rb);
 
-        if (vma->vm_prev != NULL)
+        if (prev_vma != NULL)
         {
-            vma->vm_prev->vm_next = vma->vm_next;
+            prev_vma->vm_next = next_vma;
         }
         else
         {
-            mm->mmap = vma->vm_next;
+            mm->mmap = next_vma;
         }
 
-        if (vma->vm_next != NULL)
+        if (next_vma != NULL)
         {
-            vma->vm_next->vm_prev = vma->vm_prev;
+            next_vma->vm_prev = prev_vma;
         }
 
         vm_area_free(vma);
