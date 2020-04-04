@@ -368,8 +368,15 @@ int scan_pattern(uintptr_t start,
 
         c_printk("found: %lX with pattern\n%s\n", iter, pattern);
 
-        realloc_pattern_result(pattern_result, 1);
-        pattern_result->addrs[pattern_result->count - 1] = iter;
+        if (realloc_pattern_result(pattern_result, 1))
+        {
+            pattern_result->addrs[pattern_result->count - 1] = start;
+        }
+        else
+        {
+            return 0;
+        }
+
     dontmatch:
         start++;
     }

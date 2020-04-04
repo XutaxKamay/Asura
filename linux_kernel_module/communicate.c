@@ -223,6 +223,18 @@ void communicate_process_cmds(
             {
                 break;
             }
+            case COMMUNICATE_CMD_CLOSE_THREAD:
+            {
+                break;
+            }
+            case COMMUNICATE_CMD_REMOTE_MMAP:
+            {
+                break;
+            }
+            case COMMUNICATE_CMD_REMOTE_MUNMAP:
+            {
+                break;
+            }
             case COMMUNICATE_CMD_LIST_VMA:
             {
                 break;
