@@ -10,3 +10,5 @@ XLib.*
 *.sym*
 *.cmd*
 *.mod*
+winexts/tests/target
+winexts/tests/test_ioctl
