@@ -48,13 +48,13 @@ typedef struct communicate_create_thread_struct
     pid_t pid_target;
 } communicate_create_thread_t;
 
-typedef struct communicate_remote_nmap_struct
+typedef struct communicate_remote_mmap_struct
 {
     uintptr_t address_result;
     uintptr_t wanted_address;
     uintptr_t vm_size;
     pid_t pid_target;
-} communicate_remote_nmap_t;
+} communicate_remote_mmap_struct_t;
 
 typedef struct communicate_remote_munmap_struct
 {
