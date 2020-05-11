@@ -824,7 +824,8 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     alignedaddress = align_address((uintptr_t)to, PAGE_SIZE);
     shifted        = (uintptr_t)to - alignedaddress;
 
-    // If the rest is higher or equal than shifted we must add a page.
+    // If shifted is higher or equal than the rest of size to be copied we
+    // must add a page.
     if (shifted > (size % PAGE_SIZE))
     {
         nb_pages += 1;
@@ -931,7 +932,8 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     alignedaddress = align_address((uintptr_t)from, PAGE_SIZE);
     shifted        = (uintptr_t)from - alignedaddress;
 
-    // If the rest is higher or equal than shifted we must add a page.
+    // If shifted is higher or equal than the rest of size to be copied we
+    // must add a page.
     if (shifted > (size % PAGE_SIZE))
     {
         nb_pages += 1;
