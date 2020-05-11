@@ -2,16 +2,7 @@
 #define COMMUNICATE_STRUCT
 
 #define COMMUNICATE_MAX_BUFFER (1 << 30)
-
-typedef enum communicate_cmd
-{
-    COMMUNICATE_CMD_READ,
-    COMMUNICATE_CMD_WRITE,
-    COMMUNICATE_CMD_REMOTE_MMAP = 3, // The number two is damned
-                                     // apparently.
-    COMMUNICATE_CMD_REMOTE_MUNMAP,
-    COMMUNICATE_CMD_CLONE
-} communicate_cmd_t;
+#define IO_MAGIC_NUMBER        'x'
 
 typedef enum communicate_error
 {
@@ -75,10 +66,23 @@ typedef struct communicate_remote_clone_struct
     uint64_t stack;
     uint64_t stack_size;
     uint64_t tls;
-    pid_t* set_tid;
+    uint64_t set_tid;
     size_t set_tid_size;
     pid_t pid_target;
     int ret;
 } communicate_remote_clone_t;
+
+typedef enum communicate_cmd
+{
+    COMMUNICATE_CMD_READ = _IOWR(IO_MAGIC_NUMBER, 0, communicate_read_t*),
+    COMMUNICATE_CMD_WRITE
+    = _IOWR(IO_MAGIC_NUMBER, 1, communicate_write_t*),
+    COMMUNICATE_CMD_REMOTE_MMAP
+    = _IOWR(IO_MAGIC_NUMBER, 2, communicate_remote_mmap_t*),
+    COMMUNICATE_CMD_REMOTE_MUNMAP
+    = _IOWR(IO_MAGIC_NUMBER, 3, communicate_remote_munmap_t*),
+    COMMUNICATE_CMD_REMOTE_CLONE
+    = _IOWR(IO_MAGIC_NUMBER, 4, communicate_remote_clone_t*)
+} communicate_cmd_t;
 
 #endif // COMMUNICATE_STRUCT

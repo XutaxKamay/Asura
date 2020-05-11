@@ -246,7 +246,7 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
 
     // We can trick the kernel by saying the current task is the
     // targeted one for a moment.
-    old_current = current;
+    old_current = get_current();
 
 #ifndef __arch_um__
     this_cpu_write(current_task, remote_task);
@@ -325,7 +325,7 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
 
     // We can trick the kernel by saying the current task is the
     // targeted one for a moment.
-    old_current = current;
+    old_current = get_current();
 
 #ifndef __arch_um__
     this_cpu_write(current_task, remote_task);
@@ -395,19 +395,35 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
         goto out;
     }
 
+    memcpy(&clone_args,
+           &communicate_remote_clone,
+           sizeof(struct kernel_clone_args));
+
+    c_printk("pid: %i flags: %llu pidfd: %lX child_tid: %lX "
+             "parent_tid: %lX exit_signal: %X stack: %lX "
+             "stack_size: "
+             "%lX tls: %lX set_tid: %lX set_tid_size: %lu",
+             get_current()->pid,
+             clone_args.flags,
+             (uintptr_t)clone_args.pidfd,
+             (uintptr_t)clone_args.child_tid,
+             (uintptr_t)clone_args.parent_tid,
+             clone_args.exit_signal,
+             clone_args.stack,
+             clone_args.stack_size,
+             clone_args.tls,
+             (uintptr_t)clone_args.set_tid,
+             clone_args.set_tid_size);
+
     // We can trick the kernel by saying the current task is the
     // targeted one for a moment.
-    old_current = current;
+    old_current = get_current();
 
 #ifndef __arch_um__
     this_cpu_write(current_task, remote_task);
 #else
     current = remote_task;
 #endif
-
-    memcpy(&clone_args,
-           &communicate_remote_clone,
-           sizeof(struct kernel_clone_args));
 
     communicate_remote_clone.ret = _do_fork(&clone_args);
 

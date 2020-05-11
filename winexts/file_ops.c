@@ -92,7 +92,7 @@ long file_operation_ioctl(file_t* f, unsigned int n, unsigned long p)
             error = communicate_process_cmd_remote_munmap(get_current(), p);
             break;
         }
-        case COMMUNICATE_CMD_CLONE:
+        case COMMUNICATE_CMD_REMOTE_CLONE:
         {
             error = communicate_process_cmd_remote_clone(get_current(), p);
             break;

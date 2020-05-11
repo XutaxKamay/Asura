@@ -96,6 +96,10 @@ int main()
         printf("ouch mmap %i\n", error);
     }
 
+    printf("mmap'd at %lX\n", remote_mmap.ret);
+
+    getchar();
+
     communicate_write_t write;
 
     memset(values, 0x33, sizeof(values));
@@ -110,6 +114,10 @@ int main()
     if (error != COMMUNICATE_ERROR_NONE)
     {
         printf("ouch write %i\n", error);
+    }
+    else
+    {
+        printf("test write\n");
     }
 
     communicate_read_t read;
@@ -127,17 +135,23 @@ int main()
     {
         printf("ouch read %i\n", error);
     }
+    else
+    {
+        printf("test read\n");
+    }
 
     if (memcmp(values, read_values, sizeof(read_values)) == 0)
     {
         printf("success\n");
     }
 
+    getchar();
+
     communicate_write_t write_shellcode;
     write_shellcode.pid_target = pid_name("target");
 
-    uint8_t shellcode[]
-      = { 0xCC, 0xB8, 0x01, 0x00, 0x00, 0x00, 0x0F, 0x05 };
+    uint8_t shellcode[] = { 0xCC, 0x48, 0xC7, 0xC0, 0x01,
+                            0x00, 0x00, 0x00, 0x0F, 0x05 };
 
     write_shellcode.vm_local_address  = (uintptr_t)shellcode;
     write_shellcode.vm_remote_address = remote_mmap.ret;
@@ -151,19 +165,67 @@ int main()
     {
         printf("ouch write %i\n", error);
     }
+    else
+    {
+        printf("write shellcode\n");
+    }
 
     //     sleep(30);
 
-    /*communicate_remote_clone_t remote_clone;
+    /*getchar();
+
+    communicate_remote_clone_t remote_clone;*/
+
+    /*
+     * pwndbg> p (void*)args->stack
+     * $13 = (void *) 0x4002aff0
+     * pwndbg> p (void*)args->child_tid
+     * $14 = (void *) 0x0
+     * pwndbg> p (void*)args->pidfd
+     * $15 = (void *) 0x6
+     * pwndbg> p (void*)args->flags
+     * $16 = (void *) 0x700
+     * pwndbg> p (void*)args->set_tid_size
+     * $17 = (void *) 0x0
+     * pwndbg> p (void*)args->stack_size
+     * $18 = (void *) 0x0
+     * pwndbg> p (void*)args->exit_signal
+     * $19 = (void *) 0x0
+     * pwndbg> p (void*)args->parent_tid
+     * $20 = (void *) 0x6
+     * pwndbg> p (void*)args->set_tid
+     * $21 = (void *) 0x0
+     * pwndbg> p (void*)args->stack
+     * $22 = (void *) 0x4002aff0
+     * pwndbg> p (void*)args->tls
+     * $23 = (void *) 0x70
+     */
+    /*remote_clone.flags        = CLONE_VM | CLONE_FS | CLONE_FILES;
+    remote_clone.stack        = remote_mmap.ret;
+    remote_clone.stack_size   = remote_mmap.ret;
+    remote_clone.child_tid    = 0;
+    remote_clone.pidfd        = (uint64_t)(int)-1;
+    remote_clone.parent_tid   = (uint64_t)(int)-1;
+    remote_clone.set_tid_size = 0;
+    remote_clone.set_tid      = 0;
+    remote_clone.tls          = 0;
+    remote_clone.exit_signal  = 0;
+    remote_clone.pid_target   = pid_name("target");
 
     error = (communicate_error_t)ioctl(fd,
-                                       COMMUNICATE_CMD_CLONE,
-                                       &write_shellcode);
+                                       COMMUNICATE_CMD_REMOTE_CLONE,
+                                       &remote_clone);
 
     if (error != COMMUNICATE_ERROR_NONE)
     {
         printf("ouch clone %i\n", error);
+    }
+    else
+    {
+        printf("clone %i\n", remote_clone.ret);
     }*/
+
+    getchar();
 
     communicate_remote_munmap_t remote_munmap;
     remote_munmap.pid_target        = pid_name("target");
