@@ -224,6 +224,8 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
         goto out;
     }
 
+    // We can trick the kernel by saying the current task is the
+    // targeted one for a moment.
     old_current = current;
 
 #ifndef __arch_um__
@@ -304,6 +306,8 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
         goto out;
     }
 
+    // We can trick the kernel by saying the current task is the
+    // targeted one for a moment.
     old_current = current;
 
 #ifndef __arch_um__
