@@ -81,7 +81,7 @@ int main()
     communicate_remote_mmap_t remote_mmap;
     remote_mmap.fd                = -1;
     remote_mmap.prot              = PROT_EXEC | PROT_WRITE | PROT_READ;
-    remote_mmap.flags             = MAP_SHARED | MAP_ANONYMOUS;
+    remote_mmap.flags             = MAP_PRIVATE | MAP_ANONYMOUS;
     remote_mmap.offset            = 0;
     remote_mmap.vm_remote_address = 0;
     remote_mmap.vm_size           = 4096;
@@ -103,7 +103,7 @@ int main()
     write.pid_target        = pid_name("target");
     write.vm_local_address  = (uintptr_t)values;
     write.vm_size           = sizeof(values);
-    write.vm_remote_address = 0x563EC4A88040;
+    write.vm_remote_address = 0x552ACAB040;
 
     error = (communicate_error_t)ioctl(fd, COMMUNICATE_CMD_WRITE, &write);
 
@@ -119,7 +119,7 @@ int main()
     read.pid_target        = pid_name("target");
     read.vm_local_address  = (uintptr_t)read_values;
     read.vm_size           = sizeof(read_values);
-    read.vm_remote_address = 0x563EC4A88040;
+    read.vm_remote_address = 0x552ACAB040;
 
     error = (communicate_error_t)ioctl(fd, COMMUNICATE_CMD_READ, &read);
 
@@ -133,7 +133,37 @@ int main()
         printf("success\n");
     }
 
-    sleep(5);
+    communicate_write_t write_shellcode;
+    write_shellcode.pid_target = pid_name("target");
+
+    uint8_t shellcode[]
+      = { 0xCC, 0xB8, 0x01, 0x00, 0x00, 0x00, 0x0F, 0x05 };
+
+    write_shellcode.vm_local_address  = (uintptr_t)shellcode;
+    write_shellcode.vm_remote_address = remote_mmap.ret;
+    write_shellcode.vm_size           = sizeof(shellcode);
+
+    error = (communicate_error_t)ioctl(fd,
+                                       COMMUNICATE_CMD_WRITE,
+                                       &write_shellcode);
+
+    if (error != COMMUNICATE_ERROR_NONE)
+    {
+        printf("ouch write %i\n", error);
+    }
+
+    //     sleep(30);
+
+    /*communicate_remote_clone_t remote_clone;
+
+    error = (communicate_error_t)ioctl(fd,
+                                       COMMUNICATE_CMD_CLONE,
+                                       &write_shellcode);
+
+    if (error != COMMUNICATE_ERROR_NONE)
+    {
+        printf("ouch clone %i\n", error);
+    }*/
 
     communicate_remote_munmap_t remote_munmap;
     remote_munmap.pid_target        = pid_name("target");

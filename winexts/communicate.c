@@ -405,9 +405,9 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
     current = remote_task;
 #endif
 
-    clone_args.flags      = communicate_remote_clone.flags;
-    clone_args.stack      = communicate_remote_clone.fn;
-    clone_args.stack_size = communicate_remote_clone.args;
+    memcpy(&clone_args,
+           &communicate_remote_clone,
+           sizeof(struct kernel_clone_args));
 
     communicate_remote_clone.ret = _do_fork(&clone_args);
 
