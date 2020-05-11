@@ -58,8 +58,12 @@ int file_operation_release(inode_t* i, file_t* f)
 
 long file_operation_ioctl(file_t* f, unsigned int n, unsigned long p)
 {
+    mm_segment_t old_fs;
     communicate_error_t error    = COMMUNICATE_ERROR_NONE;
     communicate_cmd_t cmd_number = (communicate_cmd_t)n;
+
+    old_fs = get_fs();
+    set_fs(KERNEL_DS);
 
     c_printk_info("pid %i ioctl %s with cmd %i\n",
                   get_current()->pid,
@@ -101,6 +105,8 @@ long file_operation_ioctl(file_t* f, unsigned int n, unsigned long p)
             break;
         }
     }
+
+    set_fs(old_fs);
 
     return error;
 }

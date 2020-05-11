@@ -103,7 +103,7 @@ int main()
     write.pid_target        = pid_name("target");
     write.vm_local_address  = (uintptr_t)values;
     write.vm_size           = sizeof(values);
-    write.vm_remote_address = 0x558E7789E040;
+    write.vm_remote_address = 0x559386721040;
 
     error = (communicate_error_t)ioctl(fd, COMMUNICATE_CMD_WRITE, &write);
 
@@ -119,7 +119,7 @@ int main()
     read.pid_target        = pid_name("target");
     read.vm_local_address  = (uintptr_t)read_values;
     read.vm_size           = sizeof(read_values);
-    read.vm_remote_address = 0x558E7789E040;
+    read.vm_remote_address = 0x559386721040;
 
     error = (communicate_error_t)ioctl(fd, COMMUNICATE_CMD_READ, &read);
 
