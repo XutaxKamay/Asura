@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "main.h"
 
 unsigned char hex_digit_to_byte(char c)
 {
@@ -55,6 +55,7 @@ int convert_to_hexstring(uint8_t* array,
 {
     int i, j;
     const char* format;
+
     format = "%02X ";
 
     for (i = 0, j = 0; i < size; i++)

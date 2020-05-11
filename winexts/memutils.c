@@ -1,7 +1,6 @@
-#include "memutils.h"
+#include "main.h"
 
-void init_pattern_result(pattern_result_struct_t* pattern_result,
-                         size_t count)
+void init_pattern_result(pattern_result_t* pattern_result, size_t count)
 {
     if (count == 0)
     {
@@ -16,7 +15,7 @@ void init_pattern_result(pattern_result_struct_t* pattern_result,
     pattern_result->count = count;
 }
 
-bool realloc_pattern_result(pattern_result_struct_t* pattern_result,
+bool realloc_pattern_result(pattern_result_t* pattern_result,
                             size_t add_count)
 {
     pattern_result->count += add_count;
@@ -44,7 +43,7 @@ bool realloc_pattern_result(pattern_result_struct_t* pattern_result,
     return true;
 }
 
-void free_pattern_result(pattern_result_struct_t* pattern_result)
+void free_pattern_result(pattern_result_t* pattern_result)
 {
     if (pattern_result)
     {
@@ -53,7 +52,7 @@ void free_pattern_result(pattern_result_struct_t* pattern_result)
     }
 }
 
-void vm_flags_to_string(struct vm_area_struct* vma, char* output, int size)
+void vm_flags_to_string(vm_area_t* vma, char* output, int size)
 {
     if (size < 7)
     {
@@ -93,7 +92,7 @@ void vm_flags_to_string(struct vm_area_struct* vma, char* output, int size)
     output[6] = '\0';
 }
 
-int vm_flags_to_prot(struct vm_area_struct* vma)
+int vm_flags_to_prot(vm_area_t* vma)
 {
     int prot;
 
@@ -155,11 +154,11 @@ int prot_to_vm_flags(int prot)
 
 // Find the part of virtual memory of the virtual address space range
 // of the process that contains our virtual address.
-int c_find_vma_from_task(struct task_struct* task,
-                         struct vm_area_struct** vma_start,
+int c_find_vma_from_task(task_t* task,
+                         vm_area_t** vma_start,
                          uintptr_t wanted_addr)
 {
-    struct mm_struct* mm;
+    mm_t* mm;
 
     mm = get_task_mm_kthread(task);
 
@@ -196,11 +195,11 @@ out:
     return 0;
 }
 
-int c_find_vma_from_task_str(struct task_struct* task,
-                             struct vm_area_struct** vma_start,
+int c_find_vma_from_task_str(task_t* task,
+                             vm_area_t** vma_start,
                              const char* name)
 {
-    struct mm_struct* mm;
+    mm_t* mm;
 
     mm = get_task_mm_kthread(task);
 
@@ -242,10 +241,10 @@ out:
     return 0;
 }
 
-void c_print_vmas(struct task_struct* task)
+void c_print_vmas(task_t* task)
 {
-    struct mm_struct* mm;
-    struct vm_area_struct* vma_start;
+    mm_t* mm;
+    vm_area_t* vma_start;
     // Protect flags translated...
     char strflags[7];
 
@@ -283,10 +282,10 @@ void c_print_vmas(struct task_struct* task)
     }
 }
 
-struct task_struct* find_task_from_addr(uintptr_t address)
+task_t* find_task_from_addr(uintptr_t address)
 {
-    struct task_struct* task;
-    struct vm_area_struct* vma;
+    task_t* task;
+    vm_area_t* vma;
 
     task = NULL;
     vma  = NULL;
@@ -306,7 +305,7 @@ int scan_pattern(uintptr_t start,
                  uintptr_t end,
                  char* pattern,
                  int len,
-                 pattern_result_struct_t* pattern_result)
+                 pattern_result_t* pattern_result)
 {
     uintptr_t iter;
     char* pattern_c;
@@ -392,13 +391,13 @@ int scan_pattern(uintptr_t start,
     }
 }
 
-int scan_task(struct task_struct* task,
+int scan_task(task_t* task,
               char* pattern,
               int len,
-              pattern_result_struct_t* pattern_result)
+              pattern_result_t* pattern_result)
 {
-    struct vm_area_struct* vma;
-    struct mm_struct* mm;
+    vm_area_t* vma;
+    mm_t* mm;
     ptr_t copied_user_memory;
     mm_segment_t old_fs;
 
@@ -468,7 +467,7 @@ int scan_kernel(char* start,
                 char* end,
                 char* pattern,
                 int len,
-                pattern_result_struct_t* pattern_result)
+                pattern_result_t* pattern_result)
 {
     uintptr_t addr_start, addr_end;
     uintptr_t swap;
@@ -587,9 +586,9 @@ out:
     return pattern_result->count != 0;
 }
 
-uintptr_t map_base_task(struct task_struct* task)
+uintptr_t map_base_task(task_t* task)
 {
-    struct mm_struct* mm;
+    mm_t* mm;
 
     if (task == NULL)
     {
@@ -621,9 +620,7 @@ uintptr_t kernel_offset(void)
     return kallsyms_lookup_name("_text") - 0xffffffff81000000;
 }
 
-void change_vm_flags(struct vm_area_struct* vma,
-                     int new_flags,
-                     int* old_flags)
+void change_vm_flags(vm_area_t* vma, int new_flags, int* old_flags)
 {
     int all_prot_to_flags;
 
@@ -641,12 +638,12 @@ void change_vm_flags(struct vm_area_struct* vma,
     vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
 }
 
-int remote_mprotect(struct task_struct* task,
+int remote_mprotect(task_t* task,
                     uintptr_t address,
                     int new_flags,
                     int* old_flags)
 {
-    struct vm_area_struct* vma_start;
+    vm_area_t* vma_start;
     int ret;
 
     vma_start = NULL;
@@ -664,64 +661,9 @@ out:
     return ret;
 }
 
-struct vm_area_struct* remote_mmap(struct task_struct* task,
-                                   uintptr_t address,
-                                   int prot)
+void vma_rb_erase(vm_area_t* vma, rb_root_t* root)
 {
-    struct mm_struct* mm;
-    struct vm_area_struct* vma;
-    bool should_up_write;
-
-    should_up_write = false;
-    vma             = NULL;
-
-    mm = get_task_mm_kthread(task);
-
-    if (mm == NULL)
-    {
-        c_printk("couldn't find mm from task %i\n", task->pid);
-        goto out;
-    }
-
-    down_write(&mm->mmap_sem);
-    should_up_write = true;
-
-    vma = vm_area_alloc(mm);
-
-    if (vma == NULL)
-    {
-        c_printk("couldn't allocate vma from task %i\n", task->pid);
-        goto out;
-    }
-
-    vma_set_anonymous(vma);
-
-    vma->vm_start     = address;
-    vma->vm_end       = address + PAGE_SIZE;
-    vma->vm_flags     = prot_to_vm_flags(prot) | mm->def_flags;
-    vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
-
-    INIT_LIST_HEAD(&vma->anon_vma_chain);
-
-    if (insert_vm_struct(mm, vma) < 0)
-    {
-        vm_area_free(vma);
-        c_printk("couldn't insert vma in mm struct from task %i\n",
-                 task->pid);
-        goto out;
-    }
-
-out:
-    if (should_up_write)
-        up_write(&mm->mmap_sem);
-
-    return vma;
-}
-
-void vma_rb_erase(struct vm_area_struct* vma, struct rb_root* root)
-{
-    typedef void (*vma_rb_erase_t)(struct vm_area_struct*,
-                                   struct rb_root*);
+    typedef void (*vma_rb_erase_t)(vm_area_t*, rb_root_t*);
     static vma_rb_erase_t p_vma_rb_erase = NULL;
 
     if (p_vma_rb_erase == NULL)
@@ -739,59 +681,10 @@ void vma_rb_erase(struct vm_area_struct* vma, struct rb_root* root)
     return p_vma_rb_erase(vma, root);
 }
 
-void remote_munmap(struct task_struct* task, uintptr_t address)
-{
-    struct mm_struct* mm;
-    struct vm_area_struct *vma, *prev_vma, *next_vma;
-    bool should_up_write;
-
-    should_up_write = false;
-    vma             = NULL;
-
-    mm = get_task_mm_kthread(task);
-
-    if (mm == NULL)
-    {
-        c_printk("couldn't find mm from task %i\n", task->pid);
-        goto out;
-    }
-
-    down_write(&mm->mmap_sem);
-    should_up_write = true;
-
-    if (c_find_vma_from_task(task, &vma, address))
-    {
-        prev_vma = vma->vm_prev;
-        next_vma = vma->vm_next;
-
-        vma_rb_erase(vma, &mm->mm_rb);
-
-        if (prev_vma != NULL)
-        {
-            prev_vma->vm_next = next_vma;
-        }
-        else
-        {
-            mm->mmap = next_vma;
-        }
-
-        if (next_vma != NULL)
-        {
-            next_vma->vm_prev = prev_vma;
-        }
-
-        vm_area_free(vma);
-    }
-
-out:
-    if (should_up_write)
-        up_write(&mm->mmap_sem);
-}
-
 /* Redefine functions */
-struct vm_area_struct* vm_area_alloc(struct mm_struct* mm)
+vm_area_t* vm_area_alloc(mm_t* mm)
 {
-    typedef struct vm_area_struct* (*vm_area_alloc_t)(struct mm_struct*);
+    typedef vm_area_t* (*vm_area_alloc_t)(mm_t*);
     static vm_area_alloc_t p_vm_area_alloc = NULL;
 
     if (p_vm_area_alloc == NULL)
@@ -809,9 +702,9 @@ struct vm_area_struct* vm_area_alloc(struct mm_struct* mm)
     return p_vm_area_alloc(mm);
 }
 
-void vm_area_free(struct vm_area_struct* vma)
+void vm_area_free(vm_area_t* vma)
 {
-    typedef void (*vm_area_free_t)(struct vm_area_struct*);
+    typedef void (*vm_area_free_t)(vm_area_t*);
     static vm_area_free_t p_vm_area_free = NULL;
 
     if (p_vm_area_free == NULL)
@@ -829,10 +722,9 @@ void vm_area_free(struct vm_area_struct* vma)
     p_vm_area_free(vma);
 }
 
-int insert_vm_struct(struct mm_struct* mm, struct vm_area_struct* vma)
+int insert_vm_struct(mm_t* mm, vm_area_t* vma)
 {
-    typedef int (*insert_vm_struct_t)(struct mm_struct*,
-                                      struct vm_area_struct*);
+    typedef int (*insert_vm_struct_t)(mm_t*, vm_area_t*);
 
     static insert_vm_struct_t p_insert_vm_struct = NULL;
 
@@ -860,13 +752,13 @@ uintptr_t align_address(uintptr_t address, size_t size)
     return aligned_address;
 }
 
-void alloc_buffer(size_t size, struct buffer_struct* buffer)
+void alloc_buffer(size_t size, buffer_t* buffer)
 {
     buffer->addr = kmalloc(size, GFP_KERNEL);
     buffer->size = size;
 }
 
-void free_buffer(struct buffer_struct* buffer)
+void free_buffer(buffer_t* buffer)
 {
     if (buffer->addr != NULL)
     {
@@ -876,7 +768,7 @@ void free_buffer(struct buffer_struct* buffer)
     }
 }
 
-int realloc_buffer(size_t size, struct buffer_struct* buffer)
+int realloc_buffer(size_t size, buffer_t* buffer)
 {
     buffer->size += size;
     buffer->addr = krealloc(buffer->addr, buffer->size, GFP_KERNEL);
@@ -890,15 +782,15 @@ int realloc_buffer(size_t size, struct buffer_struct* buffer)
     return 0;
 }
 
-void init_buffer(struct buffer_struct* buffer)
+void init_buffer(buffer_t* buffer)
 {
     buffer->size = 0;
     buffer->addr = NULL;
 }
 
-struct mm_struct* get_task_mm_kthread(struct task_struct* task)
+mm_t* get_task_mm_kthread(task_t* task)
 {
-    struct mm_struct* mm;
+    mm_t* mm;
 
     mm = get_task_mm(task);
 
@@ -909,13 +801,11 @@ struct mm_struct* get_task_mm_kthread(struct task_struct* task)
     return mm;
 }
 
-unsigned long c_copy_to_user(struct task_struct* task,
-                             ptr_t to,
-                             ptr_t from,
-                             size_t size)
+unsigned long
+c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 {
-    struct mm_struct* mm;
-    struct page** page;
+    mm_t* mm;
+    page_t** page;
 
     unsigned long result;
     ptr_t realaddr;
@@ -933,8 +823,7 @@ unsigned long c_copy_to_user(struct task_struct* task,
     alignedaddress = align_address((uintptr_t)to, PAGE_SIZE);
     shifted        = (uintptr_t)to - alignedaddress;
 
-    page = (struct page**)kmalloc(nb_pages * sizeof(struct page*),
-                                  GFP_KERNEL);
+    page = (page_t**)kmalloc(nb_pages * sizeof(page_t*), GFP_KERNEL);
 
     mm = get_task_mm_kthread(task);
 
@@ -1012,13 +901,11 @@ out:
     return result;
 }
 
-unsigned long c_copy_from_user(struct task_struct* task,
-                               ptr_t to,
-                               ptr_t from,
-                               size_t size)
+unsigned long
+c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 {
-    struct mm_struct* mm;
-    struct page** page;
+    mm_t* mm;
+    page_t** page;
 
     unsigned long result;
     ptr_t realaddr;
@@ -1037,8 +924,7 @@ unsigned long c_copy_from_user(struct task_struct* task,
     alignedaddress = align_address((uintptr_t)from, PAGE_SIZE);
     shifted        = (uintptr_t)from - alignedaddress;
 
-    page = (struct page**)kmalloc(nb_pages * sizeof(struct page*),
-                                  GFP_KERNEL);
+    page = (page_t**)kmalloc(nb_pages * sizeof(page_t*), GFP_KERNEL);
 
     mm = get_task_mm_kthread(task);
 
@@ -1116,9 +1002,9 @@ out:
     return result;
 }
 
-struct task_struct* find_task_from_pid(pid_t pid)
+task_t* find_task_from_pid(pid_t pid)
 {
-    struct task_struct* task;
+    task_t* task;
 
     for_each_process(task)
     {
@@ -1132,6 +1018,7 @@ struct task_struct* find_task_from_pid(pid_t pid)
 }
 
 #ifndef __arch_um__
+
 pte_t* get_pte(uintptr_t address)
 {
     unsigned int level;

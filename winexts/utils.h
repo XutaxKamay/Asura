@@ -1,7 +1,5 @@
-#ifndef KERNEL_CUSTOM_UTILS
-#define KERNEL_CUSTOM_UTILS
-
-#include "main.h"
+#ifndef UTILS_H
+#define UTILS_H
 
 #define DO_ONCE(code)                                                    \
     {                                                                    \

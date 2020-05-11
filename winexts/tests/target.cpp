@@ -8,7 +8,7 @@ int main()
 {
 	while(1)
 	{
-		printf("%i %p\n", target_int, &target_int);
+		printf("pid: %i value: %i address: %p\n", getpid(), target_int, &target_int);
 		sleep(1);
 	}
 }
