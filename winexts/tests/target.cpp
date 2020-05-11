@@ -1,14 +1,25 @@
-#include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
-int target_int = 0;
+unsigned char values[0x3000];
+
+typedef void* ptr_t;
 
 int main()
 {
-	while(1)
-	{
-		printf("pid: %i value: %i address: %p\n", getpid(), target_int, &target_int);
-		sleep(1);
-	}
+    memset(values, 0x11, sizeof(values));
+
+    while (1)
+    {
+        printf("pid: %i address: %lX value: %lX\n",
+               getpid(),
+               (uintptr_t)values,
+               *(uintptr_t*)((uintptr_t)values + sizeof(values)
+                             - sizeof(ptr_t)));
+
+        sleep(1);
+    }
 }

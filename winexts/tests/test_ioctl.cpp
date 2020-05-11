@@ -6,11 +6,13 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <string>
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <vector>
+
 #include "../communicate_structs.h"
 
 using namespace std;
@@ -62,6 +64,9 @@ int pid_name(string procName)
     return pid;
 }
 
+unsigned char values[0x3000];
+unsigned char read_values[0x3000];
+
 int main()
 {
     int fd = open("/dev/winexts_dev", 0);
@@ -74,14 +79,32 @@ int main()
 
     communicate_write_t write;
 
-    int value               = 1337;
-    write.pid_target        = pid_name("target");
-    write.vm_local_address  = (uintptr_t)&value;
-    write.vm_size           = sizeof(uintptr_t);
-    write.vm_remote_address = 0x552acab014;
+    memset(values, 0x33, sizeof(values));
 
-    communicate_error_t error
-      = (communicate_error_t)ioctl(fd, COMMUNICATE_CMD_WRITE, &write);
+    write.pid_target        = pid_name("target");
+    write.vm_local_address  = (uintptr_t)values;
+    write.vm_size           = sizeof(values);
+    write.vm_remote_address = 0x552ACAB040;
+
+    auto error = (communicate_error_t)ioctl(fd,
+                                            COMMUNICATE_CMD_WRITE,
+                                            &write);
+
+    communicate_read_t read;
+
+    memset(read_values, 0x11, sizeof(read_values));
+
+    read.pid_target        = pid_name("target");
+    read.vm_local_address  = (uintptr_t)read_values;
+    read.vm_size           = sizeof(read_values);
+    read.vm_remote_address = 0x552ACAB040;
+
+    error = (communicate_error_t)ioctl(fd, COMMUNICATE_CMD_READ, &read);
+
+    if (memcmp(values, read_values, sizeof(read_values)) == 0)
+    {
+        printf("success\n");
+    }
 
     close(fd);
 

@@ -823,6 +823,12 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     alignedaddress = align_address((uintptr_t)to, PAGE_SIZE);
     shifted        = (uintptr_t)to - alignedaddress;
 
+    // If the rest is higher or equal than shifted we must add a page.
+    if (shifted > (size % PAGE_SIZE))
+    {
+        nb_pages += 1;
+    }
+
     page = (page_t**)kmalloc(nb_pages * sizeof(page_t*), GFP_KERNEL);
 
     mm = get_task_mm_kthread(task);
@@ -918,11 +924,17 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
     should_up_read = false;
 
-    nb_pages = ((size - 1) / PAGE_SIZE) + 1;
+    nb_pages = ((size - 1) / PAGE_SIZE) + 2;
     result   = size;
 
     alignedaddress = align_address((uintptr_t)from, PAGE_SIZE);
     shifted        = (uintptr_t)from - alignedaddress;
+
+    // If the rest is higher or equal than shifted we must add a page.
+    if (shifted > (size % PAGE_SIZE))
+    {
+        nb_pages += 1;
+    }
 
     page = (page_t**)kmalloc(nb_pages * sizeof(page_t*), GFP_KERNEL);
 
