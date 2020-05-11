@@ -928,7 +928,7 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
     should_up_read = false;
 
-    nb_pages = ((size - 1) / PAGE_SIZE) + 2;
+    nb_pages = ((size - 1) / PAGE_SIZE) + 1;
     result   = size;
 
     alignedaddress = align_address((uintptr_t)from, PAGE_SIZE);
