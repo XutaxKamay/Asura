@@ -47,20 +47,20 @@ typedef struct communicate_write_struct
 
 typedef struct communicate_remote_mmap_struct
 {
-    unsigned long vm_remote_address;
-    unsigned long vm_size;
-    unsigned long prot;
-    unsigned long flags;
-    unsigned long fd;
-    unsigned long offset;
+    uint64_t vm_remote_address;
+    uint64_t vm_size;
+    uint64_t prot;
+    uint64_t flags;
+    uint64_t fd;
+    uint64_t offset;
     pid_t pid_target;
-    long unsigned int ret;
+    uint64_t ret;
 } communicate_remote_mmap_t;
 
 typedef struct communicate_remote_munmap_struct
 {
-    unsigned long vm_remote_address;
-    unsigned long vm_size;
+    uint64_t vm_remote_address;
+    uint64_t vm_size;
     pid_t pid_target;
     int ret;
 } communicate_remote_munmap_t;
