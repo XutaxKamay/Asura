@@ -40,6 +40,48 @@ communicate_read__write_struct(task_t* task,
     return COMMUNICATE_ERROR_NONE;
 }
 
+communicate_error_t communicate_read__remote_mmap_struct(
+  task_t* task,
+  uintptr_t address,
+  communicate_remote_mmap_t* communicate_remote_mmap)
+{
+    if (c_copy_from_user(task,
+                         communicate_remote_mmap,
+                         (ptr_t)address,
+                         sizeof(communicate_remote_mmap_t)))
+    {
+        c_printk_error("couldn't read communicate remote mmap struct "
+                       "from task "
+                       "%i\n",
+                       task->pid);
+
+        return COMMUNICATE_ERROR_STRUCT_COPY_FROM;
+    }
+
+    return COMMUNICATE_ERROR_NONE;
+}
+
+communicate_error_t communicate_read__remote_munmap_struct(
+  task_t* task,
+  uintptr_t address,
+  communicate_remote_munmap_t* communicate_remote_munmap)
+{
+    if (c_copy_from_user(task,
+                         communicate_remote_munmap,
+                         (ptr_t)address,
+                         sizeof(communicate_remote_munmap_t)))
+    {
+        c_printk_error("couldn't read communicate remote munmap struct "
+                       "from task "
+                       "%i\n",
+                       task->pid);
+
+        return COMMUNICATE_ERROR_STRUCT_COPY_FROM;
+    }
+
+    return COMMUNICATE_ERROR_NONE;
+}
+
 communicate_error_t communicate_process_cmd_read(task_t* task,
                                                  uintptr_t address)
 {
@@ -102,7 +144,7 @@ communicate_error_t communicate_process_cmd_write(task_t* task,
                                                   uintptr_t address)
 {
     communicate_error_t error;
-    struct communicate_write_struct communicate_write;
+    communicate_write_t communicate_write;
     buffer_t temp_buffer;
     task_t* remote_task;
 
@@ -153,5 +195,138 @@ communicate_error_t communicate_process_cmd_write(task_t* task,
 
 out:
     free_buffer(&temp_buffer);
+    return error;
+}
+
+communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
+                                                        uintptr_t address)
+{
+    communicate_error_t error;
+    communicate_remote_mmap_t communicate_remote_mmap;
+    task_t* old_current;
+    task_t* remote_task;
+    int ret;
+
+    error = communicate_read__remote_mmap_struct(task,
+                                                 address,
+                                                 &communicate_remote_mmap);
+
+    if (error != COMMUNICATE_ERROR_NONE)
+    {
+        goto out;
+    }
+
+    remote_task = find_task_from_pid(communicate_remote_mmap.pid_target);
+
+    if (remote_task == NULL)
+    {
+        error = COMMUNICATE_ERROR_TARGET_PID_NOT_FOUND;
+        goto out;
+    }
+
+    old_current = current;
+
+#ifndef __arch_um__
+    current_task = remote_task;
+#else
+    current = remote_task;
+#endif
+
+    if (offset_in_page(communicate_remote_mmap.offset) != 0)
+    {
+        error = COMMUNICATE_ERROR_MMAP_PGOFF_FAILED;
+        goto out;
+    }
+
+    ret = ksys_mmap_pgoff(communicate_remote_mmap.vm_remote_address,
+                          communicate_remote_mmap.vm_size,
+                          communicate_remote_mmap.prot,
+                          communicate_remote_mmap.flags,
+                          communicate_remote_mmap.fd,
+                          communicate_remote_mmap.offset >> PAGE_SHIFT);
+
+    communicate_remote_mmap.vm_real_remote_address = ret;
+
+#ifndef __arch_um__
+    current_task = old_current;
+#else
+    current = old_current;
+#endif
+
+    if (ret < 0)
+    {
+        error = COMMUNICATE_ERROR_MMAP_PGOFF_FAILED;
+    }
+    else
+    {
+        if (c_copy_to_user(task,
+                           (ptr_t)address,
+                           (ptr_t)&communicate_remote_mmap,
+                           sizeof(communicate_remote_mmap_t)))
+        {
+            c_printk_error("couldn't write communicate remote mmap "
+                           "struct "
+                           "from task "
+                           "%i\n",
+                           task->pid);
+
+            error = COMMUNICATE_ERROR_COPY_TO;
+        }
+    }
+out:
+    return error;
+}
+
+communicate_error_t
+communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
+{
+    communicate_error_t error;
+    communicate_remote_munmap_t communicate_remote_munmap;
+    task_t* old_current;
+    task_t* remote_task;
+    int ret;
+
+    error = communicate_read__remote_munmap_struct(
+      task,
+      address,
+      &communicate_remote_munmap);
+
+    if (error != COMMUNICATE_ERROR_NONE)
+    {
+        goto out;
+    }
+
+    remote_task = find_task_from_pid(communicate_remote_munmap.pid_target);
+
+    if (remote_task == NULL)
+    {
+        error = COMMUNICATE_ERROR_TARGET_PID_NOT_FOUND;
+        goto out;
+    }
+
+    old_current = current;
+
+#ifndef __arch_um__
+    current_task = remote_task;
+#else
+    current = remote_task;
+#endif
+
+    ret = vm_munmap(communicate_remote_munmap.vm_remote_address,
+                    communicate_remote_munmap.vm_size);
+
+#ifndef __arch_um__
+    current_task = old_current;
+#else
+    current = old_current;
+#endif
+
+    if (ret < 0)
+    {
+        error = COMMUNICATE_ERROR_VM_MUNMAP_FAILED;
+        goto out;
+    }
+
+out:
     return error;
 }

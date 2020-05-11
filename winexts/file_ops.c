@@ -44,31 +44,25 @@ int check_permissions(task_t* task)
 
 int file_operation_open(inode_t* i, file_t* f)
 {
-    c_printk_info("pid %i open %s\n", current->pid, DEVICE_FILE_NAME);
+    c_printk_info("pid %i open %s\n", get_current()->pid, DEVICE_FILE_NAME);
 
-    return check_permissions(current);
+    return check_permissions(get_current());
 }
 
 int file_operation_release(inode_t* i, file_t* f)
 {
-    c_printk_info("pid %i release %s\n", current->pid, DEVICE_FILE_NAME);
+    c_printk_info("pid %i release %s\n", get_current()->pid, DEVICE_FILE_NAME);
 
-    return check_permissions(current);
+    return check_permissions(get_current());
 }
 
 long file_operation_ioctl(file_t* f, unsigned int n, unsigned long p)
 {
-    mm_segment_t old_fs;
     communicate_error_t error    = COMMUNICATE_ERROR_NONE;
     communicate_cmd_t cmd_number = (communicate_cmd_t)n;
 
-    // So we can access anywhere we can in user space.
-    old_fs = get_fs();
-    set_fs(KERNEL_DS);
-
-
     c_printk_info("pid %i ioctl %s with cmd %i\n",
-                  current->pid,
+                  get_current()->pid,
                   DEVICE_FILE_NAME,
                   cmd_number);
 
@@ -76,24 +70,22 @@ long file_operation_ioctl(file_t* f, unsigned int n, unsigned long p)
     {
         case COMMUNICATE_CMD_READ:
         {
-            error = communicate_process_cmd_read(current, p);
+            error = communicate_process_cmd_read(get_current(), p);
             break;
         }
         case COMMUNICATE_CMD_WRITE:
         {
-            error = communicate_process_cmd_write(current, p);
-            break;
-        }
-        case COMMUNCIATE_CMD_CREATE_THREAD:
-        {
+            error = communicate_process_cmd_write(get_current(), p);
             break;
         }
         case COMMUNICATE_CMD_REMOTE_MMAP:
         {
+            error = communicate_process_cmd_remote_mmap(get_current(), p);
             break;
         }
         case COMMUNICATE_CMD_REMOTE_MUNMAP:
         {
+            error = communicate_process_cmd_remote_munmap(get_current(), p);
             break;
         }
         default:
@@ -104,9 +96,6 @@ long file_operation_ioctl(file_t* f, unsigned int n, unsigned long p)
             break;
         }
     }
-
-    // Don't forget to set it back.
-    set_fs(old_fs);
 
     return error;
 }

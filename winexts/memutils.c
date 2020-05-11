@@ -744,6 +744,39 @@ int insert_vm_struct(mm_t* mm, vm_area_t* vma)
     return p_insert_vm_struct(mm, vma);
 }
 
+unsigned long ksys_mmap_pgoff(unsigned long addr,
+                              unsigned long len,
+                              unsigned long prot,
+                              unsigned long flags,
+                              unsigned long fd,
+                              unsigned long pgoff)
+{
+    typedef unsigned long (*ksys_mmap_pgoff_t)(unsigned long addr,
+                                               unsigned long len,
+                                               unsigned long prot,
+                                               unsigned long flags,
+                                               unsigned long fd,
+                                               unsigned long pgoff);
+
+    static ksys_mmap_pgoff_t p_ksys_mmap_pgoff = NULL;
+
+    if (p_ksys_mmap_pgoff == NULL)
+    {
+        p_ksys_mmap_pgoff = (ksys_mmap_pgoff_t)kallsyms_lookup_name(
+          "ksys_mmap_pgoff");
+    }
+
+    if (p_ksys_mmap_pgoff == NULL)
+    {
+        c_printk("couldn't find ksys_mmap_pgoff\n");
+        return -1;
+    }
+
+    return p_ksys_mmap_pgoff(addr, len, prot, flags, fd, pgoff);
+}
+
+
+
 uintptr_t align_address(uintptr_t address, size_t size)
 {
     uintptr_t aligned_address;
@@ -816,6 +849,11 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     int nb_page;
     size_t size_to_copy;
     bool should_up_write;
+    mm_segment_t old_fs;
+
+    // So we can access anywhere we can in user space.
+    old_fs = get_fs();
+    set_fs(KERNEL_DS);
 
     should_up_write = false;
     nb_pages        = ((size - 1) / PAGE_SIZE) + 1;
@@ -908,6 +946,8 @@ out:
 
     kfree(page);
 
+    set_fs(old_fs);
+
     return result;
 }
 
@@ -925,6 +965,11 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     int nb_page;
     size_t size_to_copy;
     bool should_up_read;
+    mm_segment_t old_fs;
+
+    // So we can access anywhere we can in user space.
+    old_fs = get_fs();
+    set_fs(KERNEL_DS);
 
     should_up_read = false;
 
@@ -1017,6 +1062,8 @@ out:
         up_read(&mm->mmap_sem);
 
     kfree(page);
+
+    set_fs(old_fs);
 
     return result;
 }

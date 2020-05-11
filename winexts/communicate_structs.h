@@ -7,8 +7,8 @@ typedef enum communicate_cmd
 {
     COMMUNICATE_CMD_READ,
     COMMUNICATE_CMD_WRITE,
-    COMMUNCIATE_CMD_CREATE_THREAD,
-    COMMUNICATE_CMD_REMOTE_MMAP,
+    COMMUNICATE_CMD_REMOTE_MMAP = 3, // The number two is damned
+                                     // apparently.
     COMMUNICATE_CMD_REMOTE_MUNMAP
 } communicate_cmd_t;
 
@@ -22,44 +22,43 @@ typedef enum communicate_error
     COMMUNICATE_ERROR_COPY_TO,
     COMMUNICATE_ERROR_UNKNOWN_CMD,
     COMMUNICATE_ERROR_CMD_READ_HEADER_ERROR,
+    COMMUNICATE_ERROR_MMAP_PGOFF_FAILED,
+    COMMUNICATE_ERROR_VM_MUNMAP_FAILED,
     COMMUNICATE_ERROR_MAX
 } communicate_error_t;
 
 typedef struct communicate_read_struct
 {
-    uintptr_t vm_local_address;
-    uintptr_t vm_remote_address;
-    uintptr_t vm_size;
+    uint64_t vm_local_address;
+    uint64_t vm_remote_address;
+    uint64_t vm_size;
     pid_t pid_target;
 } communicate_read_t;
 
 typedef struct communicate_write_struct
 {
-    uintptr_t vm_local_address;
-    uintptr_t vm_remote_address;
-    uintptr_t vm_size;
+    uint64_t vm_local_address;
+    uint64_t vm_remote_address;
+    uint64_t vm_size;
     pid_t pid_target;
 } communicate_write_t;
 
-typedef struct communicate_create_thread_struct
-{
-    uintptr_t routine_address;
-    uintptr_t args;
-    pid_t pid_target;
-} communicate_create_thread_t;
-
 typedef struct communicate_remote_mmap_struct
 {
-    uintptr_t address_result;
-    uintptr_t wanted_address;
-    uintptr_t vm_size;
-    pid_t pid_target;
-} communicate_remote_mmap_struct_t;
+    unsigned long vm_remote_address;
+    unsigned long vm_real_remote_address;
+    unsigned long vm_size;
+    unsigned long prot;
+    unsigned long flags;
+    unsigned long fd;
+    unsigned long offset;
+    unsigned long pid_target;
+} communicate_remote_mmap_t;
 
 typedef struct communicate_remote_munmap_struct
 {
-    uintptr_t remote_address;
-    uintptr_t vm_size;
+    unsigned long vm_remote_address;
+    unsigned long vm_size;
     pid_t pid_target;
 } communicate_remote_munmap_t;
 

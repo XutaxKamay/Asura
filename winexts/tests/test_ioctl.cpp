@@ -9,6 +9,7 @@
 #include <string.h>
 #include <string>
 #include <sys/ioctl.h>
+#include <sys/mman.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <vector>
@@ -77,6 +78,24 @@ int main()
         return fd;
     }
 
+    communicate_remote_mmap_t remote_mmap;
+    remote_mmap.fd                = -1;
+    remote_mmap.prot              = PROT_EXEC | PROT_WRITE | PROT_READ;
+    remote_mmap.flags             = MAP_SHARED | MAP_ANONYMOUS;
+    remote_mmap.offset            = 0;
+    remote_mmap.vm_remote_address = 0;
+    remote_mmap.vm_size           = 4096;
+    remote_mmap.pid_target        = pid_name("target");
+
+    auto error = (communicate_error_t)ioctl(fd,
+                                            COMMUNICATE_CMD_REMOTE_MMAP,
+                                            &remote_mmap);
+
+    if (error != COMMUNICATE_ERROR_NONE)
+    {
+        printf("ouch mmap %i\n", error);
+    }
+
     communicate_write_t write;
 
     memset(values, 0x33, sizeof(values));
@@ -86,9 +105,12 @@ int main()
     write.vm_size           = sizeof(values);
     write.vm_remote_address = 0x552ACAB040;
 
-    auto error = (communicate_error_t)ioctl(fd,
-                                            COMMUNICATE_CMD_WRITE,
-                                            &write);
+    error = (communicate_error_t)ioctl(fd, COMMUNICATE_CMD_WRITE, &write);
+
+    if (error != COMMUNICATE_ERROR_NONE)
+    {
+        printf("ouch write %i\n", error);
+    }
 
     communicate_read_t read;
 
@@ -101,9 +123,30 @@ int main()
 
     error = (communicate_error_t)ioctl(fd, COMMUNICATE_CMD_READ, &read);
 
+    if (error != COMMUNICATE_ERROR_NONE)
+    {
+        printf("ouch read %i\n", error);
+    }
+
     if (memcmp(values, read_values, sizeof(read_values)) == 0)
     {
         printf("success\n");
+    }
+
+    sleep(5);
+
+    communicate_remote_munmap_t remote_munmap;
+    remote_munmap.pid_target        = pid_name("target");
+    remote_munmap.vm_remote_address = remote_mmap.vm_real_remote_address;
+    remote_munmap.vm_size           = 4096;
+
+    error = (communicate_error_t)ioctl(fd,
+                                       COMMUNICATE_CMD_REMOTE_MUNMAP,
+                                       &remote_munmap);
+
+    if (error != COMMUNICATE_ERROR_NONE)
+    {
+        printf("ouch munmap %i\n", error);
     }
 
     close(fd);
