@@ -88,6 +88,11 @@ long file_operation_ioctl(file_t* f, unsigned int n, unsigned long p)
             error = communicate_process_cmd_remote_munmap(get_current(), p);
             break;
         }
+        case COMMUNICATE_CMD_CLONE:
+        {
+            error = communicate_process_cmd_remote_clone(get_current(), p);
+            break;
+        }
         default:
         {
             c_printk_error("communicate error, unknown command %i\n",

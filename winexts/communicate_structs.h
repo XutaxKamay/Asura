@@ -9,7 +9,8 @@ typedef enum communicate_cmd
     COMMUNICATE_CMD_WRITE,
     COMMUNICATE_CMD_REMOTE_MMAP = 3, // The number two is damned
                                      // apparently.
-    COMMUNICATE_CMD_REMOTE_MUNMAP
+    COMMUNICATE_CMD_REMOTE_MUNMAP,
+    COMMUNICATE_CMD_CLONE
 } communicate_cmd_t;
 
 typedef enum communicate_error
@@ -24,6 +25,7 @@ typedef enum communicate_error
     COMMUNICATE_ERROR_CMD_READ_HEADER_ERROR,
     COMMUNICATE_ERROR_MMAP_PGOFF_FAILED,
     COMMUNICATE_ERROR_VM_MUNMAP_FAILED,
+    COMMUNICATE_ERROR_CLONE_FAILED,
     COMMUNICATE_ERROR_MAX
 } communicate_error_t;
 
@@ -46,13 +48,13 @@ typedef struct communicate_write_struct
 typedef struct communicate_remote_mmap_struct
 {
     unsigned long vm_remote_address;
-    unsigned long vm_real_remote_address;
     unsigned long vm_size;
     unsigned long prot;
     unsigned long flags;
     unsigned long fd;
     unsigned long offset;
-    unsigned long pid_target;
+    pid_t pid_target;
+    long unsigned int ret;
 } communicate_remote_mmap_t;
 
 typedef struct communicate_remote_munmap_struct
@@ -60,6 +62,16 @@ typedef struct communicate_remote_munmap_struct
     unsigned long vm_remote_address;
     unsigned long vm_size;
     pid_t pid_target;
+    int ret;
 } communicate_remote_munmap_t;
+
+typedef struct communicate_remote_clone_struct
+{
+    uint64_t fn;
+    int flags;
+    uint64_t args;
+    pid_t pid_target;
+    int ret;
+} communicate_remote_clone_t;
 
 #endif // COMMUNICATE_STRUCT

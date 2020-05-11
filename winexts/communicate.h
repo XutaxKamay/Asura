@@ -21,6 +21,11 @@ communicate_error_t communicate_read__remote_munmap_struct(
   uintptr_t address,
   communicate_remote_munmap_t* communicate_remote_munmap);
 
+communicate_error_t communicate_read__remote_clone_struct(
+  task_t* task,
+  uintptr_t address,
+  communicate_remote_clone_t* communicate_remote_clone);
+
 communicate_error_t communicate_process_cmd_read(task_t* task,
                                                  uintptr_t address);
 
@@ -32,5 +37,8 @@ communicate_process_cmd_remote_mmap(task_t* task, uintptr_t address);
 
 communicate_error_t
 communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address);
+
+communicate_error_t
+communicate_process_cmd_remote_clone(task_t* task, uintptr_t address);
 
 #endif

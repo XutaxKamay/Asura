@@ -775,7 +775,24 @@ unsigned long ksys_mmap_pgoff(unsigned long addr,
     return p_ksys_mmap_pgoff(addr, len, prot, flags, fd, pgoff);
 }
 
+long _do_fork(struct kernel_clone_args* kargs)
+{
+    typedef long (*_do_fork_t)(struct kernel_clone_args * kargs);
+    static _do_fork_t p__do_fork = NULL;
 
+    if (p__do_fork == NULL)
+    {
+        p__do_fork = (_do_fork_t)kallsyms_lookup_name("_do_fork");
+    }
+
+    if (p__do_fork == NULL)
+    {
+        c_printk("couldn't find _do_fork\n");
+        return -1;
+    }
+
+    return p__do_fork(kargs);
+}
 
 uintptr_t align_address(uintptr_t address, size_t size)
 {
