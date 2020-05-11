@@ -8,7 +8,8 @@ communicate_read__read_struct(task_t* task,
     if (c_copy_from_user(task,
                          communicate_read,
                          (ptr_t)address,
-                         sizeof(communicate_read_t)))
+                         sizeof(communicate_read_t))
+        <= 0)
     {
         c_printk_error("couldn't read communicate read struct from task "
                        "%i\n",
@@ -28,7 +29,8 @@ communicate_read__write_struct(task_t* task,
     if (c_copy_from_user(task,
                          communicate_write,
                          (ptr_t)address,
-                         sizeof(communicate_write_t)))
+                         sizeof(communicate_write_t))
+        <= 0)
     {
         c_printk_error("couldn't read communicate write struct from task "
                        "%i\n",
@@ -78,7 +80,8 @@ communicate_error_t communicate_process_cmd_read(task_t* task,
     if (c_copy_from_user(remote_task,
                          temp_buffer.addr,
                          (ptr_t)communicate_read.vm_remote_address,
-                         temp_buffer.size))
+                         temp_buffer.size)
+        <= 0)
     {
         error = COMMUNICATE_ERROR_COPY_FROM;
         goto out;
@@ -87,7 +90,8 @@ communicate_error_t communicate_process_cmd_read(task_t* task,
     if (c_copy_to_user(task,
                        (ptr_t)communicate_read.vm_local_address,
                        (ptr_t)temp_buffer.addr,
-                       temp_buffer.size))
+                       temp_buffer.size)
+        <= 0)
     {
         error = COMMUNICATE_ERROR_COPY_TO;
         goto out;
@@ -136,7 +140,8 @@ communicate_error_t communicate_process_cmd_write(task_t* task,
     if (c_copy_from_user(task,
                          temp_buffer.addr,
                          (ptr_t)communicate_write.vm_local_address,
-                         temp_buffer.size))
+                         temp_buffer.size)
+        <= 0)
     {
         error = COMMUNICATE_ERROR_COPY_FROM;
         goto out;
@@ -145,7 +150,8 @@ communicate_error_t communicate_process_cmd_write(task_t* task,
     if (c_copy_to_user(remote_task,
                        (ptr_t)communicate_write.vm_remote_address,
                        (ptr_t)temp_buffer.addr,
-                       temp_buffer.size))
+                       temp_buffer.size)
+        <= 0)
     {
         error = COMMUNICATE_ERROR_COPY_TO;
         goto out;

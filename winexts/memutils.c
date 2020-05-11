@@ -434,7 +434,8 @@ int scan_task(task_t* task,
         if (c_copy_from_user(task,
                              copied_user_memory,
                              (ptr_t)vma->vm_start,
-                             vma->vm_end - vma->vm_start))
+                             vma->vm_end - vma->vm_start)
+            <= 0)
         {
             kfree(copied_user_memory);
             c_printk("couldn't copy memory from task %s(%i) at %lX!\n",
@@ -895,7 +896,7 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
     if (size != 0)
     {
-        BUG();
+        result = -size;
     }
 
 out:
@@ -1002,7 +1003,7 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
     if (size != 0)
     {
-        BUG();
+        result = -size;
     }
 
 out:
