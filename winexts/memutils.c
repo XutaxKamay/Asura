@@ -434,8 +434,7 @@ int scan_task(task_t* task,
         if (c_copy_from_user(task,
                              copied_user_memory,
                              (ptr_t)vma->vm_start,
-                             vma->vm_end - vma->vm_start)
-            <= 0)
+                             vma->vm_end - vma->vm_start))
         {
             kfree(copied_user_memory);
             c_printk("couldn't copy memory from task %s(%i) at %lX!\n",
@@ -576,7 +575,8 @@ int scan_kernel(char* start,
 out:
     if (page_count != max_page_count)
     {
-        BUG();
+        c_printk_error("couldn't reach max page count\n");
+        return 0;
     }
 #else
     ret = scan_pattern(addr_start, addr_end, pattern, len, pattern_result);
@@ -897,7 +897,9 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
     if (size != 0)
     {
-        result = -size;
+        c_printk_error("problem with the buffer being not copied "
+                       "completely contact a developer\n");
+        result = size;
     }
 
 out:
@@ -1005,7 +1007,9 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
     if (size != 0)
     {
-        result = -size;
+        c_printk_error("problem with the buffer being not copied "
+                       "completely contact a developer\n");
+        result = size;
     }
 
 out:
