@@ -902,7 +902,7 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
             goto out;
         }
 
-        real_addr = (uintptr_t)page_address(page) + shifted;
+        real_addr = (uintptr_t)kmap(page) + shifted;
 
         size_to_copy = PAGE_SIZE - shifted;
 
@@ -913,13 +913,16 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
         result += copy_to_user((ptr_t)real_addr, from, size_to_copy);
 
+        kunmap(page);
+
         if (result != 0)
         {
             result = size;
+            put_page(page);
             goto out;
         }
 
-        release_pages(&page, 1);
+        put_page(page);
 
         size -= size_to_copy;
 
@@ -1005,13 +1008,16 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
         result += copy_from_user(to, (ptr_t)real_addr, size_to_copy);
 
+        kunmap(page);
+
         if (result != 0)
         {
             result = size;
+            put_page(page);
             goto out;
         }
 
-        release_pages(&page, 1);
+        put_page(page);
 
         size -= size_to_copy;
 

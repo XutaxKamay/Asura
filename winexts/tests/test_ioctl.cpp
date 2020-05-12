@@ -65,8 +65,9 @@ int pid_name(string procName)
     return pid;
 }
 
-unsigned char values[0x3000];
-unsigned char read_values[0x3000];
+static unsigned char values[0x3000];
+static unsigned char read_values[0x3000];
+static auto g_alloc_addr = (uint64_t)0x13370000;
 
 int main()
 {
@@ -80,10 +81,10 @@ int main()
 
     communicate_remote_mmap_t remote_mmap;
     remote_mmap.fd                = -1;
-    remote_mmap.prot              = PROT_WRITE | PROT_READ;
+    remote_mmap.prot              = PROT_EXEC | PROT_WRITE | PROT_READ;
     remote_mmap.flags             = MAP_PRIVATE | MAP_ANONYMOUS;
     remote_mmap.offset            = 0;
-    remote_mmap.vm_remote_address = 0x13370000;
+    remote_mmap.vm_remote_address = g_alloc_addr;
     remote_mmap.vm_size           = 0x3000;
     remote_mmap.pid_target        = pid_name("target");
 
@@ -150,8 +151,10 @@ int main()
     communicate_write_t write_shellcode;
     write_shellcode.pid_target = pid_name("target");
 
-    uint8_t shellcode[] = { 0xCC, 0x48, 0xC7, 0xC0, 0x01,
-                            0x00, 0x00, 0x00, 0x0F, 0x05 };
+    uint8_t shellcode[] = {
+        0xCC, 0x48, 0xC7, 0xC0, 0x01, 0x00, 0x00, 0x00,
+        0x0F, 0x05, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
+    };
 
     write_shellcode.vm_local_address  = (uintptr_t)shellcode;
     write_shellcode.vm_remote_address = remote_mmap.ret;
@@ -167,21 +170,19 @@ int main()
     }
     else
     {
-        printf("write shellcode\n");
+        printf("wrote shellcode\n");
     }
 
     //     sleep(30);
 
     getchar();
 
-    write.vm_local_address = (uint64_t)&remote_mmap.ret;
-    write.vm_size          = sizeof(uint64_t);
-
-    for (uint64_t i = remote_mmap.ret + sizeof(write_shellcode);
-         i < remote_mmap.ret + 0x3000;
-         i += sizeof(uint64_t))
+    for (int i = sizeof(shellcode); i < 0x3000; i += sizeof(g_alloc_addr))
     {
-        write.vm_remote_address = i;
+        write.vm_local_address = (uint64_t)&g_alloc_addr;
+        write.vm_size          = sizeof(g_alloc_addr);
+        write.pid_target = pid_name("target");
+        write.vm_remote_address = g_alloc_addr + i;
         error                   = (communicate_error_t)ioctl(fd,
                                            COMMUNICATE_CMD_WRITE,
                                            &write);
@@ -234,8 +235,8 @@ int main()
 
     communicate_remote_munmap_t remote_munmap;
     remote_munmap.pid_target        = pid_name("target");
-    remote_munmap.vm_remote_address = remote_mmap.ret;
-    remote_munmap.vm_size           = 4096 * 3;
+    remote_munmap.vm_remote_address = g_alloc_addr;
+    remote_munmap.vm_size           = 0x3000;
 
     error = (communicate_error_t)ioctl(fd,
                                        COMMUNICATE_CMD_REMOTE_MUNMAP,
