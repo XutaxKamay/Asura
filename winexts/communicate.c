@@ -245,6 +245,12 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
         goto out;
     }
 
+    if (offset_in_page(communicate_remote_mmap.offset) != 0)
+    {
+        error = COMMUNICATE_ERROR_MMAP_PGOFF_FAILED;
+        goto out;
+    }
+
     old_fs = get_fs();
     set_fs(KERNEL_DS);
 
@@ -253,19 +259,29 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
     old_current = get_current();
 
 #ifndef __arch_um__
-    this_cpu_write(current_task, remote_task);
-    this_cpu_write(cpu_current_top_of_stack,
+    __this_cpu_write(current_task, remote_task);
+    __this_cpu_write(cpu_current_top_of_stack,
                    task_top_of_stack(remote_task));
+    update_task_stack(remote_task);
 #else
     set_current(remote_task);
     current = remote_task;
 #endif
 
-    if (offset_in_page(communicate_remote_mmap.offset) != 0)
-    {
-        error = COMMUNICATE_ERROR_MMAP_PGOFF_FAILED;
-        goto out;
-    }
+    c_printk_info("wantedpid %i current task pid: %i -> wanted_address: "
+                  "%llX, "
+                  "size: %llX, prot: "
+                  "%llX, "
+                  "flags: "
+                  "%llX, fd: %llX, offset: %llX\n",
+                  remote_task->pid,
+                  get_current()->pid,
+                  communicate_remote_mmap.vm_remote_address,
+                  communicate_remote_mmap.vm_size,
+                  communicate_remote_mmap.prot,
+                  communicate_remote_mmap.flags,
+                  communicate_remote_mmap.fd,
+                  communicate_remote_mmap.offset);
 
     communicate_remote_mmap.ret
       = ksys_mmap_pgoff(communicate_remote_mmap.vm_remote_address,
@@ -276,9 +292,10 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
                         communicate_remote_mmap.offset >> PAGE_SHIFT);
 
 #ifndef __arch_um__
-    this_cpu_write(current_task, old_current);
-    this_cpu_write(cpu_current_top_of_stack,
+    __this_cpu_write(current_task, old_current);
+    __this_cpu_write(cpu_current_top_of_stack,
                    task_top_of_stack(old_current));
+    update_task_stack(old_current);
 #else
     set_current(old_current);
     current = old_current;
@@ -419,21 +436,22 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
     old_current = get_current();
 
 #ifndef __arch_um__
-    this_cpu_write(current_task, remote_task);
-    this_cpu_write(cpu_current_top_of_stack,
+    __this_cpu_write(current_task, remote_task);
+    __this_cpu_write(cpu_current_top_of_stack,
                    task_top_of_stack(remote_task));
+    update_task_stack(remote_task);
 #else
     set_current(remote_task);
     current = remote_task;
-    ;
 #endif
 
     communicate_remote_clone.ret = _do_fork(&clone_args);
 
 #ifndef __arch_um__
-    this_cpu_write(current_task, old_current);
-    this_cpu_write(cpu_current_top_of_stack,
+    __this_cpu_write(current_task, old_current);
+    __this_cpu_write(cpu_current_top_of_stack,
                    task_top_of_stack(old_current));
+    update_task_stack(old_current);
 #else
     set_current(old_current);
     current = old_current;

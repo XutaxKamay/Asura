@@ -189,13 +189,12 @@ int c_find_vma_from_task(task_t* task,
             break;
     }
 
-    mmput(mm);
+    c_mmput(task, mm);
 
     return *vma_start == NULL ? 0 : 1;
 
 out:
-    if (mm != NULL)
-        mmput(mm);
+    c_mmput(task, mm);
 
     return 0;
 }
@@ -240,13 +239,12 @@ int c_find_vma_from_task_str(task_t* task,
             break;
     }
 
-    mmput(mm);
+    c_mmput(task, mm);
 
     return *vma_start == NULL ? 0 : 1;
 
 out:
-    if (mm != NULL)
-        mmput(mm);
+    c_mmput(task, mm);
 
     return 0;
 }
@@ -291,7 +289,7 @@ void c_print_vmas(task_t* task)
         }
     }
 
-    mmput(mm);
+    c_mmput(task, mm);
 }
 
 task_t* find_task_from_addr(uintptr_t address)
@@ -433,7 +431,7 @@ int scan_task(task_t* task,
         c_printk("task %s(%i) has no mmap struct!\n",
                  task->comm,
                  task->pid);
-        mmput(mm);
+        c_mmput(task, mm);
         return 0;
     }
 
@@ -471,7 +469,7 @@ int scan_task(task_t* task,
             break;
     }
 
-    mmput(mm);
+    c_mmput(task, mm);
 
     set_fs(old_fs);
 
@@ -630,7 +628,7 @@ uintptr_t map_base_task(task_t* task)
 
     result = mm->mmap_base;
 
-    mmput(mm);
+    c_mmput(task, mm);
 
     return result;
 }
@@ -893,13 +891,19 @@ int c_munmap(task_t* task, uintptr_t start)
 
     up_write(&mm->mmap_sem);
 
-    mmput(mm);
+    c_mmput(task, mm);
 
 out:
 
     set_fs(old_fs);
 
     return ret;
+}
+
+void c_mmput(task_t* task, mm_t* mm)
+{
+    if (task->active_mm == NULL && mm)
+        mmput(mm);
 }
 
 uintptr_t align_address(uintptr_t address, size_t size)
@@ -1050,7 +1054,7 @@ out:
     if (should_up_write)
     {
         up_write(&mm->mmap_sem);
-        mmput(mm);
+        c_mmput(task, mm);
     }
 
     set_fs(old_fs);
@@ -1149,7 +1153,7 @@ out:
     if (should_up_read)
     {
         up_read(&mm->mmap_sem);
-        mmput(mm);
+        c_mmput(task, mm);
     }
 
     set_fs(old_fs);
