@@ -856,37 +856,20 @@ unsigned long
 c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 {
     mm_t* mm;
-    page_t** page;
-
+    page_t* page;
     unsigned long result;
-    ptr_t realaddr;
-    uintptr_t alignedaddress;
-    uintptr_t shifted;
-    int nb_pages;
-    int nb_page;
-    size_t size_to_copy;
     bool should_up_write;
     mm_segment_t old_fs;
+    size_t size_to_copy;
+    uintptr_t real_addr, user_align_addr;
+    uintptr_t shifted;
 
     // So we can access anywhere we can in user space.
     old_fs = get_fs();
     set_fs(KERNEL_DS);
 
     should_up_write = false;
-    nb_pages        = ((size - 1) / PAGE_SIZE) + 1;
     result          = size;
-
-    alignedaddress = align_address((uintptr_t)to, PAGE_SIZE);
-    shifted        = (uintptr_t)to - alignedaddress;
-
-    // If shifted is higher or equal than the rest of size to be copied we
-    // must add a page.
-    if (shifted > (size % PAGE_SIZE))
-    {
-        nb_pages += 1;
-    }
-
-    page = (page_t**)kmalloc(nb_pages * sizeof(page_t*), GFP_KERNEL);
 
     mm = get_task_mm_kthread(task);
 
@@ -898,70 +881,62 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     down_write(&mm->mmap_sem);
     should_up_write = true;
 
-    if (get_user_pages_remote(task,
-                              mm,
-                              alignedaddress,
-                              nb_pages,
-                              FOLL_FORCE,
-                              page,
-                              NULL,
-                              NULL)
-        <= 0)
-    {
-        goto out;
-    }
+    user_align_addr = (uintptr_t)align_address((uintptr_t)to, PAGE_SIZE);
+    shifted         = (uintptr_t)to % PAGE_SIZE;
 
     result = 0;
 
-    for (nb_page = 0; nb_page < nb_pages; nb_page++)
+    while (size > 0)
     {
-        if (nb_page == 0)
+        if (get_user_pages_remote(task,
+                                  mm,
+                                  user_align_addr,
+                                  1,
+                                  FOLL_FORCE,
+                                  &page,
+                                  NULL,
+                                  NULL)
+            <= 0)
         {
-            realaddr = (ptr_t)((uintptr_t)page_address(page[nb_page])
-                               + shifted);
-
-            if (size > PAGE_SIZE - shifted)
-            {
-                size_to_copy = PAGE_SIZE - shifted;
-            }
-            else
-            {
-                size_to_copy = size;
-            }
-
-            size -= size_to_copy;
-        }
-        else
-        {
-            realaddr = page_address(page[nb_page]);
-
-            if (size > PAGE_SIZE)
-            {
-                size_to_copy = PAGE_SIZE;
-            }
-            else
-            {
-                size_to_copy = size;
-            }
-
-            size -= size_to_copy;
+            result = size;
+            goto out;
         }
 
-        result += copy_to_user(realaddr, from, size_to_copy);
+        real_addr = (uintptr_t)page_address(page) + shifted;
+
+        size_to_copy = PAGE_SIZE - shifted;
+
+        if (size_to_copy > size)
+        {
+            size_to_copy = size;
+        }
+
+        result += copy_to_user((ptr_t)real_addr, from, size_to_copy);
+
+        if (result != 0)
+        {
+            result = size;
+            goto out;
+        }
+
+        release_pages(&page, 1);
+
+        size -= size_to_copy;
+
+        // We done the first page, we can go by copying now.
+        shifted = 0;
+        user_align_addr += PAGE_SIZE;
     }
 
     if (size != 0)
     {
-        c_printk_error("problem with the buffer being not copied "
-                       "completely contact a developer\n");
+        c_printk_error("error on algorithm, contact a dev\n");
         result = size;
     }
 
 out:
     if (should_up_write)
         up_write(&mm->mmap_sem);
-
-    kfree(page);
 
     set_fs(old_fs);
 
@@ -972,38 +947,20 @@ unsigned long
 c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 {
     mm_t* mm;
-    page_t** page;
-
+    page_t* page;
     unsigned long result;
-    ptr_t realaddr;
-    uintptr_t alignedaddress;
-    uintptr_t shifted;
-    int nb_pages;
-    int nb_page;
-    size_t size_to_copy;
     bool should_up_read;
     mm_segment_t old_fs;
+    size_t size_to_copy;
+    uintptr_t real_addr, user_align_addr;
+    uintptr_t shifted;
 
     // So we can access anywhere we can in user space.
     old_fs = get_fs();
     set_fs(KERNEL_DS);
 
     should_up_read = false;
-
-    nb_pages = ((size - 1) / PAGE_SIZE) + 1;
-    result   = size;
-
-    alignedaddress = align_address((uintptr_t)from, PAGE_SIZE);
-    shifted        = (uintptr_t)from - alignedaddress;
-
-    // If shifted is higher or equal than the rest of size to be copied we
-    // must add a page.
-    if (shifted > (size % PAGE_SIZE))
-    {
-        nb_pages += 1;
-    }
-
-    page = (page_t**)kmalloc(nb_pages * sizeof(page_t*), GFP_KERNEL);
+    result         = size;
 
     mm = get_task_mm_kthread(task);
 
@@ -1015,70 +972,63 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     down_read(&mm->mmap_sem);
     should_up_read = true;
 
-    if (get_user_pages_remote(task,
-                              mm,
-                              alignedaddress,
-                              nb_pages,
-                              FOLL_FORCE,
-                              page,
-                              NULL,
-                              NULL)
-        <= 0)
-    {
-        goto out;
-    }
+    user_align_addr = (uintptr_t)align_address((uintptr_t)from,
+                                               PAGE_SIZE);
+    shifted         = (uintptr_t)from % PAGE_SIZE;
 
     result = 0;
 
-    for (nb_page = 0; nb_page < nb_pages; nb_page++)
+    while (size > 0)
     {
-        if (nb_page == 0)
+        if (get_user_pages_remote(task,
+                                  mm,
+                                  user_align_addr,
+                                  1,
+                                  FOLL_FORCE,
+                                  &page,
+                                  NULL,
+                                  NULL)
+            <= 0)
         {
-            realaddr = (ptr_t)((uintptr_t)page_address(page[nb_page])
-                               + shifted);
-
-            if (size > PAGE_SIZE - shifted)
-            {
-                size_to_copy = PAGE_SIZE - shifted;
-            }
-            else
-            {
-                size_to_copy = size;
-            }
-
-            size -= size_to_copy;
-        }
-        else
-        {
-            realaddr = page_address(page[nb_page]);
-
-            if (size > PAGE_SIZE)
-            {
-                size_to_copy = PAGE_SIZE;
-            }
-            else
-            {
-                size_to_copy = size;
-            }
-
-            size -= size_to_copy;
+            result = size;
+            goto out;
         }
 
-        result += copy_from_user(to, realaddr, size_to_copy);
+        real_addr = (uintptr_t)page_address(page) + shifted;
+
+        size_to_copy = PAGE_SIZE - shifted;
+
+        if (size_to_copy > size)
+        {
+            size_to_copy = size;
+        }
+
+        result += copy_from_user(to, (ptr_t)real_addr, size_to_copy);
+
+        if (result != 0)
+        {
+            result = size;
+            goto out;
+        }
+
+        release_pages(&page, 1);
+
+        size -= size_to_copy;
+
+        // We done the first page, we can go by copying now.
+        shifted = 0;
+        user_align_addr += PAGE_SIZE;
     }
 
     if (size != 0)
     {
-        c_printk_error("problem with the buffer being not copied "
-                       "completely contact a developer\n");
+        c_printk_error("error on algorithm, contact a dev\n");
         result = size;
     }
 
 out:
     if (should_up_read)
         up_read(&mm->mmap_sem);
-
-    kfree(page);
 
     set_fs(old_fs);
 

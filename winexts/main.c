@@ -44,7 +44,7 @@ int init_mod(void)
                   DEVICE_FILE_NAME,
                   DEVICE_CLASS_NAME);
 
-    if (device_create(g_cl, NULL, g_dev, NULL, DEVICE_FILE_NAME) == NULL)
+    if (device_create(g_cl, NULL, g_dev, NULL, DEVICE_FMT) == NULL)
     {
         class_destroy(g_cl);
         unregister_chrdev_region(g_dev, 1);
@@ -57,7 +57,7 @@ int init_mod(void)
 
     cdev_init(&g_cdev, &g_fops);
 
-    if (cdev_add(&g_cdev, g_dev, 1) == -1)
+    if (cdev_add(&g_cdev, g_dev, 1) < 0)
     {
         c_printk_error("device %s addition failed\n", DEVICE_FILE_NAME);
         device_destroy(g_cl, g_dev);
@@ -74,10 +74,10 @@ int init_mod(void)
 
 void free_mod(void)
 {
-    cdev_del(&g_cdev);
     device_destroy(g_cl, g_dev);
     class_destroy(g_cl);
-    unregister_chrdev_region(g_dev, 1);
+    cdev_del(&g_cdev);
+    unregister_chrdev_region(g_dev, 1);;
 
     c_printk("kernel module unloaded.\n");
 }

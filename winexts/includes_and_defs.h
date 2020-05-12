@@ -25,6 +25,7 @@
 #endif
 
 #define DEVICE_FILE_NAME  "winexts_dev"
+#define DEVICE_FMT        "winexts"
 #define DEVICE_CLASS_NAME "winexts_class"
 
 #define c_printk(c_args, ...)                                            \

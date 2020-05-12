@@ -222,6 +222,7 @@ out:
 communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
                                                         uintptr_t address)
 {
+    mm_segment_t old_fs;
     communicate_error_t error;
     communicate_remote_mmap_t communicate_remote_mmap;
     task_t* old_current;
@@ -260,6 +261,9 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
         goto out;
     }
 
+    old_fs = get_fs();
+    set_fs(KERNEL_DS);
+
     communicate_remote_mmap.ret
       = ksys_mmap_pgoff(communicate_remote_mmap.vm_remote_address,
                         communicate_remote_mmap.vm_size,
@@ -267,6 +271,8 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
                         communicate_remote_mmap.flags,
                         communicate_remote_mmap.fd,
                         communicate_remote_mmap.offset >> PAGE_SHIFT);
+
+    set_fs(old_fs);
 
 #ifndef __arch_um__
     this_cpu_write(current_task, old_current);
@@ -300,6 +306,7 @@ out:
 communicate_error_t
 communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
 {
+    mm_segment_t old_fs;
     communicate_error_t error;
     communicate_remote_munmap_t communicate_remote_munmap;
     task_t* old_current;
@@ -333,9 +340,14 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
     current = remote_task;
 #endif
 
+    old_fs = get_fs();
+    set_fs(KERNEL_DS);
+
     communicate_remote_munmap.ret
       = vm_munmap(communicate_remote_munmap.vm_remote_address,
                   communicate_remote_munmap.vm_size);
+
+    set_fs(old_fs);
 
 #ifndef __arch_um__
     this_cpu_write(current_task, old_current);
@@ -370,6 +382,7 @@ out:
 communicate_error_t
 communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
 {
+    mm_segment_t old_fs;
     communicate_error_t error;
     communicate_remote_clone_t communicate_remote_clone;
     task_t* old_current;
@@ -403,7 +416,7 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
              "parent_tid: %lX exit_signal: %X stack: %lX "
              "stack_size: "
              "%lX tls: %lX set_tid: %lX set_tid_size: %lu",
-             get_current()->pid,
+             remote_task->pid,
              clone_args.flags,
              (uintptr_t)clone_args.pidfd,
              (uintptr_t)clone_args.child_tid,
@@ -425,7 +438,12 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
     current = remote_task;
 #endif
 
+    old_fs = get_fs();
+    set_fs(KERNEL_DS);
+
     communicate_remote_clone.ret = _do_fork(&clone_args);
+
+    set_fs(old_fs);
 
 #ifndef __arch_um__
     this_cpu_write(current_task, old_current);

@@ -70,21 +70,21 @@ unsigned char read_values[0x3000];
 
 int main()
 {
-    int fd = open("/dev/winexts_dev", 0);
+    int fd = open("/dev/winexts", 0);
 
     if (fd < 0)
     {
-        printf("couldn't open /dev/winexts_dev\n");
+        printf("couldn't open /dev/winexts\n");
         return fd;
     }
 
     communicate_remote_mmap_t remote_mmap;
     remote_mmap.fd                = -1;
-    remote_mmap.prot              = PROT_EXEC | PROT_WRITE | PROT_READ;
+    remote_mmap.prot              = PROT_WRITE | PROT_READ;
     remote_mmap.flags             = MAP_PRIVATE | MAP_ANONYMOUS;
     remote_mmap.offset            = 0;
-    remote_mmap.vm_remote_address = 0;
-    remote_mmap.vm_size           = 4096;
+    remote_mmap.vm_remote_address = 0x13370000;
+    remote_mmap.vm_size           = 0x3000;
     remote_mmap.pid_target        = pid_name("target");
 
     auto error = (communicate_error_t)ioctl(fd,
@@ -172,40 +172,45 @@ int main()
 
     //     sleep(30);
 
+    getchar();
+
+    write.vm_local_address = (uint64_t)&remote_mmap.ret;
+    write.vm_size          = sizeof(uint64_t);
+
+    for (uint64_t i = remote_mmap.ret + sizeof(write_shellcode);
+         i < remote_mmap.ret + 0x3000;
+         i += sizeof(uint64_t))
+    {
+        write.vm_remote_address = i;
+        error                   = (communicate_error_t)ioctl(fd,
+                                           COMMUNICATE_CMD_WRITE,
+                                           &write);
+
+        if (error != COMMUNICATE_ERROR_NONE)
+        {
+            break;
+        }
+    }
+
+    if (error != COMMUNICATE_ERROR_NONE)
+    {
+        printf("ouch write %i\n", error);
+    }
+    else
+    {
+        printf("test write\n");
+    }
+
     /*getchar();
 
-    communicate_remote_clone_t remote_clone;*/
+    communicate_remote_clone_t remote_clone;
 
-    /*
-     * pwndbg> p (void*)args->stack
-     * $13 = (void *) 0x4002aff0
-     * pwndbg> p (void*)args->child_tid
-     * $14 = (void *) 0x0
-     * pwndbg> p (void*)args->pidfd
-     * $15 = (void *) 0x6
-     * pwndbg> p (void*)args->flags
-     * $16 = (void *) 0x700
-     * pwndbg> p (void*)args->set_tid_size
-     * $17 = (void *) 0x0
-     * pwndbg> p (void*)args->stack_size
-     * $18 = (void *) 0x0
-     * pwndbg> p (void*)args->exit_signal
-     * $19 = (void *) 0x0
-     * pwndbg> p (void*)args->parent_tid
-     * $20 = (void *) 0x6
-     * pwndbg> p (void*)args->set_tid
-     * $21 = (void *) 0x0
-     * pwndbg> p (void*)args->stack
-     * $22 = (void *) 0x4002aff0
-     * pwndbg> p (void*)args->tls
-     * $23 = (void *) 0x70
-     */
-    /*remote_clone.flags        = CLONE_VM | CLONE_FS | CLONE_FILES;
-    remote_clone.stack        = remote_mmap.ret;
-    remote_clone.stack_size   = remote_mmap.ret;
+    remote_clone.flags        = CLONE_VM | CLONE_FS | CLONE_FILES;
+    remote_clone.stack        = remote_mmap.ret + 0x2000;
+    remote_clone.stack_size   = 4096;
     remote_clone.child_tid    = 0;
-    remote_clone.pidfd        = (uint64_t)(int)-1;
-    remote_clone.parent_tid   = (uint64_t)(int)-1;
+    remote_clone.pidfd        = 0;
+    remote_clone.parent_tid   = 0;
     remote_clone.set_tid_size = 0;
     remote_clone.set_tid      = 0;
     remote_clone.tls          = 0;
@@ -230,7 +235,7 @@ int main()
     communicate_remote_munmap_t remote_munmap;
     remote_munmap.pid_target        = pid_name("target");
     remote_munmap.vm_remote_address = remote_mmap.ret;
-    remote_munmap.vm_size           = 4096;
+    remote_munmap.vm_size           = 4096 * 3;
 
     error = (communicate_error_t)ioctl(fd,
                                        COMMUNICATE_CMD_REMOTE_MUNMAP,

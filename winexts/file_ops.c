@@ -44,26 +44,26 @@ int check_permissions(task_t* task)
 
 int file_operation_open(inode_t* i, file_t* f)
 {
-    c_printk_info("pid %i open %s\n", get_current()->pid, DEVICE_FILE_NAME);
+    c_printk_info("pid %i open %s\n",
+                  get_current()->pid,
+                  DEVICE_FILE_NAME);
 
     return check_permissions(get_current());
 }
 
 int file_operation_release(inode_t* i, file_t* f)
 {
-    c_printk_info("pid %i release %s\n", get_current()->pid, DEVICE_FILE_NAME);
+    c_printk_info("pid %i release %s\n",
+                  get_current()->pid,
+                  DEVICE_FILE_NAME);
 
     return check_permissions(get_current());
 }
 
 long file_operation_ioctl(file_t* f, unsigned int n, unsigned long p)
 {
-    mm_segment_t old_fs;
     communicate_error_t error    = COMMUNICATE_ERROR_NONE;
     communicate_cmd_t cmd_number = (communicate_cmd_t)n;
-
-    old_fs = get_fs();
-    set_fs(KERNEL_DS);
 
     c_printk_info("pid %i ioctl %s with cmd %i\n",
                   get_current()->pid,
@@ -89,12 +89,14 @@ long file_operation_ioctl(file_t* f, unsigned int n, unsigned long p)
         }
         case COMMUNICATE_CMD_REMOTE_MUNMAP:
         {
-            error = communicate_process_cmd_remote_munmap(get_current(), p);
+            error = communicate_process_cmd_remote_munmap(get_current(),
+                                                          p);
             break;
         }
         case COMMUNICATE_CMD_REMOTE_CLONE:
         {
-            error = communicate_process_cmd_remote_clone(get_current(), p);
+            error = communicate_process_cmd_remote_clone(get_current(),
+                                                         p);
             break;
         }
         default:
@@ -105,8 +107,6 @@ long file_operation_ioctl(file_t* f, unsigned int n, unsigned long p)
             break;
         }
     }
-
-    set_fs(old_fs);
 
     return error;
 }
