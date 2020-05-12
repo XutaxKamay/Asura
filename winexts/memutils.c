@@ -794,6 +794,29 @@ long _do_fork(struct kernel_clone_args* kargs)
     return p__do_fork(kargs);
 }
 
+struct task_struct* __switch_to(struct task_struct* prev,
+                                struct task_struct* next)
+{
+    typedef struct task_struct* (
+      *__switch_to_t)(struct task_struct * prev,
+                      struct task_struct * next);
+    static __switch_to_t p___switch_to = NULL;
+
+    if (p___switch_to == NULL)
+    {
+        p___switch_to = (__switch_to_t)kallsyms_lookup_name("__switch_"
+                                                            "to");
+    }
+
+    if (p___switch_to == NULL)
+    {
+        c_printk("couldn't find __switch_to\n");
+        return NULL;
+    }
+
+    return p___switch_to(prev, next);
+}
+
 uintptr_t align_address(uintptr_t address, size_t size)
 {
     uintptr_t aligned_address;
@@ -1099,6 +1122,27 @@ pteval_t set_page_flags(uintptr_t addr, pteval_t val)
     {
         return -1;
     }
+}
+
+#else
+
+void set_current(struct task_struct* task)
+{
+    static struct cpu_task* cpu_tasks = NULL;
+    static int* __userspace_pid = NULL;
+
+    if (cpu_tasks == NULL)
+    {
+        cpu_tasks = (struct cpu_task*)kallsyms_lookup_name("cpu_tasks");
+    }
+
+    if (__userspace_pid == NULL)
+    {
+        __userspace_pid = (int*)kallsyms_lookup_name("userspace_pid");
+    }
+
+    cpu_tasks[task_thread_info(task)->cpu] = ((
+      struct cpu_task) { __userspace_pid[0], task });
 }
 
 #endif

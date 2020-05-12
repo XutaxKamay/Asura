@@ -254,7 +254,10 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
 
 #ifndef __arch_um__
     this_cpu_write(current_task, remote_task);
+    this_cpu_write(cpu_current_top_of_stack,
+                   task_top_of_stack(remote_task));
 #else
+    set_current(remote_task);
     current = remote_task;
 #endif
 
@@ -274,7 +277,10 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
 
 #ifndef __arch_um__
     this_cpu_write(current_task, old_current);
+    this_cpu_write(cpu_current_top_of_stack,
+                   task_top_of_stack(old_current));
 #else
+    set_current(old_current);
     current = old_current;
 #endif
 
@@ -339,7 +345,10 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
 
 #ifndef __arch_um__
     this_cpu_write(current_task, remote_task);
+    this_cpu_write(cpu_current_top_of_stack,
+                   task_top_of_stack(remote_task));
 #else
+    set_current(remote_task);
     current = remote_task;
 #endif
 
@@ -349,7 +358,10 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
 
 #ifndef __arch_um__
     this_cpu_write(current_task, old_current);
+    this_cpu_write(cpu_current_top_of_stack,
+                   task_top_of_stack(old_current));
 #else
+    set_current(old_current);
     current = old_current;
 #endif
 
@@ -437,15 +449,22 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
 
 #ifndef __arch_um__
     this_cpu_write(current_task, remote_task);
+    this_cpu_write(cpu_current_top_of_stack,
+                   task_top_of_stack(remote_task));
 #else
+    set_current(remote_task);
     current = remote_task;
+    ;
 #endif
 
     communicate_remote_clone.ret = _do_fork(&clone_args);
 
 #ifndef __arch_um__
     this_cpu_write(current_task, old_current);
+    this_cpu_write(cpu_current_top_of_stack,
+                   task_top_of_stack(old_current));
 #else
+    set_current(old_current);
     current = old_current;
 #endif
 

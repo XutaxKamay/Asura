@@ -1,6 +1,7 @@
 #ifndef INCLUDES_AND_DEFS
 #define INCLUDES_AND_DEFS
 
+#include <asm/switch_to.h>
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/errno.h>
@@ -15,6 +16,9 @@
 #include <linux/mman.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
+#include <linux/sched/debug.h>
+#include <linux/sched/task.h>
+#include <linux/sched/task_stack.h>
 #include <linux/slab.h>
 #include <linux/syscalls.h>
 #include <linux/types.h>
@@ -48,5 +52,13 @@ typedef struct mm_struct mm_t;
 typedef struct page page_t;
 typedef struct vm_area_struct vm_area_t;
 typedef struct rb_root rb_root_t;
+
+#ifdef __arch_um__
+typedef struct cpu_task
+{
+    int pid;
+    void* task;
+} cpu_task_t;
+#endif
 
 #endif
