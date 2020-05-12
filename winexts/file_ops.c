@@ -3,7 +3,7 @@
 file_operations_t g_fops = { .owner          = THIS_MODULE,
                              .open           = file_operation_open,
                              .release        = file_operation_release,
-                             .unlocked_ioctl = file_operation_ioctl };
+                             /*.unlocked_ioctl = file_operation_ioctl*/ };
 
 mm_t* mm_access(task_t* task, unsigned int mode)
 {
@@ -21,7 +21,7 @@ mm_t* mm_access(task_t* task, unsigned int mode)
 
     if (p_mm_access == NULL)
     {
-        c_printk("couldn't find mm_access\n");
+        c_printk_error("couldn't find mm_access\n");
         return NULL;
     }
 
@@ -48,6 +48,10 @@ int check_permissions(task_t* task)
     {
         return -EACCES;
     }
+
+    // Do not forget to release mm,
+    // Otherwhise the current task's file binary will get always busy.
+    mmput(mm);
 
     return 0;
 }
@@ -120,3 +124,4 @@ long file_operation_ioctl(file_t* f, unsigned int n, unsigned long p)
 
     return error;
 }
+
