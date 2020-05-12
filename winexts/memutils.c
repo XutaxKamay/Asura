@@ -892,7 +892,8 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
                                   mm,
                                   user_align_addr,
                                   1,
-                                  FOLL_FORCE,
+                                  FOLL_FORCE | FOLL_REMOTE | FOLL_SPLIT
+                                    | FOLL_WRITE,
                                   &page,
                                   NULL,
                                   NULL)
@@ -987,7 +988,8 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
                                   mm,
                                   user_align_addr,
                                   1,
-                                  FOLL_FORCE,
+                                  FOLL_FORCE | FOLL_REMOTE | FOLL_SPLIT
+                                    | FOLL_WRITE,
                                   &page,
                                   NULL,
                                   NULL)

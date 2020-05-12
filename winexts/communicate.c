@@ -245,6 +245,9 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
         goto out;
     }
 
+    old_fs = get_fs();
+    set_fs(KERNEL_DS);
+
     // We can trick the kernel by saying the current task is the
     // targeted one for a moment.
     old_current = get_current();
@@ -261,9 +264,6 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
         goto out;
     }
 
-    old_fs = get_fs();
-    set_fs(KERNEL_DS);
-
     communicate_remote_mmap.ret
       = ksys_mmap_pgoff(communicate_remote_mmap.vm_remote_address,
                         communicate_remote_mmap.vm_size,
@@ -272,13 +272,13 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
                         communicate_remote_mmap.fd,
                         communicate_remote_mmap.offset >> PAGE_SHIFT);
 
-    set_fs(old_fs);
-
 #ifndef __arch_um__
     this_cpu_write(current_task, old_current);
 #else
     current = old_current;
 #endif
+
+    set_fs(old_fs);
 
     if (communicate_remote_mmap.ret < 0)
     {
@@ -330,6 +330,9 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
         goto out;
     }
 
+    old_fs = get_fs();
+    set_fs(KERNEL_DS);
+
     // We can trick the kernel by saying the current task is the
     // targeted one for a moment.
     old_current = get_current();
@@ -340,20 +343,17 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
     current = remote_task;
 #endif
 
-    old_fs = get_fs();
-    set_fs(KERNEL_DS);
-
     communicate_remote_munmap.ret
       = vm_munmap(communicate_remote_munmap.vm_remote_address,
                   communicate_remote_munmap.vm_size);
-
-    set_fs(old_fs);
 
 #ifndef __arch_um__
     this_cpu_write(current_task, old_current);
 #else
     current = old_current;
 #endif
+
+    set_fs(old_fs);
 
     if (communicate_remote_munmap.ret < 0)
     {
@@ -428,6 +428,9 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
              (uintptr_t)clone_args.set_tid,
              clone_args.set_tid_size);
 
+    old_fs = get_fs();
+    set_fs(KERNEL_DS);
+
     // We can trick the kernel by saying the current task is the
     // targeted one for a moment.
     old_current = get_current();
@@ -438,18 +441,15 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
     current = remote_task;
 #endif
 
-    old_fs = get_fs();
-    set_fs(KERNEL_DS);
-
     communicate_remote_clone.ret = _do_fork(&clone_args);
-
-    set_fs(old_fs);
 
 #ifndef __arch_um__
     this_cpu_write(current_task, old_current);
 #else
     current = old_current;
 #endif
+
+    set_fs(old_fs);
 
     if (communicate_remote_clone.ret < 0)
     {

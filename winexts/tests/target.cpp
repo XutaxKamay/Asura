@@ -20,6 +20,11 @@ int main()
                *(uintptr_t*)((uintptr_t)values + sizeof(values)
                              - sizeof(ptr_t)));
 
+        if (values[0] == 0x33)
+        {
+            *(int*)0x13371000 = 1337;
+        }
+
         sleep(1);
     }
 }
