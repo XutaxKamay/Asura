@@ -96,8 +96,10 @@ int main()
     {
         printf("ouch mmap %i\n", error);
     }
-
-    printf("mmap'd at %lX\n", remote_mmap.ret);
+    else
+    {
+        printf("mmap'd at %lX\n", remote_mmap.ret);
+    }
 
     getchar();
 
@@ -143,7 +145,7 @@ int main()
 
     if (memcmp(values, read_values, sizeof(read_values)) == 0)
     {
-        printf("success\n");
+        printf("success read/write large buffer\n");
     }
 
     getchar();
@@ -164,7 +166,7 @@ int main()
 
     if (error != COMMUNICATE_ERROR_NONE)
     {
-        printf("ouch write %i\n", error);
+        printf("ouch write shellcode %i\n", error);
     }
     else
     {
@@ -175,28 +177,28 @@ int main()
 
     getchar();
 
-    write.vm_local_address = (uint64_t)&g_alloc_addr;
-    write.vm_size          = sizeof(g_alloc_addr);
+    write.vm_local_address = (uint64_t)&remote_mmap.ret;
+    write.vm_size          = sizeof(remote_mmap.ret);
     write.pid_target       = pid_name("target");
 #ifdef __arch_um__
-    write.vm_remote_address = g_alloc_addr + 0x2000 + 0x28;
+    write.vm_remote_address = remote_mmap.ret + 0x2000 + 0x28;
 #else
-    write.vm_remote_address = g_alloc_addr + 0x2000;
+    write.vm_remote_address = remote_mmap.ret + 0x2000;
 #endif
     error = (communicate_error_t)ioctl(fd, COMMUNICATE_CMD_WRITE, &write);
 
     if (error != COMMUNICATE_ERROR_NONE)
     {
-        printf("ouch write %i\n", error);
+        printf("ouch write rip %i\n", error);
     }
     else
     {
-        printf("test write\n");
+        printf("write rip\n");
     }
 
+    /*
     getchar();
-
-    /*communicate_remote_clone_t remote_clone;
+    communicate_remote_clone_t remote_clone;
 
     remote_clone.flags      = (CLONE_VM | CLONE_FS | CLONE_FILES) & ~0xFF;
     remote_clone.stack      = remote_mmap.ret + 0x2000;
@@ -227,8 +229,7 @@ int main()
 
     communicate_remote_munmap_t remote_munmap;
     remote_munmap.pid_target        = pid_name("target");
-    remote_munmap.vm_remote_address = g_alloc_addr;
-    remote_munmap.vm_size           = 0x3000;
+    remote_munmap.vm_remote_address = remote_mmap.ret;
 
     error = (communicate_error_t)ioctl(fd,
                                        COMMUNICATE_CMD_REMOTE_MUNMAP,
@@ -237,6 +238,10 @@ int main()
     if (error != COMMUNICATE_ERROR_NONE)
     {
         printf("ouch munmap %i\n", error);
+    }
+    else
+    {
+        printf("munmap\n");
     }
 
     close(fd);

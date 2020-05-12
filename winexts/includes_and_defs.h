@@ -16,12 +16,14 @@
 #include <linux/mman.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
+#include <linux/profile.h>
 #include <linux/sched/debug.h>
 #include <linux/sched/task.h>
 #include <linux/sched/task_stack.h>
 #include <linux/slab.h>
 #include <linux/syscalls.h>
 #include <linux/types.h>
+#include <linux/userfaultfd_k.h>
 #include <linux/version.h>
 
 #ifdef __PAGETABLE_P4D_FOLDED

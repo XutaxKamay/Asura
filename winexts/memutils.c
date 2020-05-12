@@ -659,29 +659,6 @@ void change_vm_flags(vm_area_t* vma, int new_flags, int* old_flags)
     vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
 }
 
-int remote_mprotect(task_t* task,
-                    uintptr_t address,
-                    int new_flags,
-                    int* old_flags)
-{
-    vm_area_t* vma_start;
-    int ret;
-
-    vma_start = NULL;
-
-    if (c_find_vma_from_task(task, &vma_start, address))
-    {
-        change_vm_flags(vma_start, new_flags, old_flags);
-        ret = 1;
-        goto out;
-    }
-
-    ret = 0;
-
-out:
-    return ret;
-}
-
 void vma_rb_erase(vm_area_t* vma, rb_root_t* root)
 {
     typedef void (*vma_rb_erase_t)(vm_area_t*, rb_root_t*);
@@ -835,6 +812,94 @@ struct task_struct* __switch_to(struct task_struct* prev,
     }
 
     return p___switch_to(prev, next);
+}
+
+int __do_munmap(struct mm_struct* mm,
+                unsigned long start,
+                size_t len,
+                struct list_head* uf,
+                bool downgrade)
+{
+    typedef int (*__do_munmap_t)(struct mm_struct * mm,
+                                 unsigned long start,
+                                 size_t len,
+                                 struct list_head* uf,
+                                 bool downgrade);
+
+    static __do_munmap_t p___do_munmap = NULL;
+
+    if (p___do_munmap == NULL)
+    {
+        p___do_munmap = (__do_munmap_t)kallsyms_lookup_name("__do_"
+                                                            "munmap");
+    }
+
+    if (p___do_munmap == NULL)
+    {
+        c_printk("couldn't find __do_munmap\n");
+        return -1;
+    }
+
+    return p___do_munmap(mm, start, len, uf, downgrade);
+}
+
+int c_munmap(task_t* task, uintptr_t start)
+{
+    mm_segment_t old_fs;
+    struct mm_struct* mm;
+    struct vm_area_struct *vma, *prev_vma, *next_vma;
+    int ret;
+
+    vma = NULL;
+    ret = -1;
+
+    old_fs = get_fs();
+    set_fs(KERNEL_DS);
+
+    mm = get_task_mm_kthread(task);
+
+    if (mm == NULL)
+    {
+        c_printk_error("couldn't find mm from task %i\n", task->pid);
+        goto out;
+    }
+
+    down_write(&mm->mmap_sem);
+
+    if (c_find_vma_from_task(task, &vma, start))
+    {
+        prev_vma = vma->vm_prev;
+        next_vma = vma->vm_next;
+
+        vma_rb_erase(vma, &mm->mm_rb);
+
+        if (prev_vma != NULL)
+        {
+            prev_vma->vm_next = next_vma;
+        }
+        else
+        {
+            mm->mmap = next_vma;
+        }
+
+        if (next_vma != NULL)
+        {
+            next_vma->vm_prev = prev_vma;
+        }
+
+        vm_area_free(vma);
+        ret = 0;
+    }
+
+    up_write(&mm->mmap_sem);
+
+    mmput(mm);
+
+out:
+
+    set_fs(old_fs);
+
+    return ret;
 }
 
 uintptr_t align_address(uintptr_t address, size_t size)

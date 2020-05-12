@@ -312,10 +312,8 @@ out:
 communicate_error_t
 communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
 {
-    mm_segment_t old_fs;
     communicate_error_t error;
     communicate_remote_munmap_t communicate_remote_munmap;
-    task_t* old_current;
     task_t* remote_task;
 
     error = communicate_read__remote_munmap_struct(
@@ -336,36 +334,9 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
         goto out;
     }
 
-    old_fs = get_fs();
-    set_fs(KERNEL_DS);
-
-    // We can trick the kernel by saying the current task is the
-    // targeted one for a moment.
-    old_current = get_current();
-
-#ifndef __arch_um__
-    this_cpu_write(current_task, remote_task);
-    this_cpu_write(cpu_current_top_of_stack,
-                   task_top_of_stack(remote_task));
-#else
-    set_current(remote_task);
-    current = remote_task;
-#endif
-
     communicate_remote_munmap.ret
-      = vm_munmap(communicate_remote_munmap.vm_remote_address,
-                  communicate_remote_munmap.vm_size);
-
-#ifndef __arch_um__
-    this_cpu_write(current_task, old_current);
-    this_cpu_write(cpu_current_top_of_stack,
-                   task_top_of_stack(old_current));
-#else
-    set_current(old_current);
-    current = old_current;
-#endif
-
-    set_fs(old_fs);
+      = c_munmap(remote_task,
+                 communicate_remote_munmap.vm_remote_address);
 
     if (communicate_remote_munmap.ret < 0)
     {

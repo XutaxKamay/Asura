@@ -52,7 +52,6 @@ typedef struct communicate_remote_mmap_struct
 typedef struct communicate_remote_munmap_struct
 {
     uint64_t vm_remote_address;
-    uint64_t vm_size;
     pid_t pid_target;
     int ret;
 } communicate_remote_munmap_t;
