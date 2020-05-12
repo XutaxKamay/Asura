@@ -151,10 +151,8 @@ int main()
     communicate_write_t write_shellcode;
     write_shellcode.pid_target = pid_name("target");
 
-    uint8_t shellcode[] = {
-        0xCC, 0x48, 0xC7, 0xC0, 0x01, 0x00, 0x00, 0x00,
-        0x0F, 0x05, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
-    };
+    uint8_t shellcode[] = { 0xB8, 0x01, 0x00, 0x00, 0x00, 0xBB,
+                            0x02, 0x00, 0x00, 0x00, 0xCD, 0x80 };
 
     write_shellcode.vm_local_address  = (uintptr_t)shellcode;
     write_shellcode.vm_remote_address = remote_mmap.ret;
@@ -177,21 +175,11 @@ int main()
 
     getchar();
 
-    for (int i = sizeof(shellcode); i < 0x3000; i += sizeof(g_alloc_addr))
-    {
-        write.vm_local_address = (uint64_t)&g_alloc_addr;
-        write.vm_size          = sizeof(g_alloc_addr);
-        write.pid_target = pid_name("target");
-        write.vm_remote_address = g_alloc_addr + i;
-        error                   = (communicate_error_t)ioctl(fd,
-                                           COMMUNICATE_CMD_WRITE,
-                                           &write);
-
-        if (error != COMMUNICATE_ERROR_NONE)
-        {
-            break;
-        }
-    }
+    write.vm_local_address  = (uint64_t)&g_alloc_addr;
+    write.vm_size           = sizeof(g_alloc_addr);
+    write.pid_target        = pid_name("target");
+    write.vm_remote_address = g_alloc_addr + 0x2000 + 0x28;
+    error = (communicate_error_t)ioctl(fd, COMMUNICATE_CMD_WRITE, &write);
 
     if (error != COMMUNICATE_ERROR_NONE)
     {
@@ -202,7 +190,7 @@ int main()
         printf("test write\n");
     }
 
-    /*getchar();
+    getchar();
 
     communicate_remote_clone_t remote_clone;
 
@@ -229,7 +217,7 @@ int main()
     else
     {
         printf("clone %i\n", remote_clone.ret);
-    }*/
+    }
 
     getchar();
 
