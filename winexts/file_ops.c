@@ -7,6 +7,9 @@ file_operations_t g_fops = { .owner          = THIS_MODULE,
 
 mm_t* mm_access(task_t* task, unsigned int mode)
 {
+    mm_segment_t old_fs;
+    mm_t* mm;
+
     typedef mm_t* (*mm_access_t)(task_t*, unsigned int);
 
     static mm_access_t p_mm_access = NULL;
@@ -22,7 +25,14 @@ mm_t* mm_access(task_t* task, unsigned int mode)
         return NULL;
     }
 
-    return p_mm_access(task, mode);
+    old_fs = get_fs();
+    set_fs(KERNEL_DS);
+
+    mm = p_mm_access(task, mode);
+
+    set_fs(old_fs);
+
+    return mm;
 }
 
 int check_permissions(task_t* task)
