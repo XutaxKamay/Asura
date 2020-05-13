@@ -259,8 +259,8 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
     old_current = get_current();
 
 #ifndef __arch_um__
-    __this_cpu_write(current_task, remote_task);
-    __this_cpu_write(cpu_current_top_of_stack,
+    this_cpu_write(current_task, remote_task);
+    this_cpu_write(cpu_current_top_of_stack,
                    task_top_of_stack(remote_task));
     update_task_stack(remote_task);
 #else
@@ -292,8 +292,8 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
                         communicate_remote_mmap.offset >> PAGE_SHIFT);
 
 #ifndef __arch_um__
-    __this_cpu_write(current_task, old_current);
-    __this_cpu_write(cpu_current_top_of_stack,
+    this_cpu_write(current_task, old_current);
+    this_cpu_write(cpu_current_top_of_stack,
                    task_top_of_stack(old_current));
     update_task_stack(old_current);
 #else
@@ -436,8 +436,8 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
     old_current = get_current();
 
 #ifndef __arch_um__
-    __this_cpu_write(current_task, remote_task);
-    __this_cpu_write(cpu_current_top_of_stack,
+    this_cpu_write(current_task, remote_task);
+    this_cpu_write(cpu_current_top_of_stack,
                    task_top_of_stack(remote_task));
     update_task_stack(remote_task);
 #else
@@ -448,8 +448,8 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
     communicate_remote_clone.ret = _do_fork(&clone_args);
 
 #ifndef __arch_um__
-    __this_cpu_write(current_task, old_current);
-    __this_cpu_write(cpu_current_top_of_stack,
+    this_cpu_write(current_task, old_current);
+    this_cpu_write(cpu_current_top_of_stack,
                    task_top_of_stack(old_current));
     update_task_stack(old_current);
 #else
