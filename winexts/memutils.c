@@ -1241,3 +1241,9 @@ void set_current(struct task_struct* task)
 }
 
 #endif
+
+/* Used for debugging it gets optimized with gcc flags anyway */
+task_t* debug_get_current(void)
+{
+    return get_current();
+}

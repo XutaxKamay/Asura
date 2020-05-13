@@ -60,6 +60,7 @@ mm_t* get_task_mm_kthread(task_t* task);
 task_t* find_task_from_pid(pid_t pid);
 int c_munmap(task_t* task, uintptr_t start);
 void c_mmput(task_t*task, mm_t*mm);
+task_t* debug_get_current(void);
 
 /* Kernels that have RWX strict protection */
 #ifndef __arch_um__
