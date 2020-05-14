@@ -275,8 +275,8 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
         goto out;
     }
 
+    preempt_disable();
     *current_task_ptr = remote_task;
-    asm volatile("movq %0, %%gs:current_task" ::"r"(remote_task));
 
     temp = get_current();
 
@@ -304,7 +304,7 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
                         communicate_remote_mmap.offset >> PAGE_SHIFT);
 
     *current_task_ptr = old_current;
-    asm volatile("movq %0, %%gs:current_task" ::"r"(old_current));
+    preempt_enable();
 
     set_fs(old_fs);
 
@@ -442,19 +442,17 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
 
     current_task_ptr = get_current_task_ptr();
 
-    *current_task_ptr = remote_task;
-    asm volatile("movq %0, %%gs:current_task" ::"r"(remote_task));
-
     if (current_task_ptr == NULL)
     {
         error = COMMUNICATE_ERROR_TARGET_PID_NOT_FOUND;
         goto out;
     }
 
+    *current_task_ptr = remote_task;
+
     communicate_remote_clone.ret = _do_fork(&clone_args);
 
     *current_task_ptr = old_current;
-    asm volatile("movq %0, %%gs:current_task" ::"r"(old_current));
 
     set_fs(old_fs);
 
