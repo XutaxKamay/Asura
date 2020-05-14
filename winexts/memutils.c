@@ -812,6 +812,29 @@ struct task_struct* __switch_to(struct task_struct* prev,
     return p___switch_to(prev, next);
 }
 
+struct task_struct* __switch_to_asm(struct task_struct* prev,
+                                    struct task_struct* next)
+{
+    typedef struct task_struct* (
+      *__switch_to_asm_t)(struct task_struct * prev,
+                          struct task_struct * next);
+    static __switch_to_asm_t p___switch_to_asm = NULL;
+
+    if (p___switch_to_asm == NULL)
+    {
+        p___switch_to_asm = (__switch_to_asm_t)kallsyms_lookup_name(
+          "__switch_to_asm");
+    }
+
+    if (p___switch_to_asm == NULL)
+    {
+        c_printk("couldn't find __switch_to_asm\n");
+        return NULL;
+    }
+
+    return p___switch_to_asm(prev, next);
+}
+
 int __do_munmap(struct mm_struct* mm,
                 unsigned long start,
                 size_t len,
@@ -839,6 +862,28 @@ int __do_munmap(struct mm_struct* mm,
     }
 
     return p___do_munmap(mm, start, len, uf, downgrade);
+}
+
+void set_task_cpu(struct task_struct* p, unsigned int cpu)
+{
+    typedef void (*set_task_cpu_t)(struct task_struct * p,
+                                   unsigned int cpu);
+
+    static set_task_cpu_t p_set_task_cpu = NULL;
+
+    if (p_set_task_cpu == NULL)
+    {
+        p_set_task_cpu = (set_task_cpu_t)kallsyms_lookup_name("set_task_"
+                                                              "cpu");
+    }
+
+    if (p_set_task_cpu == NULL)
+    {
+        c_printk("couldn't find set_task_cpu\n");
+        return;
+    }
+
+    set_task_cpu(p, cpu);
 }
 
 int c_munmap(task_t* task, uintptr_t start)
@@ -1246,4 +1291,25 @@ void set_current(struct task_struct* task)
 task_t* debug_get_current(void)
 {
     return get_current();
+}
+
+void* vmalloc_exec(unsigned long size)
+{
+    typedef void* (*vmalloc_exec_t)(unsigned long size);
+
+    static vmalloc_exec_t p_vmalloc_exec = NULL;
+
+    if (p_vmalloc_exec == NULL)
+    {
+        p_vmalloc_exec = (vmalloc_exec_t)kallsyms_lookup_name("vmalloc_"
+                                                              "exec");
+    }
+
+    if (p_vmalloc_exec == NULL)
+    {
+        c_printk("couldn't find vmalloc_exec\n");
+        return NULL;
+    }
+
+    return p_vmalloc_exec(size);
 }

@@ -1,6 +1,8 @@
 #ifndef COMMUNICATE_H
 #define COMMUNICATE_H
 
+task_t** get_current_task_ptr(void);
+
 communicate_error_t
 communicate_read__read_struct(task_t* task,
                               uintptr_t address,

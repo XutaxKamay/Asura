@@ -1,5 +1,14 @@
 #include "main.h"
 
+task_t** get_current_task_ptr(void)
+{
+#ifndef __arch_um__
+    return (task_t**)(my_cpu_offset + (uintptr_t)&current_task);
+#else
+    return &current;
+#endif
+}
+
 communicate_error_t
 communicate_read__read_struct(task_t* task,
                               uintptr_t address,
@@ -225,8 +234,8 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
     mm_segment_t old_fs;
     communicate_error_t error;
     communicate_remote_mmap_t communicate_remote_mmap;
-    task_t* old_current;
-    task_t* remote_task;
+    task_t *old_current, *remote_task, *temp;
+    task_t** current_task_ptr;
 
     error = communicate_read__remote_mmap_struct(task,
                                                  address,
@@ -258,12 +267,18 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
     // targeted one for a moment.
     old_current = get_current();
 
-#ifndef __arch_um__
-    __this_cpu_write(current_task, remote_task);
-#else
-    set_current(remote_task);
-    current = remote_task;
-#endif
+    current_task_ptr = get_current_task_ptr();
+
+    if (current_task_ptr == NULL)
+    {
+        error = COMMUNICATE_ERROR_TARGET_PID_NOT_FOUND;
+        goto out;
+    }
+
+    *current_task_ptr = remote_task;
+    asm volatile("movq %0, %%gs:current_task" ::"r"(remote_task));
+
+    temp = get_current();
 
     c_printk_info("wantedpid %i current task pid: %i -> wanted_address: "
                   "%llX, "
@@ -272,7 +287,7 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
                   "flags: "
                   "%llX, fd: %llX, offset: %llX\n",
                   remote_task->pid,
-                  get_current()->pid,
+                  temp->pid,
                   communicate_remote_mmap.vm_remote_address,
                   communicate_remote_mmap.vm_size,
                   communicate_remote_mmap.prot,
@@ -288,12 +303,8 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
                         communicate_remote_mmap.fd,
                         communicate_remote_mmap.offset >> PAGE_SHIFT);
 
-#ifndef __arch_um__
-    __this_cpu_write(current_task, old_current);
-#else
-    set_current(old_current);
-    current = old_current;
-#endif
+    *current_task_ptr = old_current;
+    asm volatile("movq %0, %%gs:current_task" ::"r"(old_current));
 
     set_fs(old_fs);
 
@@ -380,7 +391,7 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
     communicate_error_t error;
     communicate_remote_clone_t communicate_remote_clone;
     task_t* old_current;
-    task_t* remote_task;
+    task_t *remote_task, **current_task_ptr;
 
     struct kernel_clone_args clone_args = {};
 
@@ -429,21 +440,21 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
     // targeted one for a moment.
     old_current = get_current();
 
-#ifndef __arch_um__
-    __this_cpu_write(current_task, remote_task);
-#else
-    set_current(remote_task);
-    current = remote_task;
-#endif
+    current_task_ptr = get_current_task_ptr();
+
+    *current_task_ptr = remote_task;
+    asm volatile("movq %0, %%gs:current_task" ::"r"(remote_task));
+
+    if (current_task_ptr == NULL)
+    {
+        error = COMMUNICATE_ERROR_TARGET_PID_NOT_FOUND;
+        goto out;
+    }
 
     communicate_remote_clone.ret = _do_fork(&clone_args);
 
-#ifndef __arch_um__
-    __this_cpu_write(current_task, old_current);
-#else
-    set_current(old_current);
-    current = old_current;
-#endif
+    *current_task_ptr = old_current;
+    asm volatile("movq %0, %%gs:current_task" ::"r"(old_current));
 
     set_fs(old_fs);
 
