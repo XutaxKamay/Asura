@@ -196,7 +196,6 @@ int main()
         printf("write rip\n");
     }
 
-    /*
     getchar();
     communicate_remote_clone_t remote_clone;
 
@@ -223,13 +222,14 @@ int main()
     else
     {
         printf("clone %i\n", remote_clone.ret);
-    }*/
+    }
 
     getchar();
 
     communicate_remote_munmap_t remote_munmap;
     remote_munmap.pid_target        = pid_name("target");
     remote_munmap.vm_remote_address = remote_mmap.ret;
+    remote_munmap.vm_size           = 0x3000;
 
     error = (communicate_error_t)ioctl(fd,
                                        COMMUNICATE_CMD_REMOTE_MUNMAP,

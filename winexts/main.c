@@ -25,8 +25,7 @@ int init_mod(void)
         return ret;
     }
 
-    c_printk_info("registered device %s\n",
-                  DEVICE_FILE_NAME);
+    c_printk_info("registered device %s\n", DEVICE_FILE_NAME);
 
     cdev_init(&g_cdev, &g_fops);
 
@@ -44,7 +43,6 @@ int init_mod(void)
     {
         cdev_del(&g_cdev);
         unregister_chrdev_region(g_dev, 1);
-
 
         c_printk_error("failed to create class name %s for device %s\n",
                        DEVICE_FILE_NAME,
@@ -67,6 +65,8 @@ int init_mod(void)
     }
 
     c_printk_info("successfully created device %s\n", DEVICE_FILE_NAME);
+
+    spin_lock_init(&g_spin_lock);
 
     c_printk("kernel module loaded.\n");
 
