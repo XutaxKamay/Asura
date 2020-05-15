@@ -189,7 +189,6 @@ int main()
     remote_clone.tls          = 0;
     remote_clone.exit_signal  = remote_clone.flags & 0xFF;
     remote_clone.pid_target   = pid_name("target");
-    remote_clone.vm_routine_address = remote_mmap.ret;
 
     error = (communicate_error_t)ioctl(fd,
                                        COMMUNICATE_CMD_REMOTE_CLONE,

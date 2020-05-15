@@ -62,6 +62,7 @@ int c_munmap(task_t* task, uintptr_t start);
 vm_area_t* c_mmap(task_t* task, uintptr_t address, int prot);
 void c_mmput(task_t* task, mm_t* mm);
 task_t* debug_get_current(void);
+long c_do_fork(task_t* task, struct kernel_clone_args* args);
 
 /* Kernels that have RWX strict protection */
 #ifndef __arch_um__
@@ -71,5 +72,7 @@ pteval_t set_page_flags(uintptr_t addr, pteval_t val);
 #else
 void set_current(struct task_struct* task);
 #endif
+
+task_t** get_current_task_ptr(void);
 
 #endif

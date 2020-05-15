@@ -1367,3 +1367,184 @@ void* vmalloc_exec(unsigned long size)
 
     return p_vmalloc_exec(size);
 }
+
+task_t** get_current_task_ptr(void)
+{
+#ifndef __arch_um__
+    return (task_t**)(my_cpu_offset + (uintptr_t)&current_task);
+#else
+    return &current;
+#endif
+}
+
+/*
+ * Sadly we gotta do non portable stuff here...
+ */
+struct task_struct* copy_process(struct pid* pid,
+                                 int trace,
+                                 int node,
+                                 struct kernel_clone_args* args)
+{
+    typedef struct task_struct* (
+      *copy_process_t)(struct pid*, int, int, struct kernel_clone_args*);
+
+    static copy_process_t copy_process_ptr = NULL;
+
+    if (copy_process_ptr == NULL)
+    {
+        copy_process_ptr = (copy_process_t)kallsyms_lookup_name(
+          "copy_process");
+    }
+
+    if (copy_process_ptr == NULL)
+    {
+        c_printk_error("couldn't find copy_process\n");
+        return NULL;
+    }
+
+    return copy_process_ptr(pid, trace, node, args);
+}
+
+/*
+ * Straight copy from kernel, thank you.
+ */
+
+static int wait_for_vfork_done(struct task_struct* child,
+                               struct completion* vfork)
+{
+    int killed;
+
+    freezer_do_not_count();
+    killed = wait_for_completion_killable(vfork);
+    freezer_count();
+
+    if (killed)
+    {
+        task_lock(child);
+        child->vfork_done = NULL;
+        task_unlock(child);
+    }
+
+    put_task_struct(child);
+    return killed;
+}
+
+void wake_up_new_task(struct task_struct* tsk)
+{
+    typedef void (*wake_up_new_task_t)(struct task_struct*);
+
+    static wake_up_new_task_t p_wake_up_new_task = NULL;
+
+    if (p_wake_up_new_task == NULL)
+    {
+        p_wake_up_new_task = (wake_up_new_task_t)kallsyms_lookup_name(
+          "wake_up_new_task");
+    }
+
+    if (p_wake_up_new_task == NULL)
+    {
+        c_printk("couldn't find wake_up_new_task\n");
+        return;
+    }
+
+    p_wake_up_new_task(tsk);
+}
+
+void ptrace_notify(int exit_code)
+{
+    typedef void (*ptrace_notify_t)(int);
+
+    static ptrace_notify_t p_ptrace_notify = NULL;
+
+    if (p_ptrace_notify == NULL)
+    {
+        p_ptrace_notify = (ptrace_notify_t)kallsyms_lookup_name("ptrace_"
+                                                                "notify");
+    }
+
+    if (p_ptrace_notify == NULL)
+    {
+        c_printk("couldn't find ptrace_notify\n");
+        return;
+    }
+
+    p_ptrace_notify(exit_code);
+}
+
+long c_do_fork(task_t* task, struct kernel_clone_args* args)
+{
+    static DEFINE_SPINLOCK(spinlock);
+
+    u64 clone_flags = args->flags;
+    struct completion vfork;
+    struct pid* pid;
+    struct task_struct *p, *old_current, **cur_task_ptr;
+    int trace = 0;
+    long nr;
+
+    if (!(clone_flags & CLONE_UNTRACED))
+    {
+        if (clone_flags & CLONE_VFORK)
+            trace = PTRACE_EVENT_VFORK;
+        else if (args->exit_signal != SIGCHLD)
+            trace = PTRACE_EVENT_CLONE;
+        else
+            trace = PTRACE_EVENT_FORK;
+
+        if (likely(!ptrace_event_enabled(task, trace)))
+            trace = 0;
+    }
+
+    old_current = get_current();
+
+    spin_lock(&spinlock);
+
+    cur_task_ptr  = get_current_task_ptr();
+    *cur_task_ptr = task;
+
+    /**
+     * Now let's trick the kernel.
+     */
+
+    p = copy_process(NULL, trace, NUMA_NO_NODE, args);
+
+    *cur_task_ptr = old_current;
+
+    spin_unlock(&spinlock);
+
+    /**
+     * Should be good now
+     */
+
+    add_latent_entropy();
+
+    if (IS_ERR(p))
+        return PTR_ERR(p);
+
+    pid = get_task_pid(p, PIDTYPE_PID);
+    nr  = pid_vnr(pid);
+
+    if (clone_flags & CLONE_PARENT_SETTID)
+        put_user(nr, args->parent_tid);
+
+    if (clone_flags & CLONE_VFORK)
+    {
+        p->vfork_done = &vfork;
+        init_completion(&vfork);
+        get_task_struct(p);
+    }
+
+    wake_up_new_task(p);
+
+    if (unlikely(trace))
+        ptrace_event_pid(trace, pid);
+
+    if (clone_flags & CLONE_VFORK)
+    {
+        if (!wait_for_vfork_done(p, &vfork))
+            ptrace_event_pid(PTRACE_EVENT_VFORK_DONE, pid);
+    }
+
+    put_pid(pid);
+    return nr;
+}

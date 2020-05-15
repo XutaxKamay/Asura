@@ -5,6 +5,7 @@
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/errno.h>
+#include <linux/freezer.h>
 #include <linux/fs.h>
 #include <linux/gpio.h>
 #include <linux/init.h>
@@ -18,6 +19,9 @@
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/profile.h>
+#include <linux/ptrace.h>
+#include <linux/random.h>
+#include <linux/regset.h>
 #include <linux/sched/debug.h>
 #include <linux/sched/task.h>
 #include <linux/sched/task_stack.h>

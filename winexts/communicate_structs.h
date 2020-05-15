@@ -70,7 +70,6 @@ typedef struct communicate_remote_clone_struct
     uint64_t set_tid;
     size_t set_tid_size;
     pid_t pid_target;
-    uint64_t vm_routine_address;
     int64_t ret;
 } communicate_remote_clone_t;
 
