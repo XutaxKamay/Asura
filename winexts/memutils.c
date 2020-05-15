@@ -945,9 +945,65 @@ out:
     return ret;
 }
 
+vm_area_t* c_mmap(task_t* task, uintptr_t address, int prot)
+{
+    mm_t* mm;
+    vm_area_t* vma;
+    bool should_up_write;
+
+    should_up_write = false;
+    vma             = NULL;
+
+    mm = get_task_mm_kthread(task);
+
+    if (mm == NULL)
+    {
+        c_printk("couldn't find mm from task %i\n", task->pid);
+        goto out;
+    }
+
+    down_write(&mm->mmap_sem);
+    should_up_write = true;
+
+    vma = vm_area_alloc(mm);
+
+    if (vma == NULL)
+    {
+        c_printk("couldn't allocate vma from task %i\n", task->pid);
+        goto out;
+    }
+
+    vma_set_anonymous(vma);
+
+    vma->vm_start     = address;
+    vma->vm_end       = address + PAGE_SIZE;
+    vma->vm_flags     = prot_to_vm_flags(prot) | mm->def_flags;
+    vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
+
+    INIT_LIST_HEAD(&vma->anon_vma_chain);
+
+    if (insert_vm_struct(mm, vma) < 0)
+    {
+        vm_area_free(vma);
+        c_printk("couldn't insert vma in mm struct from task %i\n",
+                 task->pid);
+        goto out;
+    }
+
+out:
+    if (should_up_write)
+    {
+        up_write(&mm->mmap_sem);
+        c_mmput(task, mm);
+    }
+
+    return vma;
+}
+
 void c_mmput(task_t* task, mm_t* mm)
 {
-    if (task->active_mm == NULL && mm)
+    // Don't do that on kernel threads
+    if (mm && task->mm == task->active_mm)
         mmput(mm);
 }
 
@@ -1004,7 +1060,9 @@ mm_t* get_task_mm_kthread(task_t* task)
 
     // Kernel thread?
     if (mm == NULL)
+    {
         mm = task->active_mm;
+    }
 
     return mm;
 }
@@ -1072,15 +1130,13 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
         result += copy_to_user((ptr_t)real_addr, from, size_to_copy);
 
         kunmap(page);
+        put_page(page);
 
         if (result != 0)
         {
             result = size;
-            put_page(page);
             goto out;
         }
-
-        put_page(page);
 
         size -= size_to_copy;
 
@@ -1171,15 +1227,13 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
         result += copy_from_user(to, (ptr_t)real_addr, size_to_copy);
 
         kunmap(page);
+        put_page(page);
 
         if (result != 0)
         {
             result = size;
-            put_page(page);
             goto out;
         }
-
-        put_page(page);
 
         size -= size_to_copy;
 

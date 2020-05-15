@@ -1,7 +1,6 @@
 #ifndef COMMUNICATE_H
 #define COMMUNICATE_H
 
-extern spinlock_t g_spin_lock;
 task_t** get_current_task_ptr(void);
 
 communicate_error_t

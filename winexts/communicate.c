@@ -1,6 +1,6 @@
 #include "main.h"
 
-spinlock_t g_spin_lock;
+static DEFINE_SPINLOCK(g_spin_lock);
 
 task_t** get_current_task_ptr(void)
 {
@@ -277,7 +277,9 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
         goto out;
     }
 
-    spin_lock(&g_spin_lock);
+    if (!spin_is_locked(&g_spin_lock))
+        spin_lock(&g_spin_lock);
+
     *current_task_ptr = remote_task;
 
     communicate_remote_mmap.ret
@@ -289,7 +291,9 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
                         communicate_remote_mmap.offset >> PAGE_SHIFT);
 
     *current_task_ptr = old_current;
-    spin_unlock(&g_spin_lock);
+
+    if (spin_is_locked(&g_spin_lock))
+        spin_unlock(&g_spin_lock);
 
     set_fs(old_fs);
 
@@ -355,7 +359,9 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
     // targeted one for a moment.
     old_current = get_current();
 
-    spin_lock(&g_spin_lock);
+    if (!spin_is_locked(&g_spin_lock))
+        spin_lock(&g_spin_lock);
+
     *current_task_ptr = remote_task;
 
     communicate_remote_munmap.ret
@@ -363,7 +369,9 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
                   communicate_remote_munmap.vm_size);
 
     *current_task_ptr = old_current;
-    spin_unlock(&g_spin_lock);
+
+    if (spin_is_locked(&g_spin_lock))
+        spin_unlock(&g_spin_lock);
 
     if (communicate_remote_munmap.ret < 0)
     {
@@ -397,6 +405,8 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
     communicate_remote_clone_t communicate_remote_clone;
     task_t* old_current;
     task_t *remote_task, **current_task_ptr;
+    task_t* clone_task;
+    struct pt_regs* pt_regs;
 
     struct kernel_clone_args clone_args = {};
 
@@ -423,7 +433,7 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
            sizeof(struct kernel_clone_args));
 
     // So we avoid ptrace stuff and spinlock, very useful.
-    clone_args.flags |= CLONE_UNTRACED;
+    // clone_args.flags |= CLONE_UNTRACED;
 
     c_printk("pid: %i flags: %llu pidfd: %lX child_tid: %lX "
              "parent_tid: %lX exit_signal: %X stack: %lX "
@@ -456,20 +466,31 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
     // targeted one for a moment.
     old_current = get_current();
 
-    spin_lock(&g_spin_lock);
+    if (!spin_is_locked(&g_spin_lock))
+        spin_lock(&g_spin_lock);
+
     *current_task_ptr = remote_task;
 
     communicate_remote_clone.ret = _do_fork(&clone_args);
 
-    *current_task_ptr = old_current;
-    spin_unlock(&g_spin_lock);
-
-    set_fs(old_fs);
-
-    if (communicate_remote_clone.ret < 0)
+    if (communicate_remote_clone.ret >= 0)
+    {
+        clone_task = find_task_from_pid(communicate_remote_clone.ret);
+        // Set the remote address
+        pt_regs     = task_pt_regs(clone_task);
+        pt_regs->ip = communicate_remote_clone.vm_routine_address;
+    }
+    else
     {
         error = COMMUNICATE_ERROR_CLONE_FAILED;
     }
+
+    *current_task_ptr = old_current;
+
+    if (spin_is_locked(&g_spin_lock))
+        spin_unlock(&g_spin_lock);
+
+    set_fs(old_fs);
 
     if (c_copy_to_user(task,
                        (ptr_t)address,
@@ -488,6 +509,3 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
 out:
     return error;
 }
-
-
-

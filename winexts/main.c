@@ -66,8 +66,6 @@ int init_mod(void)
 
     c_printk_info("successfully created device %s\n", DEVICE_FILE_NAME);
 
-    spin_lock_init(&g_spin_lock);
-
     c_printk("kernel module loaded.\n");
 
     return 0;

@@ -176,28 +176,7 @@ int main()
     //     sleep(30);
 
     getchar();
-
-    write.vm_local_address = (uint64_t)&remote_mmap.ret;
-    write.vm_size          = sizeof(remote_mmap.ret);
-    write.pid_target       = pid_name("target");
-#ifdef __arch_um__
-    write.vm_remote_address = remote_mmap.ret + 0x2000 + 0x28;
-#else
-    write.vm_remote_address = remote_mmap.ret + 0x2000;
-#endif
-    error = (communicate_error_t)ioctl(fd, COMMUNICATE_CMD_WRITE, &write);
-
-    if (error != COMMUNICATE_ERROR_NONE)
-    {
-        printf("ouch write rip %i\n", error);
-    }
-    else
-    {
-        printf("write rip\n");
-    }
-
-    getchar();
-    communicate_remote_clone_t remote_clone;
+    /*communicate_remote_clone_t remote_clone;
 
     remote_clone.flags      = (CLONE_VM | CLONE_FS | CLONE_FILES) & ~0xFF;
     remote_clone.stack      = remote_mmap.ret + 0x2000;
@@ -210,6 +189,7 @@ int main()
     remote_clone.tls          = 0;
     remote_clone.exit_signal  = remote_clone.flags & 0xFF;
     remote_clone.pid_target   = pid_name("target");
+    remote_clone.vm_routine_address = remote_mmap.ret;
 
     error = (communicate_error_t)ioctl(fd,
                                        COMMUNICATE_CMD_REMOTE_CLONE,
@@ -221,10 +201,10 @@ int main()
     }
     else
     {
-        printf("clone %i\n", remote_clone.ret);
+        printf("clone %li\n", remote_clone.ret);
     }
 
-    getchar();
+    getchar();*/
 
     communicate_remote_munmap_t remote_munmap;
     remote_munmap.pid_target        = pid_name("target");
