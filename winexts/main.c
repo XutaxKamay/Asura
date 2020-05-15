@@ -27,26 +27,25 @@ int init_mod(void)
 
     c_printk_info("registered device %s\n", DEVICE_FILE_NAME);
 
-    cdev_init(&g_cdev, &g_fops);
-
-    if (cdev_add(&g_cdev, g_dev, 1) < 0)
-    {
-        c_printk_error("device %s addition failed\n", DEVICE_FILE_NAME);
-        unregister_chrdev_region(g_dev, 1);
-
-        return -1;
-    }
-
     g_cl = class_create(THIS_MODULE, DEVICE_CLASS_NAME);
 
     if (g_cl == NULL)
     {
-        cdev_del(&g_cdev);
         unregister_chrdev_region(g_dev, 1);
 
         c_printk_error("failed to create class name %s for device %s\n",
                        DEVICE_FILE_NAME,
                        DEVICE_CLASS_NAME);
+        return -1;
+    }
+
+    cdev_init(&g_cdev, &g_fops);
+
+    if (cdev_add(&g_cdev, g_dev, 1) < 0)
+    {
+        class_destroy(g_cl);
+        unregister_chrdev_region(g_dev, 1);
+        c_printk_error("device %s addition failed\n", DEVICE_FILE_NAME);
         return -1;
     }
 

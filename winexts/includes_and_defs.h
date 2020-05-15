@@ -14,6 +14,7 @@
 #include <linux/mempolicy.h>
 #include <linux/mm.h>
 #include <linux/mman.h>
+#include <linux/mmu_context.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/profile.h>

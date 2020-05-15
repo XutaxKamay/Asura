@@ -269,17 +269,9 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
     // targeted one for a moment.
     old_current = get_current();
 
-    current_task_ptr = get_current_task_ptr();
+    spin_lock(&g_spin_lock);
 
-    if (current_task_ptr == NULL)
-    {
-        error = COMMUNICATE_ERROR_TARGET_PID_NOT_FOUND;
-        goto out;
-    }
-
-    if (!spin_is_locked(&g_spin_lock))
-        spin_lock(&g_spin_lock);
-
+    current_task_ptr  = get_current_task_ptr();
     *current_task_ptr = remote_task;
 
     communicate_remote_mmap.ret
@@ -290,10 +282,10 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
                         communicate_remote_mmap.fd,
                         communicate_remote_mmap.offset >> PAGE_SHIFT);
 
+    current_task_ptr  = get_current_task_ptr();
     *current_task_ptr = old_current;
 
-    if (spin_is_locked(&g_spin_lock))
-        spin_unlock(&g_spin_lock);
+    spin_unlock(&g_spin_lock);
 
     set_fs(old_fs);
 
@@ -347,31 +339,23 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
         goto out;
     }
 
-    current_task_ptr = get_current_task_ptr();
-
-    if (current_task_ptr == NULL)
-    {
-        error = COMMUNICATE_ERROR_TARGET_PID_NOT_FOUND;
-        goto out;
-    }
-
     // We can trick the kernel by saying the current task is the
     // targeted one for a moment.
     old_current = get_current();
 
-    if (!spin_is_locked(&g_spin_lock))
-        spin_lock(&g_spin_lock);
+    spin_lock(&g_spin_lock);
 
+    current_task_ptr = get_current_task_ptr();
     *current_task_ptr = remote_task;
 
     communicate_remote_munmap.ret
       = vm_munmap(communicate_remote_munmap.vm_remote_address,
                   communicate_remote_munmap.vm_size);
 
+    current_task_ptr = get_current_task_ptr();
     *current_task_ptr = old_current;
 
-    if (spin_is_locked(&g_spin_lock))
-        spin_unlock(&g_spin_lock);
+    spin_unlock(&g_spin_lock);
 
     if (communicate_remote_munmap.ret < 0)
     {
@@ -407,6 +391,7 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
     task_t *remote_task, **current_task_ptr;
     task_t* clone_task;
     struct pt_regs* pt_regs;
+    unsigned long trace;
 
     struct kernel_clone_args clone_args = {};
 
@@ -454,41 +439,86 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
     old_fs = get_fs();
     set_fs(KERNEL_DS);
 
-    current_task_ptr = get_current_task_ptr();
-
-    if (current_task_ptr == NULL)
-    {
-        error = COMMUNICATE_ERROR_TARGET_PID_NOT_FOUND;
-        goto out;
-    }
-
     // We can trick the kernel by saying the current task is the
     // targeted one for a moment.
     old_current = get_current();
 
-    if (!spin_is_locked(&g_spin_lock))
-        spin_lock(&g_spin_lock);
+    spin_lock(&g_spin_lock);
 
+    /*
+     * ** WARNING PLEASE READ **
+     *
+     * There is a dirty trick for the kernel when the remote task is being
+     * ptraced and clone wants also being traced.
+     * If its not done, the kernel will freeze and get you a
+     * schedule bug.
+     *
+     * You should normally never do this but I expect my module doing a
+     * weird bug inside the kernel.
+     * Though I'm absolutely sure that you can blame my badly written
+     * code for being lazy to recreate clone or whole mmap/munmap code by
+     * hand. Blame me.
+     *
+     * The bugs occurs in ptrace_stop(), when it calls schedule() it
+     * prompts a schedule_bug because somehow the preempt_count is 1 when
+     * it should be 0.
+     *
+     * It is 1 because ptrace_stop calls preempt_disable()
+     * which makes prempt count to 2, then calls preempt_enable_no_resched
+     * which decrements it to 1, and finally freezable_schedule() calls
+     * schedule.
+     */
+
+    if (!(communicate_remote_clone.flags & CLONE_UNTRACED))
+    {
+        if (communicate_remote_clone.flags & CLONE_VFORK)
+            trace = PTRACE_EVENT_VFORK;
+        else if (communicate_remote_clone.exit_signal != SIGCHLD)
+            trace = PTRACE_EVENT_CLONE;
+        else
+            trace = PTRACE_EVENT_FORK;
+
+        if (likely(!ptrace_event_enabled(remote_task, trace)))
+        {
+            trace = 0;
+        }
+    }
+
+    if (unlikely(trace))
+    {
+        preempt_count_dec();
+    }
+
+    current_task_ptr = get_current_task_ptr();
     *current_task_ptr = remote_task;
 
     communicate_remote_clone.ret = _do_fork(&clone_args);
 
+    current_task_ptr = get_current_task_ptr();
+    *current_task_ptr = old_current;
+
+    if (unlikely(trace))
+    {
+        preempt_count_inc();
+    }
+
     if (communicate_remote_clone.ret >= 0)
     {
         clone_task = find_task_from_pid(communicate_remote_clone.ret);
-        // Set the remote address
-        pt_regs     = task_pt_regs(clone_task);
-        pt_regs->ip = communicate_remote_clone.vm_routine_address;
+
+        if (clone_task)
+        {
+            // Set the remote address
+            pt_regs     = task_pt_regs(clone_task);
+            pt_regs->ip = communicate_remote_clone.vm_routine_address;
+        }
     }
     else
     {
         error = COMMUNICATE_ERROR_CLONE_FAILED;
     }
 
-    *current_task_ptr = old_current;
-
-    if (spin_is_locked(&g_spin_lock))
-        spin_unlock(&g_spin_lock);
+    spin_unlock(&g_spin_lock);
 
     set_fs(old_fs);
 

@@ -1003,7 +1003,7 @@ out:
 void c_mmput(task_t* task, mm_t* mm)
 {
     // Don't do that on kernel threads
-    if (mm && task->mm == task->active_mm)
+    if (mm && (task->mm == task->active_mm))
         mmput(mm);
 }
 

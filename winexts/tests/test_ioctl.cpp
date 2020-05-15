@@ -176,7 +176,7 @@ int main()
     //     sleep(30);
 
     getchar();
-    /*communicate_remote_clone_t remote_clone;
+    communicate_remote_clone_t remote_clone;
 
     remote_clone.flags      = (CLONE_VM | CLONE_FS | CLONE_FILES) & ~0xFF;
     remote_clone.stack      = remote_mmap.ret + 0x2000;
@@ -204,7 +204,7 @@ int main()
         printf("clone %li\n", remote_clone.ret);
     }
 
-    getchar();*/
+    getchar();
 
     communicate_remote_munmap_t remote_munmap;
     remote_munmap.pid_target        = pid_name("target");
