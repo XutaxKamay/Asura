@@ -110,7 +110,7 @@ int main()
     write.pid_target        = pid_name("target");
     write.vm_local_address  = (uintptr_t)values;
     write.vm_size           = sizeof(values);
-    write.vm_remote_address = 0x552ACAB040;
+    write.vm_remote_address = 0x555555755040;
 
     error = (communicate_error_t)ioctl(fd, COMMUNICATE_CMD_WRITE, &write);
 
@@ -130,7 +130,7 @@ int main()
     read.pid_target        = pid_name("target");
     read.vm_local_address  = (uintptr_t)read_values;
     read.vm_size           = sizeof(read_values);
-    read.vm_remote_address = 0x552ACAB040;
+    read.vm_remote_address = 0x555555755040;
 
     error = (communicate_error_t)ioctl(fd, COMMUNICATE_CMD_READ, &read);
 
@@ -173,21 +173,51 @@ int main()
         printf("wrote shellcode\n");
     }
 
+    /*getchar();
+
+    write.vm_local_address = (uintptr_t)&remote_mmap.ret;
+    write.vm_size          = sizeof(uintptr_t);
+
+    for (uintptr_t i = remote_mmap.ret + sizeof(write_shellcode);
+         i < remote_mmap.ret + 0x3000;
+         i += sizeof(uintptr_t))
+    {
+        write.vm_remote_address = i;
+
+        error = (communicate_error_t)ioctl(fd,
+                                           COMMUNICATE_CMD_WRITE,
+                                           &write);
+
+        if (error != COMMUNICATE_ERROR_NONE)
+        {
+            break;
+        }
+    }
+
+    if (error != COMMUNICATE_ERROR_NONE)
+    {
+        printf("ouch write stack %i\n", error);
+    }
+    else
+    {
+        printf("wrote stack\n");
+    }*/
+
     //     sleep(30);
 
     getchar();
     communicate_remote_clone_t remote_clone;
 
-    remote_clone.flags      = (CLONE_VM | CLONE_FS | CLONE_FILES) & ~0xFF;
-    remote_clone.stack      = remote_mmap.ret + 0x2000;
-    remote_clone.stack_size = 4096;
-    remote_clone.child_tid  = 0;
-    remote_clone.pidfd      = 0;
-    remote_clone.parent_tid = 0;
+    remote_clone.flags        = (CLONE_VM | CLONE_FS | CLONE_FILES);
+    remote_clone.stack        = remote_mmap.ret + 0x2000;
+    remote_clone.stack_size   = 4096;
+    remote_clone.child_tid    = 0;
+    remote_clone.pidfd        = 0;
+    remote_clone.parent_tid   = 0;
     remote_clone.set_tid_size = 0;
     remote_clone.set_tid      = 0;
     remote_clone.tls          = 0;
-    remote_clone.exit_signal  = remote_clone.flags & 0xFF;
+    remote_clone.exit_signal  = 0;
     remote_clone.pid_target   = pid_name("target");
 
     error = (communicate_error_t)ioctl(fd,

@@ -3,6 +3,8 @@
 
 #include <asm/switch_to.h>
 #include <linux/cdev.h>
+#include <linux/cgroup.h>
+#include <linux/cpu.h>
 #include <linux/device.h>
 #include <linux/errno.h>
 #include <linux/freezer.h>
@@ -22,14 +24,20 @@
 #include <linux/ptrace.h>
 #include <linux/random.h>
 #include <linux/regset.h>
+#include <linux/sched/cputime.h>
 #include <linux/sched/debug.h>
 #include <linux/sched/task.h>
 #include <linux/sched/task_stack.h>
 #include <linux/slab.h>
+#include <linux/spinlock.h>
 #include <linux/syscalls.h>
+#include <linux/task_work.h>
+#include <linux/trace.h>
+#include <linux/tracehook.h>
 #include <linux/types.h>
 #include <linux/userfaultfd_k.h>
 #include <linux/version.h>
+#include <trace/events/sched.h>
 
 #ifdef __PAGETABLE_P4D_FOLDED
     #include <linux/sched/mm.h>
