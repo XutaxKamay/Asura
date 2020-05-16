@@ -1,4 +1,5 @@
 #include "main.h"
+#define FOLL_FLAGS FOLL_FORCE | FOLL_WRITE
 
 void alloc_buffer(size_t size, buffer_t* buffer)
 {
@@ -561,8 +562,7 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
                                   mm,
                                   user_align_addr,
                                   1,
-                                  FOLL_FORCE | FOLL_REMOTE | FOLL_SPLIT
-                                    | FOLL_WRITE,
+                                  FOLL_FLAGS,
                                   &page,
                                   NULL,
                                   NULL)
@@ -658,8 +658,7 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
                                   mm,
                                   user_align_addr,
                                   1,
-                                  FOLL_FORCE | FOLL_REMOTE | FOLL_SPLIT
-                                    | FOLL_WRITE,
+                                  FOLL_FLAGS,
                                   &page,
                                   NULL,
                                   NULL)
@@ -775,7 +774,8 @@ task_t** get_current_task_ptr(void)
  * TODO:
  * Some symbols are missing like css_set_lock or tasklist_lock
  * for now I'll remove the codes that uses it and use something else
- * but we can probably parse System.map instead since they're inside that file
+ * but we can probably parse System.map instead since they're inside that
+ * file
  */
 
 /*
