@@ -90,6 +90,8 @@ int main()
         return fd;
     }
 
+    sleep(1);
+
     communicate_remote_mmap_t remote_mmap;
     remote_mmap.fd                = -1;
     remote_mmap.prot              = PROT_EXEC | PROT_WRITE | PROT_READ;
@@ -113,6 +115,8 @@ int main()
         printf("mmap'd at %lX\n", remote_mmap.ret);
     }
 
+    sleep(1);
+
     // getchar();
 
     communicate_write_t write;
@@ -134,6 +138,8 @@ int main()
     {
         printf("test write\n");
     }
+
+    sleep(1);
 
     communicate_read_t read;
 
@@ -161,6 +167,7 @@ int main()
     }
 
     // getchar();
+    sleep(1);
 
     communicate_write_t write_shellcode;
     write_shellcode.pid_target = pid_name("target");
@@ -184,6 +191,7 @@ int main()
     }
 
     // getchar();
+    sleep(1);
 
     communicate_remote_clone_t remote_clone;
 

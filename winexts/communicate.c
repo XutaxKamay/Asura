@@ -457,5 +457,3 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
 out:
     return error;
 }
-
-
