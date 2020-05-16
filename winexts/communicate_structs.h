@@ -7,7 +7,6 @@
 /**
  * ptrace pt_regs for settings registers
  * This is the same structure as pt_regs so it's safe.
- * Those are only set if they're not equal to 0
  */
 typedef struct communicate_regs
 {

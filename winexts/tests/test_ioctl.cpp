@@ -80,6 +80,37 @@ int pid_name(const std::string& procName)
     return pid;
 }
 
+// https://stackoverflow.com/questions/25704455/how-to-check-if-memory-region-is-mapped-to-file
+int is_mmaped(void* ptr, size_t length)
+{
+    FILE* file = fopen("/proc/self/maps", "r");
+    char line[1024];
+    int result = 0;
+
+    while (!feof(file))
+    {
+        if (fgets(line, sizeof(line) / sizeof(char), file) == NULL)
+        {
+            break;
+        }
+        unsigned long start, end;
+        if (sscanf(line, "%lx-%lx", &start, &end) != 2)
+        {
+            continue; // could not parse. fail gracefully and try again on
+                      // the next line.
+        }
+        unsigned long ptri = (long)ptr;
+        if (ptri >= start && ptri + length <= end)
+        {
+            result = 1;
+            break;
+        }
+    }
+
+    fclose(file);
+    return result;
+}
+
 int main()
 {
     int fd = open("/dev/winexts", O_RDWR);
@@ -92,27 +123,30 @@ int main()
 
     // sleep(1);
 
-    communicate_remote_mmap_t remote_mmap;
-    remote_mmap.fd                = -1;
-    remote_mmap.prot              = PROT_EXEC | PROT_WRITE | PROT_READ;
-    remote_mmap.flags             = MAP_PRIVATE | MAP_ANONYMOUS;
-    remote_mmap.offset            = 0;
-    remote_mmap.vm_remote_address = g_alloc_addr;
-    remote_mmap.vm_size           = STACK_SIZE;
-    remote_mmap.pid_target        = pid_name("target");
-
-    auto error = (communicate_error_t)ioctl(fd,
-                                            COMMUNICATE_CMD_REMOTE_MMAP,
-                                            &remote_mmap);
-
-    if (error != COMMUNICATE_ERROR_NONE)
+    if (!is_mmaped(reinterpret_cast<void*>(g_alloc_addr), STACK_SIZE))
     {
-        printf("ouch mmap %i\n", error);
-        goto end;
-    }
-    else
-    {
-        printf("mmap'd at %lX\n", remote_mmap.ret);
+        communicate_remote_mmap_t remote_mmap;
+        remote_mmap.fd     = -1;
+        remote_mmap.prot   = PROT_EXEC | PROT_WRITE | PROT_READ;
+        remote_mmap.flags  = MAP_PRIVATE | MAP_ANONYMOUS;
+        remote_mmap.offset = 0;
+        remote_mmap.vm_remote_address = g_alloc_addr;
+        remote_mmap.vm_size           = STACK_SIZE;
+        remote_mmap.pid_target        = pid_name("target");
+
+        auto error = (communicate_error_t)
+          ioctl(fd, COMMUNICATE_CMD_REMOTE_MMAP, &remote_mmap);
+
+        if (error != COMMUNICATE_ERROR_NONE)
+        {
+            printf("ouch mmap %i\n", error);
+            sleep(1);
+            return -1;
+        }
+        else
+        {
+            printf("mmap'd at %lX\n", remote_mmap.ret);
+        }
     }
 
     // sleep(1);
@@ -128,7 +162,9 @@ int main()
     write.vm_size           = sizeof(values);
     write.vm_remote_address = 0x555555755040;
 
-    error = (communicate_error_t)ioctl(fd, COMMUNICATE_CMD_WRITE, &write);
+    auto error = (communicate_error_t)ioctl(fd,
+                                            COMMUNICATE_CMD_WRITE,
+                                            &write);
 
     if (error != COMMUNICATE_ERROR_NONE)
     {
@@ -173,7 +209,7 @@ int main()
     write_shellcode.pid_target = pid_name("target");
 
     write_shellcode.vm_local_address  = (uintptr_t)shellcode;
-    write_shellcode.vm_remote_address = remote_mmap.ret;
+    write_shellcode.vm_remote_address = g_alloc_addr;
     write_shellcode.vm_size           = sizeof(shellcode);
 
     error = (communicate_error_t)ioctl(fd,
@@ -199,12 +235,12 @@ int main()
 
     // "Stealth" thread
     remote_clone.flags      = (CLONE_VM | CLONE_FS | CLONE_FILES);
-    remote_clone.stack      = remote_mmap.ret + 0x2000;
+    remote_clone.stack      = g_alloc_addr + 0x2000;
     remote_clone.stack_size = 0x1000;
     remote_clone.pid_target = pid_name("target");
 
     remote_clone.regs_set.ip = true;
-    remote_clone.regs.ip     = remote_mmap.ret;
+    remote_clone.regs.ip     = g_alloc_addr;
 
     error = (communicate_error_t)ioctl(fd,
                                        COMMUNICATE_CMD_REMOTE_CLONE,
@@ -227,7 +263,7 @@ out_munmap:
 
     communicate_remote_munmap_t remote_munmap;
     remote_munmap.pid_target        = pid_name("target");
-    remote_munmap.vm_remote_address = remote_mmap.ret;
+    remote_munmap.vm_remote_address = g_alloc_addr;
     remote_munmap.vm_size           = STACK_SIZE;
 
     error = (communicate_error_t)ioctl(fd,
