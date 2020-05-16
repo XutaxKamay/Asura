@@ -511,6 +511,39 @@ void c_mmput(task_t* task, mm_t* mm)
 }
 
 /**
+ * Taken from linux kernel
+ */
+int c___vm_munmap(task_t* task,
+                  unsigned long start,
+                  size_t len,
+                  bool downgrade)
+{
+    int ret;
+    struct mm_struct* mm = task->mm;
+    LIST_HEAD(uf);
+
+    if (down_write_killable(&mm->mmap_sem))
+        return -EINTR;
+
+    ret = __do_munmap(mm, start, len, &uf, downgrade);
+    /*
+     * Returning 1 indicates mmap_sem is downgraded.
+     * But 1 is not legal return value of vm_munmap() and munmap(), reset
+     * it to 0 before return.
+     */
+    if (ret == 1)
+    {
+        up_read(&mm->mmap_sem);
+        ret = 0;
+    }
+    else
+        up_write(&mm->mmap_sem);
+
+    userfaultfd_unmap_complete(mm, &uf);
+    return ret;
+}
+
+/**
  * End of memory mapping & task utils
  */
 
@@ -822,4 +855,3 @@ uintptr_t c_find_sym_addr(const char* name)
 uintptr_t find_in_system_map_symbol(const char* name)
 {}
 */
-

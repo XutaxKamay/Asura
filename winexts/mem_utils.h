@@ -45,6 +45,10 @@ void c_print_vmas(task_t* task);
 int c_munmap(task_t* task, uintptr_t start);
 vm_area_t* c_mmap(task_t* task, uintptr_t address, int prot);
 void c_mmput(task_t* task, mm_t* mm);
+int c___vm_munmap(task_t* task,
+                  unsigned long start,
+                  size_t len,
+                  bool downgrade);
 
 /**
  * Copies memory from a task in its virtual address space to kernel one

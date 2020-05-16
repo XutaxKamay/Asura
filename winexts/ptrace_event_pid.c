@@ -417,13 +417,13 @@ void c_ptrace_do_notify(task_t* task, int signr, int exit_code, int why)
     info.si_signo = signr;
     info.si_code  = exit_code;
     info.si_pid   = task_pid_vnr(task);
-    info.si_uid   = from_kuid_munged(task->cred->user_ns, task->cred->uid);
+    info.si_uid = from_kuid_munged(task->cred->user_ns, task->cred->uid);
 
     /* Let the debugger run.  */
     c_ptrace_stop(task, exit_code, why, 1, &info);
 }
 
-void    c_ptrace_notify(task_t* task, int exit_code)
+void c_ptrace_notify(task_t* task, int exit_code)
 {
     BUG_ON((exit_code & (0x7f | ~0xffff)) != SIGTRAP);
 

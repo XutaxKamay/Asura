@@ -310,8 +310,6 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
     communicate_error_t error;
     communicate_remote_munmap_t communicate_remote_munmap;
     task_t* remote_task;
-    task_t* old_current;
-    static DEFINE_SPINLOCK(spinlock);
 
     error = communicate_read__remote_munmap_struct(
       task,
@@ -331,27 +329,11 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
         goto out;
     }
 
-    // We can trick the kernel by saying the current task is the
-    // targeted one for a moment.
-    old_current = get_current();
-
-    spin_lock(&spinlock);
-    read_lock(ptasklist_lock);
-
-    switch_to_task(remote_task);
-
-    /**
-     * TODO: we might use our own function for more stability
-     */
     communicate_remote_munmap.ret
-      = __vm_munmap(communicate_remote_munmap.vm_remote_address,
-                    communicate_remote_munmap.vm_size,
-                    true);
-
-    switch_to_task(old_current);
-
-    read_unlock(ptasklist_lock);
-    spin_unlock(&spinlock);
+      = c___vm_munmap(remote_task,
+                      communicate_remote_munmap.vm_remote_address,
+                      communicate_remote_munmap.vm_size,
+                      true);
 
     if (communicate_remote_munmap.ret < 0)
     {

@@ -25,8 +25,6 @@ struct task_struct* copy_process(struct pid* pid,
                                  int trace,
                                  int node,
                                  struct kernel_clone_args* args);
-int __vm_munmap(unsigned long start, size_t len, bool downgrade);
-
  void switch_to_extra(struct task_struct *prev,
                                    struct task_struct *next);
 
