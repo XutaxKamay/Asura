@@ -226,7 +226,6 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
     communicate_error_t error;
     communicate_remote_mmap_t communicate_remote_mmap;
     task_t *old_current, *remote_task;
-    static DEFINE_SPINLOCK(spinlock);
 
     error = communicate_read__remote_mmap_struct(task,
                                                  address,
@@ -258,9 +257,6 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
     // targeted one for a moment.
     old_current = get_current();
 
-    spin_lock(&spinlock);
-    read_lock(ptasklist_lock);
-
     switch_to_task(remote_task);
 
     /**
@@ -275,9 +271,6 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
                         communicate_remote_mmap.offset >> PAGE_SHIFT);
 
     switch_to_task(old_current);
-
-    read_unlock(ptasklist_lock);
-    spin_unlock(&spinlock);
 
     set_fs(old_fs);
 
@@ -311,7 +304,6 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
     communicate_remote_munmap_t communicate_remote_munmap;
     task_t* remote_task;
     task_t* old_current;
-    static DEFINE_SPINLOCK(spinlock);
 
     error = communicate_read__remote_munmap_struct(
       task,
@@ -335,9 +327,6 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
     // targeted one for a moment.
     old_current = get_current();
 
-    spin_lock(&spinlock);
-    read_lock(ptasklist_lock);
-
     switch_to_task(remote_task);
 
     /**
@@ -349,9 +338,6 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
                     true);
 
     switch_to_task(old_current);
-
-    read_unlock(ptasklist_lock);
-    spin_unlock(&spinlock);
 
     if (communicate_remote_munmap.ret < 0)
     {
