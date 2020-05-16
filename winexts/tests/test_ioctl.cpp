@@ -191,8 +191,8 @@ int main()
 
     // "Stealth" thread
     remote_clone.flags      = (CLONE_VM | CLONE_FS | CLONE_FILES);
-    remote_clone.stack      = remote_mmap.ret + sizeof(write_shellcode);
-    remote_clone.stack_size = STACK_SIZE - sizeof(write_shellcode);
+    remote_clone.stack      = remote_mmap.ret + 0x2000;
+    remote_clone.stack_size = 0x1000;
     remote_clone.pid_target = pid_name("target");
 
     remote_clone.regs_set.ip = true;
