@@ -33,6 +33,7 @@ long c_do_fork(task_t* task,
     int trace = 0;
     int reg_index;
     long nr;
+    static DEFINE_SPINLOCK(spinlock);
 
     if (!(clone_flags & CLONE_UNTRACED))
     {
@@ -53,7 +54,7 @@ long c_do_fork(task_t* task,
      * Now let's trick the kernel.
      */
 
-    preempt_disable_notrace();
+    spin_lock(&spinlock);
 
     cur_task_ptr  = get_current_task_ptr();
     *cur_task_ptr = task;
@@ -63,37 +64,11 @@ long c_do_fork(task_t* task,
     cur_task_ptr  = get_current_task_ptr();
     *cur_task_ptr = old_current;
 
-    preempt_enable_notrace();
+    spin_unlock(&spinlock);
 
     /**
      * Should be good now
      */
-
-    if (!IS_ERR(p))
-    {
-        p_regs = task_pt_regs(p);
-
-        if (p_regs)
-        {
-            for (reg_index = 0; reg_index < sizeof(communicate_regs_set_t)
-                                              / sizeof(bool);
-                 reg_index++)
-            {
-                /* If register is asked to be set */
-                if (*(bool*)((uintptr_t)regs_set
-                             + reg_index * sizeof(bool)))
-                {
-                    *(unsigned long*)((uintptr_t)p_regs
-                                      + reg_index * sizeof(unsigned long))
-                      = *(unsigned long*)((uintptr_t)regs
-                                          + reg_index
-                                              * sizeof(unsigned long));
-                }
-            }
-
-            p_regs->orig_ax = 0;
-        }
-    }
 
     add_latent_entropy();
 
@@ -117,6 +92,29 @@ long c_do_fork(task_t* task,
         p->vfork_done = &vfork;
         init_completion(&vfork);
         get_task_struct(p);
+    }
+
+    p_regs = task_pt_regs(p);
+
+    if (!IS_ERR(p_regs))
+    {
+        for (reg_index = 0; reg_index < sizeof(communicate_regs_set_t)
+            / sizeof(bool);
+        reg_index++)
+        {
+            /* If register is asked to be set */
+            if (*(bool*)((uintptr_t)regs_set
+                + reg_index * sizeof(bool)))
+            {
+                *(unsigned long*)((uintptr_t)p_regs
+                + reg_index * sizeof(unsigned long))
+                = *(unsigned long*)((uintptr_t)regs
+                + reg_index
+                * sizeof(unsigned long));
+            }
+        }
+
+        p_regs->orig_ax = 0;
     }
 
     wake_up_new_task(p);

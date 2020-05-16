@@ -80,7 +80,7 @@ void c_cgroup_leave_frozen(struct task_struct* task, bool always_leave)
     {
         spin_lock(&task->sighand->siglock);
         task->jobctl |= JOBCTL_TRAP_FREEZE;
-        set_thread_flag(TIF_SIGPENDING);
+        task->thread_info.flags = TIF_SIGPENDING;
         spin_unlock(&task->sighand->siglock);
     }
     spin_unlock_irq(pcss_set_lock);
@@ -364,8 +364,7 @@ void c_ptrace_stop(task_t* task,
         preempt_disable();
         read_unlock(ptasklist_lock);
         c_cgroup_enter_frozen(task);
-        barrier();
-        preempt_count_dec();
+        preempt_enable_no_resched();
         freezable_schedule();
         c_cgroup_leave_frozen(task, true);
     }
@@ -414,12 +413,6 @@ void c_ptrace_do_notify(task_t* task, int signr, int exit_code, int why)
 {
     kernel_siginfo_t info;
 
-    /**
-     * We can say that the signal comes from our current process (kernel
-     * thread or the remote task that asked to do the clone), it's not a
-     * problem.
-     */
-
     clear_siginfo(&info);
     info.si_signo = signr;
     info.si_code  = exit_code;
@@ -430,7 +423,7 @@ void c_ptrace_do_notify(task_t* task, int signr, int exit_code, int why)
     c_ptrace_stop(task, exit_code, why, 1, &info);
 }
 
-void c_ptrace_notify(task_t* task, int exit_code)
+void    c_ptrace_notify(task_t* task, int exit_code)
 {
     BUG_ON((exit_code & (0x7f | ~0xffff)) != SIGTRAP);
 
