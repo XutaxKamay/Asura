@@ -773,7 +773,7 @@ task_t** get_current_task_ptr(void)
 
 void switch_to_task(task_t* task)
 {
-    prepare_switch_to(task);
+    // prepare_switch_to(task);
     __switch_to(current, task);
     /**(get_current_task_ptr()) = task;
     this_cpu_write(cpu_current_top_of_stack, task_top_of_stack(task));
