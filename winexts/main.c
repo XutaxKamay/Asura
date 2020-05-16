@@ -65,13 +65,13 @@ int init_mod(void)
 
     c_printk_info("successfully created device %s\n", DEVICE_FILE_NAME);
 
+    /*
     if (find_css_set_lock() < 0)
     {
         c_printk_info("couldn't find css_set_lock\n");
         return -1;
     }
 
-    /*
     c_printk_info("found css_set_lock at %lX\n",
                   (uintptr_t)pcss_set_lock);
 
