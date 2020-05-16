@@ -226,7 +226,6 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
     communicate_error_t error;
     communicate_remote_mmap_t communicate_remote_mmap;
     task_t *old_current, *remote_task;
-    task_t** current_task_ptr;
     static DEFINE_SPINLOCK(spinlock);
 
     error = communicate_read__remote_mmap_struct(task,
@@ -262,10 +261,7 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
     spin_lock(&spinlock);
     read_lock(ptasklist_lock);
 
-    current_task_ptr  = get_current_task_ptr();
-    *current_task_ptr = remote_task;
-    this_cpu_write(cpu_current_top_of_stack, task_top_of_stack(remote_task));
-    update_task_stack(remote_task);
+    switch_to_task(remote_task);
 
     /**
      * TODO: we might use our own function for more stability
@@ -278,10 +274,7 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
                         communicate_remote_mmap.fd,
                         communicate_remote_mmap.offset >> PAGE_SHIFT);
 
-    current_task_ptr  = get_current_task_ptr();
-    *current_task_ptr = old_current;
-    this_cpu_write(cpu_current_top_of_stack, task_top_of_stack(old_current));
-    update_task_stack(old_current);
+    switch_to_task(old_current);
 
     read_unlock(ptasklist_lock);
     spin_unlock(&spinlock);
@@ -318,7 +311,6 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
     communicate_remote_munmap_t communicate_remote_munmap;
     task_t* remote_task;
     task_t* old_current;
-    task_t** current_task_ptr;
     static DEFINE_SPINLOCK(spinlock);
 
     error = communicate_read__remote_munmap_struct(
@@ -346,10 +338,7 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
     spin_lock(&spinlock);
     read_lock(ptasklist_lock);
 
-    current_task_ptr  = get_current_task_ptr();
-    *current_task_ptr = remote_task;
-    this_cpu_write(cpu_current_top_of_stack, task_top_of_stack(remote_task));
-    update_task_stack(remote_task);
+    switch_to_task(remote_task);
 
     /**
      * TODO: we might use our own function for more stability
@@ -359,10 +348,7 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
                     communicate_remote_munmap.vm_size,
                     true);
 
-    current_task_ptr  = get_current_task_ptr();
-    *current_task_ptr = old_current;
-    this_cpu_write(cpu_current_top_of_stack, task_top_of_stack(old_current));
-    update_task_stack(old_current);
+    switch_to_task(old_current);
 
     read_unlock(ptasklist_lock);
     spin_unlock(&spinlock);
