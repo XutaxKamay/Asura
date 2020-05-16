@@ -33,7 +33,6 @@ long c_do_fork(task_t* task,
     int trace = 0;
     int reg_index;
     long nr;
-    static DEFINE_SPINLOCK(spinlock);
 
     if (!(clone_flags & CLONE_UNTRACED))
     {
@@ -54,7 +53,7 @@ long c_do_fork(task_t* task,
      * Now let's trick the kernel.
      */
 
-    spin_lock(&spinlock);
+    preempt_disable_notrace();
 
     cur_task_ptr  = get_current_task_ptr();
     *cur_task_ptr = task;
@@ -64,7 +63,7 @@ long c_do_fork(task_t* task,
     cur_task_ptr  = get_current_task_ptr();
     *cur_task_ptr = old_current;
 
-    spin_unlock(&spinlock);
+    preempt_enable_notrace();
 
     /**
      * Should be good now

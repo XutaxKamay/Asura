@@ -227,7 +227,6 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
     communicate_remote_mmap_t communicate_remote_mmap;
     task_t *old_current, *remote_task;
     task_t** current_task_ptr;
-    static DEFINE_SPINLOCK(spinlock);
 
     error = communicate_read__remote_mmap_struct(task,
                                                  address,
@@ -259,7 +258,7 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
     // targeted one for a moment.
     old_current = get_current();
 
-    spin_lock(&spinlock);
+    preempt_disable_notrace();
     read_lock(ptasklist_lock);
 
     current_task_ptr  = get_current_task_ptr();
@@ -277,7 +276,7 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
     *current_task_ptr = old_current;
 
     read_unlock(ptasklist_lock);
-    spin_unlock(&spinlock);
+    preempt_enable_notrace();
 
     set_fs(old_fs);
 
@@ -312,7 +311,6 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
     task_t* remote_task;
     task_t* old_current;
     task_t** current_task_ptr;
-    static DEFINE_SPINLOCK(spinlock);
 
     error = communicate_read__remote_munmap_struct(
       task,
@@ -336,7 +334,7 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
     // targeted one for a moment.
     old_current = get_current();
 
-    spin_lock(&spinlock);
+    preempt_disable_notrace();
     read_lock(ptasklist_lock);
 
     current_task_ptr  = get_current_task_ptr();
@@ -351,7 +349,7 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
     *current_task_ptr = old_current;
 
     read_unlock(ptasklist_lock);
-    spin_unlock(&spinlock);
+    preempt_enable_notrace();
 
     if (communicate_remote_munmap.ret < 0)
     {
