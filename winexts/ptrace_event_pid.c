@@ -4,8 +4,8 @@
  * TODO:
  * check the end of mem_utils.c
  */
-static DEFINE_SPINLOCK(new_css_set_lock);
-static DEFINE_RWLOCK(new_tasklist_lock);
+// static DEFINE_SPINLOCK(new_css_set_lock);
+// static DEFINE_RWLOCK(new_tasklist_lock);
 
 /**
  * If anyone in the linux kernel development is reading this...
@@ -46,12 +46,12 @@ void c_cgroup_enter_frozen(struct task_struct* task)
     if (task->frozen)
         return;
 
-    spin_lock_irq(&new_css_set_lock);
+    spin_lock_irq(pcss_set_lock);
     task->frozen = true;
     cgrp         = task_dfl_cgroup(task);
     c_cgroup_inc_frozen_cnt(cgrp);
     cgroup_update_frozen(cgrp);
-    spin_unlock_irq(&new_css_set_lock);
+    spin_unlock_irq(pcss_set_lock);
 }
 
 /*
@@ -67,7 +67,7 @@ void c_cgroup_leave_frozen(struct task_struct* task, bool always_leave)
 {
     struct cgroup* cgrp;
 
-    spin_lock_irq(&new_css_set_lock);
+    spin_lock_irq(pcss_set_lock);
     cgrp = task_dfl_cgroup(task);
     if (always_leave || !test_bit(CGRP_FREEZE, &cgrp->flags))
     {
@@ -83,7 +83,7 @@ void c_cgroup_leave_frozen(struct task_struct* task, bool always_leave)
         set_thread_flag(TIF_SIGPENDING);
         spin_unlock(&task->sighand->siglock);
     }
-    spin_unlock_irq(&new_css_set_lock);
+    spin_unlock_irq(pcss_set_lock);
 }
 
 bool c_task_participate_group_stop(struct task_struct* task)
@@ -314,7 +314,7 @@ void c_ptrace_stop(task_t* task,
     task_clear_jobctl_trapping(task);
 
     spin_unlock_irq(&task->sighand->siglock);
-    read_lock(&new_tasklist_lock);
+    read_lock(ptasklist_lock);
 
     if (c_may_ptrace_stop(task))
     {
@@ -339,7 +339,7 @@ void c_ptrace_stop(task_t* task,
          * XXX: implement read_unlock_no_resched().
          */
         preempt_disable();
-        read_unlock(&new_tasklist_lock);
+        read_unlock(ptasklist_lock);
         c_cgroup_enter_frozen(task);
         barrier();
         preempt_count_dec();
@@ -365,7 +365,7 @@ void c_ptrace_stop(task_t* task,
         task->state = TASK_RUNNING;
         if (clear_code)
             task->exit_code = 0;
-        read_unlock(&new_tasklist_lock);
+        read_unlock(ptasklist_lock);
     }
 
     /*

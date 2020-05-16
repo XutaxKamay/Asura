@@ -10,66 +10,20 @@ rwlock_t* ptasklist_lock  = NULL;
 
 int find_css_set_lock(void)
 {
-    // uintptr_t temp_ptr, temp2_ptr;
+    pcss_set_lock = (spinlock_t*)(kernel_offset()
+                                  + (CSS_SET_LOCK_ADDR
+                                     - KERNEL_USUAL_TEXT_SECTION));
 
-    pcss_set_lock = (spinlock_t*)kallsyms_lookup_name("css_set_lock");
-
-    if (pcss_set_lock != NULL)
-    {
-        return 0;
-    }
-
-    /*
-    // Let's try to find the spinlock dynamically.
-    temp2_ptr = temp_ptr = kallsyms_lookup_name("cgroup_leave_frozen");
-
-    // It's very close to the function, like 4-10 more bytes.
-    for (; temp_ptr < temp2_ptr + 0x10; temp_ptr++)
-    {
-        // Kernel should be always around 0xFFFFFFFF anyway.
-        pcss_set_lock = (spinlock_t*)((uintptr_t)(0xFFFFFFFF00000000)
-                                      + *(uint32_t*)temp_ptr);
-
-        if (__virt_addr_valid((uintptr_t)pcss_set_lock))
-        {
-            return 0;
-        }
-    }
-    */
-
-    return -1;
+    return 0;
 }
 
 int find_tasklist_lock(void)
 {
-    // uintptr_t temp_ptr, temp2_ptr;
+    ptasklist_lock = (rwlock_t*)(kernel_offset()
+                                 + (TASKLIST_LOCK_ADDR
+                                    - KERNEL_USUAL_TEXT_SECTION));
 
-    pcss_set_lock = (spinlock_t*)kallsyms_lookup_name("tasklist_lock");
-
-    if (pcss_set_lock != NULL)
-    {
-        return 0;
-    }
-
-    /*
-    // Let's try to find the spinlock dynamically.
-    temp2_ptr = temp_ptr = kallsyms_lookup_name("send_sig_all");
-
-    // It's very close to the function, like 4-10 more bytes.
-    for (; temp_ptr < temp2_ptr + 0x10; temp_ptr++)
-    {
-        // Kernel should be always around 0xFFFFFFFF anyway.
-        ptasklist_lock = (rwlock_t*)((uintptr_t)(0xFFFFFFFF00000000)
-                                     + *(uint32_t*)temp_ptr);
-
-        if (__virt_addr_valid((uintptr_t)ptasklist_lock))
-        {
-            return 0;
-        }
-    }
-    */
-
-    return -1;
+    return 0;
 }
 
 #ifdef __arch_um__

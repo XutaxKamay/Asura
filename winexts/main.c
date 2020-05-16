@@ -65,7 +65,6 @@ int init_mod(void)
 
     c_printk_info("successfully created device %s\n", DEVICE_FILE_NAME);
 
-    /*
     if (find_css_set_lock() < 0)
     {
         c_printk_info("couldn't find css_set_lock\n");
@@ -83,7 +82,6 @@ int init_mod(void)
 
     c_printk_info("found find_tasklist_lock at %lX\n",
                   (uintptr_t)ptasklist_lock);
-    */
 
     c_printk("kernel module loaded.\n");
 

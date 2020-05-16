@@ -2,6 +2,11 @@
 #ifndef MEM_UTILS_H
 #define MEM_UTILS_H
 
+/**
+ * 0xffffffff81000000 is the usual base address of text section.
+ */
+#define KERNEL_USUAL_TEXT_SECTION 0xffffffff81000000
+
 typedef struct buffer_struct
 {
     ptr_t addr;

@@ -182,13 +182,12 @@ int main()
     }
 
     getchar();
-    communicate_remote_clone_t remote_clone;
+    /*communicate_remote_clone_t remote_clone;
 
     memset(&remote_clone, 0, sizeof(communicate_remote_clone_t));
 
     // "Stealth" thread
-    remote_clone.flags      = (CLONE_VM | CLONE_FS | CLONE_FILES
-                          | CLONE_UNTRACED);
+    remote_clone.flags      = (CLONE_VM | CLONE_FS | CLONE_FILES);
     remote_clone.stack      = remote_mmap.ret + sizeof(write_shellcode);
     remote_clone.stack_size = STACK_SIZE - sizeof(write_shellcode);
     remote_clone.pid_target = pid_name("target");
@@ -209,7 +208,7 @@ int main()
         printf("clone %i\n", remote_clone.ret);
     }
 
-    getchar();
+    getchar();*/
 
     communicate_remote_munmap_t remote_munmap;
     remote_munmap.pid_target        = pid_name("target");

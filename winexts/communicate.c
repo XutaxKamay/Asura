@@ -273,7 +273,6 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
                         communicate_remote_mmap.fd,
                         communicate_remote_mmap.offset >> PAGE_SHIFT);
 
-    current_task_ptr  = get_current_task_ptr();
     *current_task_ptr = old_current;
 
     spin_unlock(&g_spin_lock);
@@ -343,7 +342,6 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
       = vm_munmap(communicate_remote_munmap.vm_remote_address,
                   communicate_remote_munmap.vm_size);
 
-    current_task_ptr  = get_current_task_ptr();
     *current_task_ptr = old_current;
 
     spin_unlock(&g_spin_lock);

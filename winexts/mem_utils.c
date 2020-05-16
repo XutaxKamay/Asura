@@ -384,8 +384,7 @@ uintptr_t map_base_task(task_t* task)
 
 uintptr_t kernel_offset(void)
 {
-    // 0xffffffff81000000 is the usual base address of text section.
-    return kallsyms_lookup_name("_text") - 0xffffffff81000000;
+    return kallsyms_lookup_name("_text") - KERNEL_USUAL_TEXT_SECTION;
 }
 
 int c_munmap(task_t* task, uintptr_t start)
