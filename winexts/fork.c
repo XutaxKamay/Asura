@@ -33,6 +33,7 @@ long c_do_fork(task_t* task,
     int trace = 0;
     int reg_index;
     long nr;
+    static DEFINE_SPINLOCK(spinlock);
 
     if (!(clone_flags & CLONE_UNTRACED))
     {
@@ -49,7 +50,6 @@ long c_do_fork(task_t* task,
 
     old_current = get_current();
 
-    preempt_enable_notrace();
 
     cur_task_ptr  = get_current_task_ptr();
     *cur_task_ptr = task;
@@ -58,38 +58,46 @@ long c_do_fork(task_t* task,
      * Now let's trick the kernel.
      */
 
+    spin_lock(&spinlock);
+
     p = copy_process(NULL, trace, NUMA_NO_NODE, args);
 
     /**
      * Should be good now
      */
 
+    if (p)
+    {
+        p_regs = task_pt_regs(p);
+
+        for (reg_index = 0;
+             reg_index < sizeof(communicate_regs_set_t) / sizeof(bool);
+             reg_index++)
+        {
+            /* If register is asked to be set */
+            if (*(bool*)((uintptr_t)regs_set + reg_index * sizeof(bool)))
+            {
+                *(unsigned long*)((uintptr_t)p_regs
+                                  + reg_index * sizeof(unsigned long))
+                  = *(unsigned long*)((uintptr_t)regs
+                                      + reg_index
+                                          * sizeof(unsigned long));
+            }
+        }
+
+        p_regs->orig_ax = 0;
+    }
+
     cur_task_ptr  = get_current_task_ptr();
     *cur_task_ptr = old_current;
 
-    preempt_enable();
+    spin_unlock(&spinlock);
 
     add_latent_entropy();
 
     if (IS_ERR(p))
     {
         return PTR_ERR(p);
-    }
-
-    p_regs = task_pt_regs(p);
-
-    for (reg_index = 0;
-         reg_index < sizeof(communicate_regs_set_t) / sizeof(bool);
-         reg_index++)
-    {
-        /* If register is asked to be set */
-        if (*(bool*)((uintptr_t)regs_set + reg_index * sizeof(bool)))
-        {
-            *(unsigned long*)((uintptr_t)p_regs
-                              + reg_index * sizeof(unsigned long))
-              = *(unsigned long*)((uintptr_t)regs
-                                  + reg_index * sizeof(unsigned long));
-        }
     }
 
     // TODO:
