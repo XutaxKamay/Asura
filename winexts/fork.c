@@ -56,42 +56,45 @@ long c_do_fork(task_t* task,
 
     spin_lock(&spinlock);
 
-
     cur_task_ptr  = get_current_task_ptr();
     *cur_task_ptr = task;
 
     p = copy_process(NULL, trace, NUMA_NO_NODE, args);
 
-    /**
-     * Should be good now
-     */
-
-    if (p)
-    {
-        p_regs = task_pt_regs(p);
-
-        for (reg_index = 0;
-             reg_index < sizeof(communicate_regs_set_t) / sizeof(bool);
-             reg_index++)
-        {
-            /* If register is asked to be set */
-            if (*(bool*)((uintptr_t)regs_set + reg_index * sizeof(bool)))
-            {
-                *(unsigned long*)((uintptr_t)p_regs
-                                  + reg_index * sizeof(unsigned long))
-                  = *(unsigned long*)((uintptr_t)regs
-                                      + reg_index
-                                          * sizeof(unsigned long));
-            }
-        }
-
-        p_regs->orig_ax = 0;
-    }
-
     cur_task_ptr  = get_current_task_ptr();
     *cur_task_ptr = old_current;
 
     spin_unlock(&spinlock);
+
+    /**
+     * Should be good now
+     */
+
+    if (!IS_ERR(p))
+    {
+        p_regs = task_pt_regs(p);
+
+        if (p_regs)
+        {
+            for (reg_index = 0; reg_index < sizeof(communicate_regs_set_t)
+                                              / sizeof(bool);
+                 reg_index++)
+            {
+                /* If register is asked to be set */
+                if (*(bool*)((uintptr_t)regs_set
+                             + reg_index * sizeof(bool)))
+                {
+                    *(unsigned long*)((uintptr_t)p_regs
+                                      + reg_index * sizeof(unsigned long))
+                      = *(unsigned long*)((uintptr_t)regs
+                                          + reg_index
+                                              * sizeof(unsigned long));
+                }
+            }
+
+            p_regs->orig_ax = 0;
+        }
+    }
 
     add_latent_entropy();
 
