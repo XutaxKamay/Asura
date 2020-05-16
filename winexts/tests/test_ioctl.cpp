@@ -108,7 +108,7 @@ int main()
         printf("mmap'd at %lX\n", remote_mmap.ret);
     }
 
-    getchar();
+    //getchar();
 
     communicate_write_t write;
 
@@ -155,7 +155,7 @@ int main()
         printf("success read/write large buffer\n");
     }
 
-    getchar();
+    //getchar();
 
     communicate_write_t write_shellcode;
     write_shellcode.pid_target = pid_name("target");
@@ -181,8 +181,9 @@ int main()
         printf("wrote shellcode\n");
     }
 
-    getchar();
-    /*communicate_remote_clone_t remote_clone;
+    //getchar();
+
+    communicate_remote_clone_t remote_clone;
 
     memset(&remote_clone, 0, sizeof(communicate_remote_clone_t));
 
@@ -208,7 +209,9 @@ int main()
         printf("clone %i\n", remote_clone.ret);
     }
 
-    getchar();*/
+    //getchar();
+
+    sleep(1);
 
     communicate_remote_munmap_t remote_munmap;
     remote_munmap.pid_target        = pid_name("target");

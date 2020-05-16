@@ -260,6 +260,7 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
     // targeted one for a moment.
     old_current = get_current();
 
+    read_lock(ptasklist_lock);
     spin_lock(&g_spin_lock);
 
     current_task_ptr  = get_current_task_ptr();
@@ -276,6 +277,7 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
     *current_task_ptr = old_current;
 
     spin_unlock(&g_spin_lock);
+    read_unlock(ptasklist_lock);
 
     set_fs(old_fs);
 
@@ -333,18 +335,21 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
     // targeted one for a moment.
     old_current = get_current();
 
+    read_lock(ptasklist_lock);
     spin_lock(&g_spin_lock);
 
     current_task_ptr  = get_current_task_ptr();
     *current_task_ptr = remote_task;
 
     communicate_remote_munmap.ret
-      = vm_munmap(communicate_remote_munmap.vm_remote_address,
-                  communicate_remote_munmap.vm_size);
+      = __vm_munmap(communicate_remote_munmap.vm_remote_address,
+                    communicate_remote_munmap.vm_size,
+                    true);
 
     *current_task_ptr = old_current;
 
     spin_unlock(&g_spin_lock);
+    read_unlock(ptasklist_lock);
 
     if (communicate_remote_munmap.ret < 0)
     {

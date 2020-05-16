@@ -51,6 +51,7 @@ long c_do_fork(task_t* task,
 
     old_current = get_current();
 
+    read_lock(ptasklist_lock);
     spin_lock(&spinlock);
 
     cur_task_ptr  = get_current_task_ptr();
@@ -68,6 +69,7 @@ long c_do_fork(task_t* task,
 
     *cur_task_ptr = old_current;
     spin_unlock(&spinlock);
+    read_unlock(ptasklist_lock);
 
     p_regs = task_pt_regs(p);
 
@@ -124,3 +126,4 @@ long c_do_fork(task_t* task,
 
     return nr;
 }
+
