@@ -16,7 +16,6 @@ MODULE_DESCRIPTION("Module that brings some windows API functions");
 
 int init_mod(void)
 {
-    uintptr_t temp_ptr, temp2_ptr;
     int ret = alloc_chrdev_region(&g_dev, 0, 1, DEVICE_FILE_NAME);
 
     if (ret < 0)
@@ -64,15 +63,27 @@ int init_mod(void)
         return -1;
     }
 
-    // Let's try to find the spinlock dynamically.
-    temp2_ptr = temp_ptr = kallsyms_lookup_name("put_css_set_locked");
+    c_printk_info("successfully created device %s\n", DEVICE_FILE_NAME);
 
-    for (; temp_ptr < temp2_ptr + 0x100; temp_ptr++)
+    if (find_css_set_lock() < 0)
     {
-        pcss_set_lock = *(void**)temp_ptr;
+        c_printk_info("couldn't find css_set_lock\n");
+        return -1;
     }
 
-    c_printk_info("successfully created device %s\n", DEVICE_FILE_NAME);
+    /*
+    c_printk_info("found css_set_lock at %lX\n",
+                  (uintptr_t)pcss_set_lock);
+
+    if (find_tasklist_lock() < 0)
+    {
+        c_printk_info("couldn't find find_tasklist_lock\n");
+        return -1;
+    }
+
+    c_printk_info("found find_tasklist_lock at %lX\n",
+                  (uintptr_t)ptasklist_lock);
+    */
 
     c_printk("kernel module loaded.\n");
 

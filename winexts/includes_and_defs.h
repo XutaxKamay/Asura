@@ -36,6 +36,7 @@
 #include <linux/tracehook.h>
 #include <linux/types.h>
 #include <linux/userfaultfd_k.h>
+#include <linux/utsname.h>
 #include <linux/version.h>
 #include <trace/events/sched.h>
 
