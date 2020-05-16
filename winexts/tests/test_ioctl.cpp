@@ -26,8 +26,8 @@ static auto g_alloc_addr  = (uint64_t)0x13370000;
 constexpr auto STACK_SIZE = 0x3000;
 
 uint8_t shellcode[] = { 0x48, 0xC7, 0xC0, 0x01, 0x00, 0x00,
-    0x00, 0x48, 0xC7, 0xC3, 0x00, 0x00,
-    0x00, 0x00, 0xCD, 0x80, 0xCC };
+                        0x00, 0x48, 0xC7, 0xC3, 0x00, 0x00,
+                        0x00, 0x00, 0xCD, 0x80, 0xCC };
 
 // http://proswdev.blogspot.com/2012/02/get-process-id-by-name-in-linux-using-c.html
 int pid_name(const std::string& procName)
@@ -106,13 +106,14 @@ int main()
     if (error != COMMUNICATE_ERROR_NONE)
     {
         printf("ouch mmap %i\n", error);
+        goto end;
     }
     else
     {
         printf("mmap'd at %lX\n", remote_mmap.ret);
     }
 
-    //getchar();
+    // getchar();
 
     communicate_write_t write;
 
@@ -159,7 +160,7 @@ int main()
         printf("success read/write large buffer\n");
     }
 
-    //getchar();
+    // getchar();
 
     communicate_write_t write_shellcode;
     write_shellcode.pid_target = pid_name("target");
@@ -182,7 +183,7 @@ int main()
         printf("wrote shellcode\n");
     }
 
-    //getchar();
+    // getchar();
 
     communicate_remote_clone_t remote_clone;
 
@@ -210,11 +211,11 @@ int main()
         printf("clone %i\n", remote_clone.ret);
     }
 
-    //getchar();
+    // getchar();
 
-    out_munmap:
+out_munmap:
     // Wait for sys_exit
-    sleep(5);
+    sleep(1);
 
     communicate_remote_munmap_t remote_munmap;
     remote_munmap.pid_target        = pid_name("target");
@@ -234,6 +235,7 @@ int main()
         printf("munmap\n");
     }
 
+end:
     close(fd);
 
     return 0;

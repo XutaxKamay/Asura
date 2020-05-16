@@ -423,8 +423,8 @@ void c_ptrace_do_notify(task_t* task, int signr, int exit_code, int why)
     clear_siginfo(&info);
     info.si_signo = signr;
     info.si_code  = exit_code;
-    info.si_pid   = task_pid_vnr(current);
-    info.si_uid   = from_kuid_munged(current_user_ns(), current_uid());
+    info.si_pid   = task_pid_vnr(task);
+    info.si_uid   = from_kuid_munged(task->cred->user_ns, task->cred->uid);
 
     /* Let the debugger run.  */
     c_ptrace_stop(task, exit_code, why, 1, &info);
