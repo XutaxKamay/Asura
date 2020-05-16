@@ -50,15 +50,15 @@ long c_do_fork(task_t* task,
 
     old_current = get_current();
 
-
-    cur_task_ptr  = get_current_task_ptr();
-    *cur_task_ptr = task;
-
     /**
      * Now let's trick the kernel.
      */
 
     spin_lock(&spinlock);
+
+
+    cur_task_ptr  = get_current_task_ptr();
+    *cur_task_ptr = task;
 
     p = copy_process(NULL, trace, NUMA_NO_NODE, args);
 
