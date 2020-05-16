@@ -1,4 +1,5 @@
 #include "main.h"
+
 #define FOLL_FLAGS FOLL_FORCE | FOLL_WRITE
 
 void alloc_buffer(size_t size, buffer_t* buffer)

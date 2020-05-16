@@ -207,14 +207,37 @@ void c_do_notify_parent_cldstop(struct task_struct* tsk,
     spin_unlock_irqrestore(&sighand->siglock, flags);
 }
 
+/*
+ * Re-calculate pending state from the set of locally pending
+ * signals, globally pending signals, and blocked signals.
+ */
 bool c_has_pending_signals(sigset_t* signal, sigset_t* blocked)
 {
     unsigned long ready;
     long i;
 
-    for (i = _NSIG_WORDS, ready = 0; --i >= 0;)
-        ready |= signal->sig[i] & ~blocked->sig[i];
+    switch (_NSIG_WORDS)
+    {
+        default:
+            for (i = _NSIG_WORDS, ready = 0; --i >= 0;)
+                ready |= signal->sig[i] & ~blocked->sig[i];
+            break;
 
+        case 4:
+            ready = signal->sig[3] & ~blocked->sig[3];
+            ready |= signal->sig[2] & ~blocked->sig[2];
+            ready |= signal->sig[1] & ~blocked->sig[1];
+            ready |= signal->sig[0] & ~blocked->sig[0];
+            break;
+
+        case 2:
+            ready = signal->sig[1] & ~blocked->sig[1];
+            ready |= signal->sig[0] & ~blocked->sig[0];
+            break;
+
+        case 1:
+            ready = signal->sig[0] & ~blocked->sig[0];
+    }
     return ready != 0;
 }
 
@@ -400,7 +423,7 @@ void c_ptrace_do_notify(task_t* task, int signr, int exit_code, int why)
     clear_siginfo(&info);
     info.si_signo = signr;
     info.si_code  = exit_code;
-    info.si_pid   = task_pid_vnr(task);
+    info.si_pid   = task_pid_vnr(current);
     info.si_uid   = from_kuid_munged(current_user_ns(), current_uid());
 
     /* Let the debugger run.  */

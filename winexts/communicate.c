@@ -264,6 +264,9 @@ communicate_error_t communicate_process_cmd_remote_mmap(task_t* task,
     current_task_ptr  = get_current_task_ptr();
     *current_task_ptr = remote_task;
 
+    /**
+     * TODO: we might use our own function for more stability
+     */
     communicate_remote_mmap.ret
       = ksys_mmap_pgoff(communicate_remote_mmap.vm_remote_address,
                         communicate_remote_mmap.vm_size,
@@ -340,6 +343,9 @@ communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address)
     current_task_ptr  = get_current_task_ptr();
     *current_task_ptr = remote_task;
 
+    /**
+     * TODO: we might use our own function for more stability
+     */
     communicate_remote_munmap.ret
       = __vm_munmap(communicate_remote_munmap.vm_remote_address,
                     communicate_remote_munmap.vm_size,
