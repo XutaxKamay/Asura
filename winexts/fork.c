@@ -58,11 +58,39 @@ long c_do_fork(task_t* task,
 
     cur_task_ptr  = get_current_task_ptr();
     *cur_task_ptr = task;
+    this_cpu_write(cpu_current_top_of_stack, task_top_of_stack(task));
+    update_task_stack(task);
 
     p = copy_process(NULL, trace, NUMA_NO_NODE, args);
 
+    if (!IS_ERR(p) && p)
+    {
+        p_regs = task_pt_regs(p);
+
+        if (!IS_ERR(p_regs) && p_regs)
+        {
+            for (reg_index = 0; reg_index < sizeof(communicate_regs_set_t)
+                                              / sizeof(bool);
+                 reg_index++)
+            {
+                /* If register is asked to be set */
+                if (*(bool*)((uintptr_t)regs_set
+                             + reg_index * sizeof(bool)))
+                {
+                    *(unsigned long*)((uintptr_t)p_regs
+                                      + reg_index * sizeof(unsigned long))
+                      = *(unsigned long*)((uintptr_t)regs
+                                          + reg_index
+                                              * sizeof(unsigned long));
+                }
+            }
+        }
+    }
+
     cur_task_ptr  = get_current_task_ptr();
     *cur_task_ptr = old_current;
+    this_cpu_write(cpu_current_top_of_stack, task_top_of_stack(old_current));
+    update_task_stack(old_current);
 
     spin_unlock(&spinlock);
 
@@ -92,29 +120,6 @@ long c_do_fork(task_t* task,
         p->vfork_done = &vfork;
         init_completion(&vfork);
         get_task_struct(p);
-    }
-
-    p_regs = task_pt_regs(p);
-
-    if (!IS_ERR(p_regs))
-    {
-        for (reg_index = 0; reg_index < sizeof(communicate_regs_set_t)
-            / sizeof(bool);
-        reg_index++)
-        {
-            /* If register is asked to be set */
-            if (*(bool*)((uintptr_t)regs_set
-                + reg_index * sizeof(bool)))
-            {
-                *(unsigned long*)((uintptr_t)p_regs
-                + reg_index * sizeof(unsigned long))
-                = *(unsigned long*)((uintptr_t)regs
-                + reg_index
-                * sizeof(unsigned long));
-            }
-        }
-
-        p_regs->orig_ax = 0;
     }
 
     wake_up_new_task(p);
