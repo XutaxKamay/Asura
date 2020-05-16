@@ -16,8 +16,7 @@ int main()
            getpid(),
            (uintptr_t)values,
            *(uintptr_t*)((uintptr_t)values + sizeof(values)
-           - sizeof(ptr_t)));
-
+                         - sizeof(ptr_t)));
 
     while (1)
     {

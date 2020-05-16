@@ -8,5 +8,4 @@ int convert_to_hexstring(uint8_t* array,
                          size_t size,
                          char output[],
                          size_t output_size);
-
 #endif

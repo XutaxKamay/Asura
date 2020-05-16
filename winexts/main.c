@@ -16,6 +16,7 @@ MODULE_DESCRIPTION("Module that brings some windows API functions");
 
 int init_mod(void)
 {
+    uintptr_t temp_ptr, temp2_ptr;
     int ret = alloc_chrdev_region(&g_dev, 0, 1, DEVICE_FILE_NAME);
 
     if (ret < 0)
@@ -61,6 +62,14 @@ int init_mod(void)
 
         c_printk_error("failed to create device %s\n", DEVICE_FILE_NAME);
         return -1;
+    }
+
+    // Let's try to find the spinlock dynamically.
+    temp2_ptr = temp_ptr = kallsyms_lookup_name("put_css_set_locked");
+
+    for (; temp_ptr < temp2_ptr + 0x100; temp_ptr++)
+    {
+        pcss_set_lock = *(void**)temp_ptr;
     }
 
     c_printk_info("successfully created device %s\n", DEVICE_FILE_NAME);

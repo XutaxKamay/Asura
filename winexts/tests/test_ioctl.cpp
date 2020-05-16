@@ -1,25 +1,32 @@
-#include <dirent.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <fstream>
 #include <iostream>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <string>
+#include <vector>
+
+#include <unistd.h>
+
+#include <dirent.h>
+
+#include <errno.h>
+#include <fcntl.h>
+
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <vector>
+
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include "../communicate_structs.h"
 
-using namespace std;
+static unsigned char values[0x3000];
+static unsigned char read_values[0x3000];
+static auto g_alloc_addr  = (uint64_t)0x13370000;
+constexpr auto STACK_SIZE = 0x3000;
 
 // http://proswdev.blogspot.com/2012/02/get-process-id-by-name-in-linux-using-c.html
-int pid_name(string procName)
+int pid_name(const std::string& procName)
 {
     int pid = -1;
 
@@ -36,21 +43,25 @@ int pid_name(string procName)
             if (id > 0)
             {
                 // Read contents of virtual /proc/{pid}/cmdline file
-                string cmdPath = string("/proc/") + dirp->d_name
-                                 + "/cmdline";
-                ifstream cmdFile(cmdPath.c_str());
-                string cmdLine;
-                getline(cmdFile, cmdLine);
+                std::string cmdPath = std::string("/proc/")
+                                      + std::string(dirp->d_name)
+                                      + std::string("/cmdline");
+                std::ifstream cmdFile(cmdPath.c_str());
+                std::string cmdLine;
+                std::getline(cmdFile, cmdLine);
+
                 if (!cmdLine.empty())
                 {
                     // Keep first cmdline item which contains the program
                     // path
                     size_t pos = cmdLine.find('\0');
-                    if (pos != string::npos)
+                    if (pos != std::string::npos)
                         cmdLine = cmdLine.substr(0, pos);
+
                     // Keep program name only, removing the path
                     pos = cmdLine.rfind('/');
-                    if (pos != string::npos)
+
+                    if (pos != std::string::npos)
                         cmdLine = cmdLine.substr(pos + 1);
                     // Compare against requested process name
                     if (procName == cmdLine)
@@ -64,10 +75,6 @@ int pid_name(string procName)
 
     return pid;
 }
-
-static unsigned char values[0x3000];
-static unsigned char read_values[0x3000];
-static auto g_alloc_addr = (uint64_t)0x13370000;
 
 int main()
 {
@@ -85,7 +92,7 @@ int main()
     remote_mmap.flags             = MAP_PRIVATE | MAP_ANONYMOUS;
     remote_mmap.offset            = 0;
     remote_mmap.vm_remote_address = g_alloc_addr;
-    remote_mmap.vm_size           = 0x3000;
+    remote_mmap.vm_size           = STACK_SIZE;
     remote_mmap.pid_target        = pid_name("target");
 
     auto error = (communicate_error_t)ioctl(fd,
@@ -174,57 +181,18 @@ int main()
         printf("wrote shellcode\n");
     }
 
-    /*getchar();
-
-    write.vm_local_address = (uintptr_t)&remote_mmap.ret;
-    write.vm_size          = sizeof(uintptr_t);
-
-    for (uintptr_t i = remote_mmap.ret + sizeof(write_shellcode);
-         i < remote_mmap.ret + 0x3000;
-         i += sizeof(uintptr_t))
-    {
-        write.vm_remote_address = i;
-
-        error = (communicate_error_t)ioctl(fd,
-                                           COMMUNICATE_CMD_WRITE,
-                                           &write);
-
-        if (error != COMMUNICATE_ERROR_NONE)
-        {
-            break;
-        }
-    }
-
-    if (error != COMMUNICATE_ERROR_NONE)
-    {
-        printf("ouch write stack %i\n", error);
-    }
-    else
-    {
-        printf("wrote stack\n");
-    }*/
-
-    //     sleep(30);
-
     getchar();
     communicate_remote_clone_t remote_clone;
 
-    remote_clone.flags        = (CLONE_VM | CLONE_FS | CLONE_FILES);
-    remote_clone.stack        = remote_mmap.ret + 0x2000;
-    remote_clone.stack_size   = 4096;
-    remote_clone.child_tid    = 0;
-    remote_clone.pidfd        = 0;
-    remote_clone.parent_tid   = 0;
-    remote_clone.set_tid_size = 0;
-    remote_clone.set_tid      = 0;
-    remote_clone.tls          = 0;
-    remote_clone.exit_signal  = 0;
-    remote_clone.pid_target   = pid_name("target");
-    memset(&remote_clone.regs, 0, sizeof(communicate_regs_t));
-    memset(&remote_clone.regs_set, 0, sizeof(communicate_regs_set_t));
+    memset(&remote_clone, 0, sizeof(communicate_remote_clone_t));
+
+    remote_clone.flags      = (CLONE_VM | CLONE_FS | CLONE_FILES);
+    remote_clone.stack      = remote_mmap.ret + sizeof(write_shellcode);
+    remote_clone.stack_size = STACK_SIZE - sizeof(write_shellcode);
+    remote_clone.pid_target = pid_name("target");
 
     remote_clone.regs_set.ip = true;
-    remote_clone.regs.ip = remote_mmap.ret;
+    remote_clone.regs.ip     = remote_mmap.ret;
 
     error = (communicate_error_t)ioctl(fd,
                                        COMMUNICATE_CMD_REMOTE_CLONE,
@@ -244,7 +212,7 @@ int main()
     communicate_remote_munmap_t remote_munmap;
     remote_munmap.pid_target        = pid_name("target");
     remote_munmap.vm_remote_address = remote_mmap.ret;
-    remote_munmap.vm_size           = 0x3000;
+    remote_munmap.vm_size           = STACK_SIZE;
 
     error = (communicate_error_t)ioctl(fd,
                                        COMMUNICATE_CMD_REMOTE_MUNMAP,

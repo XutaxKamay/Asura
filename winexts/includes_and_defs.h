@@ -1,5 +1,5 @@
-#ifndef INCLUDES_AND_DEFS
-#define INCLUDES_AND_DEFS
+#ifndef INCLUDES_AND_DEFS_H
+#define INCLUDES_AND_DEFS_H
 
 #include <asm/switch_to.h>
 #include <linux/cdev.h>

@@ -1,5 +1,5 @@
-#ifndef COMMUNICATE_STRUCT
-#define COMMUNICATE_STRUCT
+#ifndef COMMUNICATE_STRUCT_H
+#define COMMUNICATE_STRUCT_H
 
 #define COMMUNICATE_MAX_BUFFER (1 << 30)
 #define IO_MAGIC_NUMBER        'x'
@@ -149,4 +149,4 @@ typedef enum communicate_cmd
     = _IOWR(IO_MAGIC_NUMBER, 4, communicate_remote_clone_t*)
 } communicate_cmd_t;
 
-#endif // COMMUNICATE_STRUCT
+#endif

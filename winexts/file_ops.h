@@ -1,5 +1,5 @@
-#ifndef FILE_OPS
-#define FILE_OPS
+#ifndef FILE_OPS_H
+#define FILE_OPS_H
 
 typedef struct file_operations file_operations_t;
 typedef struct inode inode_t;
