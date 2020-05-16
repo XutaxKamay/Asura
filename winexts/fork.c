@@ -25,8 +25,6 @@ long c_do_fork(task_t* task,
                struct pt_regs* regs,
                communicate_regs_set_t* regs_set)
 {
-    static DEFINE_SPINLOCK(spinlock);
-
     u64 clone_flags = args->flags;
     struct completion vfork;
     struct pid* pid;
@@ -51,8 +49,7 @@ long c_do_fork(task_t* task,
 
     old_current = get_current();
 
-    // read_lock(ptasklist_lock);
-    spin_lock(&spinlock);
+    preempt_enable_notrace();
 
     cur_task_ptr  = get_current_task_ptr();
     *cur_task_ptr = task;
@@ -67,9 +64,17 @@ long c_do_fork(task_t* task,
      * Should be good now
      */
 
+    cur_task_ptr  = get_current_task_ptr();
     *cur_task_ptr = old_current;
-    spin_unlock(&spinlock);
-    // read_unlock(ptasklist_lock);
+
+    preempt_enable();
+
+    add_latent_entropy();
+
+    if (IS_ERR(p))
+    {
+        return PTR_ERR(p);
+    }
 
     p_regs = task_pt_regs(p);
 
@@ -85,13 +90,6 @@ long c_do_fork(task_t* task,
               = *(unsigned long*)((uintptr_t)regs
                                   + reg_index * sizeof(unsigned long));
         }
-    }
-
-    add_latent_entropy();
-
-    if (IS_ERR(p))
-    {
-        return PTR_ERR(p);
     }
 
     // TODO:
@@ -126,4 +124,3 @@ long c_do_fork(task_t* task,
 
     return nr;
 }
-
