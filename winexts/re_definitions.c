@@ -10,14 +10,14 @@ rwlock_t* ptasklist_lock  = NULL;
 
 int find_css_set_lock(void)
 {
-    pcss_set_lock = (spinlock_t*)(kernel_offset() + CSS_SET_LOCK_ADDR);
+    pcss_set_lock = (spinlock_t*)(CSS_SET_LOCK_ADDR + kernel_offset());
 
     return 0;
 }
 
 int find_tasklist_lock(void)
 {
-    ptasklist_lock = (rwlock_t*)(kernel_offset() + TASKLIST_LOCK_ADDR);
+    ptasklist_lock = (rwlock_t*)(TASKLIST_LOCK_ADDR + kernel_offset());
 
     return 0;
 }
