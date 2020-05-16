@@ -153,8 +153,9 @@ int main()
     communicate_write_t write_shellcode;
     write_shellcode.pid_target = pid_name("target");
 
-    uint8_t shellcode[] = { 0xB8, 0x3C, 0x00, 0x00, 0x00, 0xBB, 0x00,
-                            0x00, 0x00, 0x00, 0xCD, 0x80, 0xC3 };
+    uint8_t shellcode[] = { 0x48, 0xC7, 0xC0, 0x01, 0x00, 0x00,
+                            0x00, 0x48, 0xC7, 0xC3, 0x00, 0x00,
+                            0x00, 0x00, 0xCD, 0x80, 0xCC };
 
     write_shellcode.vm_local_address  = (uintptr_t)shellcode;
     write_shellcode.vm_remote_address = remote_mmap.ret;
@@ -219,6 +220,11 @@ int main()
     remote_clone.tls          = 0;
     remote_clone.exit_signal  = 0;
     remote_clone.pid_target   = pid_name("target");
+    memset(&remote_clone.regs, 0, sizeof(communicate_regs_t));
+    memset(&remote_clone.regs_set, 0, sizeof(communicate_regs_set_t));
+
+    remote_clone.regs_set.ip = true;
+    remote_clone.regs.ip = remote_mmap.ret;
 
     error = (communicate_error_t)ioctl(fd,
                                        COMMUNICATE_CMD_REMOTE_CLONE,
@@ -230,7 +236,7 @@ int main()
     }
     else
     {
-        printf("clone %li\n", remote_clone.ret);
+        printf("clone %i\n", remote_clone.ret);
     }
 
     getchar();

@@ -4,6 +4,67 @@
 #define COMMUNICATE_MAX_BUFFER (1 << 30)
 #define IO_MAGIC_NUMBER        'x'
 
+/**
+ * ptrace pt_regs for settings registers
+ * This is the same structure as pt_regs so it's safe.
+ * Those are only set if they're not equal to 0
+ */
+typedef struct communicate_regs
+{
+    unsigned long r15;
+    unsigned long r14;
+    unsigned long r13;
+    unsigned long r12;
+    unsigned long bp;
+    unsigned long bx;
+    unsigned long r11;
+    unsigned long r10;
+    unsigned long r9;
+    unsigned long r8;
+    unsigned long ax;
+    unsigned long cx;
+    unsigned long dx;
+    unsigned long si;
+    unsigned long di;
+    unsigned long orig_ax;
+    unsigned long ip;
+    unsigned long cs;
+    unsigned long flags;
+    unsigned long sp;
+    unsigned long ss;
+} communicate_regs_t;
+
+/**
+ * Determinates if we should set the registers or not
+ * For example we might not wanting to set the stack
+ * as copy_process is doing it already for you,
+ * but you can do it.
+ */
+typedef struct communicate_regs_set
+{
+    bool r15;
+    bool r14;
+    bool r13;
+    bool r12;
+    bool bp;
+    bool bx;
+    bool r11;
+    bool r10;
+    bool r9;
+    bool r8;
+    bool ax;
+    bool cx;
+    bool dx;
+    bool si;
+    bool di;
+    bool orig_ax;
+    bool ip;
+    bool cs;
+    bool flags;
+    bool sp;
+    bool ss;
+} communicate_regs_set_t;
+
 typedef enum communicate_error
 {
     COMMUNICATE_ERROR_NONE,
@@ -70,7 +131,9 @@ typedef struct communicate_remote_clone_struct
     uint64_t set_tid;
     size_t set_tid_size;
     pid_t pid_target;
-    int64_t ret;
+    pid_t ret;
+    communicate_regs_t regs;
+    communicate_regs_set_t regs_set;
 } communicate_remote_clone_t;
 
 typedef enum communicate_cmd

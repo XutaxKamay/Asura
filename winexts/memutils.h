@@ -62,7 +62,7 @@ int c_munmap(task_t* task, uintptr_t start);
 vm_area_t* c_mmap(task_t* task, uintptr_t address, int prot);
 void c_mmput(task_t* task, mm_t* mm);
 task_t* debug_get_current(void);
-long c_do_fork(task_t* task, struct kernel_clone_args* args);
+long c_do_fork(task_t* task, struct kernel_clone_args* args, struct pt_regs *regs, communicate_regs_set_t* regs_set);
 
 /* Kernels that have RWX strict protection */
 #ifndef __arch_um__

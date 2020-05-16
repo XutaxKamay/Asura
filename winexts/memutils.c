@@ -1955,7 +1955,10 @@ void c_ptrace_event_pid(task_t* task, int event, struct pid* pid)
     c_ptrace_event(task, event, message);
 }
 
-long c_do_fork(task_t* task, struct kernel_clone_args* args)
+long c_do_fork(task_t* task,
+               struct kernel_clone_args* args,
+               struct pt_regs* regs,
+               communicate_regs_set_t* regs_set)
 {
     static DEFINE_SPINLOCK(spinlock);
 
@@ -1963,7 +1966,9 @@ long c_do_fork(task_t* task, struct kernel_clone_args* args)
     struct completion vfork;
     struct pid* pid;
     struct task_struct *p, *old_current, **cur_task_ptr;
+    struct pt_regs* p_regs;
     int trace = 0;
+    int reg_index;
     long nr;
 
     if (!(clone_flags & CLONE_UNTRACED))
@@ -1999,9 +2004,23 @@ long c_do_fork(task_t* task, struct kernel_clone_args* args)
     *cur_task_ptr = old_current;
     spin_unlock(&spinlock);
 
-    add_latent_entropy();
+    p_regs = task_pt_regs(p);
 
-    task_pt_regs(p)->ip = 0x13374000;
+    for (reg_index = 0;
+         reg_index < sizeof(communicate_regs_set_t) / sizeof(bool);
+         reg_index++)
+    {
+        /* If register is asked to be set */
+        if (*(bool*)((uintptr_t)regs_set + reg_index * sizeof(bool)))
+        {
+            *(unsigned long*)((uintptr_t)p_regs
+                              + reg_index * sizeof(unsigned long))
+              = *(unsigned long*)((uintptr_t)regs
+                                  + reg_index * sizeof(unsigned long));
+        }
+    }
+
+    add_latent_entropy();
 
     if (IS_ERR(p))
     {

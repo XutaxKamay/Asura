@@ -422,7 +422,11 @@ communicate_process_cmd_remote_clone(task_t* task, uintptr_t address)
     old_fs = get_fs();
     set_fs(KERNEL_DS);
 
-    communicate_remote_clone.ret = c_do_fork(remote_task, &clone_args);
+    communicate_remote_clone.ret
+      = c_do_fork(remote_task,
+                  &clone_args,
+                  (struct pt_regs*)&communicate_remote_clone.regs,
+                  &communicate_remote_clone.regs_set);
 
     if (communicate_remote_clone.ret < 0)
     {
