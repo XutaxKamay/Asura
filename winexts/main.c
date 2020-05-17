@@ -83,7 +83,9 @@ int init_mod(void)
     c_printk_info("found find_tasklist_lock at %lX\n",
                   (uintptr_t)ptasklist_lock);
 
-    c_printk("kernel module loaded. (kernel offset: %lX)\n", kernel_offset());
+    c_printk("kernel module loaded at %lX. (kernel offset: %lX)\n",
+             (uintptr_t)THIS_MODULE->core_layout.base,
+             kernel_offset());
 
     return 0;
 }

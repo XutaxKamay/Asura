@@ -262,7 +262,8 @@ int main()
         printf("clone %i\n", remote_clone.ret);
     }
 
-    sleep(1);
+    // sleep(1);
+    usleep(300000);
     // getchar();
 
 out_munmap:

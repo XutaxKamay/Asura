@@ -129,6 +129,9 @@ namespace XLib
         }
 
         auto countVFuncs() -> safesize_t;
+
+      private:
+        ptr_t *_vfptr;
     };
 
     template <class T>

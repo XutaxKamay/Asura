@@ -1,5 +1,7 @@
 #include "main.h"
 
+DEFINE_TRACE(sched_process_fork);
+
 int c_wait_for_vfork_done(struct task_struct* child,
                           struct completion* vfork)
 {
@@ -33,7 +35,20 @@ long c_do_fork(task_t* task,
     int trace = 0;
     int reg_index;
     long nr;
-    static DEFINE_SPINLOCK(spinlock);
+
+    static struct tracepoint* __tracepoint_sched_process_fork_ptr = NULL;
+
+    if (__tracepoint_sched_process_fork_ptr == NULL)
+    {
+        __tracepoint_sched_process_fork_ptr = (void*)kallsyms_lookup_name(
+          "__tracepoint_sched_process_fork");
+    }
+
+    if (__tracepoint_sched_process_fork_ptr == NULL)
+    {
+        c_printk_error("couldn't find __tracepoint_sched_process_fork");
+        return pid_vnr(NULL);
+    }
 
     if (!(clone_flags & CLONE_UNTRACED))
     {
@@ -48,13 +63,13 @@ long c_do_fork(task_t* task,
             trace = 0;
     }
 
-    old_current = get_current();
+    old_current = current;
 
     /**
      * Now let's trick the kernel.
      */
 
-    spin_lock(&spinlock);
+    preempt_disable_notrace();
 
     switch_to_task(task);
 
@@ -62,7 +77,7 @@ long c_do_fork(task_t* task,
 
     switch_to_task(old_current);
 
-    spin_unlock(&spinlock);
+    preempt_enable_notrace();
 
     /**
      * Should be good now
@@ -91,9 +106,8 @@ long c_do_fork(task_t* task,
         }
     }
 
-    // TODO:
-    // We might implement this for the scheduler, but it's just tracing
-    // informations trace_sched_process_fork(task, p);
+    __tracepoint_sched_process_fork = *__tracepoint_sched_process_fork_ptr;
+    trace_sched_process_fork(task, p);
 
     pid = get_task_pid(p, PIDTYPE_PID);
     nr  = pid_vnr(pid);

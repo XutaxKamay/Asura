@@ -1,7 +1,5 @@
 #include "main.h"
 
-#define GUP_FLAGS FOLL_FORCE | FOLL_WRITE
-
 void alloc_buffer(size_t size, buffer_t* buffer)
 {
     buffer->addr = kmalloc(size, GFP_KERNEL);
@@ -673,7 +671,7 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
                                   mm,
                                   user_align_addr,
                                   nr_pages,
-                                  GUP_FLAGS,
+                                  FOLL_FORCE | FOLL_WRITE,
                                   pages,
                                   NULL,
                                   NULL)
@@ -684,10 +682,11 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     }
     else
     {
-        if (get_user_pages_fast(user_align_addr,
-                                nr_pages,
-                                GUP_FLAGS,
-                                pages)
+        if (get_user_pages(user_align_addr,
+                           nr_pages,
+                           FOLL_FORCE | FOLL_WRITE,
+                           pages,
+                           NULL)
             <= 0)
         {
             goto out_sem;
@@ -779,7 +778,7 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
         goto out;
     }
 
-    down_read(&mm->mmap_sem);
+    down_write(&mm->mmap_sem);
 
     user_align_addr = (uintptr_t)align_address((uintptr_t)from,
                                                PAGE_SIZE);
@@ -837,7 +836,7 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
                                   mm,
                                   user_align_addr,
                                   nr_pages,
-                                  GUP_FLAGS,
+                                  FOLL_FORCE | FOLL_WRITE,
                                   pages,
                                   NULL,
                                   NULL)
@@ -848,10 +847,11 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     }
     else
     {
-        if (get_user_pages_fast(user_align_addr,
-                                nr_pages,
-                                GUP_FLAGS,
-                                pages)
+        if (get_user_pages(user_align_addr,
+                           nr_pages,
+                           FOLL_FORCE | FOLL_WRITE,
+                           pages,
+                           NULL)
             <= 0)
         {
             goto out_sem;
@@ -908,7 +908,7 @@ out_sem:
     if (pages)
         kfree(pages);
 
-    up_read(&mm->mmap_sem);
+    up_write(&mm->mmap_sem);
     c_mmput(task, mm);
 
 out:
