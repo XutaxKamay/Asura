@@ -43,7 +43,8 @@ int c_find_vma_from_task_str(task_t* task,
                              const char* name);
 void c_print_vmas(task_t* task);
 int c_munmap(task_t* task, uintptr_t start);
-vm_area_t* c_mmap(task_t* task, uintptr_t address, int prot);
+vm_area_t*
+c_mmap(task_t* task, uintptr_t address, uintptr_t size, int prot);
 void c_mmput(task_t* task, mm_t* mm);
 int c___vm_munmap(task_t* task,
                   unsigned long start,

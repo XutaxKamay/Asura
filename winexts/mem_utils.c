@@ -180,8 +180,6 @@ task_t* find_task_from_pid(pid_t pid)
     {
         if (task->pid == pid)
         {
-            // Add refcount
-            task = get_task_struct(task);
             return task;
         }
     }
@@ -450,20 +448,43 @@ out:
     return ret;
 }
 
-vm_area_t* c_mmap(task_t* task, uintptr_t address, int prot)
+void vm_stat_account(struct mm_struct* mm, vm_flags_t flags, long npages)
+{
+    mm->total_vm += npages;
+
+    if (is_exec_mapping(flags))
+        mm->exec_vm += npages;
+    else if (is_stack_mapping(flags))
+        mm->stack_vm += npages;
+    else if (is_data_mapping(flags))
+        mm->data_vm += npages;
+}
+
+vm_area_t*
+c_mmap(task_t* task, uintptr_t address, uintptr_t size, int prot)
 {
     mm_t* mm;
     vm_area_t* vma;
     bool should_up_write;
+    mm_segment_t old_fs;
+
+    old_fs = get_fs();
+    set_fs(KERNEL_DS);
 
     should_up_write = false;
     vma             = NULL;
 
     mm = get_task_mm_kthread(task);
 
+    if ((size % PAGE_SIZE) != 0)
+    {
+        c_printk_error("unaligned size for c_mmap task %i\n", task->pid);
+        goto out;
+    }
+
     if (mm == NULL)
     {
-        c_printk("couldn't find mm from task %i\n", task->pid);
+        c_printk_error("couldn't find mm from task %i\n", task->pid);
         goto out;
     }
 
@@ -474,26 +495,26 @@ vm_area_t* c_mmap(task_t* task, uintptr_t address, int prot)
 
     if (vma == NULL)
     {
-        c_printk("couldn't allocate vma from task %i\n", task->pid);
+        c_printk_error("couldn't allocate vma from task %i\n", task->pid);
         goto out;
     }
 
     vma_set_anonymous(vma);
 
     vma->vm_start     = address;
-    vma->vm_end       = address + PAGE_SIZE;
+    vma->vm_end       = address + size;
     vma->vm_flags     = prot_to_vm_flags(prot) | mm->def_flags;
     vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
-
-    INIT_LIST_HEAD(&vma->anon_vma_chain);
 
     if (insert_vm_struct(mm, vma) < 0)
     {
         vm_area_free(vma);
-        c_printk("couldn't insert vma in mm struct from task %i\n",
-                 task->pid);
+        c_printk_error("couldn't insert vma in mm struct from task %i\n",
+                       task->pid);
         goto out;
     }
+
+    vm_stat_account(mm, vma->vm_flags, (size / PAGE_SIZE) + 1);
 
 out:
     if (should_up_write)
@@ -501,6 +522,8 @@ out:
         up_write(&mm->mmap_sem);
         c_mmput(task, mm);
     }
+
+    set_fs(old_fs);
 
     return vma;
 }
@@ -985,4 +1008,3 @@ uintptr_t c_find_sym_addr(const char* name)
 
     return temp_symbol.addr;
 }
-

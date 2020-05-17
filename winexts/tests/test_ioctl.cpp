@@ -136,10 +136,7 @@ int main()
     if (!is_mmaped(reinterpret_cast<void*>(g_alloc_addr), STACK_SIZE, pid))
     {
         communicate_remote_mmap_t remote_mmap;
-        remote_mmap.fd     = -1;
         remote_mmap.prot   = PROT_EXEC | PROT_WRITE | PROT_READ;
-        remote_mmap.flags  = MAP_PRIVATE | MAP_ANONYMOUS;
-        remote_mmap.offset = 0;
         remote_mmap.vm_remote_address = g_alloc_addr;
         remote_mmap.vm_size           = STACK_SIZE;
         remote_mmap.pid_target        = pid;
@@ -265,18 +262,15 @@ int main()
         printf("clone %i\n", remote_clone.ret);
     }
 
-    usleep(1000);
-
+    sleep(1);
     // getchar();
 
 out_munmap:
     // Wait for sys_exit
     // sleep(1);
-
     communicate_remote_munmap_t remote_munmap;
     remote_munmap.pid_target        = pid;
     remote_munmap.vm_remote_address = g_alloc_addr;
-    remote_munmap.vm_size           = STACK_SIZE;
 
     error = (communicate_error_t)ioctl(fd,
                                        COMMUNICATE_CMD_REMOTE_MUNMAP,
