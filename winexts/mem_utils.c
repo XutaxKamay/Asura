@@ -589,7 +589,6 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     user_align_addr = (uintptr_t)align_address((uintptr_t)to, PAGE_SIZE);
     shifted         = (uintptr_t)to % PAGE_SIZE;
     nr_pages        = ((size - 1) / PAGE_SIZE) + 1;
-    result          = 0;
 
     /**
      * We might add a page if there is too much shifting
@@ -650,7 +649,6 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
                                   NULL)
             <= 0)
         {
-            result = size;
             goto out_sem;
         }
     }
@@ -662,11 +660,11 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
                                 pages)
             <= 0)
         {
-            result = size;
             goto out_sem;
         }
     }
 
+    result  = 0;
     nr_page = 0;
 
     while (1)
@@ -754,7 +752,6 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
                                                PAGE_SIZE);
     shifted         = (uintptr_t)from % PAGE_SIZE;
     nr_pages        = ((size - 1) / PAGE_SIZE) + 1;
-    result          = 0;
 
     /**
      * We might add a page if there is too much shifting
@@ -816,7 +813,6 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
                                   NULL)
             <= 0)
         {
-            result = size;
             goto out_sem;
         }
     }
@@ -828,11 +824,11 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
                                 pages)
             <= 0)
         {
-            result = size;
             goto out_sem;
         }
     }
 
+    result  = 0;
     nr_page = 0;
 
     while (1)
