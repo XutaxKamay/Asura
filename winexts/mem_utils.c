@@ -1,6 +1,6 @@
 #include "main.h"
 
-#define FOLL_FLAGS FOLL_FORCE | FOLL_WRITE
+#define GUP_FLAGS FOLL_FORCE | FOLL_WRITE
 
 void alloc_buffer(size_t size, buffer_t* buffer)
 {
@@ -644,7 +644,7 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
                                   mm,
                                   user_align_addr,
                                   nr_pages,
-                                  FOLL_FLAGS,
+                                  GUP_FLAGS,
                                   pages,
                                   NULL,
                                   NULL)
@@ -658,7 +658,7 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     {
         if (get_user_pages_fast(user_align_addr,
                                 nr_pages,
-                                FOLL_FLAGS,
+                                GUP_FLAGS,
                                 pages)
             <= 0)
         {
@@ -810,7 +810,7 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
                                   mm,
                                   user_align_addr,
                                   nr_pages,
-                                  FOLL_FLAGS,
+                                  GUP_FLAGS,
                                   pages,
                                   NULL,
                                   NULL)
@@ -824,7 +824,7 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     {
         if (get_user_pages_fast(user_align_addr,
                                 nr_pages,
-                                FOLL_FLAGS,
+                                GUP_FLAGS,
                                 pages)
             <= 0)
         {
