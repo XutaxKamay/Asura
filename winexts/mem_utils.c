@@ -594,76 +594,58 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     /**
      * We might add a page if there is too much shifting
      * For example :
-     *
+
      *  PAGE_SIZE = 0x1000
      *  user_align_addr = 0x0
      *  size = 0x1002
      *  shifted = 0xFFF
-     *
+
      *  Theorically, it should be two pages,
      *  but there is three pages.
-     *
+
      *  What happens?
-     *
+
      *  -> = becomes
-     *
+
      *  1st page:
      *  user_align_addr = 0xFFF -> 0x1000
      *  size = 0x1002 -> 0x1001
      *  shifted = 0xFFF -> 0x0
-     *
+
      *  2nd page:
      *  user_align_addr = 0x1000 -> 0x2000
      *  size = 0x1001 -> 0x1
      *  shifted = 0x0
-     *
+
      *  size == 1
      *  So then...We need a third page.
-     *
+
      *  3rd page:
      *  user_align_addr = 0x2000
      *  size = 0x1 -> 0x0
      *  shifted = 0x0
-     *
+
      *  Done.
-     *
-     * This only the case when shifted on the first page
-     * is greater than the rest of the size of a page size.
      */
 
-    if (shifted > (size % PAGE_SIZE))
+    if ((shifted + (size % PAGE_SIZE)) > PAGE_SIZE)
     {
         nr_pages++;
     }
 
     pages = kmalloc(nr_pages * sizeof(ptr_t), GFP_KERNEL);
 
-    // Check if it's the current task or not
-    if (current != task)
+    if (get_user_pages_remote(task,
+                              mm,
+                              user_align_addr,
+                              nr_pages,
+                              GUP_FLAGS,
+                              pages,
+                              NULL,
+                              NULL)
+        <= 0)
     {
-        if (get_user_pages_remote(task,
-                                  mm,
-                                  user_align_addr,
-                                  nr_pages,
-                                  GUP_FLAGS,
-                                  pages,
-                                  NULL,
-                                  NULL)
-            <= 0)
-        {
-            goto out_sem;
-        }
-    }
-    else
-    {
-        if (get_user_pages_fast(user_align_addr,
-                                nr_pages,
-                                GUP_FLAGS,
-                                pages)
-            <= 0)
-        {
-            goto out_sem;
-        }
+        goto out_sem;
     }
 
     for (nr_page = 0; nr_page < nr_pages; nr_page++)
@@ -678,8 +660,6 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
         }
 
         copied_bytes = copy_to_user((ptr_t)real_addr, from, size_to_copy);
-
-        kunmap(pages[nr_page]);
 
         result -= (size_to_copy - copied_bytes);
 
@@ -785,44 +765,26 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
      *  shifted = 0x0
 
      *  Done.
-
-     * This only the case when shifted on the first page
-     * is greater than the rest of the size of a page size.
      */
 
-    if (shifted > (size % PAGE_SIZE))
+    if ((shifted + (size % PAGE_SIZE)) > PAGE_SIZE)
     {
         nr_pages++;
     }
 
     pages = kmalloc(nr_pages * sizeof(ptr_t), GFP_KERNEL);
 
-    // Check if it's the current task or not
-    if (current != task)
+    if (get_user_pages_remote(task,
+                              mm,
+                              user_align_addr,
+                              nr_pages,
+                              GUP_FLAGS,
+                              pages,
+                              NULL,
+                              NULL)
+        <= 0)
     {
-        if (get_user_pages_remote(task,
-                                  mm,
-                                  user_align_addr,
-                                  nr_pages,
-                                  GUP_FLAGS,
-                                  pages,
-                                  NULL,
-                                  NULL)
-            <= 0)
-        {
-            goto out_sem;
-        }
-    }
-    else
-    {
-        if (get_user_pages_fast(user_align_addr,
-                                nr_pages,
-                                GUP_FLAGS,
-                                pages)
-            <= 0)
-        {
-            goto out_sem;
-        }
+        goto out_sem;
     }
 
     for (nr_page = 0; nr_page < nr_pages; nr_page++)
@@ -831,20 +793,23 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
         size_to_copy = PAGE_SIZE - shifted;
 
-        if (size_to_copy > size)
+        if (size_to_copy > result)
         {
-            size_to_copy = size;
+            size_to_copy = result;
         }
 
         copied_bytes = copy_from_user(to, (ptr_t)real_addr, size_to_copy);
-
-        kunmap(pages[nr_page]);
 
         result -= (size_to_copy - copied_bytes);
 
         if (copied_bytes != 0)
         {
             goto out_sem;
+        }
+
+        if (result <= 0)
+        {
+            break;
         }
 
         // We done the first page, we can go by copying now.
