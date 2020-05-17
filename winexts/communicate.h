@@ -26,19 +26,16 @@ communicate_error_t communicate_read__remote_clone_struct(
   uintptr_t address,
   communicate_remote_clone_t* communicate_remote_clone);
 
-communicate_error_t communicate_process_cmd_read(task_t* task,
-                                                 uintptr_t address);
+communicate_error_t communicate_process_cmd_read(uintptr_t address);
 
-communicate_error_t communicate_process_cmd_write(task_t* task,
-                                                  uintptr_t address);
+communicate_error_t communicate_process_cmd_write(uintptr_t address);
 
-communicate_error_t
-communicate_process_cmd_remote_mmap(task_t* task, uintptr_t address);
+communicate_error_t communicate_process_cmd_remote_mmap(uintptr_t address);
 
 communicate_error_t
-communicate_process_cmd_remote_munmap(task_t* task, uintptr_t address);
+communicate_process_cmd_remote_munmap(uintptr_t address);
 
 communicate_error_t
-communicate_process_cmd_remote_clone(task_t* task, uintptr_t address);
+communicate_process_cmd_remote_clone(uintptr_t address);
 
 #endif

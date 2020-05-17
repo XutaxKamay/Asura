@@ -184,7 +184,10 @@ task_t* find_task_from_pid(pid_t pid)
         }
     }
 
-    return NULL;
+    // Add refcount
+    task = get_task_struct(task);
+
+    return task;
 }
 
 void change_vm_flags(vm_area_t* vma, int new_flags, int* old_flags)

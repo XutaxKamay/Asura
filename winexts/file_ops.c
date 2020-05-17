@@ -1,34 +1,10 @@
 #include "main.h"
 
-file_operations_t g_fops = { .owner          = THIS_MODULE,
+file_operations_t g_fops  = { .owner          = THIS_MODULE,
                              .open           = file_operation_open,
                              .release        = file_operation_release,
                              .unlocked_ioctl = file_operation_ioctl };
-static bool g_bOpenDevice       = false;
-
-mm_t* mm_access(task_t* task, unsigned int mode)
-{
-    mm_t* mm;
-
-    typedef mm_t* (*mm_access_t)(task_t*, unsigned int);
-
-    static mm_access_t p_mm_access = NULL;
-
-    if (p_mm_access == NULL)
-    {
-        p_mm_access = (mm_access_t)kallsyms_lookup_name("mm_access");
-    }
-
-    if (p_mm_access == NULL)
-    {
-        c_printk_error("couldn't find mm_access\n");
-        return NULL;
-    }
-
-    mm = p_mm_access(task, mode);
-
-    return mm;
-}
+static bool g_bOpenDevice = false;
 
 int check_permissions(task_t* task)
 {
@@ -109,29 +85,27 @@ long file_operation_ioctl(file_t* f, unsigned int n, unsigned long p)
     {
         case COMMUNICATE_CMD_READ:
         {
-            error = communicate_process_cmd_read(get_current(), p);
+            error = communicate_process_cmd_read(p);
             break;
         }
         case COMMUNICATE_CMD_WRITE:
         {
-            error = communicate_process_cmd_write(get_current(), p);
+            error = communicate_process_cmd_write(p);
             break;
         }
         case COMMUNICATE_CMD_REMOTE_MMAP:
         {
-            error = communicate_process_cmd_remote_mmap(get_current(), p);
+            error = communicate_process_cmd_remote_mmap(p);
             break;
         }
         case COMMUNICATE_CMD_REMOTE_MUNMAP:
         {
-            error = communicate_process_cmd_remote_munmap(get_current(),
-                                                          p);
+            error = communicate_process_cmd_remote_munmap(p);
             break;
         }
         case COMMUNICATE_CMD_REMOTE_CLONE:
         {
-            error = communicate_process_cmd_remote_clone(get_current(),
-                                                         p);
+            error = communicate_process_cmd_remote_clone(p);
             break;
         }
         default:
