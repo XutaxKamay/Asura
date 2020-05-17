@@ -588,63 +588,73 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
     user_align_addr = (uintptr_t)align_address((uintptr_t)to, PAGE_SIZE);
     shifted         = (uintptr_t)to % PAGE_SIZE;
-    nr_pages        = ((size - 1) / PAGE_SIZE) + 1;
 
     /**
      * We might add a page if there is too much shifting
      * For example :
-
+     *
      *  PAGE_SIZE = 0x1000
      *  user_align_addr = 0x0
      *  size = 0x1002
      *  shifted = 0xFFF
-
+     *
      *  Theorically, it should be two pages,
      *  but there is three pages.
-
+     *
      *  What happens?
-
+     *
      *  -> = becomes
-
+     *
      *  1st page:
      *  user_align_addr = 0xFFF -> 0x1000
      *  size = 0x1002 -> 0x1001
      *  shifted = 0xFFF -> 0x0
-
+     *
      *  2nd page:
      *  user_align_addr = 0x1000 -> 0x2000
      *  size = 0x1001 -> 0x1
      *  shifted = 0x0
-
+     *
      *  size == 1
      *  So then...We need a third page.
-
+     *
      *  3rd page:
      *  user_align_addr = 0x2000
      *  size = 0x1 -> 0x0
      *  shifted = 0x0
-
+     *
      *  Done.
      */
 
-    if ((shifted + (size % PAGE_SIZE)) > PAGE_SIZE)
-    {
-        nr_pages++;
-    }
+    nr_pages        = (((size + shifted) - 1) / PAGE_SIZE) + 1;
 
     pages = kmalloc(nr_pages * sizeof(ptr_t), GFP_KERNEL);
 
-    if (get_user_pages_remote(task,
-                              mm,
-                              user_align_addr,
-                              nr_pages,
-                              GUP_FLAGS,
-                              pages,
-                              NULL,
-                              NULL)
-        <= 0)
+    if (current != task)
     {
-        goto out_sem;
+        if (get_user_pages_remote(task,
+                                  mm,
+                                  user_align_addr,
+                                  nr_pages,
+                                  GUP_FLAGS,
+                                  pages,
+                                  NULL,
+                                  NULL)
+            <= 0)
+        {
+            goto out_sem;
+        }
+    }
+    else
+    {
+        if (get_user_pages_fast(user_align_addr,
+                                nr_pages,
+                                GUP_FLAGS,
+                                pages)
+            <= 0)
+        {
+            goto out_sem;
+        }
     }
 
     for (nr_page = 0; nr_page < nr_pages; nr_page++)
@@ -681,7 +691,12 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
     if (result != 0)
     {
-        c_printk_error("error on algorithm, contact a dev\n");
+        c_printk_error("error on algorithm, contact a dev (%li %li "
+                       "%i %p)\n",
+                       result,
+                       size,
+                       nr_pages,
+                       to);
     }
 
 out_sem:
@@ -727,63 +742,73 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     user_align_addr = (uintptr_t)align_address((uintptr_t)from,
                                                PAGE_SIZE);
     shifted         = (uintptr_t)from % PAGE_SIZE;
-    nr_pages        = ((size - 1) / PAGE_SIZE) + 1;
 
     /**
      * We might add a page if there is too much shifting
      * For example :
-
+     *
      *  PAGE_SIZE = 0x1000
      *  user_align_addr = 0x0
      *  size = 0x1002
      *  shifted = 0xFFF
-
+     *
      *  Theorically, it should be two pages,
      *  but there is three pages.
-
+     *
      *  What happens?
-
+     *
      *  -> = becomes
-
+     *
      *  1st page:
      *  user_align_addr = 0xFFF -> 0x1000
      *  size = 0x1002 -> 0x1001
      *  shifted = 0xFFF -> 0x0
-
+     *
      *  2nd page:
      *  user_align_addr = 0x1000 -> 0x2000
      *  size = 0x1001 -> 0x1
      *  shifted = 0x0
-
+     *
      *  size == 1
      *  So then...We need a third page.
-
+     *
      *  3rd page:
      *  user_align_addr = 0x2000
      *  size = 0x1 -> 0x0
      *  shifted = 0x0
-
+     *
      *  Done.
      */
 
-    if ((shifted + (size % PAGE_SIZE)) > PAGE_SIZE)
-    {
-        nr_pages++;
-    }
+    nr_pages        = (((size + shifted) - 1) / PAGE_SIZE) + 1;
 
     pages = kmalloc(nr_pages * sizeof(ptr_t), GFP_KERNEL);
 
-    if (get_user_pages_remote(task,
-                              mm,
-                              user_align_addr,
-                              nr_pages,
-                              GUP_FLAGS,
-                              pages,
-                              NULL,
-                              NULL)
-        <= 0)
+    if (current != task)
     {
-        goto out_sem;
+        if (get_user_pages_remote(task,
+                                  mm,
+                                  user_align_addr,
+                                  nr_pages,
+                                  GUP_FLAGS,
+                                  pages,
+                                  NULL,
+                                  NULL)
+            <= 0)
+        {
+            goto out_sem;
+        }
+    }
+    else
+    {
+        if (get_user_pages_fast(user_align_addr,
+                                nr_pages,
+                                GUP_FLAGS,
+                                pages)
+            <= 0)
+        {
+            goto out_sem;
+        }
     }
 
     for (nr_page = 0; nr_page < nr_pages; nr_page++)
@@ -820,7 +845,12 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
     if (result != 0)
     {
-        c_printk_error("error on algorithm, contact a dev\n");
+        c_printk_error("error on algorithm, contact a dev (%li %li "
+                       "%i %p)\n",
+                       result,
+                       size,
+                       nr_pages,
+                       from);
     }
 
 out_sem:
