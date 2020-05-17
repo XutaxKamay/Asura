@@ -859,8 +859,6 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
         size -= size_to_copy;
 
-        size -= size_to_copy;
-
         if (size <= 0)
         {
             break;
