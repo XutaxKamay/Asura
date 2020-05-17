@@ -283,11 +283,6 @@ communicate_error_t communicate_process_cmd_remote_mmap(uintptr_t address)
 
     set_fs(old_fs);
 
-    if (communicate_remote_mmap.ret < 0)
-    {
-        error = COMMUNICATE_ERROR_MMAP_PGOFF_FAILED;
-    }
-
     if (c_copy_to_user(current,
                        (ptr_t)address,
                        (ptr_t)&communicate_remote_mmap,

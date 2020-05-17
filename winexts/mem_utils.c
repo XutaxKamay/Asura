@@ -180,12 +180,11 @@ task_t* find_task_from_pid(pid_t pid)
     {
         if (task->pid == pid)
         {
+            // Add refcount
+            task = get_task_struct(task);
             return task;
         }
     }
-
-    // Add refcount
-    task = get_task_struct(task);
 
     return task;
 }
@@ -895,11 +894,7 @@ task_t** get_current_task_ptr(void)
 
 void switch_to_task(task_t* task)
 {
-    // prepare_switch_to(task);
     __switch_to(current, task);
-    /**(get_current_task_ptr()) = task;
-    this_cpu_write(cpu_current_top_of_stack, task_top_of_stack(task));
-    update_task_stack(task);*/
 }
 
 static int find_sym_callback(temp_symbol_t* sym,
