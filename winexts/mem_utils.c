@@ -570,6 +570,7 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     uintptr_t real_addr, user_align_addr;
     uintptr_t shifted;
     int nr_pages, nr_page;
+    uintptr_t copied_bytes;
 
     // So we can access anywhere we can in user space.
     old_fs = get_fs();
@@ -629,6 +630,7 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
      * This only the case when shifted on the first page
      * is greater than the rest of the size of a page size.
      */
+
     if (shifted > (size % PAGE_SIZE))
     {
         nr_pages++;
@@ -664,34 +666,29 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
         }
     }
 
-    result  = 0;
-    nr_page = 0;
-
-    while (1)
+    for (nr_page = 0; nr_page < nr_pages; nr_page++)
     {
         real_addr = (uintptr_t)kmap(pages[nr_page]) + shifted;
 
         size_to_copy = PAGE_SIZE - shifted;
 
-        if (size_to_copy > size)
+        if (size_to_copy > result)
         {
-            size_to_copy = size;
+            size_to_copy = result;
         }
 
-        result += copy_to_user((ptr_t)real_addr, from, size_to_copy);
+        copied_bytes = copy_to_user((ptr_t)real_addr, from, size_to_copy);
 
         kunmap(pages[nr_page]);
-        put_page(pages[nr_page]);
 
-        if (result != 0)
+        result -= copied_bytes;
+
+        if (copied_bytes != size_to_copy)
         {
-            result = size;
             goto out_sem;
         }
 
-        size -= size_to_copy;
-
-        if (size <= 0)
+        if (result <= 0)
         {
             break;
         }
@@ -701,18 +698,17 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
             shifted = 0;
 
         user_align_addr += PAGE_SIZE;
-        nr_page++;
     }
 
-    if (size != 0)
+    if (result != 0)
     {
         c_printk_error("error on algorithm, contact a dev\n");
-        result = size;
     }
 
 out_sem:
     up_write(&mm->mmap_sem);
     c_mmput(task, mm);
+    release_pages(pages, nr_pages);
     kfree(pages);
 
 out:
@@ -732,6 +728,7 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     uintptr_t real_addr, user_align_addr;
     uintptr_t shifted;
     int nr_pages, nr_page;
+    uintptr_t copied_bytes;
 
     // So we can access anywhere we can in user space.
     old_fs = get_fs();
@@ -828,10 +825,7 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
         }
     }
 
-    result  = 0;
-    nr_page = 0;
-
-    while (1)
+    for (nr_page = 0; nr_page < nr_pages; nr_page++)
     {
         real_addr = (uintptr_t)kmap(pages[nr_page]) + shifted;
 
@@ -842,22 +836,15 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
             size_to_copy = size;
         }
 
-        result += copy_from_user(to, (ptr_t)real_addr, size_to_copy);
+        copied_bytes = copy_from_user(to, (ptr_t)real_addr, size_to_copy);
 
         kunmap(pages[nr_page]);
-        put_page(pages[nr_page]);
 
-        if (result != 0)
+        result -= copied_bytes;
+
+        if (copied_bytes != size_to_copy)
         {
-            result = size;
-            goto out;
-        }
-
-        size -= size_to_copy;
-
-        if (size <= 0)
-        {
-            break;
+            goto out_sem;
         }
 
         // We done the first page, we can go by copying now.
@@ -865,18 +852,17 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
             shifted = 0;
 
         user_align_addr += PAGE_SIZE;
-        nr_page++;
     }
 
-    if (size != 0)
+    if (result != 0)
     {
         c_printk_error("error on algorithm, contact a dev\n");
-        result = size;
     }
 
 out_sem:
     up_read(&mm->mmap_sem);
     c_mmput(task, mm);
+    release_pages(pages, nr_pages);
     kfree(pages);
 
 out:
