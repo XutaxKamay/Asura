@@ -4,8 +4,6 @@
  * TODO:
  * check the end of mem_utils.c
  */
-// static DEFINE_SPINLOCK(new_css_set_lock);
-// static DEFINE_RWLOCK(new_tasklist_lock);
 
 /**
  * If anyone in the linux kernel development is reading this...

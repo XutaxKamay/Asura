@@ -69,7 +69,8 @@ uintptr_t map_base_task(task_t* task);
 uintptr_t kernel_offset(void);
 uintptr_t align_address(uintptr_t address, size_t size);
 ptr_t* find_sys_call_table(void);
-// uintptr_t c_find_sym_addr(const char* name);
+uintptr_t find_in_system_map_symbol(const char* name);
+uintptr_t c_find_sym_addr(const char* name);
 
 /**
  * Paging stuffs for kernels that have RWX strict protection

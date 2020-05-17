@@ -8,7 +8,6 @@ static bool g_bOpenDevice       = false;
 
 mm_t* mm_access(task_t* task, unsigned int mode)
 {
-    mm_segment_t old_fs;
     mm_t* mm;
 
     typedef mm_t* (*mm_access_t)(task_t*, unsigned int);
@@ -26,12 +25,7 @@ mm_t* mm_access(task_t* task, unsigned int mode)
         return NULL;
     }
 
-    old_fs = get_fs();
-    set_fs(KERNEL_DS);
-
     mm = p_mm_access(task, mode);
-
-    set_fs(old_fs);
 
     return mm;
 }

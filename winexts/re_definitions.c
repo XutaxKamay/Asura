@@ -10,14 +10,24 @@ rwlock_t* ptasklist_lock  = NULL;
 
 int find_css_set_lock(void)
 {
-    pcss_set_lock = (spinlock_t*)(CSS_SET_LOCK_ADDR + kernel_offset());
+    pcss_set_lock = (spinlock_t*)kallsyms_lookup_name("css_set_lock");
+
+    if (pcss_set_lock == NULL)
+    {
+        return -1;
+    }
 
     return 0;
 }
 
 int find_tasklist_lock(void)
 {
-    ptasklist_lock = (rwlock_t*)(TASKLIST_LOCK_ADDR + kernel_offset());
+    ptasklist_lock = (rwlock_t*)kallsyms_lookup_name("tasklist_lock");
+
+    if (ptasklist_lock == NULL)
+    {
+        return -1;
+    }
 
     return 0;
 }
@@ -506,3 +516,26 @@ u64 nsec_to_clock_t(u64 x)
     return nsec_to_clock_t_ptr(x);
 }
 
+mm_t* mm_access(task_t* task, unsigned int mode)
+{
+    mm_t* mm;
+
+    typedef mm_t* (*mm_access_t)(task_t*, unsigned int);
+
+    static mm_access_t p_mm_access = NULL;
+
+    if (p_mm_access == NULL)
+    {
+        p_mm_access = (mm_access_t)kallsyms_lookup_name("mm_access");
+    }
+
+    if (p_mm_access == NULL)
+    {
+        c_printk_error("couldn't find mm_access\n");
+        return NULL;
+    }
+
+    mm = p_mm_access(task, mode);
+
+    return mm;
+}

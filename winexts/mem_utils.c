@@ -813,15 +813,6 @@ void switch_to_task(task_t* task)
     update_task_stack(task);*/
 }
 
-/**
- * TODO:
- * Some symbols are missing like css_set_lock or tasklist_lock
- * for now I'll remove the codes that uses it and use something else
- * but we can probably parse System.map instead since they're inside that
- * file
- */
-
-/*
 static int find_sym_callback(temp_symbol_t* sym,
                              const char* name,
                              struct module* mod,
@@ -851,7 +842,3 @@ uintptr_t c_find_sym_addr(const char* name)
 
     return temp_symbol.addr;
 }
-
-uintptr_t find_in_system_map_symbol(const char* name)
-{}
-*/
