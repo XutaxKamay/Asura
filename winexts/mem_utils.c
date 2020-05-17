@@ -681,9 +681,9 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
         kunmap(pages[nr_page]);
 
-        result -= copied_bytes;
+        result -= (size_to_copy - copied_bytes);
 
-        if (copied_bytes != size_to_copy)
+        if (copied_bytes != 0)
         {
             goto out_sem;
         }
@@ -840,9 +840,9 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
         kunmap(pages[nr_page]);
 
-        result -= copied_bytes;
+        result -= (size_to_copy - copied_bytes);
 
-        if (copied_bytes != size_to_copy)
+        if (copied_bytes != 0)
         {
             goto out_sem;
         }
