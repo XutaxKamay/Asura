@@ -521,11 +521,19 @@ int c___vm_munmap(task_t* task,
                   bool downgrade)
 {
     int ret;
-    struct mm_struct* mm = task->mm;
+    struct mm_struct* mm = get_task_mm_kthread(task);
     LIST_HEAD(uf);
 
+    if (mm == NULL)
+    {
+        return -EACCES;
+    }
+
     if (down_write_killable(&mm->mmap_sem))
+    {
+        c_mmput(task, mm);
         return -EINTR;
+    }
 
     ret = __do_munmap(mm, start, len, &uf, downgrade);
     /*
@@ -542,6 +550,7 @@ int c___vm_munmap(task_t* task,
         up_write(&mm->mmap_sem);
 
     userfaultfd_unmap_complete(mm, &uf);
+    c_mmput(task, mm);
     return ret;
 }
 
@@ -626,9 +635,14 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
      *  Done.
      */
 
-    nr_pages        = (((size + shifted) - 1) / PAGE_SIZE) + 1;
+    nr_pages = (((size + shifted) - 1) / PAGE_SIZE) + 1;
 
     pages = kmalloc(nr_pages * sizeof(ptr_t), GFP_KERNEL);
+
+    if (pages == NULL)
+    {
+        goto out_sem;
+    }
 
     if (current != task)
     {
@@ -670,6 +684,9 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
         copied_bytes = copy_to_user((ptr_t)real_addr, from, size_to_copy);
 
+        kunmap(pages[nr_page]);
+        put_page(pages[nr_page]);
+
         result -= (size_to_copy - copied_bytes);
 
         if (copied_bytes != 0)
@@ -700,10 +717,12 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     }
 
 out_sem:
+
+    if (pages)
+        kfree(pages);
+
     up_write(&mm->mmap_sem);
     c_mmput(task, mm);
-    release_pages(pages, nr_pages);
-    kfree(pages);
 
 out:
     set_fs(old_fs);
@@ -780,9 +799,14 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
      *  Done.
      */
 
-    nr_pages        = (((size + shifted) - 1) / PAGE_SIZE) + 1;
+    nr_pages = (((size + shifted) - 1) / PAGE_SIZE) + 1;
 
     pages = kmalloc(nr_pages * sizeof(ptr_t), GFP_KERNEL);
+
+    if (pages == NULL)
+    {
+        goto out_sem;
+    }
 
     if (current != task)
     {
@@ -824,6 +848,9 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
         copied_bytes = copy_from_user(to, (ptr_t)real_addr, size_to_copy);
 
+        kunmap(pages[nr_page]);
+        put_page(pages[nr_page]);
+
         result -= (size_to_copy - copied_bytes);
 
         if (copied_bytes != 0)
@@ -854,10 +881,12 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     }
 
 out_sem:
+
+    if (pages)
+        kfree(pages);
+
     up_read(&mm->mmap_sem);
     c_mmput(task, mm);
-    release_pages(pages, nr_pages);
-    kfree(pages);
 
 out:
     set_fs(old_fs);
@@ -956,3 +985,4 @@ uintptr_t c_find_sym_addr(const char* name)
 
     return temp_symbol.addr;
 }
+

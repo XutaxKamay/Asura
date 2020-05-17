@@ -1,10 +1,9 @@
 #include "main.h"
 
-file_operations_t g_fops  = { .owner          = THIS_MODULE,
+file_operations_t g_fops = { .owner          = THIS_MODULE,
                              .open           = file_operation_open,
                              .release        = file_operation_release,
                              .unlocked_ioctl = file_operation_ioctl };
-static bool g_bOpenDevice = false;
 
 int check_permissions(task_t* task)
 {
@@ -30,18 +29,9 @@ int check_permissions(task_t* task)
 int file_operation_open(inode_t* i, file_t* f)
 {
     int ret;
-    c_printk_info("pid %i open %s\n",
-                  get_current()->pid,
-                  DEVICE_FILE_NAME);
+    c_printk_info("pid %i open %s\n", current->pid, DEVICE_FILE_NAME);
 
-    ret = check_permissions(get_current());
-
-    if (g_bOpenDevice)
-    {
-        return -EACCES;
-    }
-
-    g_bOpenDevice = true;
+    ret = check_permissions(current);
 
     return ret;
 }
@@ -49,18 +39,9 @@ int file_operation_open(inode_t* i, file_t* f)
 int file_operation_release(inode_t* i, file_t* f)
 {
     int ret;
-    c_printk_info("pid %i release %s\n",
-                  get_current()->pid,
-                  DEVICE_FILE_NAME);
+    c_printk_info("pid %i release %s\n", current->pid, DEVICE_FILE_NAME);
 
-    ret = check_permissions(get_current());
-
-    if (!g_bOpenDevice)
-    {
-        return -EACCES;
-    }
-
-    g_bOpenDevice = false;
+    ret = check_permissions(current);
 
     return ret;
 }
@@ -70,14 +51,14 @@ long file_operation_ioctl(file_t* f, unsigned int n, unsigned long p)
     communicate_error_t error    = COMMUNICATE_ERROR_NONE;
     communicate_cmd_t cmd_number = (communicate_cmd_t)n;
 
-    if (check_permissions(get_current()) < 0)
+    if (check_permissions(current) < 0)
     {
         error = COMMUNICATE_ERROR_ACCESS_DENIED;
         goto out;
     }
 
     c_printk_info("pid %i ioctl %s with cmd %i\n",
-                  get_current()->pid,
+                  current->pid,
                   DEVICE_FILE_NAME,
                   cmd_number);
 

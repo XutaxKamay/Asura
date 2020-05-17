@@ -143,8 +143,9 @@ communicate_error_t communicate_process_cmd_read(uintptr_t address)
                          temp_buffer.size))
     {
         error = COMMUNICATE_ERROR_COPY_FROM;
-        goto put_task_struct;
     }
+
+    put_task_struct(remote_task);
 
     if (c_copy_to_user(current,
                        (ptr_t)communicate_read.vm_local_address,
@@ -152,11 +153,8 @@ communicate_error_t communicate_process_cmd_read(uintptr_t address)
                        temp_buffer.size))
     {
         error = COMMUNICATE_ERROR_COPY_TO;
-        goto put_task_struct;
     }
 
-put_task_struct:
-    put_task_struct(remote_task);
 out:
     free_buffer(&temp_buffer);
     return error;
@@ -188,6 +186,14 @@ communicate_error_t communicate_process_cmd_write(uintptr_t address)
 
     alloc_buffer(communicate_write.vm_size, &temp_buffer);
 
+    if (c_copy_from_user(current,
+                         temp_buffer.addr,
+                         (ptr_t)communicate_write.vm_local_address,
+                         temp_buffer.size))
+    {
+        error = COMMUNICATE_ERROR_COPY_FROM;
+    }
+
     remote_task = find_task_from_pid(communicate_write.pid_target);
 
     if (remote_task == NULL)
@@ -196,25 +202,14 @@ communicate_error_t communicate_process_cmd_write(uintptr_t address)
         goto out;
     }
 
-    if (c_copy_from_user(current,
-                         temp_buffer.addr,
-                         (ptr_t)communicate_write.vm_local_address,
-                         temp_buffer.size))
-    {
-        error = COMMUNICATE_ERROR_COPY_FROM;
-        goto put_task_struct;
-    }
-
     if (c_copy_to_user(remote_task,
                        (ptr_t)communicate_write.vm_remote_address,
                        (ptr_t)temp_buffer.addr,
                        temp_buffer.size))
     {
         error = COMMUNICATE_ERROR_COPY_TO;
-        goto put_task_struct;
     }
 
-put_task_struct:
     put_task_struct(remote_task);
 
 out:
@@ -228,6 +223,7 @@ communicate_error_t communicate_process_cmd_remote_mmap(uintptr_t address)
     communicate_error_t error;
     communicate_remote_mmap_t communicate_remote_mmap;
     task_t *old_current, *remote_task;
+    mm_t* backup_mm;
     static DEFINE_SPINLOCK(spinlock);
 
     error = communicate_read__remote_mmap_struct(current,
@@ -239,18 +235,18 @@ communicate_error_t communicate_process_cmd_remote_mmap(uintptr_t address)
         goto out;
     }
 
+    if (offset_in_page(communicate_remote_mmap.offset) != 0)
+    {
+        error = COMMUNICATE_ERROR_MMAP_PGOFF_FAILED;
+        goto out;
+    }
+
     remote_task = find_task_from_pid(communicate_remote_mmap.pid_target);
 
     if (remote_task == NULL)
     {
         error = COMMUNICATE_ERROR_TARGET_PID_NOT_FOUND;
         goto out;
-    }
-
-    if (offset_in_page(communicate_remote_mmap.offset) != 0)
-    {
-        error = COMMUNICATE_ERROR_MMAP_PGOFF_FAILED;
-        goto put_task_struct;
     }
 
     old_fs = get_fs();
@@ -265,16 +261,35 @@ communicate_error_t communicate_process_cmd_remote_mmap(uintptr_t address)
 
     switch_to_task(remote_task);
 
+    // This is needed for kernel threads.
+    backup_mm = get_task_mm(remote_task);
+
     /**
-     * TODO: we might use our own function for more stability
+     * We must do this in case mm is null
      */
-    communicate_remote_mmap.ret
-      = ksys_mmap_pgoff(communicate_remote_mmap.vm_remote_address,
-                        communicate_remote_mmap.vm_size,
-                        communicate_remote_mmap.prot,
-                        communicate_remote_mmap.flags,
-                        communicate_remote_mmap.fd,
-                        communicate_remote_mmap.offset >> PAGE_SHIFT);
+    if (backup_mm == NULL && remote_task->active_mm)
+        remote_task->mm = remote_task->active_mm;
+
+    if (remote_task->mm)
+    {
+        /**
+         * TODO: we might use our own function for more stability
+         */
+        communicate_remote_mmap.ret
+          = ksys_mmap_pgoff(communicate_remote_mmap.vm_remote_address,
+                            communicate_remote_mmap.vm_size,
+                            communicate_remote_mmap.prot,
+                            communicate_remote_mmap.flags,
+                            communicate_remote_mmap.fd,
+                            communicate_remote_mmap.offset >> PAGE_SHIFT);
+    }
+
+    remote_task->mm = backup_mm;
+
+    if (backup_mm)
+    {
+        mmput(backup_mm);
+    }
 
     switch_to_task(old_current);
 
@@ -282,6 +297,8 @@ communicate_error_t communicate_process_cmd_remote_mmap(uintptr_t address)
     spin_unlock(&spinlock);
 
     set_fs(old_fs);
+
+    put_task_struct(remote_task);
 
     if (c_copy_to_user(current,
                        (ptr_t)address,
@@ -297,9 +314,6 @@ communicate_error_t communicate_process_cmd_remote_mmap(uintptr_t address)
         error = COMMUNICATE_ERROR_COPY_TO;
     }
 
-put_task_struct:
-    put_task_struct(remote_task);
-
 out:
     return error;
 }
@@ -310,6 +324,7 @@ communicate_process_cmd_remote_munmap(uintptr_t address)
     communicate_error_t error;
     communicate_remote_munmap_t communicate_remote_munmap;
     task_t* remote_task;
+    mm_segment_t old_fs;
 
     error = communicate_read__remote_munmap_struct(
       current,
@@ -329,11 +344,18 @@ communicate_process_cmd_remote_munmap(uintptr_t address)
         goto out;
     }
 
+    old_fs = get_fs();
+    set_fs(KERNEL_DS);
+
     communicate_remote_munmap.ret
       = c___vm_munmap(remote_task,
                       communicate_remote_munmap.vm_remote_address,
                       communicate_remote_munmap.vm_size,
                       true);
+
+    set_fs(old_fs);
+
+    put_task_struct(remote_task);
 
     if (communicate_remote_munmap.ret < 0)
     {
@@ -353,8 +375,6 @@ communicate_process_cmd_remote_munmap(uintptr_t address)
 
         error = COMMUNICATE_ERROR_COPY_TO;
     }
-
-    put_task_struct(remote_task);
 
 out:
     return error;
@@ -378,6 +398,10 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
         goto out;
     }
 
+    memcpy(&clone_args,
+           &communicate_remote_clone,
+           sizeof(struct kernel_clone_args));
+
     remote_task = find_task_from_pid(communicate_remote_clone.pid_target);
 
     if (remote_task == NULL)
@@ -385,10 +409,6 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
         error = COMMUNICATE_ERROR_TARGET_PID_NOT_FOUND;
         goto out;
     }
-
-    memcpy(&clone_args,
-           &communicate_remote_clone,
-           sizeof(struct kernel_clone_args));
 
     old_fs = get_fs();
     set_fs(KERNEL_DS);
@@ -406,6 +426,8 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
 
     set_fs(old_fs);
 
+    put_task_struct(remote_task);
+
     if (c_copy_to_user(current,
                        (ptr_t)address,
                        (ptr_t)&communicate_remote_clone,
@@ -419,8 +441,6 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
 
         error = COMMUNICATE_ERROR_COPY_TO;
     }
-
-    put_task_struct(remote_task);
 
 out:
     return error;
