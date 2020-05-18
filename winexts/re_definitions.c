@@ -10,6 +10,9 @@ rwlock_t* ptasklist_lock  = NULL;
 
 int find_css_set_lock(void)
 {
+    /**
+     * Better to find it by symbol first
+     */
     pcss_set_lock = (spinlock_t*)kallsyms_lookup_name("css_set_lock");
 
     if (pcss_set_lock == NULL)
@@ -17,14 +20,34 @@ int find_css_set_lock(void)
         return -1;
     }
 
+    pcss_set_lock = (spinlock_t*)(CSS_SET_LOCK_ADDR + kernel_offset());
+
     return 0;
 }
 
 int find_tasklist_lock(void)
 {
+    /**
+     * Better to find it by symbol first
+     */
+
     ptasklist_lock = (rwlock_t*)kallsyms_lookup_name("tasklist_lock");
 
     if (ptasklist_lock == NULL)
+    {
+        return -1;
+    }
+
+    ptasklist_lock = (rwlock_t*)(TASKLIST_LOCK_ADDR + kernel_offset());
+
+    return 0;
+}
+
+int find_cpu_runqueues(void)
+{
+    cpu_runqueues_addr = (ptr_t)kallsyms_lookup_name("runqueues");
+
+    if (cpu_runqueues_addr == NULL)
     {
         return -1;
     }
@@ -73,7 +96,6 @@ void vma_rb_erase(vm_area_t* vma, rb_root_t* root)
     return p_vma_rb_erase(vma, root);
 }
 
-/* Redefine functions */
 vm_area_t* vm_area_alloc(mm_t* mm)
 {
     typedef vm_area_t* (*vm_area_alloc_t)(mm_t*);

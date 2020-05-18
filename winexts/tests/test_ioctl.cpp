@@ -262,13 +262,7 @@ int main()
         printf("clone %i\n", remote_clone.ret);
     }
 
-    // sleep(1);
-    usleep(300000);
-    // getchar();
-
 out_munmap:
-    // Wait for sys_exit
-    // sleep(1);
     communicate_remote_munmap_t remote_munmap;
     remote_munmap.pid_target        = pid;
     remote_munmap.vm_remote_address = g_alloc_addr;

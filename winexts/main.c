@@ -58,7 +58,6 @@ int init_mod(void)
         class_destroy(g_cl);
         cdev_del(&g_cdev);
         unregister_chrdev_region(g_dev, 1);
-
         c_printk_error("failed to create device %s\n", DEVICE_FILE_NAME);
         return -1;
     }
@@ -67,25 +66,36 @@ int init_mod(void)
 
     if (find_css_set_lock() < 0)
     {
+        class_destroy(g_cl);
+        cdev_del(&g_cdev);
+        unregister_chrdev_region(g_dev, 1);
         c_printk_info("couldn't find css_set_lock\n");
         return -1;
     }
 
-    c_printk_info("found css_set_lock at %lX\n",
-                  (uintptr_t)pcss_set_lock);
-
     if (find_tasklist_lock() < 0)
     {
+        class_destroy(g_cl);
+        cdev_del(&g_cdev);
+        unregister_chrdev_region(g_dev, 1);
         c_printk_info("couldn't find find_tasklist_lock\n");
         return -1;
     }
 
-    c_printk_info("found find_tasklist_lock at %lX\n",
-                  (uintptr_t)ptasklist_lock);
+    if (find_cpu_runqueues() < 0)
+    {
+        class_destroy(g_cl);
+        cdev_del(&g_cdev);
+        unregister_chrdev_region(g_dev, 1);
+        c_printk_error("couldn't find cpu runqueues addr\n");
+        return -1;
+    }
 
     c_printk("kernel module loaded at %lX. (kernel offset: %lX)\n",
              (uintptr_t)THIS_MODULE->core_layout.base,
              kernel_offset());
+
+    c_proc_caches_init();
 
     return 0;
 }

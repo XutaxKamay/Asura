@@ -1,6 +1,7 @@
 #include "main.h"
 
-DEFINE_TRACE(sched_process_fork);
+// TODO:
+// DEFINE_TRACE(sched_process_fork);
 
 int c_wait_for_vfork_done(struct task_struct* child,
                           struct completion* vfork)
@@ -69,15 +70,11 @@ long c_do_fork(task_t* task,
      * Now let's trick the kernel.
      */
 
-    preempt_disable_notrace();
-
     switch_to_task(task);
 
     p = copy_process(NULL, trace, NUMA_NO_NODE, args);
 
     switch_to_task(old_current);
-
-    preempt_enable_notrace();
 
     /**
      * Should be good now
@@ -106,8 +103,8 @@ long c_do_fork(task_t* task,
         }
     }
 
-    __tracepoint_sched_process_fork = *__tracepoint_sched_process_fork_ptr;
-    trace_sched_process_fork(task, p);
+    // TODO
+    // trace_sched_process_fork(task, p);
 
     pid = get_task_pid(p, PIDTYPE_PID);
     nr  = pid_vnr(pid);

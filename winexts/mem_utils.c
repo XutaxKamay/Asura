@@ -965,18 +965,19 @@ pteval_t set_page_flags(uintptr_t addr, pteval_t val)
 }
 #endif
 
-task_t** get_current_task_ptr(void)
+void lock_cpu_current_task(void)
 {
-#ifndef __arch_um__
-    return (task_t**)(my_cpu_offset + (uintptr_t)&current_task);
-#else
-    return &current;
-#endif
+    *(bool*)(my_cpu_offset + (uintptr_t)&current_task_locked) = true;
+}
+
+void unlock_cpu_current_task(void)
+{
+    *(bool*)(my_cpu_offset + (uintptr_t)&current_task_locked) = false;
 }
 
 void switch_to_task(task_t* task)
 {
-    __switch_to(current, task);
+    *(task_t**)(my_cpu_offset + (uintptr_t)&current_task) = task;
 }
 
 static int find_sym_callback(temp_symbol_t* sym,
