@@ -965,21 +965,6 @@ pteval_t set_page_flags(uintptr_t addr, pteval_t val)
 }
 #endif
 
-void lock_cpu_current_task(void)
-{
-    *(bool*)(my_cpu_offset + (uintptr_t)&current_task_locked) = true;
-}
-
-void unlock_cpu_current_task(void)
-{
-    *(bool*)(my_cpu_offset + (uintptr_t)&current_task_locked) = false;
-}
-
-void switch_to_task(task_t* task)
-{
-    *(task_t**)(my_cpu_offset + (uintptr_t)&current_task) = task;
-}
-
 static int find_sym_callback(temp_symbol_t* sym,
                              const char* name,
                              struct module* mod,

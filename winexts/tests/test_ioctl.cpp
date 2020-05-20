@@ -40,7 +40,7 @@ int pid_name(const std::string& procName)
     {
         // Enumerate all entries in directory until process found
         struct dirent* dirp;
-        while (pid < 0 && (dirp = readdir(dp)))
+        while (pid <= 0 && (dirp = readdir(dp)))
         {
             // Skip non-numeric entries
             int id = atoi(dirp->d_name);
@@ -123,8 +123,6 @@ int main()
         return fd;
     }
 
-    // sleep(1);
-
     auto pid = pid_name("target");
 
     if (pid == -1)
@@ -136,7 +134,7 @@ int main()
     if (!is_mmaped(reinterpret_cast<void*>(g_alloc_addr), STACK_SIZE, pid))
     {
         communicate_remote_mmap_t remote_mmap;
-        remote_mmap.prot   = PROT_EXEC | PROT_WRITE | PROT_READ;
+        remote_mmap.prot = PROT_EXEC | PROT_WRITE | PROT_READ;
         remote_mmap.vm_remote_address = g_alloc_addr;
         remote_mmap.vm_size           = STACK_SIZE;
         remote_mmap.pid_target        = pid;
@@ -154,11 +152,29 @@ int main()
         {
             printf("mmap'd at %lX\n", remote_mmap.ret);
         }
+
+        communicate_write_t write_shellcode;
+        write_shellcode.pid_target = pid;
+
+        write_shellcode.vm_local_address  = (uintptr_t)shellcode;
+        write_shellcode.vm_remote_address = g_alloc_addr;
+        write_shellcode.vm_size           = sizeof(shellcode);
+
+        error = (communicate_error_t)ioctl(fd,
+                                           COMMUNICATE_CMD_WRITE,
+                                           &write_shellcode);
+
+        if (error != COMMUNICATE_ERROR_NONE)
+        {
+            printf("ouch write shellcode jumping to munmap %i\n", error);
+            close(fd);
+            return -1;
+        }
+        else
+        {
+            printf("wrote shellcode\n");
+        }
     }
-
-    // sleep(1);
-
-    // getchar();
 
     communicate_write_t write;
 
@@ -181,8 +197,6 @@ int main()
     {
         printf("test write\n");
     }
-
-    // sleep(1);
 
     communicate_read_t read;
 
@@ -209,60 +223,6 @@ int main()
         printf("success read/write large buffer\n");
     }
 
-    // getchar();
-    // sleep(1);
-
-    communicate_write_t write_shellcode;
-    write_shellcode.pid_target = pid;
-
-    write_shellcode.vm_local_address  = (uintptr_t)shellcode;
-    write_shellcode.vm_remote_address = g_alloc_addr;
-    write_shellcode.vm_size           = sizeof(shellcode);
-
-    error = (communicate_error_t)ioctl(fd,
-                                       COMMUNICATE_CMD_WRITE,
-                                       &write_shellcode);
-
-    if (error != COMMUNICATE_ERROR_NONE)
-    {
-        printf("ouch write shellcode jumping to munmap %i\n", error);
-        goto out_munmap;
-    }
-    else
-    {
-        printf("wrote shellcode\n");
-    }
-
-    // getchar();
-    // sleep(1);
-
-    communicate_remote_clone_t remote_clone;
-
-    memset(&remote_clone, 0, sizeof(communicate_remote_clone_t));
-
-    // "Stealth" thread
-    remote_clone.flags      = (CLONE_VM | CLONE_FS | CLONE_FILES);
-    remote_clone.stack      = g_alloc_addr + 0x2000;
-    remote_clone.stack_size = 0x1000;
-    remote_clone.pid_target = pid;
-
-    remote_clone.regs_set.ip = true;
-    remote_clone.regs.ip     = g_alloc_addr;
-
-    error = (communicate_error_t)ioctl(fd,
-                                       COMMUNICATE_CMD_REMOTE_CLONE,
-                                       &remote_clone);
-
-    if (error != COMMUNICATE_ERROR_NONE)
-    {
-        printf("ouch clone %i\n", error);
-    }
-    else
-    {
-        printf("clone %i\n", remote_clone.ret);
-    }
-
-out_munmap:
     communicate_remote_munmap_t remote_munmap;
     remote_munmap.pid_target        = pid;
     remote_munmap.vm_remote_address = g_alloc_addr;
@@ -280,7 +240,6 @@ out_munmap:
         printf("munmap\n");
     }
 
-end:
     close(fd);
 
     return 0;

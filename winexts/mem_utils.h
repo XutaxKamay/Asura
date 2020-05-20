@@ -82,8 +82,4 @@ pteval_t get_page_flags(uintptr_t addr);
 pteval_t set_page_flags(uintptr_t addr, pteval_t val);
 #endif
 
-void lock_cpu_current_task(void);
-void unlock_cpu_current_task(void);
-void switch_to_task(task_t* task);
-
 #endif

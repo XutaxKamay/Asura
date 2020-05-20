@@ -7,6 +7,7 @@
 
 spinlock_t* pcss_set_lock = NULL;
 rwlock_t* ptasklist_lock  = NULL;
+ptr_t cpu_runqueues_addr  = NULL;
 
 int find_css_set_lock(void)
 {
@@ -17,10 +18,9 @@ int find_css_set_lock(void)
 
     if (pcss_set_lock == NULL)
     {
-        return -1;
+        pcss_set_lock = (spinlock_t*)(CSS_SET_LOCK_ADDR
+                                      + kernel_offset());
     }
-
-    pcss_set_lock = (spinlock_t*)(CSS_SET_LOCK_ADDR + kernel_offset());
 
     return 0;
 }
@@ -35,10 +35,9 @@ int find_tasklist_lock(void)
 
     if (ptasklist_lock == NULL)
     {
-        return -1;
+        ptasklist_lock = (rwlock_t*)(TASKLIST_LOCK_ADDR
+                                     + kernel_offset());
     }
-
-    ptasklist_lock = (rwlock_t*)(TASKLIST_LOCK_ADDR + kernel_offset());
 
     return 0;
 }
@@ -49,7 +48,7 @@ int find_cpu_runqueues(void)
 
     if (cpu_runqueues_addr == NULL)
     {
-        return -1;
+        cpu_runqueues_addr = (ptr_t)CPU_RUNQUEUES_ADDR;
     }
 
     return 0;
@@ -560,4 +559,303 @@ mm_t* mm_access(task_t* task, unsigned int mode)
     mm = p_mm_access(task, mode);
 
     return mm;
+}
+
+void __memcg_kmem_uncharge(struct page* page, int order)
+{
+    typedef void (*__memcg_kmem_uncharge_t)(struct page * page,
+                                            int order);
+    static __memcg_kmem_uncharge_t __memcg_kmem_uncharge_ptr = NULL;
+
+    if (__memcg_kmem_uncharge_ptr == NULL)
+    {
+        __memcg_kmem_uncharge_ptr = (__memcg_kmem_uncharge_t)
+          kallsyms_lookup_name("__memcg_kmem_uncharge");
+    }
+
+    if (__memcg_kmem_uncharge_ptr == NULL)
+    {
+        c_printk_error("couldn't find __memcg_kmem_uncharge\n");
+        return;
+    }
+
+    __memcg_kmem_uncharge_ptr(page, order);
+}
+
+int arch_dup_task_struct(struct task_struct* dst, struct task_struct* src)
+{
+    typedef int (*arch_dup_task_struct_t)(struct task_struct * dst,
+                                          struct task_struct * src);
+
+    static arch_dup_task_struct_t arch_dup_task_struct_ptr = NULL;
+
+    if (arch_dup_task_struct_ptr == NULL)
+    {
+        arch_dup_task_struct_ptr = (arch_dup_task_struct_t)
+          kallsyms_lookup_name("arch_dup_task_struct");
+    }
+
+    if (arch_dup_task_struct_ptr == NULL)
+    {
+        c_printk_error("couldn't find arch_dup_task_struct\n");
+        return -1;
+    }
+
+    return arch_dup_task_struct_ptr(dst, src);
+}
+
+void set_task_stack_end_magic(struct task_struct* tsk)
+{
+    typedef void (*func_t)(void*);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("set_task_stack_end_"
+                                                "magic");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find set_task_stack_end_magic\n");
+        return;
+    }
+
+    func_ptr(tsk);
+}
+
+void __mod_memcg_state(struct mem_cgroup* memcg, int idx, int val)
+{
+    typedef void (*func_t)(void*, int, int);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("__mod_memcg_state");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find __mod_memcg_state\n");
+        return;
+    }
+
+    func_ptr(memcg, idx, val);
+}
+
+struct vm_struct* find_vm_area(const void* addr)
+{
+    typedef void* (*func_t)(const void*);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("find_vm_area");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find find_vm_area\n");
+        return NULL;
+    }
+
+    return func_ptr(addr);
+}
+
+void* __vmalloc_node_range(unsigned long size,
+                           unsigned long align,
+                           unsigned long start,
+                           unsigned long end,
+                           gfp_t gfp_mask,
+                           pgprot_t prot,
+                           unsigned long vm_flags,
+                           int node,
+                           const void* caller)
+{
+    typedef void* (*func_t)(unsigned long,
+                            unsigned long,
+                            unsigned long,
+                            unsigned long,
+                            gfp_t,
+                            pgprot_t,
+                            unsigned long,
+                            int,
+                            const void*);
+
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("__vmalloc_node_range");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find __vmalloc_node_range\n");
+        return NULL;
+    }
+
+    return func_ptr(size,
+                    align,
+                    start,
+                    end,
+                    gfp_mask,
+                    prot,
+                    vm_flags,
+                    node,
+                    caller);
+}
+
+void mod_memcg_obj_state(void* p, int idx, int val)
+{
+    typedef void (*func_t)(void*, int, int);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("mod_memcg_obj_state");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find mod_memcg_obj_state\n");
+        return;
+    }
+
+    return func_ptr(p, idx, val);
+}
+
+int sched_fork(unsigned long clone_flags, struct task_struct* p)
+{
+    typedef int (*func_t)(unsigned long, void*);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("sched_fork");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find sched_fork\n");
+        return -1;
+    }
+
+    return func_ptr(clone_flags, p);
+}
+
+int tsk_fork_get_node(struct task_struct* tsk)
+{
+    typedef int (*func_t)(void*);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("tsk_fork_get_node");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find tsk_fork_get_node\n");
+        return -1;
+    }
+
+    return func_ptr(tsk);
+}
+
+void vfree_atomic(const void* addr)
+{
+    typedef void (*func_t)(const void*);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("vfree_atomic");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find vfree_atomic\n");
+        return;
+    }
+
+    func_ptr(addr);
+}
+
+int __memcg_kmem_charge(struct page* page, gfp_t gfp, int order)
+{
+    typedef int (*func_t)(void*, gfp_t, int);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("__memcg_kmem_charge");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find __memcg_kmem_charge\n");
+        return -1;
+    }
+
+    return func_ptr(page, gfp, order);
+}
+
+void put_task_stack(struct task_struct* tsk)
+{
+    typedef void (*func_t)(void*);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("put_task_stack");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find put_task_stack\n");
+        return;
+    }
+
+    func_ptr(tsk);
+}
+
+struct pid* alloc_pid(struct pid_namespace* ns,
+                      pid_t* set_tid,
+                      size_t set_tid_size)
+{
+    typedef void* (*func_t)(void*, void*, size_t);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("alloc_pid");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find alloc_pid\n");
+        return NULL;
+    }
+
+    return func_ptr(ns, set_tid, set_tid_size);
+}
+
+int copy_namespaces(unsigned long flags, struct task_struct* tsk)
+{
+    typedef int (*func_t)(unsigned long, void*);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("copy_namespaces");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find copy_namespaces\n");
+        return -1;
+    }
+
+    return func_ptr(flags, tsk);
 }

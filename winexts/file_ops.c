@@ -28,22 +28,16 @@ int check_permissions(task_t* task)
 
 int file_operation_open(inode_t* i, file_t* f)
 {
-    int ret;
     c_printk_info("pid %i open %s\n", current->pid, DEVICE_FILE_NAME);
 
-    ret = check_permissions(current);
-
-    return ret;
+    return 0;
 }
 
 int file_operation_release(inode_t* i, file_t* f)
 {
-    int ret;
     c_printk_info("pid %i release %s\n", current->pid, DEVICE_FILE_NAME);
 
-    ret = check_permissions(current);
-
-    return ret;
+    return 0;
 }
 
 long file_operation_ioctl(file_t* f, unsigned int n, unsigned long p)

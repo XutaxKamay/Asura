@@ -115,16 +115,6 @@ typedef struct communicate_remote_munmap_struct
 
 typedef struct communicate_remote_clone_struct
 {
-    uint64_t flags;
-    uint64_t pidfd;
-    uint64_t child_tid;
-    uint64_t parent_tid;
-    int exit_signal;
-    uint64_t stack;
-    uint64_t stack_size;
-    uint64_t tls;
-    uint64_t set_tid;
-    size_t set_tid_size;
     pid_t pid_target;
     pid_t ret;
     communicate_regs_t regs;

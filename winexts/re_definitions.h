@@ -74,4 +74,6 @@ static inline bool is_data_mapping(vm_flags_t flags)
     return (flags & (VM_WRITE | VM_SHARED | VM_STACK)) == VM_WRITE;
 }
 
+int copy_namespaces(unsigned long flags, struct task_struct* tsk);
+
 #endif
