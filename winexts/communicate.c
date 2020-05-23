@@ -333,7 +333,7 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
 {
     communicate_error_t error;
     communicate_remote_clone_t communicate_remote_clone;
-    task_t* remote_task;
+    task_t *remote_task, *old_current_task;
     struct kernel_clone_args clone_args;
 
     error
@@ -346,10 +346,6 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
         goto out;
     }
 
-    memcpy(&clone_args,
-           &communicate_remote_clone,
-           sizeof(struct kernel_clone_args));
-
     remote_task = find_task_from_pid(communicate_remote_clone.pid_target);
 
     if (remote_task == NULL)
@@ -358,7 +354,20 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
         goto out;
     }
 
-    communicate_remote_clone.ret = -1;
+    memset(&clone_args, 0, sizeof(clone_args));
+
+    clone_args.flags = CLONE_VM | CLONE_FS | CLONE_VM;
+    clone_args.stack = 0x13370000;
+
+    old_current_task = current;
+
+    current->attached_to = remote_task;
+    __switch_to(current, remote_task);
+
+    communicate_remote_clone.ret = _do_fork(&clone_args);
+
+    current->attached_to = NULL;
+    __switch_to(current, old_current_task);
 
     c_put_task_struct(remote_task);
 
