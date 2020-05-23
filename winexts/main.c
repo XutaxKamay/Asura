@@ -16,7 +16,15 @@ MODULE_DESCRIPTION("Module that brings some windows API functions");
 
 int init_mod(void)
 {
-    int ret = alloc_chrdev_region(&g_dev, 0, 1, DEVICE_FILE_NAME);
+    int ret;
+
+#if !defined(CONFIG_X86_64)
+    c_printk_error("The kernel module supports only x86-64\n");
+    c_printk_error("New archs will be supported soon.\n");
+    return -1;
+#endif
+
+    ret = alloc_chrdev_region(&g_dev, 0, 1, DEVICE_FILE_NAME);
 
     if (ret < 0)
     {
@@ -98,11 +106,23 @@ int init_mod(void)
              (uintptr_t)THIS_MODULE->core_layout.base,
              kernel_offset());
 
+    if (!init_hooks())
+    {
+        device_destroy(g_cl, g_dev);
+        class_destroy(g_cl);
+        cdev_del(&g_cdev);
+        unregister_chrdev_region(g_dev, 1);
+        c_printk_error("couldn't init hooks\n");
+        return -1;
+    }
+
     return 0;
 }
 
 void free_mod(void)
 {
+    clean_hooks();
+
     device_destroy(g_cl, g_dev);
     class_destroy(g_cl);
     cdev_del(&g_cdev);

@@ -145,23 +145,22 @@ task_t* find_task_from_addr(uintptr_t special_address)
     task_t* task;
     vm_area_t* vma;
 
-    task = NULL;
-    vma  = NULL;
+    vma = NULL;
 
     for_each_process(task)
     {
         if (c_find_vma_from_task(task, &vma, special_address))
         {
-            if (task != current)
-            {
-                get_task_struct(task);
-            }
+            //             if (task != current)
+            //             {
+            //                 get_task_struct(task);
+            //             }
 
-            break;
+            return task;
         }
     }
 
-    return task;
+    return NULL;
 }
 
 mm_t* get_task_mm_kthread(task_t* task)
@@ -199,7 +198,7 @@ task_t* find_task_from_pid(pid_t pid)
         }
     }
 
-    return task;
+    return NULL;
 }
 
 void c_put_task_struct(task_t* task)

@@ -2,7 +2,7 @@ TASKLIST_LOCK_ADDR=$(shell cat /home/kamay/vmshare/linux-liquorix-5.6/System.map
 CSS_SET_LOCK_ADDR=$(shell cat /home/kamay/vmshare/linux-liquorix-5.6/System.map | grep ' css_set_lock' | cut -d ' ' -f1)
 CPU_RUNQUEUES_ADDR=$(shell cat /home/kamay/vmshare/linux-liquorix-5.6/System.map | grep ' runqueues' | cut -d ' ' -f1)
 
-winexts-y += ../communicate.o ../file_ops.o ../fork.o ../main.o ../mem_utils.o ../pattern_scanning.o ../re_definitions.o ../utils.o
+winexts-y += ../communicate.o ../file_ops.o ../fork.o ../main.o ../mem_utils.o ../pattern_scanning.o ../re_definitions.o ../utils.o ../switch_to.o ../hooks.o
 obj-m += winexts.o
 ccflags-y += -g -O0 -Wall -DCSS_SET_LOCK_ADDR=0x$(CSS_SET_LOCK_ADDR) -DTASKLIST_LOCK_ADDR=0x$(TASKLIST_LOCK_ADDR) -DCPU_RUNQUEUES_ADDR=0x$(CPU_RUNQUEUES_ADDR)
 

@@ -233,6 +233,8 @@ int main()
     remote_clone.regs_set.ip = true;
     remote_clone.regs.ip     = g_alloc_addr;
     remote_clone.flags       = CLONE_VM | CLONE_FS | CLONE_FILES;
+    remote_clone.stack       = g_alloc_addr + 0x2000;
+    remote_clone.stack_size  = 0x1000;
 
     error = (communicate_error_t)ioctl(fd,
                                        COMMUNICATE_CMD_REMOTE_CLONE,

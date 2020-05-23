@@ -140,7 +140,8 @@ communicate_error_t communicate_process_cmd_read(uintptr_t address)
     /**
      * For now kernel threads are risky
      */
-    if (remote_task->mm == NULL || remote_task->active_mm == NULL)
+    if (remote_task->mm == NULL || remote_task->active_mm == NULL
+        || (remote_task->mm != remote_task->active_mm))
     {
         error = COMMUNICATE_ERROR_ACCESS_DENIED;
         c_printk_error("can't read on a kernel thread due to security "
@@ -216,7 +217,8 @@ communicate_error_t communicate_process_cmd_write(uintptr_t address)
     /**
      * For now kernel threads are risky
      */
-    if (remote_task->mm == NULL || remote_task->active_mm == NULL)
+    if (remote_task->mm == NULL || remote_task->active_mm == NULL
+        || (remote_task->mm != remote_task->active_mm))
     {
         error = COMMUNICATE_ERROR_ACCESS_DENIED;
         c_printk_error("can't write on a kernel thread due to security "
@@ -266,7 +268,8 @@ communicate_error_t communicate_process_cmd_remote_mmap(uintptr_t address)
     /**
      * For now kernel threads are risky
      */
-    if (remote_task->mm == NULL || remote_task->active_mm == NULL)
+    if (remote_task->mm == NULL || remote_task->active_mm == NULL
+        || (remote_task->mm != remote_task->active_mm))
     {
         error = COMMUNICATE_ERROR_ACCESS_DENIED;
         c_printk_error("can't munmap on a kernel thread due to security "
@@ -336,7 +339,8 @@ communicate_process_cmd_remote_munmap(uintptr_t address)
     /**
      * For now kernel threads are risky
      */
-    if (remote_task->mm == NULL || remote_task->active_mm == NULL)
+    if (remote_task->mm == NULL || remote_task->active_mm == NULL
+        || (remote_task->mm != remote_task->active_mm))
     {
         error = COMMUNICATE_ERROR_ACCESS_DENIED;
         c_printk_error("can't munmap on a kernel thread due to security "
@@ -401,7 +405,8 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
     /**
      * For now kernel threads are risky
      */
-    if (remote_task->mm == NULL || remote_task->active_mm == NULL)
+    if (remote_task->mm == NULL || remote_task->active_mm == NULL
+        || (remote_task->mm != remote_task->active_mm))
     {
         error = COMMUNICATE_ERROR_ACCESS_DENIED;
         c_printk_error("can't clone on a kernel thread due to security "
@@ -409,12 +414,16 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
         goto out;
     }
 
+    memset(&clone_args, 0, sizeof(clone_args));
+
     clone_args.flags       = communicate_remote_clone.flags;
     clone_args.exit_signal = communicate_remote_clone.exit_signal;
+    clone_args.stack       = communicate_remote_clone.stack;
+    clone_args.stack_size  = communicate_remote_clone.stack_size;
 
     old_current_task = current;
 
-    current->attached_to = remote_task;
+    task_attached_to[old_current_task->pid] = remote_task;
     this_cpu_write(current_task, remote_task);
 
     communicate_remote_clone.ret
@@ -422,7 +431,7 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
                   &communicate_remote_clone.regs,
                   &communicate_remote_clone.regs_set);
 
-    old_current_task->attached_to = NULL;
+    task_attached_to[old_current_task->pid] = NULL;
     this_cpu_write(current_task, old_current_task);
 
     c_put_task_struct(remote_task);
