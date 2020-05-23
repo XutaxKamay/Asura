@@ -331,7 +331,6 @@ out:
 
 communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
 {
-    mm_segment_t old_fs;
     communicate_error_t error;
     communicate_remote_clone_t communicate_remote_clone;
     task_t* remote_task;

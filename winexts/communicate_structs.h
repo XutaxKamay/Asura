@@ -10,27 +10,27 @@
  */
 typedef struct communicate_regs
 {
-    unsigned long r15;
-    unsigned long r14;
-    unsigned long r13;
-    unsigned long r12;
-    unsigned long bp;
-    unsigned long bx;
-    unsigned long r11;
-    unsigned long r10;
-    unsigned long r9;
-    unsigned long r8;
-    unsigned long ax;
-    unsigned long cx;
-    unsigned long dx;
-    unsigned long si;
-    unsigned long di;
-    unsigned long orig_ax;
-    unsigned long ip;
-    unsigned long cs;
-    unsigned long flags;
-    unsigned long sp;
-    unsigned long ss;
+    uint64_t r15;
+    uint64_t r14;
+    uint64_t r13;
+    uint64_t r12;
+    uint64_t bp;
+    uint64_t bx;
+    uint64_t r11;
+    uint64_t r10;
+    uint64_t r9;
+    uint64_t r8;
+    uint64_t ax;
+    uint64_t cx;
+    uint64_t dx;
+    uint64_t si;
+    uint64_t di;
+    uint64_t orig_ax;
+    uint64_t ip;
+    uint64_t cs;
+    uint64_t flags;
+    uint64_t sp;
+    uint64_t ss;
 } communicate_regs_t;
 
 /**
