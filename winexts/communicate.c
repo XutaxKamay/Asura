@@ -137,6 +137,17 @@ communicate_error_t communicate_process_cmd_read(uintptr_t address)
         goto out;
     }
 
+    /**
+     * For now kernel threads are risky
+     */
+    if (remote_task->mm == NULL || remote_task->active_mm == NULL)
+    {
+        error = COMMUNICATE_ERROR_ACCESS_DENIED;
+        c_printk_error("can't read on a kernel thread due to security "
+                       "risks (might also freeze your kernel)\n");
+        goto out;
+    }
+
     if (c_copy_from_user(remote_task,
                          temp_buffer.addr,
                          (ptr_t)communicate_read.vm_remote_address,
@@ -202,6 +213,17 @@ communicate_error_t communicate_process_cmd_write(uintptr_t address)
         goto out;
     }
 
+    /**
+     * For now kernel threads are risky
+     */
+    if (remote_task->mm == NULL || remote_task->active_mm == NULL)
+    {
+        error = COMMUNICATE_ERROR_ACCESS_DENIED;
+        c_printk_error("can't write on a kernel thread due to security "
+                       "risks (might also freeze your kernel)\n");
+        goto out;
+    }
+
     if (c_copy_to_user(remote_task,
                        (ptr_t)communicate_write.vm_remote_address,
                        (ptr_t)temp_buffer.addr,
@@ -238,6 +260,17 @@ communicate_error_t communicate_process_cmd_remote_mmap(uintptr_t address)
     if (remote_task == NULL)
     {
         error = COMMUNICATE_ERROR_TARGET_PID_NOT_FOUND;
+        goto out;
+    }
+
+    /**
+     * For now kernel threads are risky
+     */
+    if (remote_task->mm == NULL || remote_task->active_mm == NULL)
+    {
+        error = COMMUNICATE_ERROR_ACCESS_DENIED;
+        c_printk_error("can't munmap on a kernel thread due to security "
+                       "risks (might also freeze your kernel)\n");
         goto out;
     }
 
@@ -300,6 +333,17 @@ communicate_process_cmd_remote_munmap(uintptr_t address)
         goto out;
     }
 
+    /**
+     * For now kernel threads are risky
+     */
+    if (remote_task->mm == NULL || remote_task->active_mm == NULL)
+    {
+        error = COMMUNICATE_ERROR_ACCESS_DENIED;
+        c_printk_error("can't munmap on a kernel thread due to security "
+                       "risks (might also freeze your kernel)\n");
+        goto out;
+    }
+
     communicate_remote_munmap.ret
       = c_munmap(remote_task,
                  communicate_remote_munmap.vm_remote_address);
@@ -354,20 +398,32 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
         goto out;
     }
 
-    memset(&clone_args, 0, sizeof(clone_args));
+    /**
+     * For now kernel threads are risky
+     */
+    if (remote_task->mm == NULL || remote_task->active_mm == NULL)
+    {
+        error = COMMUNICATE_ERROR_ACCESS_DENIED;
+        c_printk_error("can't clone on a kernel thread due to security "
+                       "risks (might also freeze your kernel)\n");
+        goto out;
+    }
 
-    clone_args.flags = CLONE_VM | CLONE_FS | CLONE_VM;
-    clone_args.stack = 0x13370000;
+    clone_args.flags       = communicate_remote_clone.flags;
+    clone_args.exit_signal = communicate_remote_clone.exit_signal;
 
     old_current_task = current;
 
     current->attached_to = remote_task;
-    __switch_to(current, remote_task);
+    this_cpu_write(current_task, remote_task);
 
-    communicate_remote_clone.ret = _do_fork(&clone_args);
+    communicate_remote_clone.ret
+      = c_do_fork(&clone_args,
+                  &communicate_remote_clone.regs,
+                  &communicate_remote_clone.regs_set);
 
-    current->attached_to = NULL;
-    __switch_to(current, old_current_task);
+    old_current_task->attached_to = NULL;
+    this_cpu_write(current_task, old_current_task);
 
     c_put_task_struct(remote_task);
 

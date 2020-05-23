@@ -176,33 +176,6 @@ int main()
         {
             printf("wrote shellcode\n");
         }
-
-        communicate_write_t write_stack;
-        write_stack.pid_target = pid;
-
-        uintptr_t val                = g_alloc_addr;
-        write_stack.vm_local_address = (uintptr_t)&val;
-        write_stack.vm_size          = sizeof(val);
-
-        for (uintptr_t i = g_alloc_addr + sizeof(shellcode);
-             i < g_alloc_addr + STACK_SIZE;
-             i += sizeof(uintptr_t))
-        {
-            write_stack.vm_remote_address = i;
-            error                         = (communicate_error_t)ioctl(fd,
-                                               COMMUNICATE_CMD_WRITE,
-                                               &write_stack);
-
-            if (error != COMMUNICATE_ERROR_NONE)
-            {
-                printf("ouch write stack jumping to munmap %i\n",
-                       error);
-                close(fd);
-                return -1;
-            }
-        }
-
-        printf("wrote stack\n");
     }
 
     communicate_write_t write;
@@ -252,14 +225,14 @@ int main()
         printf("success read/write large buffer\n");
     }
 
-    /*
     communicate_remote_clone_t remote_clone;
+
+    memset(&remote_clone, 0, sizeof(remote_clone));
 
     remote_clone.pid_target  = pid;
     remote_clone.regs_set.ip = true;
-    remote_clone.regs_set.sp = true;
     remote_clone.regs.ip     = g_alloc_addr;
-    remote_clone.regs.sp     = g_alloc_addr + 0x200;
+    remote_clone.flags       = CLONE_VM | CLONE_FS | CLONE_FILES;
 
     error = (communicate_error_t)ioctl(fd,
                                        COMMUNICATE_CMD_REMOTE_CLONE,
@@ -272,9 +245,9 @@ int main()
     else
     {
         printf("test clone\n");
-    }*/
+    }
 
-    communicate_remote_munmap_t remote_munmap;
+    /*communicate_remote_munmap_t remote_munmap;
     remote_munmap.pid_target        = pid;
     remote_munmap.vm_remote_address = g_alloc_addr;
 
@@ -289,7 +262,7 @@ int main()
     else
     {
         printf("munmap\n");
-    }
+    }*/
 
     close(fd);
 

@@ -76,6 +76,7 @@ typedef enum communicate_error
     COMMUNICATE_ERROR_CMD_READ_HEADER_ERROR,
     COMMUNICATE_ERROR_MMAP_PGOFF_FAILED,
     COMMUNICATE_ERROR_VM_MUNMAP_FAILED,
+    COMMUNICATE_ERROR_VM_MMAP_FAILED,
     COMMUNICATE_ERROR_CLONE_FAILED,
     COMMUNICATE_ERROR_ACCESS_DENIED,
     COMMUNICATE_ERROR_MAX
@@ -115,6 +116,8 @@ typedef struct communicate_remote_munmap_struct
 
 typedef struct communicate_remote_clone_struct
 {
+    uint64_t flags;
+    int exit_signal;
     pid_t pid_target;
     pid_t ret;
     communicate_regs_t regs;

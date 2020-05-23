@@ -7,6 +7,7 @@
 
 #include "communicate.h"
 #include "file_ops.h"
+#include "fork.h"
 #include "mem_utils.h"
 #include "pattern_scanning.h"
 #include "re_definitions.h"
