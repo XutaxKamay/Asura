@@ -503,6 +503,12 @@ c_mmap(task_t* task, uintptr_t address, uintptr_t size, int prot)
 
     mm = get_task_mm_kthread(task);
 
+    if ((address % PAGE_SIZE) != 0)
+    {
+        c_printk_error("unaligned address for c_mmap task %i\n", task->pid);
+        goto out;
+    }
+
     if ((size % PAGE_SIZE) != 0)
     {
         c_printk_error("unaligned size for c_mmap task %i\n", task->pid);

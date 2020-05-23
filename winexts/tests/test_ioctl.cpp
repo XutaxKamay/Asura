@@ -20,15 +20,6 @@
 
 #include "../communicate_structs.h"
 
-static unsigned char values[0x3000];
-static unsigned char read_values[0x3000];
-static auto g_alloc_addr  = (uint64_t)0x13370000;
-constexpr auto STACK_SIZE = 0x3000;
-
-uint8_t shellcode[] = { 0x48, 0xC7, 0xC0, 0x01, 0x00, 0x00,
-                        0x00, 0x48, 0xC7, 0xC3, 0x00, 0x00,
-                        0x00, 0x00, 0xCD, 0x80, 0xCC };
-
 // http://proswdev.blogspot.com/2012/02/get-process-id-by-name-in-linux-using-c.html
 int pid_name(const std::string& procName)
 {
@@ -131,6 +122,15 @@ int main()
         return fd;
     }
 
+    unsigned char values[0x3000];
+    unsigned char read_values[0x3000];
+    uint64_t g_alloc_addr = 0x13370000;
+    uint64_t STACK_SIZE   = 0x3000;
+
+    uint8_t shellcode[] = { 0x48, 0xC7, 0xC0, 0x01, 0x00, 0x00,
+                            0x00, 0x48, 0xC7, 0xC3, 0x00, 0x00,
+                            0x00, 0x00, 0xCD, 0x80, 0xCC };
+
     if (!is_mmaped(reinterpret_cast<void*>(g_alloc_addr), STACK_SIZE, pid))
     {
         communicate_remote_mmap_t remote_mmap;
@@ -150,7 +150,9 @@ int main()
         }
         else
         {
-            printf("mmap'd at %lX\n", remote_mmap.ret);
+            printf("mmap'd at %lX-%lX\n",
+                   remote_mmap.ret,
+                   remote_mmap.vm_remote_address);
         }
 
         communicate_write_t write_shellcode;
