@@ -190,10 +190,10 @@ task_t* find_task_from_pid(pid_t pid)
             /**
              * Don't need to do that for current?
              */
-            if (task != current)
-            {
-                get_task_struct(task);
-            }
+            //             if (task != current)
+            //             {
+            //                 get_task_struct(task);
+            //             }
 
             return task;
         }
@@ -207,10 +207,10 @@ void c_put_task_struct(task_t* task)
     /**
      * Don't need to do that for current?
      */
-    if (task != current)
-    {
-        put_task_struct(task);
-    }
+    //     if (task != current)
+    //     {
+    //         put_task_struct(task);
+    //     }
 }
 
 /**
@@ -496,6 +496,11 @@ c_mmap(task_t* task, uintptr_t address, uintptr_t size, int prot)
     should_up_write = false;
     vma             = NULL;
 
+    if (c_find_vma_from_task(task, &vma, address))
+    {
+        goto out;
+    }
+
     mm = get_task_mm_kthread(task);
 
     if ((size % PAGE_SIZE) != 0)
@@ -531,6 +536,7 @@ c_mmap(task_t* task, uintptr_t address, uintptr_t size, int prot)
     if (insert_vm_struct(mm, vma) < 0)
     {
         vm_area_free(vma);
+        vma = NULL;
         c_printk_error("couldn't insert vma in mm struct from task %i\n",
                        task->pid);
         goto out;
