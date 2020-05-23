@@ -106,7 +106,7 @@ int init_mod(void)
              (uintptr_t)THIS_MODULE->core_layout.base,
              kernel_offset());
 
-    if (!init_hooks())
+    if (init_hooks())
     {
         device_destroy(g_cl, g_dev);
         class_destroy(g_cl);
