@@ -304,7 +304,6 @@ communicate_process_cmd_remote_munmap(uintptr_t address)
       = c_munmap(remote_task,
                  communicate_remote_munmap.vm_remote_address);
 
-
     c_put_task_struct(remote_task);
 
     if (communicate_remote_munmap.ret < 0)

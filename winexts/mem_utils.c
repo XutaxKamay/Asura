@@ -457,7 +457,7 @@ void change_vm_flags(vm_area_t* vma, int new_flags, int* old_flags)
     int all_prot_to_flags;
 
     all_prot_to_flags = VM_READ | VM_WRITE | VM_EXEC | VM_GROWSDOWN
-    | VM_GROWSUP;
+                        | VM_GROWSUP;
 
     if (old_flags != NULL)
     {
