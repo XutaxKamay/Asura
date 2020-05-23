@@ -145,6 +145,8 @@ communicate_error_t communicate_process_cmd_read(uintptr_t address)
         error = COMMUNICATE_ERROR_COPY_FROM;
     }
 
+    c_put_task_struct(remote_task);
+
     if (c_copy_to_user(current,
                        (ptr_t)communicate_read.vm_local_address,
                        (ptr_t)temp_buffer.addr,
@@ -208,6 +210,8 @@ communicate_error_t communicate_process_cmd_write(uintptr_t address)
         error = COMMUNICATE_ERROR_COPY_TO;
     }
 
+    c_put_task_struct(remote_task);
+
 out:
     free_buffer(&temp_buffer);
     return error;
@@ -215,7 +219,6 @@ out:
 
 communicate_error_t communicate_process_cmd_remote_mmap(uintptr_t address)
 {
-    mm_segment_t old_fs;
     communicate_error_t error;
     communicate_remote_mmap_t communicate_remote_mmap;
     task_t* remote_task;
@@ -238,9 +241,6 @@ communicate_error_t communicate_process_cmd_remote_mmap(uintptr_t address)
         goto out;
     }
 
-    old_fs = get_fs();
-    set_fs(KERNEL_DS);
-
     vma = c_mmap(remote_task,
                  communicate_remote_mmap.vm_remote_address,
                  communicate_remote_mmap.vm_size,
@@ -255,7 +255,7 @@ communicate_error_t communicate_process_cmd_remote_mmap(uintptr_t address)
         communicate_remote_mmap.ret = 0;
     }
 
-    set_fs(old_fs);
+    c_put_task_struct(remote_task);
 
     if (c_copy_to_user(current,
                        (ptr_t)address,
@@ -281,7 +281,6 @@ communicate_process_cmd_remote_munmap(uintptr_t address)
     communicate_error_t error;
     communicate_remote_munmap_t communicate_remote_munmap;
     task_t* remote_task;
-    mm_segment_t old_fs;
 
     error = communicate_read__remote_munmap_struct(
       current,
@@ -301,14 +300,12 @@ communicate_process_cmd_remote_munmap(uintptr_t address)
         goto out;
     }
 
-    old_fs = get_fs();
-    set_fs(KERNEL_DS);
-
     communicate_remote_munmap.ret
       = c_munmap(remote_task,
                  communicate_remote_munmap.vm_remote_address);
 
-    set_fs(old_fs);
+
+    c_put_task_struct(remote_task);
 
     if (communicate_remote_munmap.ret < 0)
     {
@@ -363,12 +360,9 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
         goto out;
     }
 
-    old_fs = get_fs();
-    set_fs(KERNEL_DS);
-
     communicate_remote_clone.ret = -1;
 
-    set_fs(old_fs);
+    c_put_task_struct(remote_task);
 
     if (c_copy_to_user(current,
                        (ptr_t)address,

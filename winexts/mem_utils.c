@@ -36,24 +36,9 @@ void init_buffer(buffer_t* buffer)
     buffer->addr = NULL;
 }
 
-task_t* find_task_from_addr(uintptr_t special_address)
-{
-    task_t* task;
-    vm_area_t* vma;
-
-    task = NULL;
-    vma  = NULL;
-
-    for_each_process(task)
-    {
-        if (c_find_vma_from_task(task, &vma, special_address))
-        {
-            break;
-        }
-    }
-
-    return task;
-}
+/**
+ * task_struct and mm_struct utils
+ */
 
 void vm_flags_to_string(vm_area_t* vma, char* output, int size)
 {
@@ -155,6 +140,30 @@ int prot_to_vm_flags(int prot)
     return flags;
 }
 
+task_t* find_task_from_addr(uintptr_t special_address)
+{
+    task_t* task;
+    vm_area_t* vma;
+
+    task = NULL;
+    vma  = NULL;
+
+    for_each_process(task)
+    {
+        if (c_find_vma_from_task(task, &vma, special_address))
+        {
+            if (task != current)
+            {
+                get_task_struct(task);
+            }
+
+            break;
+        }
+    }
+
+    return task;
+}
+
 mm_t* get_task_mm_kthread(task_t* task)
 {
     mm_t* mm;
@@ -178,6 +187,14 @@ task_t* find_task_from_pid(pid_t pid)
     {
         if (task->pid == pid)
         {
+            /**
+             * Don't need to do that for current?
+             */
+            if (task != current)
+            {
+                get_task_struct(task);
+            }
+
             return task;
         }
     }
@@ -185,27 +202,16 @@ task_t* find_task_from_pid(pid_t pid)
     return task;
 }
 
-void change_vm_flags(vm_area_t* vma, int new_flags, int* old_flags)
+void c_put_task_struct(task_t* task)
 {
-    int all_prot_to_flags;
-
-    all_prot_to_flags = VM_READ | VM_WRITE | VM_EXEC | VM_GROWSDOWN
-                        | VM_GROWSUP;
-
-    if (old_flags != NULL)
+    /**
+     * Don't need to do that for current?
+     */
+    if (task != current)
     {
-        *old_flags = vm_flags_to_prot(vma);
+        put_task_struct(task);
     }
-
-    // Do not delete special vm flags.
-    vma->vm_flags &= ~all_prot_to_flags;
-    vma->vm_flags |= prot_to_vm_flags(new_flags);
-    vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
 }
-
-/**
- * task_struct and mm_struct utils
- */
 
 /**
  * Finds the part of virtual memory of the virtual address space range
@@ -444,6 +450,24 @@ out:
     set_fs(old_fs);
 
     return ret;
+}
+
+void change_vm_flags(vm_area_t* vma, int new_flags, int* old_flags)
+{
+    int all_prot_to_flags;
+
+    all_prot_to_flags = VM_READ | VM_WRITE | VM_EXEC | VM_GROWSDOWN
+    | VM_GROWSUP;
+
+    if (old_flags != NULL)
+    {
+        *old_flags = vm_flags_to_prot(vma);
+    }
+
+    // Do not delete special vm flags.
+    vma->vm_flags &= ~all_prot_to_flags;
+    vma->vm_flags |= prot_to_vm_flags(new_flags);
+    vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
 }
 
 void vm_stat_account(struct mm_struct* mm, vm_flags_t flags, long npages)
@@ -922,7 +946,6 @@ out:
  */
 
 #ifndef __arch_um__
-
 pte_t* get_pte(uintptr_t address)
 {
     unsigned int level;
