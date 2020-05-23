@@ -9,6 +9,7 @@ bool hook_rel_call(uintptr_t call_inst_location, uintptr_t new_func)
 
     if (*(unsigned char*)call_inst_location != 0xE8)
     {
+        set_page_flags(call_inst_location + 1, old_pte_val);
         return false;
     }
 
@@ -30,6 +31,7 @@ bool hook_rel_jmp(uintptr_t call_inst_location, uintptr_t new_func)
 
     if (*(unsigned char*)call_inst_location != 0xE9)
     {
+        set_page_flags(call_inst_location + 1, old_pte_val);
         return false;
     }
 
