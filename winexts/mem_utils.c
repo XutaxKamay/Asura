@@ -493,16 +493,6 @@ c_mmap(task_t* task, uintptr_t address, uintptr_t size, int prot)
     old_fs = get_fs();
     set_fs(KERNEL_DS);
 
-    should_up_write = false;
-    vma             = NULL;
-
-    if (c_find_vma_from_task(task, &vma, address))
-    {
-        goto out;
-    }
-
-    mm = get_task_mm_kthread(task);
-
     if ((address % PAGE_SIZE) != 0)
     {
         c_printk_error("unaligned address for c_mmap task %i\n", task->pid);
@@ -514,6 +504,16 @@ c_mmap(task_t* task, uintptr_t address, uintptr_t size, int prot)
         c_printk_error("unaligned size for c_mmap task %i\n", task->pid);
         goto out;
     }
+
+    should_up_write = false;
+    vma             = NULL;
+
+    if (c_find_vma_from_task(task, &vma, address))
+    {
+        goto out;
+    }
+
+    mm = get_task_mm_kthread(task);
 
     if (mm == NULL)
     {
