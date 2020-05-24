@@ -13,6 +13,8 @@
 
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include <cstdint>
 #include <cstdio>
@@ -232,7 +234,7 @@ int main()
             printf("success read/write large buffer\n");
         }
 
-        /*communicate_remote_clone_t remote_clone;
+        communicate_remote_clone_t remote_clone;
 
         memset(&remote_clone, 0, sizeof(remote_clone));
 
@@ -243,22 +245,28 @@ int main()
         remote_clone.stack       = g_alloc_addr + 0x2000;
         remote_clone.stack_size  = 0x1000;
 
-        while (true)
+        error = (communicate_error_t)ioctl(fd,
+                                           COMMUNICATE_CMD_REMOTE_CLONE,
+                                           &remote_clone);
+
+        if (error != COMMUNICATE_ERROR_NONE)
         {
-            auto error = (communicate_error_t)
-              ioctl(fd, COMMUNICATE_CMD_REMOTE_CLONE, &remote_clone);
+            printf("ouch clone %i\n", error);
+        }
+        else
+        {
+            printf("test clone %i\n", remote_clone.ret);
 
-            if (error != COMMUNICATE_ERROR_NONE)
-            {
-                printf("ouch clone %i\n", error);
-            }
-            else
-            {
-                printf("test clone %i\n", remote_clone.ret);
-            }
+            // Wait for termination
+            int status;
+            waitpid(remote_clone.ret, &status, 0);
 
-            usleep(1000*10);
-        }*/
+            if (WIFEXITED(status))
+            {
+                int exit_status = WEXITSTATUS(status);
+                printf("Exit status of the child was %d\n", exit_status);
+            }
+        }
 
         communicate_remote_munmap_t remote_munmap;
         remote_munmap.pid_target        = pid;

@@ -424,13 +424,6 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
 
     old_current_task = current;
 
-    /**
-     * This is needed as we are not on the current task,
-     * though get_task_mm and mmput shouldn't be used for some obscure
-     * reasons I don't know yet..
-     */
-    // mm = get_task_mm(remote_task);
-
     down_write(&remote_task->mm->mmap_sem);
 
     task_attached_to[old_current_task->pid] = remote_task;
@@ -448,8 +441,6 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
      * This is needed as we are not on the current task
      */
     up_write(&remote_task->mm->mmap_sem);
-
-    // mmput(mm);
 
     c_put_task_struct(remote_task);
 
