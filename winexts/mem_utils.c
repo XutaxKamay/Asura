@@ -455,6 +455,9 @@ int c_munmap(task_t* task, uintptr_t start)
                         &uf);
     }
 
+    /**
+     * Debugging
+     */
     validate_mm(mm);
 
     up_write(&mm->mmap_sem);
@@ -484,18 +487,6 @@ void change_vm_flags(vm_area_t* vma, int new_flags, int* old_flags)
     vma->vm_flags &= ~all_prot_to_flags;
     vma->vm_flags |= prot_to_vm_flags(new_flags);
     vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
-}
-
-void vm_stat_account(struct mm_struct* mm, vm_flags_t flags, long npages)
-{
-    mm->total_vm += npages;
-
-    if (is_exec_mapping(flags))
-        mm->exec_vm += npages;
-    else if (is_stack_mapping(flags))
-        mm->stack_vm += npages;
-    else if (is_data_mapping(flags))
-        mm->data_vm += npages;
 }
 
 vm_area_t*
@@ -567,9 +558,12 @@ c_mmap(task_t* task, uintptr_t address, uintptr_t size, int prot)
         goto out;
     }
 
-    vm_stat_account(mm, vma->vm_flags, size >> PAGE_SHIFT);
+    vm_stat_account(mm, vma->vm_flags, (size / PAGE_SIZE) + 1);
 
 out:
+    /**
+     * Debugging
+     */
     validate_mm(mm);
 
     if (should_up_write)

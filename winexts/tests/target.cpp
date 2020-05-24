@@ -14,7 +14,6 @@ typedef void* ptr_t;
 
 int main()
 {
-    signal(SIGCHLD, SIG_IGN);
     memset(values, 0x11, sizeof(values));
 
     printf("pid: %i address: %lX value: %lX\n",
@@ -25,6 +24,5 @@ int main()
 
     while (1)
     {
-        usleep(1000);
     }
 }
