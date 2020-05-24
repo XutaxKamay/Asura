@@ -458,7 +458,7 @@ int c_munmap(task_t* task, uintptr_t start)
     /**
      * Debugging
      */
-    validate_mm(mm);
+    // validate_mm(mm);
 
     up_write(&mm->mmap_sem);
 
@@ -547,7 +547,6 @@ c_mmap(task_t* task, uintptr_t address, uintptr_t size, int prot)
     vma->vm_flags = prot_to_vm_flags(prot) | mm->def_flags | VM_DONTEXPAND
                     | VM_SOFTDIRTY;
     vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
-    vma->vm_pgoff     = 0;
 
     if (insert_vm_struct(mm, vma) < 0)
     {
@@ -564,7 +563,7 @@ out:
     /**
      * Debugging
      */
-    validate_mm(mm);
+    // validate_mm(mm);
 
     if (should_up_write)
     {

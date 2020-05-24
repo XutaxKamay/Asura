@@ -1,18 +1,28 @@
 
 #include "main.h"
 
+/**
+ * Credits to linux kernel developers
+ */
+
 DEFINE_TRACE(sched_process_fork);
 
-void ignore_signal_sigchld(struct task_struct* t)
+void ignore_signal(int signal, struct task_struct* t)
 {
-    t->sighand->action[SIGCHLD].sa.sa_handler = SIG_IGN;
+    t->sighand->action[signal].sa.sa_handler = SIG_IGN;
 
     flush_signals(t);
 }
 
-/**
- * Credits to linux kernel developers
- */
+void ignore_signals(struct task_struct *t)
+{
+    int i;
+
+    for (i = 0; i < _NSIG; ++i)
+        t->sighand->action[i].sa.sa_handler = SIG_IGN;
+
+    flush_signals(t);
+}
 
 int wait_for_vfork_done(struct task_struct* child,
                         struct completion* vfork)
@@ -78,33 +88,30 @@ long c_do_fork(struct kernel_clone_args* args,
 
     p = copy_process(NULL, trace, NUMA_NO_NODE, args);
 
-    if (!IS_ERR(p))
-    {
-        pt_regs = task_pt_regs(p);
-
-        if (!IS_ERR(pt_regs))
-        {
-            for (reg_index = 0; reg_index < sizeof(communicate_regs_set_t)
-                                              / sizeof(bool);
-                 reg_index++)
-            {
-                /* If register is asked to be set */
-                if (*(bool*)((uintptr_t)regs_set
-                             + reg_index * sizeof(bool)))
-                {
-                    *(unsigned long*)((uintptr_t)pt_regs
-                                      + reg_index * sizeof(unsigned long))
-                      = *(unsigned long*)((uintptr_t)regs
-                                          + reg_index * sizeof(uint64_t));
-                }
-            }
-        }
-    }
-
     add_latent_entropy();
 
     if (IS_ERR(p))
         return PTR_ERR(p);
+
+    pt_regs = task_pt_regs(p);
+
+    if (!IS_ERR(pt_regs))
+    {
+        for (reg_index = 0;
+             reg_index < sizeof(communicate_regs_set_t) / sizeof(bool);
+             reg_index++)
+        {
+            /* If register is asked to be set */
+            if (*(bool*)((uintptr_t)regs_set + reg_index * sizeof(bool)))
+            {
+                *(unsigned long*)((uintptr_t)pt_regs
+                                  + reg_index * sizeof(unsigned long))
+                  = (unsigned long)*(uint64_t*)((uintptr_t)regs
+                                                + reg_index
+                                                    * sizeof(uint64_t));
+            }
+        }
+    }
 
     /*
      * Do this prior waking up the new thread - the thread pointer
@@ -139,5 +146,6 @@ long c_do_fork(struct kernel_clone_args* args,
     }
 
     put_pid(pid);
+
     return nr;
 }

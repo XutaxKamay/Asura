@@ -2,7 +2,7 @@
 #ifndef FORK_H
 #define FORK_H
 
-void ignore_signal_sigchld(struct task_struct* t);
+void ignore_signal(int signal, struct task_struct* t);
 
 int wait_for_vfork_done(struct task_struct* child,
                         struct completion* vfork);

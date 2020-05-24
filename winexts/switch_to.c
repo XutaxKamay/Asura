@@ -20,7 +20,8 @@ task_t* task_attached_to[PID_MAX_LIMIT];
  * For now we write twice the current_task, but this not a problem,
  * since we're inside the schedule function.
  */
-task_t* new___switch_to(task_t* prev, task_t* next)
+__visible __notrace_funcgraph task_t* new___switch_to(task_t* prev,
+                                                      task_t* next)
 {
     task_t* ret;
 

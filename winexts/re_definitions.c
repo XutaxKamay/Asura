@@ -960,6 +960,25 @@ void __mpol_put(struct mempolicy* p)
     func_ptr(p);
 }
 
+int force_sig_info(struct kernel_siginfo* info)
+{
+    typedef int (*func_t)(void*);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("force_sig_info");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find force_sig_info\n");
+        return -1;
+    }
+
+    return func_ptr(info);
+}
+
 /**
  * Code
  * Credits to linux kernel developers
