@@ -979,6 +979,25 @@ int force_sig_info(struct kernel_siginfo* info)
     return func_ptr(info);
 }
 
+const char* arch_vma_name(struct vm_area_struct* vma)
+{
+    typedef void* (*func_t)(void*);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("arch_vma_name");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find arch_vma_name\n");
+        return NULL;
+    }
+
+    return func_ptr(vma);
+}
+
 /**
  * Code
  * Credits to linux kernel developers

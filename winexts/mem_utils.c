@@ -21,7 +21,7 @@ int realloc_buffer(size_t size, buffer_t* buffer)
     if (buffer == NULL)
     {
         alloc_buffer(size, buffer);
-        return 0;
+        return 1;
     }
     else
     {

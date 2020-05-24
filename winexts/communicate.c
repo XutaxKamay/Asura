@@ -484,14 +484,14 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
 {
     communicate_error_t error;
     communicate_list_vmas_t communicate_list_vmas;
-    communicate_vma_t communicate_vma;
+    communicate_vma_t* communicate_vma;
     task_t* remote_task;
-    buffer_t* buffer;
+    buffer_t buffer;
     mm_t* mm;
     vm_area_t* vma;
     const char* vma_description = NULL;
 
-    init_buffer(buffer);
+    init_buffer(&buffer);
 
     error = communicate_read__list_vmas_struct(current,
                                                address,
@@ -531,14 +531,30 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
 
     while (vma != NULL)
     {
-        communicate_vma.vm_has_private_data = vma->vm_private_data ?
-                                                true :
-                                                false;
-        communicate_vma.vm_start            = vma->vm_start;
-        communicate_vma.vm_end              = vma->vm_end;
-        communicate_vma.vm_flags            = vma->vm_flags;
-        communicate_vma.vm_pgoff            = vma->vm_pgoff;
-        communicate_vma.vm_page_prot        = vma->vm_page_prot.pgprot;
+        communicate_list_vmas.vma_count++;
+
+        if (!realloc_buffer(sizeof(communicate_vma_t)
+                              * communicate_list_vmas.vma_count,
+                            &buffer))
+        {
+            error = COMMUNICATE_ERROR_KERNEL_ALLOC_FAILED;
+            goto out;
+        }
+
+        communicate_vma = ((
+          communicate_vma_t*)((uintptr_t)buffer.addr
+                              + sizeof(communicate_vma_t)
+                                  * (communicate_list_vmas.vma_count
+                                     - 1)));
+
+        communicate_vma->vm_has_private_data = vma->vm_private_data ?
+                                                 true :
+                                                 false;
+        communicate_vma->vm_start            = vma->vm_start;
+        communicate_vma->vm_end              = vma->vm_end;
+        communicate_vma->vm_flags            = vma->vm_flags;
+        communicate_vma->vm_pgoff            = vma->vm_pgoff;
+        communicate_vma->vm_page_prot        = vma->vm_page_prot.pgprot;
 
         if (vma->vm_ops && vma->vm_ops->name)
         {
@@ -554,13 +570,11 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
                 {
                     vma_description = "[vdso]";
                 }
-
                 else if (vma->vm_start <= mm->brk
                          && vma->vm_end >= mm->start_brk)
                 {
                     vma_description = "[heap]";
                 }
-
                 else if (vma->vm_start <= vma->vm_mm->start_stack
                          && vma->vm_end >= vma->vm_mm->start_stack)
                 {
@@ -569,20 +583,22 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
             }
         }
 
-        if (strlen(vma_description) <= COMMUNICATE_MAX_PATH)
+        if (vma_description != NULL)
         {
-            strcpy(communicate_vma.vm_descriptor, vma_description);
+            if (strlen(vma_description) <= COMMUNICATE_MAX_PATH)
+            {
+                strcpy(communicate_vma->vm_descriptor, vma_description);
+            }
+            else
+            {
+                strcpy(communicate_vma->vm_descriptor,
+                       "array is too low");
+            }
         }
         else
         {
-            strcpy(communicate_vma.vm_descriptor, "array is too low");
+            strcpy(communicate_vma->vm_descriptor, "");
         }
-
-        communicate_list_vmas.vma_count++;
-
-        realloc_buffer(sizeof(communicate_vma_t)
-                         * communicate_list_vmas.vma_count,
-                       buffer);
 
         vma = vma->vm_next;
     }
@@ -599,7 +615,37 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
         goto out;
     }
 
+    if (c_copy_to_user(current,
+                       communicate_list_vmas.vmas,
+                       buffer.addr,
+                       communicate_list_vmas.vma_count
+                         * sizeof(communicate_vma_t)))
+    {
+        c_printk_error("couldn't write communicate vmas "
+                       "from task "
+                       "%i\n",
+                       current->pid);
+
+        error = COMMUNICATE_ERROR_COPY_TO;
+        goto out;
+    }
+
+    if (c_copy_to_user(current,
+                       (ptr_t)address,
+                       (ptr_t)&communicate_list_vmas,
+                       sizeof(communicate_list_vmas_t)))
+    {
+        c_printk_error("couldn't write communicate list vmas "
+                       "struct "
+                       "from task "
+                       "%i\n",
+                       current->pid);
+
+        error = COMMUNICATE_ERROR_COPY_TO;
+        goto out;
+    }
+
 out:
-    free_buffer(buffer);
+    free_buffer(&buffer);
     return error;
 }

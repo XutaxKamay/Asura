@@ -172,7 +172,6 @@ int scan_task(task_t* task,
         c_printk("task %s(%i) has no mmap struct!\n",
                  task->comm,
                  task->pid);
-        c_mmput(task, mm);
         return 0;
     }
 
@@ -209,8 +208,6 @@ int scan_task(task_t* task,
         if (vma == NULL)
             break;
     }
-
-    c_mmput(task, mm);
 
     set_fs(old_fs);
 
