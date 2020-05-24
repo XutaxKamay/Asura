@@ -383,6 +383,7 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
     communicate_remote_clone_t communicate_remote_clone;
     task_t *remote_task, *old_current_task;
     struct kernel_clone_args clone_args;
+    mm_t* mm;
 
     error
       = communicate_read__remote_clone_struct(current,
@@ -423,7 +424,12 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
 
     old_current_task = current;
 
-    down_write(&remote_task->mm->mmap_sem);
+    /**
+     * This is needed as we are not on the current task
+     */
+    mm = get_task_mm(remote_task);
+
+    down_write(&mm->mmap_sem);
 
     task_attached_to[old_current_task->pid] = remote_task;
     this_cpu_write(current_task, remote_task);
@@ -436,7 +442,12 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
     task_attached_to[old_current_task->pid] = NULL;
     this_cpu_write(current_task, old_current_task);
 
-    up_write(&remote_task->mm->mmap_sem);
+    /**
+     * This is needed as we are not on the current task
+     */
+    up_write(&mm->mmap_sem);
+
+    mmput(mm);
 
     c_put_task_struct(remote_task);
 

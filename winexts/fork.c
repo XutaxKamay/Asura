@@ -88,8 +88,7 @@ long c_do_fork(struct kernel_clone_args* args,
                     *(unsigned long*)((uintptr_t)pt_regs
                                       + reg_index * sizeof(unsigned long))
                       = *(unsigned long*)((uintptr_t)regs
-                                          + reg_index
-                                              * sizeof(unsigned long));
+                                          + reg_index * sizeof(uint64_t));
                 }
             }
         }
