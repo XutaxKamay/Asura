@@ -132,11 +132,20 @@ int main()
     uint64_t g_alloc_addr = 0x13370000;
     uint64_t STACK_SIZE   = 0x3000;
 
-    uint8_t shellcode[] = { 0x48, 0xC7, 0xC0, 0x01, 0x00, 0x00,
-                            0x00, 0x48, 0xC7, 0xC3, 0x00, 0x00,
-                            0x00, 0x00, 0xCD, 0x80, 0xCC };
+    /**
+     * mov rax, 39
+     * int 0x80*
+     * mov rsi, 9
+     * mov rdi, rax
+     * mov rax, 62
+     * int 0x80
+     */
 
-    while (true)
+    uint8_t shellcode[] = { 0x48, 0xC7, 0xC0, 0x27, 0x00, 0x00, 0x00,
+                            0xCD, 0x80, 0x48, 0xC7, 0xC6, 0x09, 0x00,
+                            0x00, 0x00, 0x48, 0x89, 0xC7, 0x48, 0xC7,
+                            0xC0, 0x3E, 0x00, 0x00, 0x00, 0xCD, 0x80 };
+    // while (true)
     {
         if (!is_mmaped(reinterpret_cast<void*>(g_alloc_addr),
                        STACK_SIZE,
@@ -154,7 +163,6 @@ int main()
             if (error != COMMUNICATE_ERROR_NONE)
             {
                 printf("ouch mmap %i\n", error);
-                continue;
             }
             else
             {
@@ -178,7 +186,6 @@ int main()
         if (error != COMMUNICATE_ERROR_NONE)
         {
             printf("ouch write shellcode jumping to munmap %i\n", error);
-            continue;
         }
         else
         {
@@ -242,6 +249,7 @@ int main()
         remote_clone.regs_set.ip = true;
         remote_clone.regs.ip     = g_alloc_addr;
         remote_clone.flags       = (CLONE_VM | CLONE_FS | CLONE_FILES);
+        remote_clone.exit_signal = 0;
         remote_clone.stack       = g_alloc_addr + 0x2000;
         remote_clone.stack_size  = 0x1000;
 
@@ -256,17 +264,10 @@ int main()
         else
         {
             printf("test clone %i\n", remote_clone.ret);
-
-            // Wait for termination
-            int status;
-            waitpid(remote_clone.ret, &status, 0);
-
-            if (WIFEXITED(status))
-            {
-                int exit_status = WEXITSTATUS(status);
-                printf("Exit status of the child was %d\n", exit_status);
-            }
+            usleep(1000 * 50);
         }
+
+        getchar();
 
         communicate_remote_munmap_t remote_munmap;
         remote_munmap.pid_target        = pid;
