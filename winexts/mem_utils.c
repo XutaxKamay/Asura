@@ -167,7 +167,9 @@ mm_t* get_task_mm_kthread(task_t* task)
 {
     mm_t* mm;
 
-    mm = get_task_mm(task);
+//     mm = get_task_mm(task);
+
+    mm = task->mm;
 
     // Kernel thread?
     if (mm == NULL)
@@ -565,8 +567,8 @@ out:
 void c_mmput(task_t* task, mm_t* mm)
 {
     // Don't do that on kernel threads
-    if (mm && (task->mm == task->active_mm))
-        mmput(mm);
+//     if (mm && (task->mm == task->active_mm))
+//         mmput(mm);
 }
 
 /**

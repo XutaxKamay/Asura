@@ -134,28 +134,32 @@ int main()
                             0x00, 0x48, 0xC7, 0xC3, 0x00, 0x00,
                             0x00, 0x00, 0xCD, 0x80, 0xCC };
 
-    if (!is_mmaped(reinterpret_cast<void*>(g_alloc_addr), STACK_SIZE, pid))
+    while (true)
     {
-        communicate_remote_mmap_t remote_mmap;
-        remote_mmap.prot = PROT_EXEC | PROT_WRITE | PROT_READ;
-        remote_mmap.vm_remote_address = g_alloc_addr;
-        remote_mmap.vm_size           = STACK_SIZE;
-        remote_mmap.pid_target        = pid;
-
-        auto error = (communicate_error_t)
-          ioctl(fd, COMMUNICATE_CMD_REMOTE_MMAP, &remote_mmap);
-
-        if (error != COMMUNICATE_ERROR_NONE)
+        if (!is_mmaped(reinterpret_cast<void*>(g_alloc_addr),
+                       STACK_SIZE,
+                       pid))
         {
-            printf("ouch mmap %i\n", error);
-            close(fd);
-            return -1;
-        }
-        else
-        {
-            printf("mmap'd at %lX-%lX\n",
-                   remote_mmap.ret,
-                   remote_mmap.vm_remote_address);
+            communicate_remote_mmap_t remote_mmap;
+            remote_mmap.prot = PROT_EXEC | PROT_WRITE | PROT_READ;
+            remote_mmap.vm_remote_address = g_alloc_addr;
+            remote_mmap.vm_size           = STACK_SIZE;
+            remote_mmap.pid_target        = pid;
+
+            auto error = (communicate_error_t)
+              ioctl(fd, COMMUNICATE_CMD_REMOTE_MMAP, &remote_mmap);
+
+            if (error != COMMUNICATE_ERROR_NONE)
+            {
+                printf("ouch mmap %i\n", error);
+                continue;
+            }
+            else
+            {
+                printf("mmap'd at %lX-%lX\n",
+                       remote_mmap.ret,
+                       remote_mmap.vm_remote_address);
+            }
         }
 
         communicate_write_t write_shellcode;
@@ -165,15 +169,14 @@ int main()
         write_shellcode.vm_remote_address = g_alloc_addr;
         write_shellcode.vm_size           = sizeof(shellcode);
 
-        error = (communicate_error_t)ioctl(fd,
-                                           COMMUNICATE_CMD_WRITE,
-                                           &write_shellcode);
+        auto error = (communicate_error_t)ioctl(fd,
+                                                COMMUNICATE_CMD_WRITE,
+                                                &write_shellcode);
 
         if (error != COMMUNICATE_ERROR_NONE)
         {
             printf("ouch write shellcode jumping to munmap %i\n", error);
-            close(fd);
-            return -1;
+            continue;
         }
         else
         {
@@ -228,55 +231,54 @@ int main()
         {
             printf("success read/write large buffer\n");
         }
-    }
 
-    communicate_remote_clone_t remote_clone;
+        /*communicate_remote_clone_t remote_clone;
 
-    memset(&remote_clone, 0, sizeof(remote_clone));
+        memset(&remote_clone, 0, sizeof(remote_clone));
 
-    remote_clone.pid_target  = pid;
-    remote_clone.regs_set.ip = true;
-    remote_clone.regs.ip     = g_alloc_addr;
-    remote_clone.flags       = (CLONE_VM | CLONE_FS | CLONE_FILES);
-    remote_clone.stack       = g_alloc_addr + 0x2000;
-    remote_clone.stack_size  = 0x1000;
+        remote_clone.pid_target  = pid;
+        remote_clone.regs_set.ip = true;
+        remote_clone.regs.ip     = g_alloc_addr;
+        remote_clone.flags       = (CLONE_VM | CLONE_FS | CLONE_FILES);
+        remote_clone.stack       = g_alloc_addr + 0x2000;
+        remote_clone.stack_size  = 0x1000;
 
-    while (true)
-    {
-        auto error = (communicate_error_t)
-          ioctl(fd, COMMUNICATE_CMD_REMOTE_CLONE, &remote_clone);
+        while (true)
+        {
+            auto error = (communicate_error_t)
+              ioctl(fd, COMMUNICATE_CMD_REMOTE_CLONE, &remote_clone);
+
+            if (error != COMMUNICATE_ERROR_NONE)
+            {
+                printf("ouch clone %i\n", error);
+            }
+            else
+            {
+                printf("test clone %i\n", remote_clone.ret);
+            }
+
+            usleep(1000*10);
+        }*/
+
+        communicate_remote_munmap_t remote_munmap;
+        remote_munmap.pid_target        = pid;
+        remote_munmap.vm_remote_address = g_alloc_addr;
+
+        error = (communicate_error_t)ioctl(fd,
+                                           COMMUNICATE_CMD_REMOTE_MUNMAP,
+                                           &remote_munmap);
 
         if (error != COMMUNICATE_ERROR_NONE)
         {
-            printf("ouch clone %i\n", error);
+            printf("ouch munmap %i\n", error);
         }
         else
         {
-            printf("test clone %i\n", remote_clone.ret);
+            printf("munmap\n");
         }
-
-        usleep(1000*10);
     }
-
-    /*communicate_remote_munmap_t remote_munmap;
-    remote_munmap.pid_target        = pid;
-    remote_munmap.vm_remote_address = g_alloc_addr;
-
-    error = (communicate_error_t)ioctl(fd,
-                                       COMMUNICATE_CMD_REMOTE_MUNMAP,
-                                       &remote_munmap);
-
-    if (error != COMMUNICATE_ERROR_NONE)
-    {
-        printf("ouch munmap %i\n", error);
-    }
-    else
-    {
-        printf("munmap\n");
-    }*/
 
     close(fd);
 
     return 0;
 }
-
