@@ -3,6 +3,10 @@
 
 DEFINE_TRACE(sched_process_fork);
 
+/**
+ * Credits to linux kernel developers
+ */
+
 int wait_for_vfork_done(struct task_struct* child,
                         struct completion* vfork)
 {

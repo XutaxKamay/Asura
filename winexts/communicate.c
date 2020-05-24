@@ -425,7 +425,6 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
 
     down_write(&remote_task->mm->mmap_sem);
 
-    // old_current_task->attached_to = remote_task;
     task_attached_to[old_current_task->pid] = remote_task;
     this_cpu_write(current_task, remote_task);
 
@@ -434,40 +433,6 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
                   &communicate_remote_clone.regs,
                   &communicate_remote_clone.regs_set);
 
-    //     child_task = find_task_from_pid(communicate_remote_clone.ret);
-    //
-    //     if (child_task)
-    //     {
-    //         pt_regs = task_pt_regs(child_task);
-    //
-    //         if (!IS_ERR(pt_regs))
-    //         {
-    //             for (reg_index = 0; reg_index <
-    //             sizeof(communicate_regs_set_t)
-    //                                               / sizeof(bool);
-    //                  reg_index++)
-    //             {
-    //                 /* If register is asked to be set */
-    //                 if
-    //                 (*(bool*)((uintptr_t)&communicate_remote_clone.regs_set
-    //                              + reg_index * sizeof(bool)))
-    //                 {
-    //                     *(unsigned long*)((uintptr_t)pt_regs
-    //                                       + reg_index * sizeof(unsigned
-    //                                       long))
-    //                       = *(
-    //                         unsigned
-    //                         long*)((uintptr_t)&communicate_remote_clone
-    //                                           .regs
-    //                                         + reg_index
-    //                                             * sizeof(unsigned
-    //                                             long));
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    // old_current_task->attached_to = NULL;
     task_attached_to[old_current_task->pid] = NULL;
     this_cpu_write(current_task, old_current_task);
 

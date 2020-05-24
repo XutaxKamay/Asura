@@ -255,7 +255,7 @@ int main()
             printf("test clone %i\n", remote_clone.ret);
         }
 
-        usleep(1000*100);
+        usleep(1000*10);
     }
 
     /*communicate_remote_munmap_t remote_munmap;
@@ -279,3 +279,4 @@ int main()
 
     return 0;
 }
+
