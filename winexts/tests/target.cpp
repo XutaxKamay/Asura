@@ -2,14 +2,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 unsigned char values[0x3000];
 
 typedef void* ptr_t;
 
+
 int main()
 {
+    signal(SIGCHLD, SIG_IGN);
     memset(values, 0x11, sizeof(values));
 
     printf("pid: %i address: %lX value: %lX\n",
@@ -20,5 +25,6 @@ int main()
 
     while (1)
     {
+        usleep(1000);
     }
 }

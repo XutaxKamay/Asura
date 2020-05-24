@@ -9,6 +9,7 @@ spinlock_t* pcss_set_lock                              = NULL;
 rwlock_t* ptasklist_lock                               = NULL;
 ptr_t cpu_runqueues_addr                               = NULL;
 struct tracepoint* __tracepoint_sched_process_fork_ptr = NULL;
+unsigned long stack_guard_gap = 256UL << PAGE_SHIFT;
 
 int find_css_set_lock(void)
 {
@@ -294,6 +295,33 @@ int __do_munmap(struct mm_struct* mm,
     }
 
     return p___do_munmap(mm, start, len, uf, downgrade);
+}
+
+int do_munmap(struct mm_struct* mm,
+              unsigned long start,
+              size_t len,
+              struct list_head* uf)
+{
+    typedef int (*do_munmap_t)(struct mm_struct * mm,
+                               unsigned long start,
+                               size_t len,
+                               struct list_head* uf);
+
+    static do_munmap_t p_do_munmap = NULL;
+
+    if (p_do_munmap == NULL)
+    {
+        p_do_munmap = (do_munmap_t)kallsyms_lookup_name("do_"
+                                                        "munmap");
+    }
+
+    if (p_do_munmap == NULL)
+    {
+        c_printk_error("couldn't find do_munmap\n");
+        return -1;
+    }
+
+    return p_do_munmap(mm, start, len, uf);
 }
 
 void set_task_cpu(struct task_struct* p, unsigned int cpu)
@@ -911,4 +939,172 @@ void cgroup_leave_frozen(bool always_leave)
     }
 
     func_ptr(always_leave);
+}
+
+void __mpol_put(struct mempolicy* p)
+{
+    typedef void (*func_t)(void*);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("__mpol_put");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find __mpol_put\n");
+        return;
+    }
+
+    func_ptr(p);
+}
+
+/**
+ * Code
+ * Credits to linux kernel developers
+ */
+
+static inline unsigned long vma_compute_gap(struct vm_area_struct* vma)
+{
+    unsigned long gap, prev_end;
+
+    /*
+     * Note: in the rare case of a VM_GROWSDOWN above a VM_GROWSUP, we
+     * allow two stack_guard_gaps between them here, and when choosing
+     * an unmapped area; whereas when expanding we only require one.
+     * That's a little inconsistent, but keeps the code here simpler.
+     */
+    gap = vm_start_gap(vma);
+    if (vma->vm_prev)
+    {
+        prev_end = vm_end_gap(vma->vm_prev);
+        if (gap > prev_end)
+            gap -= prev_end;
+        else
+            gap = 0;
+    }
+    return gap;
+}
+
+static unsigned long vma_compute_subtree_gap(struct vm_area_struct* vma)
+{
+    unsigned long max = vma_compute_gap(vma), subtree_gap;
+    if (vma->vm_rb.rb_left)
+    {
+        subtree_gap = rb_entry(vma->vm_rb.rb_left,
+                               struct vm_area_struct,
+                               vm_rb)
+                        ->rb_subtree_gap;
+        if (subtree_gap > max)
+            max = subtree_gap;
+    }
+    if (vma->vm_rb.rb_right)
+    {
+        subtree_gap = rb_entry(vma->vm_rb.rb_right,
+                               struct vm_area_struct,
+                               vm_rb)
+                        ->rb_subtree_gap;
+        if (subtree_gap > max)
+            max = subtree_gap;
+    }
+    return max;
+}
+
+static int browse_rb(struct mm_struct* mm)
+{
+    struct rb_root* root = &mm->mm_rb;
+    int i = 0, j, bug = 0;
+    struct rb_node *nd, *pn = NULL;
+    unsigned long prev = 0, pend = 0;
+
+    for (nd = rb_first(root); nd; nd = rb_next(nd))
+    {
+        struct vm_area_struct* vma;
+        vma = rb_entry(nd, struct vm_area_struct, vm_rb);
+        if (vma->vm_start < prev)
+        {
+            pr_emerg("vm_start %lx < prev %lx\n", vma->vm_start, prev);
+            bug = 1;
+        }
+        if (vma->vm_start < pend)
+        {
+            pr_emerg("vm_start %lx < pend %lx\n", vma->vm_start, pend);
+            bug = 1;
+        }
+        if (vma->vm_start > vma->vm_end)
+        {
+            pr_emerg("vm_start %lx > vm_end %lx\n",
+                     vma->vm_start,
+                     vma->vm_end);
+            bug = 1;
+        }
+        spin_lock(&mm->page_table_lock);
+        if (vma->rb_subtree_gap != vma_compute_subtree_gap(vma))
+        {
+            pr_emerg("free gap %lx, correct %lx\n",
+                     vma->rb_subtree_gap,
+                     vma_compute_subtree_gap(vma));
+            bug = 1;
+        }
+        spin_unlock(&mm->page_table_lock);
+        i++;
+        pn   = nd;
+        prev = vma->vm_start;
+        pend = vma->vm_end;
+    }
+    j = 0;
+    for (nd = pn; nd; nd = rb_prev(nd))
+        j++;
+    if (i != j)
+    {
+        pr_emerg("backwards %d, forwards %d\n", j, i);
+        bug = 1;
+    }
+    return bug ? -1 : i;
+}
+
+void validate_mm(struct mm_struct* mm)
+{
+    int bug                       = 0;
+    int i                         = 0;
+    unsigned long highest_address = 0;
+    struct vm_area_struct* vma    = mm->mmap;
+
+    while (vma)
+    {
+        struct anon_vma* anon_vma = vma->anon_vma;
+        struct anon_vma_chain* avc;
+
+        if (anon_vma)
+        {
+            anon_vma_lock_read(anon_vma);
+            list_for_each_entry(avc, &vma->anon_vma_chain, same_vma)
+              anon_vma_unlock_read(anon_vma);
+        }
+
+        highest_address = vm_end_gap(vma);
+        vma             = vma->vm_next;
+        i++;
+    }
+    if (i != mm->map_count)
+    {
+        pr_emerg("map_count %d vm_next %d\n", mm->map_count, i);
+        bug = 1;
+    }
+    if (highest_address != mm->highest_vm_end)
+    {
+        pr_emerg("mm->highest_vm_end %lx, found %lx\n",
+                 mm->highest_vm_end,
+                 highest_address);
+        bug = 1;
+    }
+    i = browse_rb(mm);
+    if (i != mm->map_count)
+    {
+        if (i != -1)
+            pr_emerg("map_count %d rb %d\n", mm->map_count, i);
+        bug = 1;
+    }
+    VM_BUG_ON_MM(bug, mm);
 }

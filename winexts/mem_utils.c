@@ -167,7 +167,7 @@ mm_t* get_task_mm_kthread(task_t* task)
 {
     mm_t* mm;
 
-//     mm = get_task_mm(task);
+    //     mm = get_task_mm(task);
 
     mm = task->mm;
 
@@ -398,8 +398,10 @@ int c_munmap(task_t* task, uintptr_t start)
 {
     mm_segment_t old_fs;
     struct mm_struct* mm;
-    struct vm_area_struct *vma, *prev_vma, *next_vma;
+    struct vm_area_struct* vma /*, *prev_vma, *next_vma*/;
+    LIST_HEAD(uf);
     int ret;
+    // long nrpages;
 
     vma = NULL;
     ret = -1;
@@ -419,7 +421,7 @@ int c_munmap(task_t* task, uintptr_t start)
 
     if (c_find_vma_from_task(task, &vma, start))
     {
-        prev_vma = vma->vm_prev;
+        /*prev_vma = vma->vm_prev;
         next_vma = vma->vm_next;
 
         vma_rb_erase(vma, &mm->mm_rb);
@@ -438,9 +440,22 @@ int c_munmap(task_t* task, uintptr_t start)
             next_vma->vm_prev = prev_vma;
         }
 
-        vm_area_free(vma);
-        ret = 0;
+        nrpages = vma_pages(vma);
+
+        vm_stat_account(mm, vma->vm_flags, -nrpages);
+        mm->map_count--;
+        mpol_put(vma_policy(vma));
+        // vm_unacct_memory(nrpages);
+
+        vm_area_free(vma);*/
+
+        ret = do_munmap(mm,
+                        vma->vm_start,
+                        vma->vm_end - vma->vm_start,
+                        &uf);
     }
+
+    validate_mm(mm);
 
     up_write(&mm->mmap_sem);
 
@@ -536,10 +551,12 @@ c_mmap(task_t* task, uintptr_t address, uintptr_t size, int prot)
 
     vma_set_anonymous(vma);
 
-    vma->vm_start     = address;
-    vma->vm_end       = address + size;
-    vma->vm_flags     = prot_to_vm_flags(prot) | mm->def_flags;
+    vma->vm_start = address;
+    vma->vm_end   = address + size;
+    vma->vm_flags = prot_to_vm_flags(prot) | mm->def_flags | VM_DONTEXPAND
+                    | VM_SOFTDIRTY;
     vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
+    vma->vm_pgoff     = 0;
 
     if (insert_vm_struct(mm, vma) < 0)
     {
@@ -550,9 +567,11 @@ c_mmap(task_t* task, uintptr_t address, uintptr_t size, int prot)
         goto out;
     }
 
-    vm_stat_account(mm, vma->vm_flags, (size / PAGE_SIZE) + 1);
+    vm_stat_account(mm, vma->vm_flags, size >> PAGE_SHIFT);
 
 out:
+    validate_mm(mm);
+
     if (should_up_write)
     {
         up_write(&mm->mmap_sem);
@@ -567,8 +586,8 @@ out:
 void c_mmput(task_t* task, mm_t* mm)
 {
     // Don't do that on kernel threads
-//     if (mm && (task->mm == task->active_mm))
-//         mmput(mm);
+    //     if (mm && (task->mm == task->active_mm))
+    //         mmput(mm);
 }
 
 /**

@@ -78,4 +78,6 @@ static inline bool is_data_mapping(vm_flags_t flags)
 
 int copy_namespaces(unsigned long flags, struct task_struct* tsk);
 
+void validate_mm(struct mm_struct *mm);
+
 #endif

@@ -148,14 +148,8 @@ int main()
      * syscall
      */
 
-    uint8_t shellcode[] = { 0x48, 0xC7, 0xC0, 0x27, 0x00, 0x00,    0x00,
-                            0x0F, 0x05, 0x48, 0xC7, 0xC6, SIGCHLD, 0x00,
-                            0x00, 0x00, 0x48, 0x89, 0xC7, 0x48,    0xC7,
-                            0xC0, 0x3E, 0x00, 0x00, 0x00, 0x0F,    0x05,
-                            0x48, 0xC7, 0xC0, 0x27, 0x00, 0x00,    0x00,
-                            0x0F, 0x05, 0x48, 0xC7, 0xC6, 0x09,    0x00,
-                            0x00, 0x00, 0x48, 0x89, 0xC7, 0x48,    0xC7,
-                            0xC0, 0x3E, 0x00, 0x00, 0x00, 0x0F,    0x05 };
+    uint8_t shellcode[] = "\x48\xC7\xC7\x37\x13\x00\x00\x48\xC7\xC0\x3C"
+                          "\x00\x00\x00\x0F\x05";
 
     // while (true)
     {
@@ -253,7 +247,7 @@ int main()
             printf("success read/write large buffer\n");
         }
 
-        communicate_remote_clone_t remote_clone;
+        /*communicate_remote_clone_t remote_clone;
 
         memset(&remote_clone, 0, sizeof(remote_clone));
 
@@ -280,7 +274,7 @@ int main()
             usleep(1000 * 50);
         }
 
-        getchar();
+        getchar();*/
 
         communicate_remote_munmap_t remote_munmap;
         remote_munmap.pid_target        = pid;
