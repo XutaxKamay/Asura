@@ -103,6 +103,27 @@ communicate_error_t communicate_read__remote_clone_struct(
     return COMMUNICATE_ERROR_NONE;
 }
 
+communicate_error_t communicate_read__list_vmas_struct(
+  task_t* task,
+  uintptr_t address,
+  communicate_list_vmas_t* communicate_list_vmas)
+{
+    if (c_copy_from_user(task,
+                         communicate_list_vmas,
+                         (ptr_t)address,
+                         sizeof(communicate_list_vmas_t)))
+    {
+        c_printk_error("couldn't read communicate list vmas struct "
+                       "from task "
+                       "%i\n",
+                       task->pid);
+
+        return COMMUNICATE_ERROR_STRUCT_COPY_FROM;
+    }
+
+    return COMMUNICATE_ERROR_NONE;
+}
+
 communicate_error_t communicate_process_cmd_read(uintptr_t address)
 {
     communicate_error_t error;
@@ -145,7 +166,9 @@ communicate_error_t communicate_process_cmd_read(uintptr_t address)
     {
         error = COMMUNICATE_ERROR_ACCESS_DENIED;
         c_printk_error("can't read on a kernel thread due to security "
-                       "risks (might also freeze your kernel)\n");
+                       "risks (might also freeze your kernel) asked "
+                       "task: %i\n",
+                       remote_task->pid);
         goto out;
     }
 
@@ -156,8 +179,6 @@ communicate_error_t communicate_process_cmd_read(uintptr_t address)
     {
         error = COMMUNICATE_ERROR_COPY_FROM;
     }
-
-    c_put_task_struct(remote_task);
 
     if (c_copy_to_user(current,
                        (ptr_t)communicate_read.vm_local_address,
@@ -222,7 +243,9 @@ communicate_error_t communicate_process_cmd_write(uintptr_t address)
     {
         error = COMMUNICATE_ERROR_ACCESS_DENIED;
         c_printk_error("can't write on a kernel thread due to security "
-                       "risks (might also freeze your kernel)\n");
+                       "risks (might also freeze your kernel) asked "
+                       "task: %i\n",
+                       remote_task->pid);
         goto out;
     }
 
@@ -233,8 +256,6 @@ communicate_error_t communicate_process_cmd_write(uintptr_t address)
     {
         error = COMMUNICATE_ERROR_COPY_TO;
     }
-
-    c_put_task_struct(remote_task);
 
 out:
     free_buffer(&temp_buffer);
@@ -273,7 +294,9 @@ communicate_error_t communicate_process_cmd_remote_mmap(uintptr_t address)
     {
         error = COMMUNICATE_ERROR_ACCESS_DENIED;
         c_printk_error("can't munmap on a kernel thread due to security "
-                       "risks (might also freeze your kernel)\n");
+                       "risks (might also freeze your kernel) asked "
+                       "task: %i\n",
+                       remote_task->pid);
         goto out;
     }
 
@@ -290,8 +313,6 @@ communicate_error_t communicate_process_cmd_remote_mmap(uintptr_t address)
     {
         communicate_remote_mmap.ret = 0;
     }
-
-    c_put_task_struct(remote_task);
 
     if (c_copy_to_user(current,
                        (ptr_t)address,
@@ -344,15 +365,15 @@ communicate_process_cmd_remote_munmap(uintptr_t address)
     {
         error = COMMUNICATE_ERROR_ACCESS_DENIED;
         c_printk_error("can't munmap on a kernel thread due to security "
-                       "risks (might also freeze your kernel)\n");
+                       "risks (might also freeze your kernel) asked "
+                       "task: %i\n",
+                       remote_task->pid);
         goto out;
     }
 
     communicate_remote_munmap.ret
       = c_munmap(remote_task,
                  communicate_remote_munmap.vm_remote_address);
-
-    c_put_task_struct(remote_task);
 
     if (communicate_remote_munmap.ret < 0)
     {
@@ -411,7 +432,9 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
     {
         error = COMMUNICATE_ERROR_ACCESS_DENIED;
         c_printk_error("can't clone on a kernel thread due to security "
-                       "risks (might also freeze your kernel)\n");
+                       "risks (might also freeze your kernel) asked "
+                       "task: %i\n",
+                       remote_task->pid);
         goto out;
     }
 
@@ -439,8 +462,6 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
 
     // up_write(&remote_task->mm->mmap_sem);
 
-    c_put_task_struct(remote_task);
-
     if (c_copy_to_user(current,
                        (ptr_t)address,
                        (ptr_t)&communicate_remote_clone,
@@ -459,3 +480,126 @@ out:
     return error;
 }
 
+communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
+{
+    communicate_error_t error;
+    communicate_list_vmas_t communicate_list_vmas;
+    communicate_vma_t communicate_vma;
+    task_t* remote_task;
+    buffer_t* buffer;
+    mm_t* mm;
+    vm_area_t* vma;
+    const char* vma_description = NULL;
+
+    init_buffer(buffer);
+
+    error = communicate_read__list_vmas_struct(current,
+                                               address,
+                                               &communicate_list_vmas);
+
+    if (error != COMMUNICATE_ERROR_NONE)
+    {
+        goto out;
+    }
+
+    remote_task = find_task_from_pid(communicate_list_vmas.pid_target);
+
+    if (remote_task == NULL)
+    {
+        error = COMMUNICATE_ERROR_TARGET_PID_NOT_FOUND;
+        goto out;
+    }
+
+    /**
+     * For now kernel threads are risky
+     */
+    if (remote_task->mm == NULL || remote_task->active_mm == NULL
+        || (remote_task->mm != remote_task->active_mm))
+    {
+        error = COMMUNICATE_ERROR_ACCESS_DENIED;
+        c_printk_error("can't write on a kernel thread due to security "
+                       "risks (might also freeze your kernel) asked "
+                       "task: %i\n",
+                       remote_task->pid);
+        goto out;
+    }
+
+    mm  = get_task_mm_kthread(remote_task);
+    vma = mm->mmap;
+
+    communicate_list_vmas.vma_count = 0;
+
+    while (vma != NULL)
+    {
+        communicate_vma.vm_has_private_data = vma->vm_private_data ?
+                                                true :
+                                                false;
+        communicate_vma.vm_start            = vma->vm_start;
+        communicate_vma.vm_end              = vma->vm_end;
+        communicate_vma.vm_flags            = vma->vm_flags;
+        communicate_vma.vm_pgoff            = vma->vm_pgoff;
+        communicate_vma.vm_page_prot        = vma->vm_page_prot.pgprot;
+
+        if (vma->vm_ops && vma->vm_ops->name)
+        {
+            vma_description = vma->vm_ops->name(vma);
+        }
+        else
+        {
+            vma_description = arch_vma_name(vma);
+
+            if (vma_description == NULL)
+            {
+                if (!vma->vm_mm)
+                {
+                    vma_description = "[vdso]";
+                }
+
+                else if (vma->vm_start <= mm->brk
+                         && vma->vm_end >= mm->start_brk)
+                {
+                    vma_description = "[heap]";
+                }
+
+                else if (vma->vm_start <= vma->vm_mm->start_stack
+                         && vma->vm_end >= vma->vm_mm->start_stack)
+                {
+                    vma_description = "[stack]";
+                }
+            }
+        }
+
+        if (strlen(vma_description) <= COMMUNICATE_MAX_PATH)
+        {
+            strcpy(communicate_vma.vm_descriptor, vma_description);
+        }
+        else
+        {
+            strcpy(communicate_vma.vm_descriptor, "array is too low");
+        }
+
+        communicate_list_vmas.vma_count++;
+
+        realloc_buffer(sizeof(communicate_vma_t)
+                         * communicate_list_vmas.vma_count,
+                       buffer);
+
+        vma = vma->vm_next;
+    }
+
+    if (communicate_list_vmas.vma_count
+        > communicate_list_vmas.vma_max_count)
+    {
+        error = COMMUNICATE_ERROR_LIST_VMAS_NOT_ENOUGH_MEMORY;
+        c_printk_error("can't list all vmas on task %i, there is %i vmas "
+                       "when max vmas count is %i\n",
+                       remote_task->pid,
+                       communicate_list_vmas.vma_count,
+                       communicate_list_vmas.vma_max_count);
+        goto out;
+    }
+
+out:
+    free_buffer(buffer);
+    return error;
+}

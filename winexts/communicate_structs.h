@@ -4,6 +4,8 @@
 #define COMMUNICATE_MAX_BUFFER (1 << 30)
 #define IO_MAGIC_NUMBER        'x'
 
+#define COMMUNICATE_MAX_PATH 4096
+
 /**
  * ptrace pt_regs for settings registers
  * This is the same structure as pt_regs so it's safe.
@@ -79,6 +81,7 @@ typedef enum communicate_error
     COMMUNICATE_ERROR_VM_MMAP_FAILED,
     COMMUNICATE_ERROR_CLONE_FAILED,
     COMMUNICATE_ERROR_ACCESS_DENIED,
+    COMMUNICATE_ERROR_LIST_VMAS_NOT_ENOUGH_MEMORY,
     COMMUNICATE_ERROR_MAX
 } communicate_error_t;
 
@@ -126,6 +129,26 @@ typedef struct communicate_remote_clone_struct
     communicate_regs_set_t regs_set;
 } communicate_remote_clone_t;
 
+typedef struct communicate_vma_struct
+{
+    uint64_t vm_start;
+    uint64_t vm_end;
+    uint64_t vm_flags;
+    uint64_t vm_page_prot;
+    uint64_t vm_pgoff;
+    char vm_descriptor[COMMUNICATE_MAX_PATH];
+    bool vm_has_private_data;
+} communicate_vma_t;
+
+typedef struct communicate_list_vmas_struct
+{
+    communicate_vma_t* vmas;
+    int vma_count;     /* Counts vma listed above */
+    int vma_max_count; /* Max allocated by the user */
+    pid_t pid_target;
+
+} communicate_list_vmas_t;
+
 typedef enum communicate_cmd
 {
     COMMUNICATE_CMD_READ = _IOWR(IO_MAGIC_NUMBER, 0, communicate_read_t*),
@@ -136,7 +159,9 @@ typedef enum communicate_cmd
     COMMUNICATE_CMD_REMOTE_MUNMAP
     = _IOWR(IO_MAGIC_NUMBER, 3, communicate_remote_munmap_t*),
     COMMUNICATE_CMD_REMOTE_CLONE
-    = _IOWR(IO_MAGIC_NUMBER, 4, communicate_remote_clone_t*)
+    = _IOWR(IO_MAGIC_NUMBER, 4, communicate_remote_clone_t*),
+    COMMUNICATE_CMD_LIST_VMAS
+    = _IOWR(IO_MAGIC_NUMBER, 5, communicate_remote_clone_t*)
 } communicate_cmd_t;
 
 #endif

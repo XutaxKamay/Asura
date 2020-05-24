@@ -34,7 +34,6 @@ int vm_flags_to_prot(vm_area_t* vma);
 int prot_to_vm_flags(int prot);
 mm_t* get_task_mm_kthread(task_t* task);
 task_t* find_task_from_pid(pid_t pid);
-void c_put_task_struct(task_t* task);
 int c_find_vma_from_task(task_t* task,
                          vm_area_t** vma_start,
                          uintptr_t wanted_addr);
@@ -46,11 +45,11 @@ int c_munmap(task_t* task, uintptr_t start);
 void change_vm_flags(vm_area_t* vma, int new_flags, int* old_flags);
 vm_area_t*
 c_mmap(task_t* task, uintptr_t address, uintptr_t size, int prot);
-void c_mmput(task_t* task, mm_t* mm);
 int c___vm_munmap(task_t* task,
                   unsigned long start,
                   size_t len,
                   bool downgrade);
+int c_vma_count(mm_t* mm);
 
 /**
  * Copies memory from a task in its virtual address space to kernel one

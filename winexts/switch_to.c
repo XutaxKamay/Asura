@@ -79,6 +79,8 @@ int hook___switch_to(void)
         return -1;
     }
 
+    c_printk_info("hooked __switch_to\n");
+
     return 0;
 }
 
@@ -94,5 +96,7 @@ void unhook___switch_to(void)
                      (uintptr_t)original___switch_to);
 
         free_pattern_result(&pattern_result);
+
+        c_printk_info("unhooked __switch_to\n");
     }
 }

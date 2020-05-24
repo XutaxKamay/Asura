@@ -271,7 +271,7 @@ int main()
             }
             else
             {
-                usleep(1000 * 100);
+                usleep(1000 * 300);
                 printf("test clone %i\n", remote_clone.ret);
             }
         }

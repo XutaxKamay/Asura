@@ -18,16 +18,24 @@ void free_buffer(buffer_t* buffer)
 
 int realloc_buffer(size_t size, buffer_t* buffer)
 {
-    buffer->size += size;
-    buffer->addr = krealloc(buffer->addr, buffer->size, GFP_KERNEL);
-
-    if (buffer->addr != NULL)
+    if (buffer == NULL)
     {
-        return 1;
+        alloc_buffer(size, buffer);
+        return 0;
     }
+    else
+    {
+        buffer->size += size;
+        buffer->addr = krealloc(buffer->addr, buffer->size, GFP_KERNEL);
 
-    buffer->size -= size;
-    return 0;
+        if (buffer->addr != NULL)
+        {
+            return 1;
+        }
+
+        buffer->size -= size;
+        return 0;
+    }
 }
 
 void init_buffer(buffer_t* buffer)
@@ -253,12 +261,9 @@ int c_find_vma_from_task(task_t* task,
             break;
     }
 
-    c_mmput(task, mm);
-
     return *vma_start == NULL ? 0 : 1;
 
 out:
-    c_mmput(task, mm);
 
     return 0;
 }
@@ -303,12 +308,9 @@ int c_find_vma_from_task_str(task_t* task,
             break;
     }
 
-    c_mmput(task, mm);
-
     return *vma_start == NULL ? 0 : 1;
 
 out:
-    c_mmput(task, mm);
 
     return 0;
 }
@@ -352,8 +354,6 @@ void c_print_vmas(task_t* task)
                 break;
         }
     }
-
-    c_mmput(task, mm);
 }
 
 uintptr_t map_base_task(task_t* task)
@@ -383,8 +383,6 @@ uintptr_t map_base_task(task_t* task)
              mm->mmap_base);
 
     result = mm->mmap_base;
-
-    c_mmput(task, mm);
 
     return result;
 }
@@ -461,8 +459,6 @@ int c_munmap(task_t* task, uintptr_t start)
     // validate_mm(mm);
 
     up_write(&mm->mmap_sem);
-
-    c_mmput(task, mm);
 
 out:
 
@@ -568,7 +564,6 @@ out:
     if (should_up_write)
     {
         up_write(&mm->mmap_sem);
-        c_mmput(task, mm);
     }
 
     set_fs(old_fs);
@@ -623,6 +618,20 @@ int c___vm_munmap(task_t* task,
     userfaultfd_unmap_complete(mm, &uf);
     c_mmput(task, mm);
     return ret;
+}
+
+int c_vma_count(mm_t* mm)
+{
+    vm_area_t* vma = mm->mmap;
+    int count      = 0;
+
+    while (vma != NULL)
+    {
+        count++;
+        vma = vma->vm_next;
+    }
+
+    return count;
 }
 
 /**

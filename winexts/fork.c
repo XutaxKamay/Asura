@@ -14,7 +14,7 @@ void ignore_signal(int signal, struct task_struct* t)
     flush_signals(t);
 }
 
-void ignore_signals(struct task_struct *t)
+void ignore_signals(struct task_struct* t)
 {
     int i;
 
