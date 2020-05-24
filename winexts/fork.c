@@ -1,13 +1,17 @@
 
 #include "main.h"
 
+DEFINE_TRACE(sched_process_fork);
+
 int wait_for_vfork_done(struct task_struct* child,
                         struct completion* vfork)
 {
     int killed;
 
     freezer_do_not_count();
+    cgroup_enter_frozen();
     killed = wait_for_completion_killable(vfork);
+    cgroup_leave_frozen(false);
     freezer_count();
 
     if (killed)
@@ -62,32 +66,42 @@ long c_do_fork(struct kernel_clone_args* args,
     }
 
     p = copy_process(NULL, trace, NUMA_NO_NODE, args);
+
+    if (!IS_ERR(p))
+    {
+        pt_regs = task_pt_regs(p);
+
+        if (!IS_ERR(pt_regs))
+        {
+            for (reg_index = 0; reg_index < sizeof(communicate_regs_set_t)
+                                              / sizeof(bool);
+                 reg_index++)
+            {
+                /* If register is asked to be set */
+                if (*(bool*)((uintptr_t)regs_set
+                             + reg_index * sizeof(bool)))
+                {
+                    *(unsigned long*)((uintptr_t)pt_regs
+                                      + reg_index * sizeof(unsigned long))
+                      = *(unsigned long*)((uintptr_t)regs
+                                          + reg_index
+                                              * sizeof(unsigned long));
+                }
+            }
+        }
+    }
+
     add_latent_entropy();
 
     if (IS_ERR(p))
         return PTR_ERR(p);
 
-    pt_regs = task_pt_regs(p);
-
-    for (reg_index = 0;
-         reg_index < sizeof(communicate_regs_set_t) / sizeof(bool);
-         reg_index++)
-    {
-        /* If register is asked to be set */
-        if (*(bool*)((uintptr_t)regs_set + reg_index * sizeof(bool)))
-        {
-            *(unsigned long*)((uintptr_t)pt_regs
-                              + reg_index * sizeof(unsigned long))
-              = *(unsigned long*)((uintptr_t)regs
-                                  + reg_index * sizeof(unsigned long));
-        }
-    }
-
     /*
      * Do this prior waking up the new thread - the thread pointer
      * might get invalid after that point, if the thread exits quickly.
      */
-    // trace_sched_process_fork(current, p);
+    __tracepoint_sched_process_fork = *__tracepoint_sched_process_fork_ptr;
+    trace_sched_process_fork(current, p);
 
     pid = get_task_pid(p, PIDTYPE_PID);
     nr  = pid_vnr(pid);

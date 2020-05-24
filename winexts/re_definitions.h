@@ -12,10 +12,12 @@
 extern spinlock_t* pcss_set_lock;
 extern rwlock_t* ptasklist_lock;
 extern ptr_t cpu_runqueues_addr;
+extern struct tracepoint* __tracepoint_sched_process_fork_ptr;
 
 int find_css_set_lock(void);
 int find_tasklist_lock(void);
 int find_cpu_runqueues(void);
+int find___tracepoint_sched_process_fork(void);
 
 void vma_rb_erase(vm_area_t* vma, rb_root_t* root);
 struct task_struct* copy_process(struct pid* pid,

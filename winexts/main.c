@@ -102,9 +102,16 @@ int init_mod(void)
         return -1;
     }
 
-    c_printk("kernel module loaded at %lX. (kernel offset: %lX)\n",
-             (uintptr_t)THIS_MODULE->core_layout.base,
-             kernel_offset());
+    if (find___tracepoint_sched_process_fork() < 0)
+    {
+        device_destroy(g_cl, g_dev);
+        class_destroy(g_cl);
+        cdev_del(&g_cdev);
+        unregister_chrdev_region(g_dev, 1);
+        c_printk_error("couldn't find tracepoint sched process fork "
+                       "addr\n");
+        return -1;
+    }
 
     if (init_hooks())
     {
@@ -115,6 +122,10 @@ int init_mod(void)
         c_printk_error("couldn't init hooks\n");
         return -1;
     }
+
+    c_printk("kernel module loaded at %lX. (kernel offset: %lX)\n",
+             (uintptr_t)THIS_MODULE->core_layout.base,
+             kernel_offset());
 
     return 0;
 }

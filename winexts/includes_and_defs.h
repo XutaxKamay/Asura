@@ -1,6 +1,8 @@
 #ifndef INCLUDES_AND_DEFS_H
 #define INCLUDES_AND_DEFS_H
 
+#include <asm/fpu/internal.h>
+#include <asm/resctrl_sched.h>
 #include <asm/switch_to.h>
 #include <linux/anon_inodes.h>
 #include <linux/audit.h>

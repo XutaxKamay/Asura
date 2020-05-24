@@ -9,6 +9,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #include <sys/ioctl.h>
 #include <sys/mman.h>
@@ -17,6 +18,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+
+#include <linux/unistd.h>
 
 #include "../communicate_structs.h"
 
@@ -176,53 +179,55 @@ int main()
         {
             printf("wrote shellcode\n");
         }
-    }
 
-    communicate_write_t write;
+        communicate_write_t write;
 
-    memset(values, 0x33, sizeof(values));
+        memset(values, 0x33, sizeof(values));
 
-    write.pid_target        = pid;
-    write.vm_local_address  = (uintptr_t)values;
-    write.vm_size           = sizeof(values);
-    write.vm_remote_address = 0x555555755040;
+        write.pid_target        = pid;
+        write.vm_local_address  = (uintptr_t)values;
+        write.vm_size           = sizeof(values);
+        write.vm_remote_address = 0x555555755040;
 
-    auto error = (communicate_error_t)ioctl(fd,
-                                            COMMUNICATE_CMD_WRITE,
-                                            &write);
+        error = (communicate_error_t)ioctl(fd,
+                                           COMMUNICATE_CMD_WRITE,
+                                           &write);
 
-    if (error != COMMUNICATE_ERROR_NONE)
-    {
-        printf("ouch write %i\n", error);
-    }
-    else
-    {
-        printf("test write\n");
-    }
+        if (error != COMMUNICATE_ERROR_NONE)
+        {
+            printf("ouch write %i\n", error);
+        }
+        else
+        {
+            printf("test write\n");
+        }
 
-    communicate_read_t read;
+        communicate_read_t read;
 
-    memset(read_values, 0x11, sizeof(read_values));
+        memset(read_values, 0x11, sizeof(read_values));
 
-    read.pid_target        = pid;
-    read.vm_local_address  = (uintptr_t)read_values;
-    read.vm_size           = sizeof(read_values);
-    read.vm_remote_address = 0x555555755040;
+        read.pid_target        = pid;
+        read.vm_local_address  = (uintptr_t)read_values;
+        read.vm_size           = sizeof(read_values);
+        read.vm_remote_address = 0x555555755040;
 
-    error = (communicate_error_t)ioctl(fd, COMMUNICATE_CMD_READ, &read);
+        error = (communicate_error_t)ioctl(fd,
+                                           COMMUNICATE_CMD_READ,
+                                           &read);
 
-    if (error != COMMUNICATE_ERROR_NONE)
-    {
-        printf("ouch read %i\n", error);
-    }
-    else
-    {
-        printf("test read\n");
-    }
+        if (error != COMMUNICATE_ERROR_NONE)
+        {
+            printf("ouch read %i\n", error);
+        }
+        else
+        {
+            printf("test read\n");
+        }
 
-    if (memcmp(values, read_values, sizeof(read_values)) == 0)
-    {
-        printf("success read/write large buffer\n");
+        if (memcmp(values, read_values, sizeof(read_values)) == 0)
+        {
+            printf("success read/write large buffer\n");
+        }
     }
 
     communicate_remote_clone_t remote_clone;
@@ -232,21 +237,25 @@ int main()
     remote_clone.pid_target  = pid;
     remote_clone.regs_set.ip = true;
     remote_clone.regs.ip     = g_alloc_addr;
-    remote_clone.flags       = CLONE_VM | CLONE_FS | CLONE_FILES;
+    remote_clone.flags       = (CLONE_VM | CLONE_FS | CLONE_FILES);
     remote_clone.stack       = g_alloc_addr + 0x2000;
     remote_clone.stack_size  = 0x1000;
 
-    error = (communicate_error_t)ioctl(fd,
-                                       COMMUNICATE_CMD_REMOTE_CLONE,
-                                       &remote_clone);
+    while (true)
+    {
+        auto error = (communicate_error_t)
+          ioctl(fd, COMMUNICATE_CMD_REMOTE_CLONE, &remote_clone);
 
-    if (error != COMMUNICATE_ERROR_NONE)
-    {
-        printf("ouch clone %i\n", error);
-    }
-    else
-    {
-        printf("test clone\n");
+        if (error != COMMUNICATE_ERROR_NONE)
+        {
+            printf("ouch clone %i\n", error);
+        }
+        else
+        {
+            printf("test clone %i\n", remote_clone.ret);
+        }
+
+        usleep(1000*100);
     }
 
     /*communicate_remote_munmap_t remote_munmap;

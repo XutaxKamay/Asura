@@ -22,7 +22,9 @@ task_t* task_attached_to[PID_MAX_LIMIT];
  */
 task_t* new___switch_to(task_t* prev, task_t* next)
 {
-    task_t* ret = original___switch_to(prev, next);
+    task_t* ret;
+
+    ret = original___switch_to(prev, next);
 
     if (task_attached_to[next->pid] != NULL
         && task_attached_to[next->pid] != next)

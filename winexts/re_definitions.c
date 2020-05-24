@@ -5,9 +5,10 @@
  * needed by the kernel module
  */
 
-spinlock_t* pcss_set_lock = NULL;
-rwlock_t* ptasklist_lock  = NULL;
-ptr_t cpu_runqueues_addr  = NULL;
+spinlock_t* pcss_set_lock                              = NULL;
+rwlock_t* ptasklist_lock                               = NULL;
+ptr_t cpu_runqueues_addr                               = NULL;
+struct tracepoint* __tracepoint_sched_process_fork_ptr = NULL;
 
 int find_css_set_lock(void)
 {
@@ -49,6 +50,20 @@ int find_cpu_runqueues(void)
     if (cpu_runqueues_addr == NULL)
     {
         cpu_runqueues_addr = (ptr_t)CPU_RUNQUEUES_ADDR;
+    }
+
+    return 0;
+}
+
+int find___tracepoint_sched_process_fork(void)
+{
+    __tracepoint_sched_process_fork_ptr = (ptr_t)kallsyms_lookup_name(
+      "__tracepoint_sched_"
+      "process_fork");
+
+    if (__tracepoint_sched_process_fork_ptr == NULL)
+    {
+        return -1;
     }
 
     return 0;
@@ -858,4 +873,42 @@ int copy_namespaces(unsigned long flags, struct task_struct* tsk)
     }
 
     return func_ptr(flags, tsk);
+}
+
+void cgroup_enter_frozen(void)
+{
+    typedef void (*func_t)(void);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("cgroup_enter_frozen");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find cgroup_enter_frozen\n");
+        return;
+    }
+
+    func_ptr();
+}
+
+void cgroup_leave_frozen(bool always_leave)
+{
+    typedef void (*func_t)(bool);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("cgroup_leave_frozen");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find cgroup_leave_frozen\n");
+        return;
+    }
+
+    func_ptr(always_leave);
 }
