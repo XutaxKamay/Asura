@@ -3,6 +3,13 @@
 
 DEFINE_TRACE(sched_process_fork);
 
+void ignore_signal_sigchld(struct task_struct* t)
+{
+    t->sighand->action[SIGCHLD].sa.sa_handler = SIG_IGN;
+
+    flush_signals(t);
+}
+
 /**
  * Credits to linux kernel developers
  */

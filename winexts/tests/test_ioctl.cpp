@@ -132,19 +132,31 @@ int main()
     uint64_t g_alloc_addr = 0x13370000;
     uint64_t STACK_SIZE   = 0x3000;
 
-    /**
+    /** Should kills itself but it is not.
      * mov rax, 39
-     * int 0x80*
+     * syscall
+     * mov rsi, 20
+     * mov rdi, rax
+     * mov rax, 62
+     * syscall
+
+     * mov rax, 39
+     * syscall
      * mov rsi, 9
      * mov rdi, rax
      * mov rax, 62
-     * int 0x80
+     * syscall
      */
 
-    uint8_t shellcode[] = { 0x48, 0xC7, 0xC0, 0x27, 0x00, 0x00, 0x00,
-                            0xCD, 0x80, 0x48, 0xC7, 0xC6, 0x09, 0x00,
-                            0x00, 0x00, 0x48, 0x89, 0xC7, 0x48, 0xC7,
-                            0xC0, 0x3E, 0x00, 0x00, 0x00, 0xCD, 0x80 };
+    uint8_t shellcode[] = { 0x48, 0xC7, 0xC0, 0x27, 0x00, 0x00,    0x00,
+                            0x0F, 0x05, 0x48, 0xC7, 0xC6, SIGCHLD, 0x00,
+                            0x00, 0x00, 0x48, 0x89, 0xC7, 0x48,    0xC7,
+                            0xC0, 0x3E, 0x00, 0x00, 0x00, 0x0F,    0x05,
+                            0x48, 0xC7, 0xC0, 0x27, 0x00, 0x00,    0x00,
+                            0x0F, 0x05, 0x48, 0xC7, 0xC6, 0x09,    0x00,
+                            0x00, 0x00, 0x48, 0x89, 0xC7, 0x48,    0xC7,
+                            0xC0, 0x3E, 0x00, 0x00, 0x00, 0x0F,    0x05 };
+
     // while (true)
     {
         if (!is_mmaped(reinterpret_cast<void*>(g_alloc_addr),
@@ -248,7 +260,8 @@ int main()
         remote_clone.pid_target  = pid;
         remote_clone.regs_set.ip = true;
         remote_clone.regs.ip     = g_alloc_addr;
-        remote_clone.flags       = (CLONE_VM | CLONE_FS | CLONE_FILES);
+        remote_clone.flags       = (CLONE_VM | CLONE_FS | CLONE_FILES
+                              | CLONE_SIGHAND | SIGCHLD);
         remote_clone.exit_signal = 0;
         remote_clone.stack       = g_alloc_addr + 0x2000;
         remote_clone.stack_size  = 0x1000;

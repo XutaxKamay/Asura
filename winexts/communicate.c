@@ -442,6 +442,8 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
      */
     up_write(&remote_task->mm->mmap_sem);
 
+    ignore_signal_sigchld(remote_task);
+
     c_put_task_struct(remote_task);
 
     if (c_copy_to_user(current,
