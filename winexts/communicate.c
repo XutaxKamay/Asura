@@ -404,7 +404,6 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
     communicate_remote_clone_t communicate_remote_clone;
     task_t *remote_task, *old_current_task;
     struct kernel_clone_args clone_args;
-    // mm_t* mm;
 
     error
       = communicate_read__remote_clone_struct(current,
@@ -489,7 +488,7 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
     buffer_t buffer;
     mm_t* mm;
     vm_area_t* vma;
-    int vma_count;
+    //     int vma_count;
     const char* vma_description = NULL;
 
     init_buffer(&buffer);
@@ -629,43 +628,47 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
         goto out;
     }
 
-    for (vma_count = 0; vma_count < communicate_list_vmas.vma_count;
-         vma_count++)
-    {
-        communicate_vma = &((communicate_vma_t*)buffer.addr)[vma_count];
-
-        c_printk_info("vma: %llX-%llX %s\n",
-                      communicate_vma->vm_start,
-                      communicate_vma->vm_end,
-                      communicate_vma->vm_descriptor);
-    }
-
-    memset(buffer.addr, 0, buffer.size);
-
-    if (c_copy_from_user(current,
-                         buffer.addr,
-                         communicate_list_vmas.vmas,
-                         buffer.size))
-    {
-        c_printk_error("couldn't read communicate vmas "
-                       "from task "
-                       "%i\n",
-                       current->pid);
-
-        error = COMMUNICATE_ERROR_COPY_FROM;
-        goto out;
-    }
-
-    for (vma_count = 0; vma_count < communicate_list_vmas.vma_count;
-         vma_count++)
-    {
-        communicate_vma = &((communicate_vma_t*)buffer.addr)[vma_count];
-
-        c_printk_info("vma: %llX-%llX %s\n",
-                      communicate_vma->vm_start,
-                      communicate_vma->vm_end,
-                      communicate_vma->vm_descriptor);
-    }
+    //     for (vma_count = 0; vma_count <
+    //     communicate_list_vmas.vma_count;
+    //          vma_count++)
+    //     {
+    //         communicate_vma =
+    //         &((communicate_vma_t*)buffer.addr)[vma_count];
+    //
+    //         c_printk_info("vma: %llX-%llX %s\n",
+    //                       communicate_vma->vm_start,
+    //                       communicate_vma->vm_end,
+    //                       communicate_vma->vm_descriptor);
+    //     }
+    //
+    //     memset(buffer.addr, 0, buffer.size);
+    //
+    //     if (c_copy_from_user(current,
+    //                          buffer.addr,
+    //                          communicate_list_vmas.vmas,
+    //                          buffer.size))
+    //     {
+    //         c_printk_error("couldn't read communicate vmas "
+    //                        "from task "
+    //                        "%i\n",
+    //                        current->pid);
+    //
+    //         error = COMMUNICATE_ERROR_COPY_FROM;
+    //         goto out;
+    //     }
+    //
+    //     for (vma_count = 0; vma_count <
+    //     communicate_list_vmas.vma_count;
+    //          vma_count++)
+    //     {
+    //         communicate_vma =
+    //         &((communicate_vma_t*)buffer.addr)[vma_count];
+    //
+    //         c_printk_info("vma: %llX-%llX %s\n",
+    //                       communicate_vma->vm_start,
+    //                       communicate_vma->vm_end,
+    //                       communicate_vma->vm_descriptor);
+    //     }
 
     if (c_copy_to_user(current,
                        (ptr_t)address,
