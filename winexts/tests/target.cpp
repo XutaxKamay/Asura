@@ -24,11 +24,13 @@ int main()
 
     while (1)
     {
+        /*
         asm volatile("pushq $1000");
         asm volatile("pushq $0");
         asm volatile("mov %rsp, %rdi");
         asm volatile("mov $35, %rax");
         asm volatile("xor %esi, %esi");
         asm volatile("syscall");
+        */
     }
 }

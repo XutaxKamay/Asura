@@ -246,6 +246,43 @@ int main()
             {
                 printf("success read/write large buffer\n");
             }
+
+            communicate_list_vmas_t communicate_list_vmas;
+
+            communicate_list_vmas.pid_target    = pid;
+            communicate_list_vmas.vma_max_count = 128;
+            communicate_list_vmas.vmas = (communicate_vma_t*)malloc(
+              communicate_list_vmas.vma_max_count
+              * sizeof(communicate_vma_t));
+
+            printf("write listvmas %lX\n",
+                   (uintptr_t)communicate_list_vmas.vmas);
+
+            error = (communicate_error_t)ioctl(fd,
+                                               COMMUNICATE_CMD_LIST_VMAS,
+                                               &communicate_list_vmas);
+
+            printf("%li\n", sizeof(communicate_vma_t));
+
+            if (error != COMMUNICATE_ERROR_NONE)
+            {
+                printf("ouch listvmas %i\n", error);
+            }
+            else
+            {
+                for (int vma = 0; vma < communicate_list_vmas.vma_count;
+                     vma++)
+                {
+                    printf("vma: %lX-%lX %s\n",
+                           communicate_list_vmas.vmas[vma].vm_start,
+                           communicate_list_vmas.vmas[vma].vm_end,
+                           communicate_list_vmas.vmas[vma].vm_descriptor);
+                }
+
+                printf("done listvmas\n");
+            }
+
+            free(communicate_list_vmas.vmas);
         }
 
         communicate_remote_clone_t remote_clone;
@@ -260,7 +297,7 @@ int main()
         remote_clone.stack       = g_alloc_addr + 0x2000;
         remote_clone.stack_size  = 0x1000;
 
-        while (true)
+        // while (true)
         {
             auto error = (communicate_error_t)
               ioctl(fd, COMMUNICATE_CMD_REMOTE_CLONE, &remote_clone);
@@ -276,13 +313,12 @@ int main()
             }
         }
 
-        /*communicate_remote_munmap_t remote_munmap;
+        communicate_remote_munmap_t remote_munmap;
         remote_munmap.pid_target        = pid;
         remote_munmap.vm_remote_address = g_alloc_addr;
 
-        error = (communicate_error_t)ioctl(fd,
-                                           COMMUNICATE_CMD_REMOTE_MUNMAP,
-                                           &remote_munmap);
+        auto error = (communicate_error_t)
+          ioctl(fd, COMMUNICATE_CMD_REMOTE_MUNMAP, &remote_munmap);
 
         if (error != COMMUNICATE_ERROR_NONE)
         {
@@ -291,7 +327,7 @@ int main()
         else
         {
             printf("munmap\n");
-        }*/
+        }
     }
 
     close(fd);

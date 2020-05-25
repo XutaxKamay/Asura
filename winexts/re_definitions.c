@@ -998,6 +998,25 @@ const char* arch_vma_name(struct vm_area_struct* vma)
     return func_ptr(vma);
 }
 
+void dump_mm(const struct mm_struct *mm)
+{
+    typedef void (*func_t)(const void*);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("dump_mm");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find dump_mm\n");
+        return;
+    }
+
+    return func_ptr(mm);
+}
+
 /**
  * Code
  * Credits to linux kernel developers

@@ -52,7 +52,7 @@ namespace XLib
         /**
          * @brief generateRSAKeys
          */
-        auto generateRSAKeys() -> void;
+        auto generateRSAKeys(bool bRSAPublicKey = true) -> void;
         /**
          * @brief generateAESKey
          * @return
@@ -144,10 +144,15 @@ namespace XLib
     };
 
     template <int RSAKeySize>
-    auto HybridCrypt<RSAKeySize>::generateRSAKeys() -> void
+    auto HybridCrypt<RSAKeySize>::generateRSAKeys(bool bRSAPublicKey)
+      -> void
     {
         _privateKey.GenerateRandomWithKeySize(_rng, RSAKeySize);
-        _publicKey = RSA::PublicKey(_privateKey);
+
+        if (bRSAPublicKey)
+        {
+            _publicKey = RSA::PublicKey(_privateKey);
+        }
     }
 
     template <int RSAKeySize>
@@ -354,6 +359,7 @@ namespace XLib
     {
         return _rng;
     }
+
     template <int RSAKeySize>
     auto HybridCrypt<RSAKeySize>::setRng(const AutoSeededRandomPool& rng)
       -> void

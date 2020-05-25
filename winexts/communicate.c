@@ -489,6 +489,7 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
     buffer_t buffer;
     mm_t* mm;
     vm_area_t* vma;
+    int vma_count;
     const char* vma_description = NULL;
 
     init_buffer(&buffer);
@@ -533,19 +534,14 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
     {
         communicate_list_vmas.vma_count++;
 
-        if (!realloc_buffer(sizeof(communicate_vma_t)
-                              * communicate_list_vmas.vma_count,
-                            &buffer))
+        if (!realloc_buffer(sizeof(communicate_vma_t), &buffer))
         {
             error = COMMUNICATE_ERROR_KERNEL_ALLOC_FAILED;
             goto out;
         }
 
-        communicate_vma = ((
-          communicate_vma_t*)((uintptr_t)buffer.addr
-                              + sizeof(communicate_vma_t)
-                                  * (communicate_list_vmas.vma_count
-                                     - 1)));
+        communicate_vma = &((communicate_vma_t*)buffer
+                              .addr)[communicate_list_vmas.vma_count - 1];
 
         communicate_vma->vm_has_private_data = vma->vm_private_data ?
                                                  true :
@@ -579,6 +575,10 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
                          && vma->vm_end >= vma->vm_mm->start_stack)
                 {
                     vma_description = "[stack]";
+                }
+                else
+                {
+                    vma_description = "[anon]";
                 }
             }
         }
@@ -618,8 +618,7 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
     if (c_copy_to_user(current,
                        communicate_list_vmas.vmas,
                        buffer.addr,
-                       communicate_list_vmas.vma_count
-                         * sizeof(communicate_vma_t)))
+                       buffer.size))
     {
         c_printk_error("couldn't write communicate vmas "
                        "from task "
@@ -628,6 +627,44 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
 
         error = COMMUNICATE_ERROR_COPY_TO;
         goto out;
+    }
+
+    for (vma_count = 0; vma_count < communicate_list_vmas.vma_count;
+         vma_count++)
+    {
+        communicate_vma = &((communicate_vma_t*)buffer.addr)[vma_count];
+
+        c_printk_info("vma: %llX-%llX %s\n",
+                      communicate_vma->vm_start,
+                      communicate_vma->vm_end,
+                      communicate_vma->vm_descriptor);
+    }
+
+    memset(buffer.addr, 0, buffer.size);
+
+    if (c_copy_from_user(current,
+                         buffer.addr,
+                         communicate_list_vmas.vmas,
+                         buffer.size))
+    {
+        c_printk_error("couldn't read communicate vmas "
+                       "from task "
+                       "%i\n",
+                       current->pid);
+
+        error = COMMUNICATE_ERROR_COPY_FROM;
+        goto out;
+    }
+
+    for (vma_count = 0; vma_count < communicate_list_vmas.vma_count;
+         vma_count++)
+    {
+        communicate_vma = &((communicate_vma_t*)buffer.addr)[vma_count];
+
+        c_printk_info("vma: %llX-%llX %s\n",
+                      communicate_vma->vm_start,
+                      communicate_vma->vm_end,
+                      communicate_vma->vm_descriptor);
     }
 
     if (c_copy_to_user(current,

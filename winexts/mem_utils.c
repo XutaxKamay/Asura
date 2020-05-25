@@ -666,14 +666,17 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
     result = size;
 
+    if (result == 0)
+    {
+        goto out;
+    }
+
     mm = get_task_mm_kthread(task);
 
     if (mm == NULL)
     {
         goto out;
     }
-
-    down_write(&mm->mmap_sem);
 
     user_align_addr = (uintptr_t)align_address((uintptr_t)to, PAGE_SIZE);
     shifted         = (uintptr_t)to % PAGE_SIZE;
@@ -719,6 +722,8 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
     for (nr_page = 0; nr_page < nr_pages; nr_page++)
     {
+        down_write(&mm->mmap_sem);
+
         if (get_user_pages_remote(task,
                                   mm,
                                   user_align_addr,
@@ -727,9 +732,10 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
                                   &page,
                                   NULL,
                                   NULL)
-            <= 0)
+            != 1)
         {
-            goto out_sem;
+            up_write(&mm->mmap_sem);
+            goto out;
         }
 
         real_addr = (uintptr_t)kmap(page) + shifted;
@@ -741,16 +747,22 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
             size_to_copy = result;
         }
 
+        c_printk_info("writing %lX-%lX with %li\n",
+                      real_addr,
+                      (uintptr_t)user_align_addr + shifted,
+                      size_to_copy);
+
         copied_bytes = copy_to_user((ptr_t)real_addr, from, size_to_copy);
 
         kunmap(page);
         put_page(page);
+        up_write(&mm->mmap_sem);
 
         result -= (size_to_copy - copied_bytes);
 
         if (copied_bytes != 0)
         {
-            goto out_sem;
+            goto out;
         }
 
         if (result <= 0)
@@ -763,6 +775,7 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
             shifted = 0;
 
         user_align_addr += PAGE_SIZE;
+        *(uintptr_t*)&from += size_to_copy;
     }
 
     if (result != 0)
@@ -774,11 +787,6 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
                        nr_pages,
                        to);
     }
-
-out_sem:
-
-    up_write(&mm->mmap_sem);
-    c_mmput(task, mm);
 
 out:
     set_fs(old_fs);
@@ -805,14 +813,17 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
     result = size;
 
+    if (result == 0)
+    {
+        goto out;
+    }
+
     mm = get_task_mm_kthread(task);
 
     if (mm == NULL)
     {
         goto out;
     }
-
-    down_write(&mm->mmap_sem);
 
     user_align_addr = (uintptr_t)align_address((uintptr_t)from,
                                                PAGE_SIZE);
@@ -859,6 +870,8 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
     for (nr_page = 0; nr_page < nr_pages; nr_page++)
     {
+        down_write(&mm->mmap_sem);
+
         if (get_user_pages_remote(task,
                                   mm,
                                   user_align_addr,
@@ -867,9 +880,10 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
                                   &page,
                                   NULL,
                                   NULL)
-            <= 0)
+            != 1)
         {
-            goto out_sem;
+            up_write(&mm->mmap_sem);
+            goto out;
         }
 
         real_addr = (uintptr_t)kmap(page) + shifted;
@@ -881,16 +895,22 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
             size_to_copy = result;
         }
 
+        c_printk_info("reading %lX-%lX with %li\n",
+                      real_addr,
+                      (uintptr_t)user_align_addr + shifted,
+                      size_to_copy);
+
         copied_bytes = copy_from_user(to, (ptr_t)real_addr, size_to_copy);
 
         kunmap(page);
         put_page(page);
+        up_write(&mm->mmap_sem);
 
         result -= (size_to_copy - copied_bytes);
 
         if (copied_bytes != 0)
         {
-            goto out_sem;
+            goto out;
         }
 
         if (result <= 0)
@@ -903,6 +923,7 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
             shifted = 0;
 
         user_align_addr += PAGE_SIZE;
+        *(uintptr_t*)&to += size_to_copy;
     }
 
     if (result != 0)
@@ -914,11 +935,6 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
                        nr_pages,
                        from);
     }
-
-out_sem:
-
-    up_write(&mm->mmap_sem);
-    c_mmput(task, mm);
 
 out:
     set_fs(old_fs);

@@ -147,7 +147,6 @@ typedef struct communicate_list_vmas_struct
     int vma_count;     /* Counts vma listed above */
     int vma_max_count; /* Max allocated by the user */
     pid_t pid_target;
-
 } communicate_list_vmas_t;
 
 typedef enum communicate_cmd
