@@ -998,7 +998,7 @@ const char* arch_vma_name(struct vm_area_struct* vma)
     return func_ptr(vma);
 }
 
-void dump_mm(const struct mm_struct *mm)
+void dump_mm(const struct mm_struct* mm)
 {
     typedef void (*func_t)(const void*);
     static func_t func_ptr = NULL;
