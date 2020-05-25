@@ -741,6 +741,8 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     {
         real_addr = (uintptr_t)page_address(pages[nr_page]) + shifted;
 
+        unpin_user_page(pages[nr_page]);
+
         size_to_copy = PAGE_SIZE - shifted;
 
         if (size_to_copy > result)
@@ -786,9 +788,9 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     }
 
 out:
+
     if (pages)
     {
-        unpin_user_pages(pages, nr_pages);
         kfree(pages);
         up_write(&mm->mmap_sem);
     }
@@ -893,6 +895,8 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     {
         real_addr = (uintptr_t)page_address(pages[nr_page]) + shifted;
 
+        unpin_user_page(pages[nr_page]);
+
         size_to_copy = PAGE_SIZE - shifted;
 
         if (size_to_copy > result)
@@ -941,7 +945,6 @@ out:
 
     if (pages)
     {
-        unpin_user_pages(pages, nr_pages);
         kfree(pages);
         up_write(&mm->mmap_sem);
     }
