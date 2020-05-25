@@ -486,7 +486,7 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
     communicate_vma_t* communicate_vma;
     task_t* remote_task;
     buffer_t buffer;
-    mm_t* mm;
+    mm_t* mm = NULL;
     vm_area_t* vma;
     //     int vma_count;
     const char* vma_description = NULL;
@@ -524,7 +524,13 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
         goto out;
     }
 
-    mm  = get_task_mm_kthread(remote_task);
+    mm = remote_task->mm;
+
+    /**
+     * Just in case
+     */
+    down_read(&mm->mmap_sem);
+
     vma = mm->mmap;
 
     communicate_list_vmas.vma_count = 0;
@@ -696,6 +702,12 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
     }
 
 out:
+
+    if (mm)
+    {
+        up_read(&mm->mmap_sem);
+    }
+
     free_buffer(&buffer);
     return error;
 }
