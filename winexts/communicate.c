@@ -551,52 +551,62 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
         communicate_vma->vm_pgoff            = vma->vm_pgoff;
         communicate_vma->vm_page_prot        = vma->vm_page_prot.pgprot;
 
+        if (vma->vm_file)
+        {
+            vma_description = d_path(&vma->vm_file->f_path,
+                                     communicate_vma->vm_descriptor,
+                                     COMMUNICATE_MAX_PATH);
+
+            if (vma_description)
+                goto found_description;
+        }
+
         if (vma->vm_ops && vma->vm_ops->name)
         {
             vma_description = vma->vm_ops->name(vma);
+
+            if (vma_description)
+                goto found_description;
+        }
+
+        vma_description = arch_vma_name(vma);
+
+        if (vma_description == NULL)
+        {
+            if (vma->vm_mm == NULL)
+            {
+                vma_description = "[vdso]";
+                goto found_description;
+            }
+
+            if (vma->vm_start <= mm->brk && vma->vm_end >= mm->start_brk)
+            {
+                vma_description = "[heap]";
+                goto found_description;
+            }
+
+            if (vma->vm_start <= vma->vm_mm->start_stack
+                && vma->vm_end >= vma->vm_mm->start_stack)
+            {
+                vma_description = "[stack]";
+                goto found_description;
+            }
+        }
+
+        if (vma_description == NULL)
+        {
+            vma_description = "[anon]";
+        }
+
+    found_description:
+
+        if (strlen(vma_description) <= COMMUNICATE_MAX_PATH)
+        {
+            strcpy(communicate_vma->vm_descriptor, vma_description);
         }
         else
         {
-            vma_description = arch_vma_name(vma);
-
-            if (vma_description == NULL)
-            {
-                if (!vma->vm_mm)
-                {
-                    vma_description = "[vdso]";
-                }
-                else if (vma->vm_start <= mm->brk
-                         && vma->vm_end >= mm->start_brk)
-                {
-                    vma_description = "[heap]";
-                }
-                else if (vma->vm_start <= vma->vm_mm->start_stack
-                         && vma->vm_end >= vma->vm_mm->start_stack)
-                {
-                    vma_description = "[stack]";
-                }
-                else
-                {
-                    vma_description = "[anon]";
-                }
-            }
-        }
-
-        if (vma_description != NULL)
-        {
-            if (strlen(vma_description) <= COMMUNICATE_MAX_PATH)
-            {
-                strcpy(communicate_vma->vm_descriptor, vma_description);
-            }
-            else
-            {
-                strcpy(communicate_vma->vm_descriptor,
-                       "array is too low");
-            }
-        }
-        else
-        {
-            strcpy(communicate_vma->vm_descriptor, "");
+            strcpy(communicate_vma->vm_descriptor, "array is too low");
         }
 
         vma = vma->vm_next;
