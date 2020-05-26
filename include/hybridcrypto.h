@@ -101,13 +101,19 @@ namespace XLib
          */
         auto setPublicKey(const RSA::PublicKey& publicKey) -> void;
         /**
-         * @brief AESData
+         * @brief publicKeyFromPrivateKey
          * @return
+         */
+        auto publicKeyFromPrivateKey();
+        /**
+         * @brief AESData
+         * @return AESData_t
          */
         auto AESData() const;
         /**
          * @brief setAESData
          * @param AESData_t
+         * @return
          */
         auto setAESData(const AESData_t& AESData_t) -> void;
 
@@ -263,11 +269,16 @@ namespace XLib
     }
 
     template <int RSAKeySize>
-    auto
-    HybridCrypt<RSAKeySize>::setPublicKey(const RSA::PublicKey& publicKey)
-      -> void
+    auto HybridCrypt<RSAKeySize>::setPublicKey(
+      const RSA::PublicKey& publicKey) -> void
     {
         _publicKey = publicKey;
+    }
+
+    template <int RSAKeySize>
+    auto HybridCrypt<RSAKeySize>::publicKeyFromPrivateKey()
+    {
+        return RSA::PublicKey(_privateKey);
     }
 
     template <int RSAKeySize>
@@ -347,9 +358,8 @@ namespace XLib
     }
 
     template <int RSAKeySize>
-    auto
-    HybridCrypt<RSAKeySize>::setEncodedAESDataSize(int encodedAESDataSize)
-      -> void
+    auto HybridCrypt<RSAKeySize>::setEncodedAESDataSize(
+      int encodedAESDataSize) -> void
     {
         _encodedAESDataSize = encodedAESDataSize;
     }

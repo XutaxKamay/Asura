@@ -1,9 +1,9 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <cstddef>
 #include <iostream>
 #include <vector>
-#include <cstddef>
 
 #if defined _WIN32 || defined _WIN64
     #define WINDOWS

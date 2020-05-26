@@ -172,9 +172,8 @@ namespace XLib
     }
 
     template <safesize_t max_size>
-    inline auto
-    WriteBuffer<max_size>::setWriteSize(const safesize_t& writeSize)
-      -> void
+    inline auto WriteBuffer<max_size>::setWriteSize(
+      const safesize_t& writeSize) -> void
     {
         _writeSize = writeSize;
     }

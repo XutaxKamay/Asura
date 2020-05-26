@@ -95,10 +95,10 @@ namespace XLib
         }
 
         template <safesize_t index, typename T2 = ptr_t>
-        constexpr inline auto
-        hook(T2 newFuncPtr,
-             std::function<void(ptr_t, ptr_t)> before = nullptr,
-             std::function<void(ptr_t, ptr_t)> after  = nullptr)
+        constexpr inline auto hook(
+          T2 newFuncPtr,
+          std::function<void(ptr_t, ptr_t)> before = nullptr,
+          std::function<void(ptr_t, ptr_t)> after  = nullptr)
         {
             auto funcPtr = getVFuncPtr<index, T2*>();
 
