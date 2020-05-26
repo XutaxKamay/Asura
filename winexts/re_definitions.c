@@ -409,8 +409,7 @@ void cgroup_update_frozen(struct cgroup* cgrp)
 void task_clear_jobctl_trapping(struct task_struct* task)
 {
     typedef void (*task_clear_jobctl_trapping_t)(void*);
-    static task_clear_jobctl_trapping_t task_clear_jobctl_trapping_ptr
-      = NULL;
+    static task_clear_jobctl_trapping_t task_clear_jobctl_trapping_ptr = NULL;
 
     if (task_clear_jobctl_trapping_ptr == NULL)
     {
@@ -432,8 +431,7 @@ void task_clear_jobctl_pending(struct task_struct* task,
                                unsigned long mask)
 {
     typedef void (*task_clear_jobctl_pending_t)(void*, unsigned long);
-    static task_clear_jobctl_pending_t task_clear_jobctl_pending_ptr
-      = NULL;
+    static task_clear_jobctl_pending_t task_clear_jobctl_pending_ptr = NULL;
 
     if (task_clear_jobctl_pending_ptr == NULL)
     {

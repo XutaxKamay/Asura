@@ -43,8 +43,10 @@ int c_find_vma_from_task_str(task_t* task,
 void c_print_vmas(task_t* task);
 int c_munmap(task_t* task, uintptr_t start);
 void change_vm_flags(vm_area_t* vma, int new_flags, int* old_flags);
-vm_area_t*
-c_mmap(task_t* task, uintptr_t address, uintptr_t size, int prot);
+vm_area_t* c_mmap(task_t* task,
+                  uintptr_t address,
+                  uintptr_t size,
+                  int prot);
 int c___vm_munmap(task_t* task,
                   unsigned long start,
                   size_t len,
@@ -59,14 +61,18 @@ int c_mprotect(task_t* task,
 /**
  * Copies memory from a task in its virtual address space to kernel one
  */
-unsigned long
-c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size);
+unsigned long c_copy_from_user(task_t* task,
+                               ptr_t to,
+                               ptr_t from,
+                               size_t size);
 
 /**
  * Copies memory to a task in its virtual address space to kernel one
  */
-unsigned long
-c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size);
+unsigned long c_copy_to_user(task_t* task,
+                             ptr_t to,
+                             ptr_t from,
+                             size_t size);
 
 /**
  * Memory offsets stuffs

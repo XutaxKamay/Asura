@@ -171,18 +171,24 @@ typedef struct communicate_remote_mprotect_struct
 typedef enum communicate_cmd
 {
     COMMUNICATE_CMD_READ = _IOWR(IO_MAGIC_NUMBER, 0, communicate_read_t*),
-    COMMUNICATE_CMD_WRITE
-    = _IOWR(IO_MAGIC_NUMBER, 1, communicate_write_t*),
-    COMMUNICATE_CMD_REMOTE_MMAP
-    = _IOWR(IO_MAGIC_NUMBER, 2, communicate_remote_mmap_t*),
-    COMMUNICATE_CMD_REMOTE_MUNMAP
-    = _IOWR(IO_MAGIC_NUMBER, 3, communicate_remote_munmap_t*),
-    COMMUNICATE_CMD_REMOTE_CLONE
-    = _IOWR(IO_MAGIC_NUMBER, 4, communicate_remote_clone_t*),
-    COMMUNICATE_CMD_LIST_VMAS
-    = _IOWR(IO_MAGIC_NUMBER, 5, communicate_list_vmas_t*),
-    COMMUNICATE_CMD_REMOTE_PROTECT
-    = _IOWR(IO_MAGIC_NUMBER, 6, communicate_remote_mprotect_t*)
+    COMMUNICATE_CMD_WRITE          = _IOWR(IO_MAGIC_NUMBER,
+                                  1,
+                                  communicate_write_t*),
+    COMMUNICATE_CMD_REMOTE_MMAP    = _IOWR(IO_MAGIC_NUMBER,
+                                        2,
+                                        communicate_remote_mmap_t*),
+    COMMUNICATE_CMD_REMOTE_MUNMAP  = _IOWR(IO_MAGIC_NUMBER,
+                                          3,
+                                          communicate_remote_munmap_t*),
+    COMMUNICATE_CMD_REMOTE_CLONE   = _IOWR(IO_MAGIC_NUMBER,
+                                         4,
+                                         communicate_remote_clone_t*),
+    COMMUNICATE_CMD_LIST_VMAS      = _IOWR(IO_MAGIC_NUMBER,
+                                      5,
+                                      communicate_list_vmas_t*),
+    COMMUNICATE_CMD_REMOTE_PROTECT = _IOWR(IO_MAGIC_NUMBER,
+                                           6,
+                                           communicate_remote_mprotect_t*)
 } communicate_cmd_t;
 
 #endif

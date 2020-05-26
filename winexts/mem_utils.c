@@ -499,8 +499,10 @@ void change_vm_flags(vm_area_t* vma, int new_flags, int* old_flags)
     vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
 }
 
-vm_area_t*
-c_mmap(task_t* task, uintptr_t address, uintptr_t size, int prot)
+vm_area_t* c_mmap(task_t* task,
+                  uintptr_t address,
+                  uintptr_t size,
+                  int prot)
 {
     mm_t* mm;
     vm_area_t* vma;
@@ -994,8 +996,10 @@ uintptr_t align_address(uintptr_t address, size_t size)
     return aligned_address;
 }
 
-unsigned long
-c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
+unsigned long c_copy_to_user(task_t* task,
+                             ptr_t to,
+                             ptr_t from,
+                             size_t size)
 {
     mm_t* mm;
     page_t** pages;
@@ -1155,8 +1159,10 @@ out:
     return result;
 }
 
-unsigned long
-c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
+unsigned long c_copy_from_user(task_t* task,
+                               ptr_t to,
+                               ptr_t from,
+                               size_t size)
 {
     mm_t* mm;
     page_t** pages = NULL;

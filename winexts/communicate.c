@@ -1,9 +1,9 @@
 #include "main.h"
 
-communicate_error_t
-communicate_read__read_struct(task_t* task,
-                              uintptr_t address,
-                              communicate_read_t* communicate_read)
+communicate_error_t communicate_read__read_struct(
+  task_t* task,
+  uintptr_t address,
+  communicate_read_t* communicate_read)
 {
     if (c_copy_from_user(task,
                          communicate_read,
@@ -20,10 +20,10 @@ communicate_read__read_struct(task_t* task,
     return COMMUNICATE_ERROR_NONE;
 }
 
-communicate_error_t
-communicate_read__write_struct(task_t* task,
-                               uintptr_t address,
-                               communicate_write_t* communicate_write)
+communicate_error_t communicate_read__write_struct(
+  task_t* task,
+  uintptr_t address,
+  communicate_write_t* communicate_write)
 {
     if (c_copy_from_user(task,
                          communicate_write,
@@ -353,8 +353,8 @@ out:
     return error;
 }
 
-communicate_error_t
-communicate_process_cmd_remote_munmap(uintptr_t address)
+communicate_error_t communicate_process_cmd_remote_munmap(
+  uintptr_t address)
 {
     communicate_error_t error;
     communicate_remote_munmap_t communicate_remote_munmap;
@@ -392,9 +392,9 @@ communicate_process_cmd_remote_munmap(uintptr_t address)
         goto out;
     }
 
-    communicate_remote_munmap.ret
-      = c_munmap(remote_task,
-                 communicate_remote_munmap.vm_remote_address);
+    communicate_remote_munmap.ret = c_munmap(
+      remote_task,
+      communicate_remote_munmap.vm_remote_address);
 
     if (communicate_remote_munmap.ret < 0)
     {
@@ -426,10 +426,10 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
     task_t *remote_task, *old_current_task;
     struct kernel_clone_args clone_args;
 
-    error
-      = communicate_read__remote_clone_struct(current,
-                                              address,
-                                              &communicate_remote_clone);
+    error = communicate_read__remote_clone_struct(
+      current,
+      address,
+      &communicate_remote_clone);
 
     if (error != COMMUNICATE_ERROR_NONE)
     {
@@ -472,10 +472,10 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
     task_attached_to[old_current_task->pid] = remote_task;
     this_cpu_write(current_task, remote_task);
 
-    communicate_remote_clone.ret
-      = c_do_fork(&clone_args,
-                  &communicate_remote_clone.regs,
-                  &communicate_remote_clone.regs_set);
+    communicate_remote_clone.ret = c_do_fork(
+      &clone_args,
+      &communicate_remote_clone.regs,
+      &communicate_remote_clone.regs_set);
 
     task_attached_to[old_current_task->pid] = NULL;
     this_cpu_write(current_task, old_current_task);
@@ -731,8 +731,8 @@ out:
     return error;
 }
 
-communicate_error_t
-communicate_process_cmd_remote_mprotect(uintptr_t address)
+communicate_error_t communicate_process_cmd_remote_mprotect(
+  uintptr_t address)
 {
     communicate_error_t error;
     communicate_remote_mprotect_t communicate_remote_mprotect;
@@ -771,12 +771,12 @@ communicate_process_cmd_remote_mprotect(uintptr_t address)
         goto out;
     }
 
-    communicate_remote_mprotect.ret
-      = c_mprotect(remote_task,
-                   communicate_remote_mprotect.address,
-                   communicate_remote_mprotect.size,
-                   communicate_remote_mprotect.wanted_flags,
-                   communicate_remote_mprotect.pkey);
+    communicate_remote_mprotect.ret = c_mprotect(
+      remote_task,
+      communicate_remote_mprotect.address,
+      communicate_remote_mprotect.size,
+      communicate_remote_mprotect.wanted_flags,
+      communicate_remote_mprotect.pkey);
 
     if (c_copy_to_user(current,
                        (ptr_t)address,

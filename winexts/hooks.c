@@ -13,9 +13,11 @@ bool hook_rel_call(uintptr_t call_inst_location, uintptr_t new_func)
         return false;
     }
 
-    *(uint32_t*)(call_inst_location + 1)
-      = ((uint32_t)(new_func & 0xFFFFFFFF))
-        - (((uint32_t)call_inst_location + 5) & 0xFFFFFFFF);
+    *(uint32_t*)(call_inst_location + 1) = ((uint32_t)(new_func
+                                                       & 0xFFFFFFFF))
+                                           - (((uint32_t)call_inst_location
+                                               + 5)
+                                              & 0xFFFFFFFF);
 
     set_page_flags(call_inst_location + 1, old_pte_val);
 
@@ -35,9 +37,11 @@ bool hook_rel_jmp(uintptr_t jmp_inst_location, uintptr_t new_func)
         return false;
     }
 
-    *(uint32_t*)(jmp_inst_location + 1)
-      = ((uint32_t)(new_func & 0xFFFFFFFF))
-        - (((uint32_t)jmp_inst_location + 5) & 0xFFFFFFFF);
+    *(uint32_t*)(jmp_inst_location + 1) = ((uint32_t)(new_func
+                                                      & 0xFFFFFFFF))
+                                          - (((uint32_t)jmp_inst_location
+                                              + 5)
+                                             & 0xFFFFFFFF);
 
     set_page_flags(jmp_inst_location + 1, old_pte_val);
 

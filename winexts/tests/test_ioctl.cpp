@@ -204,15 +204,15 @@ int main()
             communicate_remote_mprotect.pid_target   = pid;
             communicate_remote_mprotect.address      = g_alloc_addr;
             communicate_remote_mprotect.wanted_flags = PROT_EXEC
-                                                      | PROT_READ
-                                                      | PROT_WRITE;
+                                                       | PROT_READ
+                                                       | PROT_WRITE;
             communicate_remote_mprotect.pkey = -1;
             communicate_remote_mprotect.size = STACK_SIZE;
 
-            error
-              = (communicate_error_t)ioctl(fd,
-                                           COMMUNICATE_CMD_REMOTE_PROTECT,
-                                           &communicate_remote_mprotect);
+            error = (communicate_error_t)ioctl(
+              fd,
+              COMMUNICATE_CMD_REMOTE_PROTECT,
+              &communicate_remote_mprotect);
 
             if (error != COMMUNICATE_ERROR_NONE)
             {
