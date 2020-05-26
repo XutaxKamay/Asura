@@ -123,21 +123,18 @@ namespace XLib
         }
 
         template <typename T2 = ptr_t>
-        constexpr inline auto Get()
+        constexpr inline auto _vptr()
         {
             return VTable<T2>(this);
         }
 
         auto countVFuncs() -> safesize_t;
-
-      private:
-        ptr_t *_vfptr;
     };
 
     template <class T>
     auto VirtualTable<T>::countVFuncs() -> safesize_t
     {
-        auto vtable = Get();
+        auto vtable = _vptr();
 
         safesize_t count = 0;
 

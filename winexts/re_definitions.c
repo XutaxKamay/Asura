@@ -5,56 +5,8 @@
  * needed by the kernel module
  */
 
-spinlock_t* pcss_set_lock                              = NULL;
-rwlock_t* ptasklist_lock                               = NULL;
-ptr_t cpu_runqueues_addr                               = NULL;
 struct tracepoint* __tracepoint_sched_process_fork_ptr = NULL;
 unsigned long stack_guard_gap = 256UL << PAGE_SHIFT;
-
-int find_css_set_lock(void)
-{
-    /**
-     * Better to find it by symbol first
-     */
-    pcss_set_lock = (spinlock_t*)kallsyms_lookup_name("css_set_lock");
-
-    if (pcss_set_lock == NULL)
-    {
-        pcss_set_lock = (spinlock_t*)(CSS_SET_LOCK_ADDR
-                                      + kernel_offset());
-    }
-
-    return 0;
-}
-
-int find_tasklist_lock(void)
-{
-    /**
-     * Better to find it by symbol first
-     */
-
-    ptasklist_lock = (rwlock_t*)kallsyms_lookup_name("tasklist_lock");
-
-    if (ptasklist_lock == NULL)
-    {
-        ptasklist_lock = (rwlock_t*)(TASKLIST_LOCK_ADDR
-                                     + kernel_offset());
-    }
-
-    return 0;
-}
-
-int find_cpu_runqueues(void)
-{
-    cpu_runqueues_addr = (ptr_t)kallsyms_lookup_name("runqueues");
-
-    if (cpu_runqueues_addr == NULL)
-    {
-        cpu_runqueues_addr = (ptr_t)CPU_RUNQUEUES_ADDR;
-    }
-
-    return 0;
-}
 
 int find___tracepoint_sched_process_fork(void)
 {
@@ -1015,6 +967,294 @@ void dump_mm(const struct mm_struct* mm)
     }
 
     return func_ptr(mm);
+}
+
+long populate_vma_page_range(struct vm_area_struct* vma,
+                             unsigned long start,
+                             unsigned long end,
+                             int* nonblocking)
+{
+    typedef long (*func_t)(void*, unsigned long, unsigned long, int*);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("populate_vma_page_"
+                                                "range");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find populate_vma_page_range\n");
+        return 0;
+    }
+
+    return func_ptr(vma, start, end, nonblocking);
+}
+
+bool may_expand_vm(struct mm_struct* mm,
+                   vm_flags_t flags,
+                   unsigned long npages)
+{
+    typedef bool (*func_t)(void*, vm_flags_t, unsigned long);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("may_expand_vm");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find may_expand_vm\n");
+        return false;
+    }
+
+    return func_ptr(mm, flags, npages);
+}
+
+int vma_wants_writenotify(struct vm_area_struct* vma,
+                          pgprot_t vm_page_prot)
+{
+    typedef int (*func_t)(void*, pgprot_t);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("vma_wants_writenotify");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find vma_wants_writenotify\n");
+        return -1;
+    }
+
+    return func_ptr(vma, vm_page_prot);
+}
+
+int walk_page_range(struct mm_struct* mm,
+                    unsigned long start,
+                    unsigned long end,
+                    const struct mm_walk_ops* ops,
+                    void* private)
+{
+    typedef int (
+      *func_t)(void*, unsigned long, unsigned long, const void*, void*);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("walk_page_range");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find walk_page_range\n");
+        return -1;
+    }
+
+    return func_ptr(mm, start, end, ops, private);
+}
+
+int security_file_mprotect(struct vm_area_struct* vma,
+                           unsigned long reqprot,
+                           unsigned long prot)
+{
+    typedef int (*func_t)(void*, unsigned long, unsigned long);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("security_file_mprotect");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find security_file_mprotect\n");
+        return -1;
+    }
+
+    return func_ptr(vma, reqprot, prot);
+}
+
+struct vm_area_struct* vma_merge(struct mm_struct* mm,
+                                 struct vm_area_struct* prev,
+                                 unsigned long addr,
+                                 unsigned long end,
+                                 unsigned long vm_flags,
+                                 struct anon_vma* anon_vma,
+                                 struct file* file,
+                                 pgoff_t pgoff,
+                                 struct mempolicy* mempolicy,
+                                 struct vm_userfaultfd_ctx ctx)
+{
+    typedef void* (*func_t)(void*,
+                            void*,
+                            unsigned long,
+                            unsigned long,
+                            unsigned long,
+                            void*,
+                            void*,
+                            pgoff_t,
+                            void*,
+                            struct vm_userfaultfd_ctx);
+
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("vma_merge");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find vma_merge\n");
+        return NULL;
+    }
+
+    return func_ptr(mm,
+                    prev,
+                    addr,
+                    end,
+                    vm_flags,
+                    anon_vma,
+                    file,
+                    pgoff,
+                    mempolicy,
+                    ctx);
+}
+
+int security_vm_enough_memory_mm(struct mm_struct* mm, long pages)
+{
+    typedef int (*func_t)(void*, long);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("security_vm_enough_"
+                                                "memory_mm");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find security_vm_enough_memory_mm\n");
+        return -1;
+    }
+
+    return func_ptr(mm, pages);
+}
+
+unsigned long change_protection(struct vm_area_struct* vma,
+                                unsigned long start,
+                                unsigned long end,
+                                pgprot_t newprot,
+                                int dirty_accountable,
+                                int prot_numa)
+{
+    typedef unsigned long (
+      *func_t)(void*, unsigned long, unsigned long, pgprot_t, int, int);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("change_protection");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find change_protection\n");
+        return -1;
+    }
+
+    return func_ptr(vma,
+                    start,
+                    end,
+                    newprot,
+                    dirty_accountable,
+                    prot_numa);
+}
+
+void vma_set_page_prot(struct vm_area_struct* vma)
+{
+    typedef void (*func_t)(void*);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("vma_set_page_prot");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find vma_set_page_prot\n");
+        return;
+    }
+
+    func_ptr(vma);
+}
+
+bool pfn_modify_allowed(unsigned long pfn, pgprot_t prot)
+{
+    typedef bool (*func_t)(unsigned long, pgprot_t);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("pfn_modify_allowed");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find pfn_modify_allowed\n");
+        return false;
+    }
+
+    return func_ptr(pfn, prot);
+}
+
+int split_vma(struct mm_struct* mm,
+              struct vm_area_struct* vma,
+              unsigned long addr,
+              int new_below)
+{
+    typedef int (*func_t)(void*, void*, unsigned long, int);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("split_vma");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find split_vma\n");
+        return -1;
+    }
+
+    return func_ptr(mm, vma, addr, new_below);
+}
+
+int __arch_override_mprotect_pkey(struct vm_area_struct* vma,
+                                  int prot,
+                                  int pkey)
+{
+    typedef int (*func_t)(void*, int, int);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("__arch_override_"
+                                                "mprotect_pkey");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find __arch_override_mprotect_pkey\n");
+        return -1;
+    }
+
+    return func_ptr(vma, prot, pkey);
 }
 
 /**

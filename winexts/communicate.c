@@ -124,6 +124,27 @@ communicate_error_t communicate_read__list_vmas_struct(
     return COMMUNICATE_ERROR_NONE;
 }
 
+communicate_error_t communicate_read__remote_mprotect_struct(
+  task_t* task,
+  uintptr_t address,
+  communicate_remote_mprotect_t* communicate_remote_mprotect)
+{
+    if (c_copy_from_user(task,
+                         communicate_remote_mprotect,
+                         (ptr_t)address,
+                         sizeof(communicate_remote_mprotect_t)))
+    {
+        c_printk_error("couldn't read communicate remote protect struct "
+                       "from task "
+                       "%i\n",
+                       task->pid);
+
+        return COMMUNICATE_ERROR_STRUCT_COPY_FROM;
+    }
+
+    return COMMUNICATE_ERROR_NONE;
+}
+
 communicate_error_t communicate_process_cmd_read(uintptr_t address)
 {
     communicate_error_t error;
@@ -541,6 +562,7 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
 
         if (!realloc_buffer(sizeof(communicate_vma_t), &buffer))
         {
+            up_read(&mm->mmap_sem);
             error = COMMUNICATE_ERROR_KERNEL_ALLOC_FAILED;
             goto out;
         }
@@ -556,6 +578,7 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
         communicate_vma->vm_flags            = vma->vm_flags;
         communicate_vma->vm_pgoff            = vma->vm_pgoff;
         communicate_vma->vm_page_prot        = vma->vm_page_prot.pgprot;
+        communicate_vma->pkey                = vma_pkey(vma);
 
         if (vma->vm_file)
         {
@@ -617,6 +640,8 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
 
         vma = vma->vm_next;
     }
+
+    up_read(&mm->mmap_sem);
 
     if (communicate_list_vmas.vma_count
         > communicate_list_vmas.vma_max_count)
@@ -702,12 +727,71 @@ communicate_error_t communicate_process_cmd_list_vmas(uintptr_t address)
     }
 
 out:
+    free_buffer(&buffer);
+    return error;
+}
 
-    if (mm)
+communicate_error_t
+communicate_process_cmd_remote_mprotect(uintptr_t address)
+{
+    communicate_error_t error;
+    communicate_remote_mprotect_t communicate_remote_mprotect;
+    task_t* remote_task;
+
+    error = communicate_read__remote_mprotect_struct(
+      current,
+      address,
+      &communicate_remote_mprotect);
+
+    if (error != COMMUNICATE_ERROR_NONE)
     {
-        up_read(&mm->mmap_sem);
+        goto out;
     }
 
-    free_buffer(&buffer);
+    remote_task = find_task_from_pid(
+      communicate_remote_mprotect.pid_target);
+
+    if (remote_task == NULL)
+    {
+        error = COMMUNICATE_ERROR_TARGET_PID_NOT_FOUND;
+        goto out;
+    }
+
+    /**
+     * For now kernel threads are risky
+     */
+    if (remote_task->mm == NULL || remote_task->active_mm == NULL
+        || (remote_task->mm != remote_task->active_mm))
+    {
+        error = COMMUNICATE_ERROR_ACCESS_DENIED;
+        c_printk_error("can't write on a kernel thread due to security "
+                       "risks (might also freeze your kernel) asked "
+                       "task: %i\n",
+                       remote_task->pid);
+        goto out;
+    }
+
+    communicate_remote_mprotect.ret
+      = c_mprotect(remote_task,
+                   communicate_remote_mprotect.address,
+                   communicate_remote_mprotect.size,
+                   communicate_remote_mprotect.wanted_flags,
+                   communicate_remote_mprotect.pkey);
+
+    if (c_copy_to_user(current,
+                       (ptr_t)address,
+                       (ptr_t)&communicate_remote_mprotect,
+                       sizeof(communicate_remote_mprotect_t)))
+    {
+        c_printk_error("couldn't write communicate remote protect "
+                       "struct "
+                       "from task "
+                       "%i\n",
+                       current->pid);
+
+        error = COMMUNICATE_ERROR_COPY_TO;
+    }
+
+out:
     return error;
 }

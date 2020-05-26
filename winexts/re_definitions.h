@@ -9,14 +9,9 @@
 /**
  * This one is found in memory instead
  */
-extern spinlock_t* pcss_set_lock;
-extern rwlock_t* ptasklist_lock;
-extern ptr_t cpu_runqueues_addr;
+
 extern struct tracepoint* __tracepoint_sched_process_fork_ptr;
 
-int find_css_set_lock(void);
-int find_tasklist_lock(void);
-int find_cpu_runqueues(void);
 int find___tracepoint_sched_process_fork(void);
 
 void vma_rb_erase(vm_area_t* vma, rb_root_t* root);
@@ -79,5 +74,10 @@ static inline bool is_data_mapping(vm_flags_t flags)
 int copy_namespaces(unsigned long flags, struct task_struct* tsk);
 
 void validate_mm(struct mm_struct* mm);
+
+long populate_vma_page_range(struct vm_area_struct* vma,
+                             unsigned long start,
+                             unsigned long end,
+                             int* nonblocking);
 
 #endif

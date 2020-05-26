@@ -115,6 +115,13 @@ int vm_flags_to_prot(vm_area_t* vma)
         prot |= PROT_GROWSUP;
     }
 
+    /**
+     * VM_MAY*
+     */
+    prot |= vma->vm_flags
+            & (C_PROT_MAY_EXEC | C_PROT_MAY_READ | C_PROT_MAY_WRITE
+               | C_PROT_MAY_SHARE);
+
     return prot;
 }
 
@@ -144,6 +151,13 @@ int prot_to_vm_flags(int prot)
     {
         flags |= VM_GROWSUP;
     }
+
+    /**
+     * VM_MAY*
+     */
+    flags |= prot
+             & (C_PROT_MAY_EXEC | C_PROT_MAY_READ | C_PROT_MAY_WRITE
+                | C_PROT_MAY_SHARE);
 
     return flags;
 }
@@ -538,10 +552,9 @@ c_mmap(task_t* task, uintptr_t address, uintptr_t size, int prot)
 
     vma_set_anonymous(vma);
 
-    vma->vm_start = address;
-    vma->vm_end   = address + size;
-    vma->vm_flags = prot_to_vm_flags(prot) | mm->def_flags | VM_DONTEXPAND
-                    | VM_SOFTDIRTY;
+    vma->vm_start     = address;
+    vma->vm_end       = address + size;
+    vma->vm_flags     = prot_to_vm_flags(prot) | mm->def_flags;
     vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
 
     if (insert_vm_struct(mm, vma) < 0)
@@ -635,6 +648,340 @@ int c_vma_count(mm_t* mm)
 }
 
 /**
+ * Credits to linux kernel for mprotect
+ */
+
+static int prot_none_pte_entry(pte_t* pte,
+                               unsigned long addr,
+                               unsigned long next,
+                               struct mm_walk* walk)
+{
+    return pfn_modify_allowed(pte_pfn(*pte),
+                              *(pgprot_t*)(walk->private)) ?
+             0 :
+             -EACCES;
+}
+
+static int prot_none_hugetlb_entry(pte_t* pte,
+                                   unsigned long hmask,
+                                   unsigned long addr,
+                                   unsigned long next,
+                                   struct mm_walk* walk)
+{
+    return pfn_modify_allowed(pte_pfn(*pte),
+                              *(pgprot_t*)(walk->private)) ?
+             0 :
+             -EACCES;
+}
+
+static int prot_none_test(unsigned long addr,
+                          unsigned long next,
+                          struct mm_walk* walk)
+{
+    return 0;
+}
+
+static const struct mm_walk_ops prot_none_walk_ops = {
+    .pte_entry     = prot_none_pte_entry,
+    .hugetlb_entry = prot_none_hugetlb_entry,
+    .test_walk     = prot_none_test,
+};
+
+int c_mprotect_fixup(task_t* task,
+                     struct vm_area_struct* vma,
+                     struct vm_area_struct** pprev,
+                     unsigned long start,
+                     unsigned long end,
+                     unsigned long newflags)
+{
+    struct mm_struct* mm   = vma->vm_mm;
+    unsigned long oldflags = vma->vm_flags;
+    long nrpages           = (end - start) >> PAGE_SHIFT;
+    unsigned long charged  = 0;
+    pgoff_t pgoff;
+    int error;
+    int dirty_accountable = 0;
+
+    if (newflags == oldflags)
+    {
+        *pprev = vma;
+        return 0;
+    }
+
+    /*
+     * Do PROT_NONE PFN permission checks here when we can still
+     * bail out without undoing a lot of state. This is a rather
+     * uncommon case, so doesn't need to be very optimized.
+     */
+    if (arch_has_pfn_modify_check()
+        && (vma->vm_flags & (VM_PFNMAP | VM_MIXEDMAP))
+        && (newflags & (VM_READ | VM_WRITE | VM_EXEC)) == 0)
+    {
+        pgprot_t new_pgprot = vm_get_page_prot(newflags);
+
+        error = walk_page_range(task->mm,
+                                start,
+                                end,
+                                &prot_none_walk_ops,
+                                &new_pgprot);
+        if (error)
+            return error;
+    }
+
+    /*
+     * If we make a private mapping writable we increase our commit;
+     * but (without finer accounting) cannot reduce our commit if we
+     * make it unwritable again. hugetlb mapping were accounted for
+     * even if read-only so there is no need to account for them here
+     */
+    if (newflags & VM_WRITE)
+    {
+        /* Check space limits when area turns into data. */
+        if (!may_expand_vm(mm, newflags, nrpages)
+            && may_expand_vm(mm, oldflags, nrpages))
+            return -ENOMEM;
+        if (!(oldflags
+              & (VM_ACCOUNT | VM_WRITE | VM_HUGETLB | VM_SHARED
+                 | VM_NORESERVE)))
+        {
+            charged = nrpages;
+            if (security_vm_enough_memory_mm(mm, charged))
+                return -ENOMEM;
+            newflags |= VM_ACCOUNT;
+        }
+    }
+
+    /*
+     * First try to merge with previous and/or next vma.
+     */
+    pgoff  = vma->vm_pgoff + ((start - vma->vm_start) >> PAGE_SHIFT);
+    *pprev = vma_merge(mm,
+                       *pprev,
+                       start,
+                       end,
+                       newflags,
+                       vma->anon_vma,
+                       vma->vm_file,
+                       pgoff,
+                       vma_policy(vma),
+                       vma->vm_userfaultfd_ctx);
+    if (*pprev)
+    {
+        vma = *pprev;
+        VM_WARN_ON((vma->vm_flags ^ newflags) & ~VM_SOFTDIRTY);
+        goto success;
+    }
+
+    *pprev = vma;
+
+    if (start != vma->vm_start)
+    {
+        error = split_vma(mm, vma, start, 1);
+        if (error)
+            goto fail;
+    }
+
+    if (end != vma->vm_end)
+    {
+        error = split_vma(mm, vma, end, 0);
+        if (error)
+            goto fail;
+    }
+
+success:
+    /*
+     * vm_flags and vm_page_prot are protected by the mmap_sem
+     * held in write mode.
+     */
+    vma->vm_flags     = newflags;
+    dirty_accountable = vma_wants_writenotify(vma, vma->vm_page_prot);
+    vma_set_page_prot(vma);
+
+    change_protection(vma,
+                      start,
+                      end,
+                      vma->vm_page_prot,
+                      dirty_accountable,
+                      0);
+
+    /*
+     * Private VM_LOCKED VMA becoming writable: trigger COW to avoid major
+     * fault on access.
+     */
+    if ((oldflags & (VM_WRITE | VM_SHARED | VM_LOCKED)) == VM_LOCKED
+        && (newflags & VM_WRITE))
+    {
+        populate_vma_page_range(vma, start, end, NULL);
+    }
+
+    vm_stat_account(mm, oldflags, -nrpages);
+    vm_stat_account(mm, newflags, nrpages);
+    // TODO: Might be not needed
+    // perf_event_mmap(vma);
+    return 0;
+
+fail:
+    // TODO:
+    // vm_unacct_memory(charged);
+    return error;
+}
+
+int _c_mprotect(task_t* task,
+                uintptr_t start,
+                uintptr_t size,
+                int prot,
+                int pkey)
+{
+    unsigned long nstart, end, tmp, reqprot;
+    struct vm_area_struct *vma, *prev;
+    int error       = -EINVAL;
+    const int grows = prot & (PROT_GROWSDOWN | PROT_GROWSUP);
+    const bool rier = (task->personality & READ_IMPLIES_EXEC)
+                      && (prot & PROT_READ);
+
+    start = untagged_addr(start);
+
+    prot &= ~(PROT_GROWSDOWN | PROT_GROWSUP);
+    if (grows == (PROT_GROWSDOWN | PROT_GROWSUP)) /* can't be both */
+        return -EINVAL;
+
+    if (start & ~PAGE_MASK)
+        return -EINVAL;
+    if (!size)
+        return 0;
+    size = PAGE_ALIGN(size);
+    end  = start + size;
+    if (end <= start)
+        return -ENOMEM;
+    if (!arch_validate_prot(prot, start))
+        return -EINVAL;
+
+    reqprot = prot;
+
+    if (down_write_killable(&task->mm->mmap_sem))
+        return -EINTR;
+
+    /*
+     * If userspace did not allocate the pkey, do not let
+     * them use it here.
+     */
+    error = -EINVAL;
+    if ((pkey != -1) && !mm_pkey_is_allocated(task->mm, pkey))
+        goto out;
+
+    vma   = find_vma(task->mm, start);
+    error = -ENOMEM;
+    if (!vma)
+        goto out;
+    prev = vma->vm_prev;
+    if (unlikely(grows & PROT_GROWSDOWN))
+    {
+        if (vma->vm_start >= end)
+            goto out;
+        start = vma->vm_start;
+        error = -EINVAL;
+        if (!(vma->vm_flags & VM_GROWSDOWN))
+            goto out;
+    }
+    else
+    {
+        if (vma->vm_start > start)
+            goto out;
+        if (unlikely(grows & PROT_GROWSUP))
+        {
+            end   = vma->vm_end;
+            error = -EINVAL;
+            if (!(vma->vm_flags & VM_GROWSUP))
+                goto out;
+        }
+    }
+    if (start > vma->vm_start)
+        prev = vma;
+
+    for (nstart = start;;)
+    {
+        unsigned long mask_off_old_flags;
+        unsigned long newflags;
+        int new_vma_pkey;
+
+        /* Here we know that vma->vm_start <= nstart < vma->vm_end. */
+
+        /* Does the application expect PROT_READ to imply PROT_EXEC */
+        if (rier && (vma->vm_flags & VM_MAYEXEC))
+            prot |= PROT_EXEC;
+
+        /*
+         * Each mprotect() call explicitly passes r/w/x permissions.
+         * If a permission is not passed to mprotect(), it must be
+         * cleared from the VMA.
+         */
+        mask_off_old_flags = VM_READ | VM_WRITE | VM_EXEC
+                             | VM_FLAGS_CLEAR;
+
+        new_vma_pkey = arch_override_mprotect_pkey(vma, prot, pkey);
+        newflags     = calc_vm_prot_bits(prot, new_vma_pkey);
+        newflags |= (vma->vm_flags & ~mask_off_old_flags);
+
+        /* newflags >> 4 shift VM_MAY% in place of VM_% */
+
+        /** Let's bypass this */
+        //         if ((newflags & ~(newflags >> 4))
+        //             & (VM_READ | VM_WRITE | VM_EXEC))
+        //         {
+        //             error = -EACCES;
+        //             goto out;
+        //         }
+
+        error = security_file_mprotect(vma, reqprot, prot);
+        if (error)
+            goto out;
+
+        tmp = vma->vm_end;
+        if (tmp > end)
+            tmp = end;
+        error = c_mprotect_fixup(task, vma, &prev, nstart, tmp, newflags);
+        if (error)
+            goto out;
+        nstart = tmp;
+
+        if (nstart < prev->vm_end)
+            nstart = prev->vm_end;
+        if (nstart >= end)
+            goto out;
+
+        vma = prev->vm_next;
+        if (!vma || vma->vm_start != nstart)
+        {
+            error = -ENOMEM;
+            goto out;
+        }
+        prot = reqprot;
+    }
+out:
+    up_write(&task->mm->mmap_sem);
+    return error;
+}
+
+int c_mprotect(task_t* task,
+               uintptr_t start,
+               uintptr_t size,
+               int prot,
+               int pkey)
+{
+    int ret;
+    mm_segment_t old_fs;
+
+    old_fs = get_fs();
+    set_fs(KERNEL_DS);
+
+    ret = _c_mprotect(task, start, size, prot, pkey);
+
+    set_fs(old_fs);
+
+    return ret;
+}
+
+/**
  * End of memory mapping & task utils
  */
 
@@ -658,7 +1005,9 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     uintptr_t real_addr, user_align_addr;
     uintptr_t shifted;
     int nr_pages, nr_page;
-    uintptr_t copied_bytes;
+    uintptr_t failed_copied_bytes;
+    int ret    = 0;
+    int locked = 1;
 
     // So we can access anywhere we can in user space.
     old_fs = get_fs();
@@ -677,8 +1026,6 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     {
         goto out;
     }
-
-    down_write(&mm->mmap_sem);
 
     user_align_addr = (uintptr_t)align_address((uintptr_t)to, PAGE_SIZE);
     shifted         = (uintptr_t)to % PAGE_SIZE;
@@ -724,24 +1071,29 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
     pages = kmalloc(nr_pages * sizeof(struct page*), GFP_KERNEL);
 
-    if (get_user_pages_remote(task,
-                              mm,
-                              user_align_addr,
-                              nr_pages,
-                              FOLL_FORCE | FOLL_WRITE,
-                              pages,
-                              NULL,
-                              NULL)
-        <= 0)
+    down_read(&mm->mmap_sem);
+
+    ret = pin_user_pages_remote(task,
+                                mm,
+                                user_align_addr,
+                                nr_pages,
+                                FOLL_FORCE | FOLL_WRITE,
+                                pages,
+                                NULL,
+                                &locked);
+    if (locked)
+    {
+        up_read(&mm->mmap_sem);
+    }
+
+    if (ret <= 0)
     {
         goto out;
     }
 
     for (nr_page = 0; nr_page < nr_pages; nr_page++)
     {
-        real_addr = (uintptr_t)page_address(pages[nr_page]) + shifted;
-
-        unpin_user_page(pages[nr_page]);
+        real_addr = (uintptr_t)kmap(pages[nr_page]) + shifted;
 
         size_to_copy = PAGE_SIZE - shifted;
 
@@ -755,11 +1107,13 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
         //                       (uintptr_t)user_align_addr + shifted,
         //                       size_to_copy);
 
-        copied_bytes = copy_to_user((ptr_t)real_addr, from, size_to_copy);
+        failed_copied_bytes = copy_to_user((ptr_t)real_addr,
+                                           from,
+                                           size_to_copy);
 
-        result -= (size_to_copy - copied_bytes);
+        result -= (size_to_copy - failed_copied_bytes);
 
-        if (copied_bytes != 0)
+        if (failed_copied_bytes != 0)
         {
             goto out;
         }
@@ -787,12 +1141,13 @@ c_copy_to_user(task_t* task, ptr_t to, ptr_t from, size_t size)
                        to);
     }
 
+    unpin_user_pages_dirty_lock(pages, nr_pages, true);
+
 out:
 
     if (pages)
     {
         kfree(pages);
-        up_write(&mm->mmap_sem);
     }
 
     set_fs(old_fs);
@@ -811,7 +1166,9 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     uintptr_t real_addr, user_align_addr;
     uintptr_t shifted;
     int nr_pages, nr_page;
-    uintptr_t copied_bytes;
+    uintptr_t failed_copied_bytes;
+    int ret    = 0;
+    int locked = 1;
 
     // So we can access anywhere we can in user space.
     old_fs = get_fs();
@@ -830,8 +1187,6 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
     {
         goto out;
     }
-
-    down_write(&mm->mmap_sem);
 
     user_align_addr = (uintptr_t)align_address((uintptr_t)from,
                                                PAGE_SIZE);
@@ -878,24 +1233,29 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
 
     pages = kmalloc(nr_pages * sizeof(struct page*), GFP_KERNEL);
 
-    if (get_user_pages_remote(task,
-                              mm,
-                              user_align_addr,
-                              nr_pages,
-                              FOLL_FORCE | FOLL_WRITE,
-                              pages,
-                              NULL,
-                              NULL)
-        <= 0)
+    down_read(&mm->mmap_sem);
+
+    ret = pin_user_pages_remote(task,
+                                mm,
+                                user_align_addr,
+                                nr_pages,
+                                FOLL_FORCE,
+                                pages,
+                                NULL,
+                                &locked);
+    if (locked)
+    {
+        up_read(&mm->mmap_sem);
+    }
+
+    if (ret <= 0)
     {
         goto out;
     }
 
     for (nr_page = 0; nr_page < nr_pages; nr_page++)
     {
-        real_addr = (uintptr_t)page_address(pages[nr_page]) + shifted;
-
-        unpin_user_page(pages[nr_page]);
+        real_addr = (uintptr_t)kmap(pages[nr_page]) + shifted;
 
         size_to_copy = PAGE_SIZE - shifted;
 
@@ -909,11 +1269,13 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
         //                       (uintptr_t)user_align_addr + shifted,
         //                       size_to_copy);
 
-        copied_bytes = copy_from_user(to, (ptr_t)real_addr, size_to_copy);
+        failed_copied_bytes = copy_from_user(to,
+                                             (ptr_t)real_addr,
+                                             size_to_copy);
 
-        result -= (size_to_copy - copied_bytes);
+        result -= (size_to_copy - failed_copied_bytes);
 
-        if (copied_bytes != 0)
+        if (failed_copied_bytes != 0)
         {
             goto out;
         }
@@ -941,12 +1303,12 @@ c_copy_from_user(task_t* task, ptr_t to, ptr_t from, size_t size)
                        from);
     }
 
+    unpin_user_pages_dirty_lock(pages, nr_pages, false);
 out:
 
     if (pages)
     {
         kfree(pages);
-        up_write(&mm->mmap_sem);
     }
 
     set_fs(old_fs);

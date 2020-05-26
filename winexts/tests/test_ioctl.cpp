@@ -158,7 +158,9 @@ int main()
                        pid))
         {
             communicate_remote_mmap_t remote_mmap;
-            remote_mmap.prot = PROT_EXEC | PROT_WRITE | PROT_READ;
+            remote_mmap.prot = PROT_EXEC | PROT_READ | C_PROT_MAY_EXEC
+                               | C_PROT_MAY_READ | C_PROT_MAY_WRITE
+                               | C_PROT_MAY_SHARE;
             remote_mmap.vm_remote_address = g_alloc_addr;
             remote_mmap.vm_size           = STACK_SIZE;
             remote_mmap.pid_target        = pid;
@@ -190,12 +192,36 @@ int main()
 
             if (error != COMMUNICATE_ERROR_NONE)
             {
-                printf("ouch write shellcode jumping to munmap %i\n",
-                       error);
+                printf("ouch write shellcode %i\n", error);
             }
             else
             {
                 printf("wrote shellcode\n");
+            }
+
+            communicate_remote_mprotect_t communicate_remote_mprotect;
+
+            communicate_remote_mprotect.pid_target   = pid;
+            communicate_remote_mprotect.address      = g_alloc_addr;
+            communicate_remote_mprotect.wanted_flags = PROT_EXEC
+                                                      | PROT_READ
+                                                      | PROT_WRITE;
+            communicate_remote_mprotect.pkey = -1;
+            communicate_remote_mprotect.size = STACK_SIZE;
+
+            error
+              = (communicate_error_t)ioctl(fd,
+                                           COMMUNICATE_CMD_REMOTE_PROTECT,
+                                           &communicate_remote_mprotect);
+
+            if (error != COMMUNICATE_ERROR_NONE)
+            {
+                printf("ouch remote protect %i\n", error);
+            }
+            else
+            {
+                printf("remote protect done %i\n",
+                       communicate_remote_mprotect.ret);
             }
 
             communicate_write_t write;
@@ -292,7 +318,8 @@ int main()
         remote_clone.pid_target  = pid;
         remote_clone.regs_set.ip = true;
         remote_clone.regs.ip     = g_alloc_addr;
-        remote_clone.flags       = (CLONE_VM | CLONE_FS | CLONE_FILES);
+        remote_clone.flags       = (CLONE_VM | CLONE_FS | CLONE_FILES
+                              | CLONE_PARENT);
         remote_clone.exit_signal = 0;
         remote_clone.stack       = g_alloc_addr + 0x2000;
         remote_clone.stack_size  = 0x1000;
@@ -308,12 +335,11 @@ int main()
             }
             else
             {
-                usleep(1000 * 300);
                 printf("test clone %i\n", remote_clone.ret);
             }
         }
 
-        communicate_remote_munmap_t remote_munmap;
+        /*communicate_remote_munmap_t remote_munmap;
         remote_munmap.pid_target        = pid;
         remote_munmap.vm_remote_address = g_alloc_addr;
 
@@ -327,7 +353,7 @@ int main()
         else
         {
             printf("munmap\n");
-        }
+        }*/
     }
 
     close(fd);

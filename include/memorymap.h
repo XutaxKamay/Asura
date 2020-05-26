@@ -72,7 +72,7 @@ namespace XLib
          * @brief _protection
          * Protection flags on the memory map.
          */
-        protection_t _protection {};
+        int _protection {};
     };
 
     using map_t  = MemoryMap<ptr_t>;

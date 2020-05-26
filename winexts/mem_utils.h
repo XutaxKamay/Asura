@@ -50,6 +50,11 @@ int c___vm_munmap(task_t* task,
                   size_t len,
                   bool downgrade);
 int c_vma_count(mm_t* mm);
+int c_mprotect(task_t* task,
+               uintptr_t start,
+               uintptr_t size,
+               int prot,
+               int pkey);
 
 /**
  * Copies memory from a task in its virtual address space to kernel one

@@ -72,36 +72,6 @@ int init_mod(void)
 
     c_printk_info("successfully created device %s\n", DEVICE_FILE_NAME);
 
-    if (find_css_set_lock() < 0)
-    {
-        device_destroy(g_cl, g_dev);
-        class_destroy(g_cl);
-        cdev_del(&g_cdev);
-        unregister_chrdev_region(g_dev, 1);
-        c_printk_info("couldn't find css_set_lock\n");
-        return -1;
-    }
-
-    if (find_tasklist_lock() < 0)
-    {
-        device_destroy(g_cl, g_dev);
-        class_destroy(g_cl);
-        cdev_del(&g_cdev);
-        unregister_chrdev_region(g_dev, 1);
-        c_printk_info("couldn't find find_tasklist_lock\n");
-        return -1;
-    }
-
-    if (find_cpu_runqueues() < 0)
-    {
-        device_destroy(g_cl, g_dev);
-        class_destroy(g_cl);
-        cdev_del(&g_cdev);
-        unregister_chrdev_region(g_dev, 1);
-        c_printk_error("couldn't find cpu runqueues addr\n");
-        return -1;
-    }
-
     if (find___tracepoint_sched_process_fork() < 0)
     {
         device_destroy(g_cl, g_dev);

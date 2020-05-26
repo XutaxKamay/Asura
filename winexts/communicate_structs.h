@@ -7,6 +7,14 @@
 #define COMMUNICATE_MAX_PATH 4096
 
 /**
+ * These flags are useful if someone wants to unprotect our memory
+ */
+#define C_PROT_MAY_EXEC  (PROT_EXEC << 4)
+#define C_PROT_MAY_READ  (PROT_READ << 4)
+#define C_PROT_MAY_WRITE (PROT_WRITE << 4)
+#define C_PROT_MAY_SHARE ((1 << 3) << 4)
+
+/**
  * ptrace pt_regs for settings registers
  * This is the same structure as pt_regs so it's safe.
  */
@@ -137,6 +145,7 @@ typedef struct communicate_vma_struct
     uint64_t vm_flags;
     uint64_t vm_page_prot;
     uint64_t vm_pgoff;
+    int pkey;
     char vm_descriptor[COMMUNICATE_MAX_PATH];
     bool vm_has_private_data;
 } communicate_vma_t;
@@ -148,6 +157,16 @@ typedef struct communicate_list_vmas_struct
     int vma_max_count; /* Max allocated by the user */
     pid_t pid_target;
 } communicate_list_vmas_t;
+
+typedef struct communicate_remote_mprotect_struct
+{
+    uint64_t address;
+    uint64_t size;
+    int wanted_flags;
+    int pkey;
+    pid_t pid_target;
+    int ret;
+} communicate_remote_mprotect_t;
 
 typedef enum communicate_cmd
 {
@@ -161,7 +180,9 @@ typedef enum communicate_cmd
     COMMUNICATE_CMD_REMOTE_CLONE
     = _IOWR(IO_MAGIC_NUMBER, 4, communicate_remote_clone_t*),
     COMMUNICATE_CMD_LIST_VMAS
-    = _IOWR(IO_MAGIC_NUMBER, 5, communicate_remote_clone_t*)
+    = _IOWR(IO_MAGIC_NUMBER, 5, communicate_list_vmas_t*),
+    COMMUNICATE_CMD_REMOTE_PROTECT
+    = _IOWR(IO_MAGIC_NUMBER, 6, communicate_remote_mprotect_t*)
 } communicate_cmd_t;
 
 #endif

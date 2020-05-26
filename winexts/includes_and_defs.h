@@ -34,6 +34,7 @@
 #include <linux/mmu_notifier.h>
 #include <linux/module.h>
 #include <linux/nsproxy.h>
+#include <linux/pagewalk.h>
 #include <linux/platform_device.h>
 #include <linux/profile.h>
 #include <linux/ptrace.h>
@@ -62,6 +63,7 @@
 #include <linux/utsname.h>
 #include <linux/version.h>
 #include <linux/vmacache.h>
+#include <linux/writeback.h>
 #include <trace/events/sched.h>
 
 #ifdef __PAGETABLE_P4D_FOLDED

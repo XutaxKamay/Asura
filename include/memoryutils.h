@@ -51,9 +51,14 @@ namespace XLib
                                   map_t::protection_t* pFlags = nullptr)
         {}
 
-        static auto allocMap(ptr_t address,
-                             size_t size,
-                             map_t::protection_t newFlags);
+        template <typename T>
+        static auto
+        allocMap(T address, size_t size, map_t::protection_t newFlags)
+        {}
+
+        template <typename T>
+        static auto freeMap(T address)
+        {}
     };
 
     template <typename T>
