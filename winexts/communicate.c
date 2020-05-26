@@ -458,6 +458,36 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
         goto out;
     }
 
+    //     if (task_pt_regs(remote_task)->ax == -ENOSYS
+    //         && task_pt_regs(remote_task)->orig_ax > 0)
+    //     {
+    //         error = COMMUNICATE_ERROR_ACCESS_DENIED;
+    //         c_printk_error("task: %i is inside a syscall, can't
+    //         fork\n",
+    //                        remote_task->pid);
+    //         goto out;
+    //     }
+
+    /**
+     * We accept only these three states,
+     * if not we create zombies processes that are unkillable and
+     * might crash the kernel at the end.
+     * The fork routine don't take this into account because it
+     * assumes that the current task is always running, etc.
+     * This might be not our case.
+     */
+
+    if (remote_task->state
+        > (TASK_UNINTERRUPTIBLE | TASK_INTERRUPTIBLE | TASK_RUNNING))
+    {
+        error = COMMUNICATE_ERROR_ACCESS_DENIED;
+        c_printk_error("the task %i needs to be running to"
+                       "fork (state: %li)\n",
+                       remote_task->pid,
+                       remote_task->state);
+        goto out;
+    }
+
     memset(&clone_args, 0, sizeof(clone_args));
 
     clone_args.flags       = communicate_remote_clone.flags;
@@ -467,7 +497,9 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
 
     old_current_task = current;
 
-    task_attached_to[old_current_task->pid] = remote_task;
+    current_task_switched = old_current_task;
+    task_attached_to      = remote_task;
+
     this_cpu_write(current_task, remote_task);
 
     communicate_remote_clone.ret = c_do_fork(
@@ -475,7 +507,9 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
       &communicate_remote_clone.regs,
       &communicate_remote_clone.regs_set);
 
-    task_attached_to[old_current_task->pid] = NULL;
+    task_attached_to      = NULL;
+    current_task_switched = NULL;
+
     this_cpu_write(current_task, old_current_task);
 
     if (c_copy_to_user(current,

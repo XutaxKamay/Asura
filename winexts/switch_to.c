@@ -11,7 +11,8 @@ static pattern_result_t pattern_result;
 /**
  * This is used to know what tasks are attached to
  */
-task_t* task_attached_to[PID_MAX_LIMIT];
+task_t* task_attached_to      = NULL;
+task_t* current_task_switched = NULL;
 
 /**
  * We could rewrite the whole function here instead to optimize the
@@ -25,24 +26,14 @@ __visible __notrace_funcgraph task_t* new___switch_to(task_t* prev,
 {
     task_t* ret;
 
-    if (task_attached_to[next->pid] != NULL
-        && task_attached_to[next->pid] != next)
-    {
-        /**
-         * Write the new current_task on the cpu
-         */
-        this_cpu_write(current_task, task_attached_to[next->pid]);
-    }
-
     ret = original___switch_to(prev, next);
 
-    if (task_attached_to[next->pid] != NULL
-        && task_attached_to[next->pid] != next)
+    if (task_attached_to != NULL && current_task_switched == next)
     {
         /**
          * Write the new current_task on the cpu
          */
-        this_cpu_write(current_task, task_attached_to[next->pid]);
+        this_cpu_write(current_task, task_attached_to);
     }
 
     return ret;
@@ -53,11 +44,6 @@ int hook___switch_to(void)
     char patterns[][64] = { "41 5F 41 5E 41 5D 41 5C 5B 5D E9 ?? ?? ?? "
                             "?? "
                             "0F 1F 40 00" };
-
-    /**
-     * Init tasks being attached somewhere
-     */
-    memset(task_attached_to, 0, sizeof(task_attached_to));
 
     /**
      * We want only 1 call for now
