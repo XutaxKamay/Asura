@@ -13,7 +13,6 @@
 using namespace XLib;
 
 #ifndef WINDOWS
-static auto g_pageSize       = sysconf(_SC_PAGESIZE);
 constexpr auto g_maxCountVMA = 0x400;
 #endif
 
@@ -37,27 +36,27 @@ maps_t XLib::MemoryUtils::queryMaps(pid_t pid)
         return maps;
     }
 
-    communicate_list_vmas_t listedVMA;
+    communicate_list_vmas_t listed_vmas;
 
-    listedVMA.pid_target    = pid;
-    listedVMA.vma_max_count = g_maxCountVMA;
-    listedVMA.vmas          = new communicate_vma_t[g_maxCountVMA];
+    listed_vmas.pid_target    = pid;
+    listed_vmas.vma_max_count = g_maxCountVMA;
+    listed_vmas.vmas          = new communicate_vma_t[g_maxCountVMA];
 
-    auto error = ioctl(fd, COMMUNICATE_CMD_LIST_VMAS, &listedVMA);
+    auto error = ioctl(fd, COMMUNICATE_CMD_LIST_VMAS, &listed_vmas);
 
     if (error == COMMUNICATE_ERROR_NONE)
     {
-        for (auto vmaCount = 0; vmaCount < listedVMA.vma_count;
+        for (auto vmaCount = 0; vmaCount < listed_vmas.vma_count;
              vmaCount++)
         {
-            auto vma = &listedVMA.vmas[vmaCount];
+            auto vma = &listed_vmas.vmas[vmaCount];
 
             map_t map;
 
-            map.setAddress(view_as<ptr_t>(vma->vm_start));
-            map.setSize(view_as<size_t>(vma->vm_end - vma->vm_start));
+            map.setAddress(*view_as<ptr_t*>(&vma->vm_start));
+            map.setSize(static_cast<size_t>(vma->vm_end - vma->vm_start));
 
-            auto &prot = map.protection();
+            auto& prot = map.protection();
 
             prot = 0;
 
@@ -80,11 +79,11 @@ maps_t XLib::MemoryUtils::queryMaps(pid_t pid)
         }
     }
 
-    delete[] listedVMA.vmas;
+    delete[] listed_vmas.vmas;
 
     close(fd);
 #else
-    throw("Not implemented");
+
 #endif
 
     return maps;

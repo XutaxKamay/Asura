@@ -169,10 +169,10 @@ auto XLib::Test::run() -> void
     VAPI_t* api = static_cast<VAPI_t*>(&g_API);
     api->callVFunc<0, void>();
 
-    /** TODO: finish MemoryUtils so we can use this
-     * api->hook< 0 >( vfunc_hook );
-     * api->callVFunc< 0, void >();
-     */
+    /** TODO: finish MemoryUtils so we can use this */
+    api->hook<0>(vfunc_hook);
+    api->callVFunc<0, void>();
+
     std::cout << "Number of virtual funcs: " << api->countVFuncs()
               << std::endl;
 }

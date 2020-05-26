@@ -58,7 +58,7 @@ namespace XLib
         {}
 
         template <typename T>
-        static auto freeMap(T address)
+        static auto freeMap(T address, size_t size)
         {}
     };
 

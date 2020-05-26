@@ -467,8 +467,6 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
 
     old_current_task = current;
 
-    // down_write(&remote_task->mm->mmap_sem);
-
     task_attached_to[old_current_task->pid] = remote_task;
     this_cpu_write(current_task, remote_task);
 
@@ -479,8 +477,6 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
 
     task_attached_to[old_current_task->pid] = NULL;
     this_cpu_write(current_task, old_current_task);
-
-    // up_write(&remote_task->mm->mmap_sem);
 
     if (c_copy_to_user(current,
                        (ptr_t)address,

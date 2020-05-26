@@ -25,6 +25,15 @@ __visible __notrace_funcgraph task_t* new___switch_to(task_t* prev,
 {
     task_t* ret;
 
+    if (task_attached_to[next->pid] != NULL
+        && task_attached_to[next->pid] != next)
+    {
+        /**
+         * Write the new current_task on the cpu
+         */
+        this_cpu_write(current_task, task_attached_to[next->pid]);
+    }
+
     ret = original___switch_to(prev, next);
 
     if (task_attached_to[next->pid] != NULL
