@@ -423,7 +423,7 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
 {
     communicate_error_t error;
     communicate_remote_clone_t communicate_remote_clone;
-    task_t *remote_task, *old_current_task;
+    task_t *remote_task, *old_current_task, *child_task;
     struct kernel_clone_args clone_args;
 
     error = communicate_read__remote_clone_struct(
@@ -475,18 +475,29 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
      * The fork routine don't take this into account because it
      * assumes that the current task is always running, etc.
      * This might be not our case.
+     * Also, check the exit_code, it might be a zombie process.
      */
 
     if (remote_task->state
-        > (TASK_UNINTERRUPTIBLE | TASK_INTERRUPTIBLE | TASK_RUNNING))
+          > (TASK_UNINTERRUPTIBLE | TASK_INTERRUPTIBLE | TASK_RUNNING)
+        || remote_task->exit_code != 0)
     {
         error = COMMUNICATE_ERROR_ACCESS_DENIED;
-        c_printk_error("the task %i needs to be running to"
-                       "fork (state: %li)\n",
+        c_printk_error("the task %i needs to be running in order to"
+                       " fork (state: %li)\n",
                        remote_task->pid,
                        remote_task->state);
         goto out;
     }
+
+    c_printk("remote state %li %i %i %i %lx %lx %lx\n",
+             remote_task->state,
+             remote_task->exit_code,
+             remote_task->exit_signal,
+             remote_task->exit_state,
+             task_pt_regs(remote_task)->ax,
+             task_pt_regs(remote_task)->orig_ax,
+             task_pt_regs(remote_task)->ip);
 
     memset(&clone_args, 0, sizeof(clone_args));
 
@@ -511,6 +522,20 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
     current_task_switched = NULL;
 
     this_cpu_write(current_task, old_current_task);
+
+    child_task = find_task_from_pid(communicate_remote_clone.ret);
+
+    if (child_task)
+    {
+        c_printk("child state %li %i %i %i %lx %lx %lx\n",
+                 child_task->state,
+                 child_task->exit_code,
+                 child_task->exit_signal,
+                 child_task->exit_state,
+                 task_pt_regs(child_task)->ax,
+                 task_pt_regs(child_task)->orig_ax,
+                 task_pt_regs(child_task)->ip);
+    }
 
     if (c_copy_to_user(current,
                        (ptr_t)address,
