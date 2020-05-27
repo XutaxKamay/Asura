@@ -1255,6 +1255,63 @@ int __arch_override_mprotect_pkey(struct vm_area_struct* vma,
     return func_ptr(vma, prot, pkey);
 }
 
+bool freeze_task(struct task_struct* t)
+{
+    typedef bool (*func_t)(void*);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("freeze_task");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find freeze_task\n");
+        return false;
+    }
+
+    return func_ptr(t);
+}
+
+void __thaw_task(struct task_struct* t)
+{
+    typedef void (*func_t)(void*);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("__thaw_task");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find __thaw_task\n");
+        return;
+    }
+
+    func_ptr(t);
+}
+
+int wake_up_state(struct task_struct* tsk, unsigned int state)
+{
+    typedef int (*func_t)(void*, unsigned int);
+    static func_t func_ptr = NULL;
+
+    if (func_ptr == NULL)
+    {
+        func_ptr = (func_t)kallsyms_lookup_name("wake_up_state");
+    }
+
+    if (func_ptr == NULL)
+    {
+        c_printk_error("couldn't find wake_up_state\n");
+        return false;
+    }
+
+    return func_ptr(tsk, state);
+}
+
 /**
  * Code
  * Credits to linux kernel developers

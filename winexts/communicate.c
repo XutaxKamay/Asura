@@ -484,9 +484,10 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
     {
         error = COMMUNICATE_ERROR_ACCESS_DENIED;
         c_printk_error("the task %i needs to be running in order to"
-                       " fork (state: %li)\n",
+                       " fork (state: %li, exit code: %i)\n",
                        remote_task->pid,
-                       remote_task->state);
+                       remote_task->state,
+                       remote_task->exit_code);
         goto out;
     }
 
@@ -499,20 +500,20 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
 
     old_current_task = current;
 
-    current_task_switched = old_current_task;
+    current_task_switched = current;
     task_attached_to      = remote_task;
 
-    this_cpu_write(current_task, remote_task);
+    current_switch_to(remote_task, false);
 
     communicate_remote_clone.ret = c_do_fork(
       &clone_args,
       &communicate_remote_clone.regs,
       &communicate_remote_clone.regs_set);
 
-    task_attached_to      = NULL;
     current_task_switched = NULL;
+    task_attached_to      = NULL;
 
-    this_cpu_write(current_task, old_current_task);
+    current_switch_to(old_current_task, false);
 
     if (c_copy_to_user(current,
                        (ptr_t)address,
@@ -827,3 +828,4 @@ communicate_error_t communicate_process_cmd_remote_mprotect(
 out:
     return error;
 }
+

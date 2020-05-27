@@ -11,4 +11,6 @@ task_t* new___switch_to(task_t* prev, task_t* next);
 int hook___switch_to(void);
 void unhook___switch_to(void);
 
+void current_switch_to(task_t* task, bool show_regs);
+
 #endif
