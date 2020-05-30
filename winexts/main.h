@@ -12,6 +12,7 @@
 #include "mem_utils.h"
 #include "pattern_scanning.h"
 #include "re_definitions.h"
+#include "schedule_hooks.h"
 #include "switch_to.h"
 #include "utils.h"
 

@@ -1,6 +1,8 @@
 #ifndef INCLUDES_AND_DEFS_H
 #define INCLUDES_AND_DEFS_H
 
+#include <../kernel/sched/sched.h>
+#include <../kernel/sched/stats.h>
 #include <asm/fpu/internal.h>
 #include <asm/resctrl_sched.h>
 #include <asm/switch_to.h>
@@ -25,6 +27,7 @@
 #include <linux/kdev_t.h>
 #include <linux/kernel.h>
 #include <linux/khugepaged.h>
+#include <linux/kprobes.h>
 #include <linux/ksm.h>
 #include <linux/livepatch.h>
 #include <linux/mempolicy.h>
@@ -94,24 +97,5 @@ typedef struct mm_struct mm_t;
 typedef struct page page_t;
 typedef struct vm_area_struct vm_area_t;
 typedef struct rb_root rb_root_t;
-
-#ifdef __arch_um__
-typedef struct cpu_task
-{
-    int pid;
-    void* task;
-} cpu_task_t;
-#endif
-
-/*
- * This is the main, per-CPU runqueue data structure.
- * This data should only be modified by the local cpu.
- */
-struct rq
-{
-    raw_spinlock_t* lock;
-    raw_spinlock_t* orig_lock;
-    struct task_struct __rcu* curr;
-};
 
 #endif

@@ -24,6 +24,10 @@ int init_mod(void)
     return -1;
 #endif
 
+    c_printk("kernel module loaded at %lX. (kernel offset: %lX)\n",
+             (uintptr_t)THIS_MODULE->core_layout.base,
+             kernel_offset());
+
     ret = alloc_chrdev_region(&g_dev, 0, 1, DEVICE_FILE_NAME);
 
     if (ret < 0)
@@ -93,16 +97,17 @@ int init_mod(void)
         return -1;
     }
 
-    c_printk("kernel module loaded at %lX. (kernel offset: %lX)\n",
-             (uintptr_t)THIS_MODULE->core_layout.base,
-             kernel_offset());
-
     return 0;
 }
 
 void free_mod(void)
 {
-    clean_hooks();
+    if (clean_hooks() < 0)
+    {
+        c_printk_error("BUG: can't clean hooksk\n");
+        // Should be never reached
+        BUG();
+    }
 
     device_destroy(g_cl, g_dev);
     class_destroy(g_cl);

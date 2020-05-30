@@ -500,8 +500,8 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
 
     old_current_task = current;
 
-    current_task_switched = current;
-    task_attached_to      = remote_task;
+    // current_task_switched = current;
+    // task_attached_to      = remote_task;
 
     current_switch_to(remote_task, false);
 
@@ -510,8 +510,8 @@ communicate_error_t communicate_process_cmd_remote_clone(uintptr_t address)
       &communicate_remote_clone.regs,
       &communicate_remote_clone.regs_set);
 
-    current_task_switched = NULL;
-    task_attached_to      = NULL;
+    // current_task_switched = NULL;
+    // task_attached_to      = NULL;
 
     current_switch_to(old_current_task, false);
 
@@ -828,4 +828,3 @@ communicate_error_t communicate_process_cmd_remote_mprotect(
 out:
     return error;
 }
-
