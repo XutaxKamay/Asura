@@ -12,45 +12,130 @@
 struct tracepoint* __tracepoint_sched_process_fork_ptr = NULL;
 unsigned long stack_guard_gap = 256UL << PAGE_SHIFT;
 
-int find___tracepoint_sched_process_fork(void)
+typedef void (*vma_rb_erase_t)(vm_area_t*, rb_root_t*);
+static vma_rb_erase_t p_vma_rb_erase = NULL;
+
+typedef vm_area_t* (*vm_area_alloc_t)(mm_t*);
+static vm_area_alloc_t p_vm_area_alloc = NULL;
+
+typedef void (*vm_area_free_t)(vm_area_t*);
+static vm_area_free_t p_vm_area_free = NULL;
+
+typedef int (*insert_vm_struct_t)(mm_t*, vm_area_t*);
+static insert_vm_struct_t p_insert_vm_struct = NULL;
+
+typedef unsigned long (*ksys_mmap_pgoff_t)(unsigned long addr,
+                                           unsigned long len,
+                                           unsigned long prot,
+                                           unsigned long flags,
+                                           unsigned long fd,
+                                           unsigned long pgoff);
+static ksys_mmap_pgoff_t p_ksys_mmap_pgoff = NULL;
+
+typedef long (*_do_fork_t)(struct kernel_clone_args* kargs);
+static _do_fork_t p__do_fork = NULL;
+
+typedef struct task_struct* (*__switch_to_t)(struct task_struct* prev,
+                                             struct task_struct* next);
+static __switch_to_t p___switch_to = NULL;
+
+typedef struct task_struct* (*__switch_to_asm_t)(struct task_struct* prev,
+                                                 struct task_struct* next);
+static __switch_to_asm_t p___switch_to_asm = NULL;
+
+typedef int (*__do_munmap_t)(struct mm_struct* mm,
+                             unsigned long start,
+                             size_t len,
+                             struct list_head* uf,
+                             bool downgrade);
+static __do_munmap_t p___do_munmap = NULL;
+
+typedef int (*do_munmap_t)(struct mm_struct* mm,
+                           unsigned long start,
+                           size_t len,
+                           struct list_head* uf);
+static do_munmap_t p_do_munmap = NULL;
+
+typedef void (*set_task_cpu_t)(struct task_struct* p, unsigned int cpu);
+static set_task_cpu_t p_set_task_cpu = NULL;
+
+typedef void* (*vmalloc_exec_t)(unsigned long size);
+static vmalloc_exec_t p_vmalloc_exec = NULL;
+
+typedef struct task_struct* (*copy_process_t)(struct pid*,
+                                              int,
+                                              int,
+                                              struct kernel_clone_args*);
+static copy_process_t copy_process_ptr = NULL;
+
+typedef void (*wake_up_new_task_t)(struct task_struct*);
+static wake_up_new_task_t p_wake_up_new_task = NULL;
+
+typedef void (*ptrace_notify_t)(int);
+static ptrace_notify_t p_ptrace_notify = NULL;
+
+typedef void (*cgroup_update_frozen_t)(void*);
+static cgroup_update_frozen_t cgroup_update_frozen_ptr = NULL;
+
+typedef void (*task_clear_jobctl_trapping_t)(void*);
+static task_clear_jobctl_trapping_t task_clear_jobctl_trapping_ptr = NULL;
+
+typedef void (*task_clear_jobctl_pending_t)(void*, unsigned long);
+static task_clear_jobctl_pending_t task_clear_jobctl_pending_ptr = NULL;
+
+typedef int (*__group_send_sig_info_t)(int, void*, void*);
+static __group_send_sig_info_t __group_send_sig_info_ptr = NULL;
+
+typedef void (*__wake_up_parent_t)(void*, void*);
+static __wake_up_parent_t __wake_up_parent_ptr = NULL;
+
+typedef void (*task_work_run_t)(void);
+static task_work_run_t task_work_run_ptr = NULL;
+
+typedef u64 (*nsec_to_clock_t_t)(u64);
+static nsec_to_clock_t_t nsec_to_clock_t_ptr = NULL;
+
+typedef void (*__memcg_kmem_uncharge_t)(struct page* page, int order);
+static __memcg_kmem_uncharge_t __memcg_kmem_uncharge_ptr = NULL;
+
+typedef int (*arch_dup_task_struct_t)(struct task_struct* dst,
+                                      struct task_struct* src);
+static arch_dup_task_struct_t arch_dup_task_struct_ptr = NULL;
+
+typedef mm_t* (*mm_access_t)(task_t*, unsigned int);
+static mm_access_t p_mm_access = NULL;
+
+typedef void (*set_task_stack_end_magic_t)(void*);
+static set_task_stack_end_magic_t set_task_stack_end_magic_ptr = NULL;
+
+typedef void (*__mod_memcg_state_t)(void*, int, int);
+static __mod_memcg_state_t __mod_memcg_state_ptr = NULL;
+
+typedef void* (*__vmalloc_node_range_t)(unsigned long,
+                                        unsigned long,
+                                        unsigned long,
+                                        unsigned long,
+                                        gfp_t,
+                                        pgprot_t,
+                                        unsigned long,
+                                        int,
+                                        const void*);
+static __vmalloc_node_range_t __vmalloc_node_range_ptr = NULL;
+
+int find_all_symbols(void)
 {
-    __tracepoint_sched_process_fork_ptr = (ptr_t)kallsyms_lookup_name(
-      "__tracepoint_sched_"
-      "process_fork");
+    if (__tracepoint_sched_process_fork_ptr == NULL)
+    {
+        __tracepoint_sched_process_fork_ptr = (ptr_t)kallsyms_lookup_name(
+          "__tracepoint_sched_"
+          "process_fork");
+    }
 
     if (__tracepoint_sched_process_fork_ptr == NULL)
     {
+        c_printk_error("couldn't find __tracepoint_sched_process_fork\n");
         return -1;
     }
-
-    return 0;
-}
-
-#ifdef __arch_um__
-void set_current(struct task_struct* task)
-{
-    static struct cpu_task* cpu_tasks = NULL;
-    static int* __userspace_pid       = NULL;
-
-    if (cpu_tasks == NULL)
-    {
-        cpu_tasks = (struct cpu_task*)kallsyms_lookup_name("cpu_tasks");
-    }
-
-    if (__userspace_pid == NULL)
-    {
-        __userspace_pid = (int*)kallsyms_lookup_name("userspace_pid");
-    }
-
-    cpu_tasks[task_thread_info(task)->cpu] = ((
-      struct cpu_task) { __userspace_pid[0], task });
-}
-#endif
-
-void vma_rb_erase(vm_area_t* vma, rb_root_t* root)
-{
-    typedef void (*vma_rb_erase_t)(vm_area_t*, rb_root_t*);
-    static vma_rb_erase_t p_vma_rb_erase = NULL;
 
     if (p_vma_rb_erase == NULL)
     {
@@ -61,16 +146,8 @@ void vma_rb_erase(vm_area_t* vma, rb_root_t* root)
     if (p_vma_rb_erase == NULL)
     {
         c_printk_error("couldn't find vma_rb_erase\n");
-        return;
+        return -1;
     }
-
-    return p_vma_rb_erase(vma, root);
-}
-
-vm_area_t* vm_area_alloc(mm_t* mm)
-{
-    typedef vm_area_t* (*vm_area_alloc_t)(mm_t*);
-    static vm_area_alloc_t p_vm_area_alloc = NULL;
 
     if (p_vm_area_alloc == NULL)
     {
@@ -81,16 +158,8 @@ vm_area_t* vm_area_alloc(mm_t* mm)
     if (p_vm_area_alloc == NULL)
     {
         c_printk_error("couldn't find vm_area_alloc\n");
-        return NULL;
+        return -1;
     }
-
-    return p_vm_area_alloc(mm);
-}
-
-void vm_area_free(vm_area_t* vma)
-{
-    typedef void (*vm_area_free_t)(vm_area_t*);
-    static vm_area_free_t p_vm_area_free = NULL;
 
     if (p_vm_area_free == NULL)
     {
@@ -101,17 +170,8 @@ void vm_area_free(vm_area_t* vma)
     if (p_vm_area_free == NULL)
     {
         c_printk_error("couldn't find vm_area_free\n");
-        return;
+        return -1;
     }
-
-    p_vm_area_free(vma);
-}
-
-int insert_vm_struct(mm_t* mm, vm_area_t* vma)
-{
-    typedef int (*insert_vm_struct_t)(mm_t*, vm_area_t*);
-
-    static insert_vm_struct_t p_insert_vm_struct = NULL;
 
     if (p_insert_vm_struct == NULL)
     {
@@ -125,25 +185,6 @@ int insert_vm_struct(mm_t* mm, vm_area_t* vma)
         return -1;
     }
 
-    return p_insert_vm_struct(mm, vma);
-}
-
-unsigned long ksys_mmap_pgoff(unsigned long addr,
-                              unsigned long len,
-                              unsigned long prot,
-                              unsigned long flags,
-                              unsigned long fd,
-                              unsigned long pgoff)
-{
-    typedef unsigned long (*ksys_mmap_pgoff_t)(unsigned long addr,
-                                               unsigned long len,
-                                               unsigned long prot,
-                                               unsigned long flags,
-                                               unsigned long fd,
-                                               unsigned long pgoff);
-
-    static ksys_mmap_pgoff_t p_ksys_mmap_pgoff = NULL;
-
     if (p_ksys_mmap_pgoff == NULL)
     {
         p_ksys_mmap_pgoff = (ksys_mmap_pgoff_t)kallsyms_lookup_name(
@@ -156,14 +197,6 @@ unsigned long ksys_mmap_pgoff(unsigned long addr,
         return -1;
     }
 
-    return p_ksys_mmap_pgoff(addr, len, prot, flags, fd, pgoff);
-}
-
-long _do_fork(struct kernel_clone_args* kargs)
-{
-    typedef long (*_do_fork_t)(struct kernel_clone_args * kargs);
-    static _do_fork_t p__do_fork = NULL;
-
     if (p__do_fork == NULL)
     {
         p__do_fork = (_do_fork_t)kallsyms_lookup_name("_do_fork");
@@ -175,17 +208,6 @@ long _do_fork(struct kernel_clone_args* kargs)
         return -1;
     }
 
-    return p__do_fork(kargs);
-}
-
-struct task_struct* __switch_to(struct task_struct* prev,
-                                struct task_struct* next)
-{
-    typedef struct task_struct* (
-      *__switch_to_t)(struct task_struct * prev,
-                      struct task_struct * next);
-    static __switch_to_t p___switch_to = NULL;
-
     if (p___switch_to == NULL)
     {
         p___switch_to = (__switch_to_t)kallsyms_lookup_name("__switch_"
@@ -195,19 +217,8 @@ struct task_struct* __switch_to(struct task_struct* prev,
     if (p___switch_to == NULL)
     {
         c_printk_error("couldn't find __switch_to\n");
-        return NULL;
+        return -1;
     }
-
-    return p___switch_to(prev, next);
-}
-
-struct task_struct* __switch_to_asm(struct task_struct* prev,
-                                    struct task_struct* next)
-{
-    typedef struct task_struct* (
-      *__switch_to_asm_t)(struct task_struct * prev,
-                          struct task_struct * next);
-    static __switch_to_asm_t p___switch_to_asm = NULL;
 
     if (p___switch_to_asm == NULL)
     {
@@ -218,25 +229,8 @@ struct task_struct* __switch_to_asm(struct task_struct* prev,
     if (p___switch_to_asm == NULL)
     {
         c_printk_error("couldn't find __switch_to_asm\n");
-        return NULL;
+        return -1;
     }
-
-    return p___switch_to_asm(prev, next);
-}
-
-int __do_munmap(struct mm_struct* mm,
-                unsigned long start,
-                size_t len,
-                struct list_head* uf,
-                bool downgrade)
-{
-    typedef int (*__do_munmap_t)(struct mm_struct * mm,
-                                 unsigned long start,
-                                 size_t len,
-                                 struct list_head* uf,
-                                 bool downgrade);
-
-    static __do_munmap_t p___do_munmap = NULL;
 
     if (p___do_munmap == NULL)
     {
@@ -250,21 +244,6 @@ int __do_munmap(struct mm_struct* mm,
         return -1;
     }
 
-    return p___do_munmap(mm, start, len, uf, downgrade);
-}
-
-int do_munmap(struct mm_struct* mm,
-              unsigned long start,
-              size_t len,
-              struct list_head* uf)
-{
-    typedef int (*do_munmap_t)(struct mm_struct * mm,
-                               unsigned long start,
-                               size_t len,
-                               struct list_head* uf);
-
-    static do_munmap_t p_do_munmap = NULL;
-
     if (p_do_munmap == NULL)
     {
         p_do_munmap = (do_munmap_t)kallsyms_lookup_name("do_"
@@ -277,16 +256,6 @@ int do_munmap(struct mm_struct* mm,
         return -1;
     }
 
-    return p_do_munmap(mm, start, len, uf);
-}
-
-void set_task_cpu(struct task_struct* p, unsigned int cpu)
-{
-    typedef void (*set_task_cpu_t)(struct task_struct * p,
-                                   unsigned int cpu);
-
-    static set_task_cpu_t p_set_task_cpu = NULL;
-
     if (p_set_task_cpu == NULL)
     {
         p_set_task_cpu = (set_task_cpu_t)kallsyms_lookup_name("set_task_"
@@ -296,17 +265,8 @@ void set_task_cpu(struct task_struct* p, unsigned int cpu)
     if (p_set_task_cpu == NULL)
     {
         c_printk_error("couldn't find set_task_cpu\n");
-        return;
+        return -1;
     }
-
-    set_task_cpu(p, cpu);
-}
-
-void* vmalloc_exec(unsigned long size)
-{
-    typedef void* (*vmalloc_exec_t)(unsigned long size);
-
-    static vmalloc_exec_t p_vmalloc_exec = NULL;
 
     if (p_vmalloc_exec == NULL)
     {
@@ -317,21 +277,8 @@ void* vmalloc_exec(unsigned long size)
     if (p_vmalloc_exec == NULL)
     {
         c_printk_error("couldn't find vmalloc_exec\n");
-        return NULL;
+        return -1;
     }
-
-    return p_vmalloc_exec(size);
-}
-
-struct task_struct* copy_process(struct pid* pid,
-                                 int trace,
-                                 int node,
-                                 struct kernel_clone_args* args)
-{
-    typedef struct task_struct* (
-      *copy_process_t)(struct pid*, int, int, struct kernel_clone_args*);
-
-    static copy_process_t copy_process_ptr = NULL;
 
     if (copy_process_ptr == NULL)
     {
@@ -342,17 +289,8 @@ struct task_struct* copy_process(struct pid* pid,
     if (copy_process_ptr == NULL)
     {
         c_printk_error("couldn't find copy_process\n");
-        return NULL;
+        return -1;
     }
-
-    return copy_process_ptr(pid, trace, node, args);
-}
-
-void wake_up_new_task(struct task_struct* tsk)
-{
-    typedef void (*wake_up_new_task_t)(struct task_struct*);
-
-    static wake_up_new_task_t p_wake_up_new_task = NULL;
 
     if (p_wake_up_new_task == NULL)
     {
@@ -363,17 +301,8 @@ void wake_up_new_task(struct task_struct* tsk)
     if (p_wake_up_new_task == NULL)
     {
         c_printk_error("couldn't find wake_up_new_task\n");
-        return;
+        return -1;
     }
-
-    p_wake_up_new_task(tsk);
-}
-
-void ptrace_notify(int exit_code)
-{
-    typedef void (*ptrace_notify_t)(int);
-
-    static ptrace_notify_t p_ptrace_notify = NULL;
 
     if (p_ptrace_notify == NULL)
     {
@@ -384,16 +313,8 @@ void ptrace_notify(int exit_code)
     if (p_ptrace_notify == NULL)
     {
         c_printk_error("couldn't find ptrace_notify\n");
-        return;
+        return -1;
     }
-
-    p_ptrace_notify(exit_code);
-}
-
-void cgroup_update_frozen(struct cgroup* cgrp)
-{
-    typedef void (*cgroup_update_frozen_t)(void*);
-    static cgroup_update_frozen_t cgroup_update_frozen_ptr = NULL;
 
     if (cgroup_update_frozen_ptr == NULL)
     {
@@ -404,16 +325,8 @@ void cgroup_update_frozen(struct cgroup* cgrp)
     if (cgroup_update_frozen_ptr == NULL)
     {
         c_printk_error("couldn't find cgroup_update_frozen\n");
-        return;
+        return -1;
     }
-
-    cgroup_update_frozen_ptr(cgrp);
-}
-
-void task_clear_jobctl_trapping(struct task_struct* task)
-{
-    typedef void (*task_clear_jobctl_trapping_t)(void*);
-    static task_clear_jobctl_trapping_t task_clear_jobctl_trapping_ptr = NULL;
 
     if (task_clear_jobctl_trapping_ptr == NULL)
     {
@@ -425,17 +338,8 @@ void task_clear_jobctl_trapping(struct task_struct* task)
     {
         c_printk_error("couldn't find "
                        "task_clear_jobctl_trapping\n");
-        return;
+        return -1;
     }
-
-    task_clear_jobctl_trapping_ptr(task);
-}
-
-void task_clear_jobctl_pending(struct task_struct* task,
-                               unsigned long mask)
-{
-    typedef void (*task_clear_jobctl_pending_t)(void*, unsigned long);
-    static task_clear_jobctl_pending_t task_clear_jobctl_pending_ptr = NULL;
 
     if (task_clear_jobctl_pending_ptr == NULL)
     {
@@ -446,18 +350,8 @@ void task_clear_jobctl_pending(struct task_struct* task,
     if (task_clear_jobctl_pending_ptr == NULL)
     {
         c_printk_error("couldn't find task_clear_jobctl_pending\n");
-        return;
+        return -1;
     }
-
-    task_clear_jobctl_pending_ptr(task, mask);
-}
-
-int __group_send_sig_info(int i,
-                          struct kernel_siginfo* sig,
-                          struct task_struct* tsk)
-{
-    typedef int (*__group_send_sig_info_t)(int, void*, void*);
-    static __group_send_sig_info_t __group_send_sig_info_ptr = NULL;
 
     if (__group_send_sig_info_ptr == NULL)
     {
@@ -471,14 +365,6 @@ int __group_send_sig_info(int i,
         return -1;
     }
 
-    return __group_send_sig_info_ptr(i, sig, tsk);
-}
-
-void __wake_up_parent(struct task_struct* p, struct task_struct* parent)
-{
-    typedef void (*__wake_up_parent_t)(void*, void*);
-    static __wake_up_parent_t __wake_up_parent_ptr = NULL;
-
     if (__wake_up_parent_ptr == NULL)
     {
         __wake_up_parent_ptr = (__wake_up_parent_t)kallsyms_lookup_name(
@@ -488,16 +374,8 @@ void __wake_up_parent(struct task_struct* p, struct task_struct* parent)
     if (__wake_up_parent_ptr == NULL)
     {
         c_printk_error("couldn't find __wake_up_parent\n");
-        return;
+        return -1;
     }
-
-    return __wake_up_parent_ptr(p, parent);
-}
-
-void task_work_run(void)
-{
-    typedef void (*task_work_run_t)(void);
-    static task_work_run_t task_work_run_ptr = NULL;
 
     if (task_work_run_ptr == NULL)
     {
@@ -508,16 +386,8 @@ void task_work_run(void)
     if (task_work_run_ptr == NULL)
     {
         c_printk_error("couldn't find task_work_run\n");
-        return;
+        return -1;
     }
-
-    return task_work_run_ptr();
-}
-
-u64 nsec_to_clock_t(u64 x)
-{
-    typedef u64 (*nsec_to_clock_t_t)(u64);
-    static nsec_to_clock_t_t nsec_to_clock_t_ptr = NULL;
 
     if (nsec_to_clock_t_ptr == NULL)
     {
@@ -528,19 +398,8 @@ u64 nsec_to_clock_t(u64 x)
     if (nsec_to_clock_t_ptr == NULL)
     {
         c_printk_error("couldn't find nsec_to_clock_t\n");
-        return 0;
+        return -1;
     }
-
-    return nsec_to_clock_t_ptr(x);
-}
-
-mm_t* mm_access(task_t* task, unsigned int mode)
-{
-    mm_t* mm;
-
-    typedef mm_t* (*mm_access_t)(task_t*, unsigned int);
-
-    static mm_access_t p_mm_access = NULL;
 
     if (p_mm_access == NULL)
     {
@@ -550,19 +409,8 @@ mm_t* mm_access(task_t* task, unsigned int mode)
     if (p_mm_access == NULL)
     {
         c_printk_error("couldn't find mm_access\n");
-        return NULL;
+        return -1;
     }
-
-    mm = p_mm_access(task, mode);
-
-    return mm;
-}
-
-void __memcg_kmem_uncharge(struct page* page, int order)
-{
-    typedef void (*__memcg_kmem_uncharge_t)(struct page * page,
-                                            int order);
-    static __memcg_kmem_uncharge_t __memcg_kmem_uncharge_ptr = NULL;
 
     if (__memcg_kmem_uncharge_ptr == NULL)
     {
@@ -573,18 +421,8 @@ void __memcg_kmem_uncharge(struct page* page, int order)
     if (__memcg_kmem_uncharge_ptr == NULL)
     {
         c_printk_error("couldn't find __memcg_kmem_uncharge\n");
-        return;
+        return -1;
     }
-
-    __memcg_kmem_uncharge_ptr(page, order);
-}
-
-int arch_dup_task_struct(struct task_struct* dst, struct task_struct* src)
-{
-    typedef int (*arch_dup_task_struct_t)(struct task_struct * dst,
-                                          struct task_struct * src);
-
-    static arch_dup_task_struct_t arch_dup_task_struct_ptr = NULL;
 
     if (arch_dup_task_struct_ptr == NULL)
     {
@@ -598,46 +436,199 @@ int arch_dup_task_struct(struct task_struct* dst, struct task_struct* src)
         return -1;
     }
 
+    if (set_task_stack_end_magic_ptr == NULL)
+    {
+        set_task_stack_end_magic_ptr = (set_task_stack_end_magic_t)
+          kallsyms_lookup_name("set_task_stack_end_"
+                               "magic");
+    }
+
+    if (set_task_stack_end_magic_ptr == NULL)
+    {
+        c_printk_error("couldn't find set_task_stack_end_magic\n");
+        return -1;
+    }
+
+    if (__mod_memcg_state_ptr == NULL)
+    {
+        __mod_memcg_state_ptr = (__mod_memcg_state_t)kallsyms_lookup_name(
+          "__mod_memcg_state");
+    }
+
+    if (__mod_memcg_state_ptr == NULL)
+    {
+        c_printk_error("couldn't find __mod_memcg_state\n");
+        return -1;
+    }
+
+    if (__vmalloc_node_range_ptr == NULL)
+    {
+        __vmalloc_node_range_ptr = (__vmalloc_node_range_t)
+          kallsyms_lookup_name("__vmalloc_node_range");
+    }
+
+    if (__vmalloc_node_range_ptr == NULL)
+    {
+        c_printk_error("couldn't find __vmalloc_node_range\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+void vma_rb_erase(vm_area_t* vma, rb_root_t* root)
+{
+    return p_vma_rb_erase(vma, root);
+}
+
+vm_area_t* vm_area_alloc(mm_t* mm)
+{
+    return p_vm_area_alloc(mm);
+}
+
+void vm_area_free(vm_area_t* vma)
+{
+    p_vm_area_free(vma);
+}
+
+int insert_vm_struct(mm_t* mm, vm_area_t* vma)
+{
+    return p_insert_vm_struct(mm, vma);
+}
+
+unsigned long ksys_mmap_pgoff(unsigned long addr,
+                              unsigned long len,
+                              unsigned long prot,
+                              unsigned long flags,
+                              unsigned long fd,
+                              unsigned long pgoff)
+{
+    return p_ksys_mmap_pgoff(addr, len, prot, flags, fd, pgoff);
+}
+
+long _do_fork(struct kernel_clone_args* kargs)
+{
+    return p__do_fork(kargs);
+}
+
+struct task_struct* __switch_to(struct task_struct* prev,
+                                struct task_struct* next)
+{
+    return p___switch_to(prev, next);
+}
+
+struct task_struct* __switch_to_asm(struct task_struct* prev,
+                                    struct task_struct* next)
+{
+    return p___switch_to_asm(prev, next);
+}
+
+int __do_munmap(struct mm_struct* mm,
+                unsigned long start,
+                size_t len,
+                struct list_head* uf,
+                bool downgrade)
+{
+    return p___do_munmap(mm, start, len, uf, downgrade);
+}
+
+int do_munmap(struct mm_struct* mm,
+              unsigned long start,
+              size_t len,
+              struct list_head* uf)
+{
+    return p_do_munmap(mm, start, len, uf);
+}
+
+void set_task_cpu(struct task_struct* p, unsigned int cpu)
+{
+    set_task_cpu(p, cpu);
+}
+
+void* vmalloc_exec(unsigned long size)
+{
+    return p_vmalloc_exec(size);
+}
+
+struct task_struct* copy_process(struct pid* pid,
+                                 int trace,
+                                 int node,
+                                 struct kernel_clone_args* args)
+{
+    return copy_process_ptr(pid, trace, node, args);
+}
+
+void wake_up_new_task(struct task_struct* tsk)
+{
+    p_wake_up_new_task(tsk);
+}
+
+void ptrace_notify(int exit_code)
+{
+    p_ptrace_notify(exit_code);
+}
+
+void cgroup_update_frozen(struct cgroup* cgrp)
+{
+    cgroup_update_frozen_ptr(cgrp);
+}
+
+void task_clear_jobctl_trapping(struct task_struct* task)
+{
+    task_clear_jobctl_trapping_ptr(task);
+}
+
+void task_clear_jobctl_pending(struct task_struct* task,
+                               unsigned long mask)
+{
+    task_clear_jobctl_pending_ptr(task, mask);
+}
+
+int __group_send_sig_info(int i,
+                          struct kernel_siginfo* sig,
+                          struct task_struct* tsk)
+{
+    return __group_send_sig_info_ptr(i, sig, tsk);
+}
+
+void __wake_up_parent(struct task_struct* p, struct task_struct* parent)
+{
+    return __wake_up_parent_ptr(p, parent);
+}
+
+void task_work_run(void)
+{
+    return task_work_run_ptr();
+}
+
+u64 nsec_to_clock_t(u64 x)
+{
+    return nsec_to_clock_t_ptr(x);
+}
+
+mm_t* mm_access(task_t* task, unsigned int mode)
+{
+    return p_mm_access(task, mode);
+}
+
+void __memcg_kmem_uncharge(struct page* page, int order)
+{
+    __memcg_kmem_uncharge_ptr(page, order);
+}
+
+int arch_dup_task_struct(struct task_struct* dst, struct task_struct* src)
+{
     return arch_dup_task_struct_ptr(dst, src);
 }
 
 void set_task_stack_end_magic(struct task_struct* tsk)
 {
-    typedef void (*func_t)(void*);
-    static func_t func_ptr = NULL;
-
-    if (func_ptr == NULL)
-    {
-        func_ptr = (func_t)kallsyms_lookup_name("set_task_stack_end_"
-                                                "magic");
-    }
-
-    if (func_ptr == NULL)
-    {
-        c_printk_error("couldn't find set_task_stack_end_magic\n");
-        return;
-    }
-
-    func_ptr(tsk);
+    set_task_stack_end_magic_ptr(tsk);
 }
 
 void __mod_memcg_state(struct mem_cgroup* memcg, int idx, int val)
 {
-    typedef void (*func_t)(void*, int, int);
-    static func_t func_ptr = NULL;
-
-    if (func_ptr == NULL)
-    {
-        func_ptr = (func_t)kallsyms_lookup_name("__mod_memcg_state");
-    }
-
-    if (func_ptr == NULL)
-    {
-        c_printk_error("couldn't find __mod_memcg_state\n");
-        return;
-    }
-
-    func_ptr(memcg, idx, val);
+    __mod_memcg_state_ptr(memcg, idx, val);
 }
 
 struct vm_struct* find_vm_area(const void* addr)
@@ -669,38 +660,15 @@ void* __vmalloc_node_range(unsigned long size,
                            int node,
                            const void* caller)
 {
-    typedef void* (*func_t)(unsigned long,
-                            unsigned long,
-                            unsigned long,
-                            unsigned long,
-                            gfp_t,
-                            pgprot_t,
-                            unsigned long,
-                            int,
-                            const void*);
-
-    static func_t func_ptr = NULL;
-
-    if (func_ptr == NULL)
-    {
-        func_ptr = (func_t)kallsyms_lookup_name("__vmalloc_node_range");
-    }
-
-    if (func_ptr == NULL)
-    {
-        c_printk_error("couldn't find __vmalloc_node_range\n");
-        return NULL;
-    }
-
-    return func_ptr(size,
-                    align,
-                    start,
-                    end,
-                    gfp_mask,
-                    prot,
-                    vm_flags,
-                    node,
-                    caller);
+    return __vmalloc_node_range_ptr(size,
+                                    align,
+                                    start,
+                                    end,
+                                    gfp_mask,
+                                    prot,
+                                    vm_flags,
+                                    node,
+                                    caller);
 }
 
 void mod_memcg_obj_state(void* p, int idx, int val)

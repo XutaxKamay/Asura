@@ -1,8 +1,6 @@
 #ifndef INCLUDES_AND_DEFS_H
 #define INCLUDES_AND_DEFS_H
 
-#include <../kernel/sched/sched.h>
-#include <../kernel/sched/stats.h>
 #include <asm/fpu/internal.h>
 #include <asm/resctrl_sched.h>
 #include <asm/switch_to.h>

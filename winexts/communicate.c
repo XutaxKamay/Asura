@@ -828,3 +828,4 @@ communicate_error_t communicate_process_cmd_remote_mprotect(
 out:
     return error;
 }
+

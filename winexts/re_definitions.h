@@ -12,7 +12,7 @@
 
 extern struct tracepoint* __tracepoint_sched_process_fork_ptr;
 
-int find___tracepoint_sched_process_fork(void);
+int find_all_symbols(void);
 
 void vma_rb_erase(vm_area_t* vma, rb_root_t* root);
 struct task_struct* copy_process(struct pid* pid,

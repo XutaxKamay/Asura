@@ -889,6 +889,7 @@ int _c_mprotect(task_t* task,
     {
         if (vma->vm_start > start)
             goto out;
+
         if (unlikely(grows & PROT_GROWSUP))
         {
             end   = vma->vm_end;
@@ -897,6 +898,7 @@ int _c_mprotect(task_t* task,
                 goto out;
         }
     }
+
     if (start > vma->vm_start)
         prev = vma;
 
@@ -926,7 +928,9 @@ int _c_mprotect(task_t* task,
 
         /* newflags >> 4 shift VM_MAY% in place of VM_% */
 
-        /** Let's bypass this */
+        /**
+         * Let's bypass this
+         */
         //         if ((newflags & ~(newflags >> 4))
         //             & (VM_READ | VM_WRITE | VM_EXEC))
         //         {
@@ -1127,7 +1131,7 @@ unsigned long c_copy_to_user(task_t* task,
             break;
         }
 
-        // We done the first page, we can go by copying now.
+        // We done the first page, we can go by copying full pages now.
         if (shifted != 0)
             shifted = 0;
 
@@ -1291,7 +1295,7 @@ unsigned long c_copy_from_user(task_t* task,
             break;
         }
 
-        // We done the first page, we can go by copying now.
+        // We done the first page, we can go by copying full pages now.
         if (shifted != 0)
             shifted = 0;
 

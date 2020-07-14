@@ -2,51 +2,65 @@
 
 uintptr_t hook_rel_call(uintptr_t call_inst_location, uintptr_t new_func)
 {
+    pte_t* pte;
     pteval_t old_pte_val;
-    uintptr_t old_func;
+    uintptr_t old_func = 0;
 
     if (*(unsigned char*)call_inst_location != 0xE8)
     {
-        return 0;
+        goto out;
     }
 
-    old_func = (uintptr_t)(*(int32_t*)(call_inst_location + 1))
-               + (call_inst_location + 5);
+    pte = get_pte(call_inst_location + 1);
 
-    old_pte_val = get_page_flags(call_inst_location + 1);
-    set_page_flags(call_inst_location + 1, old_pte_val | _PAGE_RW);
+    if (pte)
+    {
+        old_func = (uintptr_t)(*(int32_t*)(call_inst_location + 1))
+                   + (call_inst_location + 5);
 
-    *(int32_t*)(call_inst_location + 1) = (int32_t)new_func
-                                          - ((int32_t)call_inst_location
-                                             + 5);
+        old_pte_val = pte->pte;
+        pte->pte |= _PAGE_RW;
 
-    set_page_flags(call_inst_location + 1, old_pte_val);
+        *(int32_t*)(call_inst_location + 1) = (int32_t)new_func
+                                              - ((int32_t)
+                                                   call_inst_location
+                                                 + 5);
 
+        pte->pte = old_pte_val;
+    }
+
+out:
     return old_func;
 }
 
 uintptr_t hook_rel_jmp(uintptr_t jmp_inst_location, uintptr_t new_func)
 {
+    pte_t* pte;
     pteval_t old_pte_val;
-    uintptr_t old_func;
+    uintptr_t old_func = 0;
 
     if (*(unsigned char*)jmp_inst_location != 0xE9)
     {
-        return 0;
+        goto out;
     }
 
-    old_func = (uintptr_t)(*(int32_t*)(jmp_inst_location + 1))
-               + (jmp_inst_location + 5);
+    pte = get_pte(jmp_inst_location + 1);
 
-    old_pte_val = get_page_flags(jmp_inst_location + 1);
-    set_page_flags(jmp_inst_location + 1, old_pte_val | _PAGE_RW);
+    if (pte)
+    {
+        old_func = (uintptr_t)(*(int32_t*)(jmp_inst_location + 1))
+                   + (jmp_inst_location + 5);
+        old_pte_val = pte->pte;
+        pte->pte |= _PAGE_RW;
 
-    *(int32_t*)(jmp_inst_location + 1) = (int32_t)new_func
-                                         - ((int32_t)jmp_inst_location
-                                            + 5);
+        *(int32_t*)(jmp_inst_location + 1) = (int32_t)new_func
+                                             - ((int32_t)jmp_inst_location
+                                                + 5);
 
-    set_page_flags(jmp_inst_location + 1, old_pte_val);
+        pte->pte = old_pte_val;
+    }
 
+out:
     return old_func;
 }
 

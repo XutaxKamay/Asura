@@ -48,17 +48,15 @@ int init_mod(void)
         c_printk_error("failed to create class name %s for device %s\n",
                        DEVICE_FILE_NAME,
                        DEVICE_CLASS_NAME);
-        return -1;
+        goto unregister_chrdev;
     }
 
     cdev_init(&g_cdev, &g_fops);
 
     if (cdev_add(&g_cdev, g_dev, 1) < 0)
     {
-        class_destroy(g_cl);
-        unregister_chrdev_region(g_dev, 1);
         c_printk_error("device %s addition failed\n", DEVICE_FILE_NAME);
-        return -1;
+        goto class_des;
     }
 
     c_printk_info("created class name %s for device %s\n",
@@ -67,45 +65,44 @@ int init_mod(void)
 
     if (device_create(g_cl, NULL, g_dev, NULL, DEVICE_FMT) == NULL)
     {
-        class_destroy(g_cl);
-        cdev_del(&g_cdev);
-        unregister_chrdev_region(g_dev, 1);
         c_printk_error("failed to create device %s\n", DEVICE_FILE_NAME);
-        return -1;
+        goto class_des;
     }
 
     c_printk_info("successfully created device %s\n", DEVICE_FILE_NAME);
 
-    if (find___tracepoint_sched_process_fork() < 0)
+    if (find_all_symbols() < 0)
     {
-        device_destroy(g_cl, g_dev);
-        class_destroy(g_cl);
-        cdev_del(&g_cdev);
-        unregister_chrdev_region(g_dev, 1);
-        c_printk_error("couldn't find tracepoint sched process fork "
-                       "addr\n");
-        return -1;
+        c_printk_error("couldn't find all symbols\n");
+        goto dev_destroy;
     }
 
     if (init_hooks())
     {
-        device_destroy(g_cl, g_dev);
-        class_destroy(g_cl);
-        cdev_del(&g_cdev);
-        unregister_chrdev_region(g_dev, 1);
         c_printk_error("couldn't init hooks\n");
-        return -1;
+        goto dev_destroy;
     }
 
     return 0;
+
+dev_destroy:
+    device_destroy(g_cl, g_dev);
+class_des:
+    class_destroy(g_cl);
+    cdev_del(&g_cdev);
+unregister_chrdev:
+    unregister_chrdev_region(g_dev, 1);
+    return -1;
 }
 
 void free_mod(void)
 {
     if (clean_hooks() < 0)
     {
-        c_printk_error("BUG: can't clean hooksk\n");
-        // Should be never reached
+        c_printk_error("BUG: can't clean hooks\n");
+        /**
+         * Should be never reached
+         */
         BUG();
     }
 
