@@ -11,10 +11,4 @@
 #include "virtualtabletools.h"
 #include "writebuffer.h"
 
-#ifndef WINDOWS
-    #include <sys/ioctl.h>
-
-    #include "communicate_structs.h"
-#endif
-
 #endif // XLIB_H
