@@ -10,10 +10,6 @@
 
 using namespace XLib;
 
-#ifndef WINDOWS
-constexpr auto g_maxCountVMA = 0x400;
-#endif
-
 /**
  * auto alignedSize = ( ( size + g_pageSize ) / g_pageSize )
  *                 * g_pageSize;
@@ -26,7 +22,7 @@ maps_t XLib::MemoryUtils::queryMaps(pid_t)
     maps_t maps;
 
 #ifndef WINDOWS
-    
+
 #else
 
 #endif

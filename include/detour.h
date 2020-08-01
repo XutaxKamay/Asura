@@ -15,9 +15,11 @@ enum calling_conventions_t
 namespace XLib
 {
 #ifdef _WIN32
-    template <calling_conventions_t TCC, typename TRetType, typename... TArgs>
+    template <calling_conventions_t calling_convention_T,
+              typename ret_type_T,
+              typename... args_T>
 #else
-    template <typename TRetType, typename... TArgs>
+    template <typename ret_type_T, typename... args_T>
 #endif
     /**
      * @brief Detour
@@ -55,23 +57,23 @@ namespace XLib
         using func_t   = typename decltype(GenNewFuncType())::type;
 
 #else /* Otherwhise it should be always the same convention */
-        using cbfunc_t = TRetType (*)(TArgs...);
+        using cbfunc_t = ret_type_T (*)(args_T...);
         using func_t   = cbfunc_t;
 #endif
 
       public:
       private:
         /**
-         * @brief _callBackFunc
+         * @brief _callback_func
          * The call back function permits to call the original function
          * inside the new function.
          */
-        cbfunc_t _callBackFunc {};
+        cbfunc_t _callback_func {};
         /**
-         * @brief _newFunc
+         * @brief _new_func
          * Pointer to the new function.
          */
-        func_t _newFunc {};
+        func_t _new_func {};
     };
 
     /**
@@ -83,40 +85,46 @@ namespace XLib
      * always pushed to the stack.
      */
 #ifdef _WIN32
-    template <calling_conventions_t TCC, typename TRetType, typename... TArgs>
-    constexpr auto Detour<TCC, TRetType, TArgs...>::GenCallBackFuncType()
+    template <calling_conventions_t calling_convention_T,
+              typename ret_type_T,
+              typename... args_T>
+    constexpr auto Detour<calling_convention_T, ret_type_T, args_T...>::
+      GenCallBackFuncType()
     {
-        if constexpr (TCC == cc_fastcall)
+        if constexpr (calling_convention_T == cc_fastcall)
         {
             /* thisptr - EDX, stack params */
-            return type_wrapper<TRetType(__thiscall*)(ptr_t, TArgs...)>;
+            return type_wrapper<ret_type_T(__thiscall*)(ptr_t, args_T...)>;
         }
-        else if constexpr (TCC == cc_stdcall)
+        else if constexpr (calling_convention_T == cc_stdcall)
         {
-            return type_wrapper<TRetType(__stdcall*)(TArgs...)>;
+            return type_wrapper<ret_type_T(__stdcall*)(args_T...)>;
         }
         else
         {
-            return type_wrapper<TRetType (*)(TArgs...)>;
+            return type_wrapper<ret_type_T (*)(args_T...)>;
         }
     }
 
-    template <calling_conventions_t TCC, typename TRetType, typename... TArgs>
-    constexpr auto Detour<TCC, TRetType, TArgs...>::GenNewFuncType()
+    template <calling_conventions_t calling_convention_T,
+              typename ret_type_T,
+              typename... args_T>
+    constexpr auto Detour<calling_convention_T, ret_type_T, args_T...>::
+      GenNewFuncType()
     {
-        if constexpr (TCC == cc_fastcall)
+        if constexpr (calling_convention_T == cc_fastcall)
         {
             /* EDX, ECX, stack params */
-            return type_wrapper<TRetType(
-              __fastcall*)(ptr_t, ptr_t, TArgs...)>;
+            return type_wrapper<ret_type_T(
+              __fastcall*)(ptr_t, ptr_t, args_T...)>;
         }
-        else if constexpr (TCC == cc_stdcall)
+        else if constexpr (calling_convention_T == cc_stdcall)
         {
-            return type_wrapper<TRetType(__stdcall*)(TArgs...)>;
+            return type_wrapper<ret_type_T(__stdcall*)(args_T...)>;
         }
         else
         {
-            return type_wrapper<TRetType (*)(TArgs...)>;
+            return type_wrapper<ret_type_T (*)(args_T...)>;
         }
     }
 #endif

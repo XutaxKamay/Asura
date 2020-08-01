@@ -2,131 +2,134 @@
 #ifndef VIRTUALTABLETOOLS_H
 #define VIRTUALTABLETOOLS_H
 
+#include "buffer.h"
 #include "types.h"
 #include <functional>
 
 namespace XLib
 {
-    namespace Virtual
+    using vfunc_t  = ptr_t;
+    using vfuncs_t = std::vector<vfunc_t>;
+
+    template <typename T = ptr_t>
+    constexpr auto vtable(T classPtr)
     {
-        template <typename T = ptr_t>
-        /**
-         * @brief VTable
-         * @param classPtr
-         * Gets a virtual table from a class pointer.
-         */
-        constexpr auto VTable(T classPtr)
-        {
-            return *view_as<ptr_t**>(classPtr);
-        }
+        return *view_as<ptr_t**>(classPtr);
+    }
 
-        template <safesize_t index, typename T = ptr_t>
-        /**
-         * @brief Cast_VFunc
-         * @param classPtr
-         * Gets a virtual function type from a virtual table and an index.
-         */
-        constexpr inline auto Cast_VFunc(ptr_t classPtr)
-        {
-            return view_as<T>(VTable(classPtr)[index]);
-        }
+    template <safesize_t index_T, typename T = ptr_t>
+    constexpr inline auto view_vfunc_as(ptr_t classPtr)
+    {
+        return view_as<T>(vtable(classPtr)[index_T]);
+    }
 
-        template <safesize_t index, typename T = ptr_t>
-        /**
-         * @brief VFuncPtr
-         * @param classPtr
-         * Gets a pointer of virtual function pointer from a virtual table
-         * and an index.
-         */
-        constexpr inline auto VFuncPtr(ptr_t classPtr)
-        {
-            return view_as<T>(&VTable(classPtr)[index]);
-        }
+    template <safesize_t index_T, typename T = ptr_t>
+    constexpr inline auto vfunc_ptr(ptr_t classPtr)
+    {
+        return view_as<T>(&vtable(classPtr)[index_T]);
+    }
 
-        template <safesize_t index,
-                  typename TRetType = void,
-                  typename... TArgs>
-        /**
-         * @brief VFunc
-         * @param classPtr
-         * Gets a virtual function type for calling process from a virtual
-         * table and an index.view_as
-         */
-        constexpr inline auto VFunc(ptr_t classPtr)
-        {
+    template <safesize_t index_T,
+              typename ret_type_T = void,
+              typename... args_T>
+    constexpr inline auto vfunc(ptr_t classPtr)
+    {
 #ifdef WINDOWS
-            return Cast_VFunc<index,
-                              TRetType(__thiscall*)(ptr_t, TArgs...)>(
-              classPtr);
+        return view_vfunc_as<index_T,
+                             ret_type_T(__thiscall*)(ptr_t, args_T...)>(
+          classPtr);
 #else
-            return Cast_VFunc<index, TRetType (*)(ptr_t, TArgs...)>(
-              classPtr);
+        return view_vfunc_as<index_T, ret_type_T (*)(ptr_t, args_T...)>(
+          classPtr);
 #endif
+    }
+
+    template <safesize_t index_T,
+              typename ret_type_T = void,
+              typename... args_T>
+    constexpr inline auto call_vfunc(ptr_t classPtr, args_T... args)
+    {
+        return vfunc<index_T, ret_type_T, args_T...>(classPtr)(classPtr,
+                                                               args...);
+    }
+
+    template <class T>
+    constexpr inline auto construct_vtable_from_vfuncs(
+      const vfuncs_t& vfuncs,
+      safesize_t classSize = 0)
+    {
+        using class_ptr_t = std::unique_ptr<T*>;
+
+        auto classPtr = class_ptr_t(classSize == 0 ? new T :
+                                                     alloc(classSize));
+
+        auto vfuncsInsideVTable = view_as<ptr_t*>(
+          alloc(vfuncs.size() * sizeof(vfunc_t)));
+
+        /**
+         * Setup hidden _vptr member
+         */
+        *view_as<ptr_t*>(classPtr) = vfuncsInsideVTable;
+
+        for (auto&& vfunc : vfuncs)
+        {
+            *vfuncsInsideVTable = vfunc;
+
+            vfuncsInsideVTable++;
         }
 
-        template <safesize_t index,
-                  typename TRetType = void,
-                  typename... TArgs>
-        /**
-         * @brief CallVFunc
-         * @param classPtr
-         * @param Args
-         * Calls a virtual function from a virtual table and an index.
-         */
-        constexpr inline auto CallVFunc(ptr_t classPtr, TArgs... Args)
-        {
-            return VFunc<index, TRetType, TArgs...>(classPtr)(classPtr,
-                                                              Args...);
-        }
-    };
+        return classPtr;
+    }
 
     template <class T>
     class VirtualTable : public T
     {
-        using pre_or_post_hook_func_t = std::function<void(ptr_t, ptr_t)>;
+        using pre_or_post_hook_func_t = std::function<
+          void(ptr_t funcPtr, ptr_t newFuncPtr)>;
 
       public:
-        template <safesize_t index,
-                  typename TRetType = void,
-                  typename... TArgs>
-        constexpr inline auto callVFunc(TArgs... Args)
+        template <safesize_t index_T,
+                  typename ret_type_T = void,
+                  typename... args_T>
+        constexpr inline auto callVFunc(args_T... args)
         {
-            return Virtual::CallVFunc<index, TRetType, TArgs...>(this,
-                                                                 Args...);
+            return XLib::call_vfunc<index_T, ret_type_T, args_T...>(
+              this,
+              args...);
         }
 
-        template <safesize_t index, typename T2 = ptr_t>
+        template <safesize_t index_T, typename T2 = ptr_t>
         constexpr inline auto VFunc()
         {
-            return Virtual::VFunc<index, T2>(this);
+            return XLib::vfunc<index_T, T2>(this);
         }
 
-        template <safesize_t index, typename T2 = ptr_t>
+        template <safesize_t index_T, typename T2 = ptr_t>
         constexpr inline auto VFuncPtr()
         {
-            return Virtual::VFuncPtr<index, T2>(this);
+            return XLib::vfunc_ptr<index_T, T2>(this);
         }
 
-        template <safesize_t index, typename T2 = ptr_t>
+        template <safesize_t index_T, typename T2 = ptr_t>
         inline auto hook(T2 newFuncPtr,
-                         pre_or_post_hook_func_t before = nullptr,
-                         pre_or_post_hook_func_t after  = nullptr)
+                         pre_or_post_hook_func_t pre  = nullptr,
+                         pre_or_post_hook_func_t post = nullptr)
         {
-            auto funcPtr = VFuncPtr<index, T2*>();
+            auto funcPtr = VFuncPtr<index_T, T2*>();
 
             if (funcPtr && *funcPtr && newFuncPtr)
             {
-                if (before)
-                    before(view_as<ptr_t>(funcPtr),
-                           view_as<ptr_t>(newFuncPtr));
+                if (pre)
+                    pre(view_as<ptr_t>(funcPtr),
+                        view_as<ptr_t>(newFuncPtr));
 
                 /* __builtin_trap(); */
 
                 *funcPtr = newFuncPtr;
 
-                if (after)
-                    after(view_as<ptr_t>(funcPtr),
-                          view_as<ptr_t>(newFuncPtr));
+                if (post)
+                    post(view_as<ptr_t>(funcPtr),
+                         view_as<ptr_t>(newFuncPtr));
 
                 return true;
             }
@@ -137,9 +140,10 @@ namespace XLib
         template <typename T2 = ptr_t>
         constexpr inline auto _vptr()
         {
-            return Virtual::VTable<T2>(this);
+            return XLib::vtable<T2>(this);
         }
 
+        auto listVFuncs() -> vfuncs_t;
         auto countVFuncs() -> safesize_t;
     };
 
@@ -151,13 +155,24 @@ namespace XLib
         safesize_t count = 0;
 
         while (vtable[count])
-        {
             count++;
-        }
 
         return count;
     }
 
+    template <class T>
+    auto VirtualTable<T>::listVFuncs() -> vfuncs_t
+    {
+        vfuncs_t vfuncs;
+
+        auto vtable = _vptr();
+
+        do
+            vfuncs.push_back(view_as<vfunc_t>(*vtable));
+        while (++vtable);
+
+        return vfuncs;
+    }
 }
 
 #endif // VIRTUALTABLETOOLS_H

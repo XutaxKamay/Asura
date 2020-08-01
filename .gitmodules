@@ -1,0 +1,3 @@
+[submodule "linux_kernel_changes/zen-kernel"]
+	path = linux_kernel_changes/zen-kernel
+	url = https://github.com/zen-kernel/zen-kernel

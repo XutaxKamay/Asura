@@ -5,8 +5,9 @@ using namespace XLib;
 XLib::Process::Process(const XLib::maps_t& maps,
                        const std::string fullName,
                        pid_t pid)
- : _maps(maps), _fullName(fullName), _pid(pid)
-{}
+ : _maps(maps), _full_name(fullName), _pid(pid)
+{
+}
 
 auto XLib::Process::refresh() -> void
 {
@@ -21,12 +22,12 @@ auto XLib::Process::maps()
 
 auto XLib::Process::setFullName(const std::string& fullName) -> void
 {
-    _fullName = fullName;
+    _full_name = fullName;
 }
 
 auto XLib::Process::fullName() const
 {
-    return _fullName;
+    return _full_name;
 }
 
 auto XLib::Process::setPID(pid_t pid)

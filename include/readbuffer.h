@@ -36,41 +36,46 @@ namespace XLib
         ~ReadBuffer() = default;
 
       public:
-        template <typesize_t typeSize = type_32>
+        template <typesize_t typesize_T = type_32>
         /**
          * @brief readVar
          * @param pSize
          */
         constexpr inline auto readVar(safesize_t* pSize = nullptr)
         {
-            auto type = *this->shift<typesize_t*>(_readSize);
+            auto type = *this->shift<typesize_t*>(_read_size);
             advance(sizeof(typesize_t));
 
             /* Read type first */
-            if (type != typeSize)
-                /* Blame programmer for not writing the buffer correctly.
+            if (type != typesize_T)
+            {
+                /*
+                 * Blame programmer for not writing the buffer correctly.
                  */
                 assert(std::string("Expected type: "
-                                   + GetVariableTypeStr(typeSize)
+                                   + get_variable_type_str(typesize_T)
                                    + "when type is instead "
-                                   + GetVariableTypeStr(type))
+                                   + get_variable_type_str(type))
                          .c_str());
+            }
 
-            using varType = gvt<typeSize>;
+            using var_t = get_variable_t<typesize_T>;
 
             /* Initialize data type */
-            varType data = {};
-            if constexpr (typeSize == type_array)
+            var_t data = {};
+
+            if constexpr (typesize_T == type_array)
             {
                 /* If it's an array we read first its size */
-                auto dataSize = *this->shift<safesize_t*>(_readSize);
+                auto dataSize = *this->shift<safesize_t*>(_read_size);
                 advance(sizeof(safesize_t));
 
                 /* Then we give the pointer of where is located data */
-                data = this->shift<varType>(_readSize);
+                data = this->shift<var_t>(_read_size);
                 advance(dataSize);
 
-                /* If it the parameter isn't null we give the array size
+                /*
+                 * If it the parameter isn't null we give the array size
                  */
                 if (pSize != nullptr)
                 {
@@ -79,13 +84,13 @@ namespace XLib
             }
             else
             {
-                data = *this->shift<varType*>(_readSize);
-                advance(sizeof(varType));
+                data = *this->shift<var_t*>(_read_size);
+                advance(sizeof(var_t));
 
                 /* If it the parameter isn't null we give the type size */
                 if (pSize != nullptr)
                 {
-                    *pSize = sizeof(varType);
+                    *pSize = sizeof(var_t);
                 }
             }
 
@@ -132,14 +137,15 @@ namespace XLib
 
       private:
         /**
-         * @brief _readSize
+         * @brief _read_size
          */
-        safesize_t _readSize {};
+        safesize_t _read_size {};
     };
 
     template <safesize_t max_size>
     ReadBuffer<max_size>::ReadBuffer() : Buffer<max_size>()
-    {}
+    {
+    }
 
     template <safesize_t max_size>
     ReadBuffer<max_size>::ReadBuffer(array_t pData,
@@ -148,32 +154,32 @@ namespace XLib
                                      safesize_t maxSize)
      : Buffer<max_size>(pData, allocated, maxSize)
     {
-        _readSize = readSize;
+        _read_size = readSize;
     }
 
     template <safesize_t max_size>
     inline auto ReadBuffer<max_size>::reset() -> void
     {
-        _readSize = 0;
+        _read_size = 0;
     }
 
     template <safesize_t max_size>
     inline auto ReadBuffer<max_size>::advance(safesize_t size) -> void
     {
-        _readSize += size;
+        _read_size += size;
     }
 
     template <safesize_t max_size>
     inline auto ReadBuffer<max_size>::readSize() const
     {
-        return _readSize;
+        return _read_size;
     }
 
     template <safesize_t max_size>
     inline auto ReadBuffer<max_size>::setReadSize(
       const safesize_t& readSize)
     {
-        _readSize = readSize;
+        _read_size = readSize;
     }
 
 }

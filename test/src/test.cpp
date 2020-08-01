@@ -50,11 +50,11 @@ auto XLib::Test::run() -> void
 
     auto strSize = static_cast<safesize_t>(str.size());
 
-    writeBuffer.addVar<type_array>(view_as<gvt<type_array>>(str.data()),
+    writeBuffer.addVar<type_array>(view_as<gv_t<type_array>>(str.data()),
                                    strSize);
-    writeBuffer.addVar<type_array>(view_as<gvt<type_array>>(str.data()),
+    writeBuffer.addVar<type_array>(view_as<gv_t<type_array>>(str.data()),
                                    strSize);
-    writeBuffer.addVar<type_array>(view_as<gvt<type_array>>(str.data()),
+    writeBuffer.addVar<type_array>(view_as<gv_t<type_array>>(str.data()),
                                    strSize);
 
     writeBuffer.addVar<type_8>(1);
@@ -154,16 +154,6 @@ auto XLib::Test::run() -> void
         ConsoleOutput("Failed test(s)") << std::endl;
     }
 
-    /* Virtual Functions Tests */
-
-    /* CallVFunc< 0, void >( static_cast< ptr_t >( &g_API ) );
-     *
-     * auto ret1 = CallVFunc< 1, std::vector< int >, const char*, int >(
-     *     static_cast< ptr_t >( &g_API ),
-     *    "test",
-     * 1337 );
-     */
-
     using VAPI_t = VirtualTable<Test::API>;
 
     VAPI_t* api = static_cast<VAPI_t*>(&g_API);
@@ -171,10 +161,11 @@ auto XLib::Test::run() -> void
 
     /** TODO: finish MemoryUtils so we can use this */
     api->hook<0>(vfunc_hook);
+
     api->callVFunc<0, void>();
 
-    std::cout << "Number of virtual funcs: " << api->countVFuncs()
-              << std::endl;
+    ConsoleOutput("Number of virtual funcs: ")
+      << api->countVFuncs() << std::endl;
 }
 
 void XLib::Test::API::func1()

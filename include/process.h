@@ -22,7 +22,7 @@ namespace XLib
 
       private:
         maps_t _maps {};
-        std::string _fullName {};
+        std::string _full_name {};
         pid_t _pid {};
     };
 }

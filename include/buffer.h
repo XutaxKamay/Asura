@@ -2,9 +2,12 @@
 #define BUFFER_H
 
 #include "types.h"
+#include <algorithm>
 
 namespace XLib
 {
+    inline static std::vector<ptr_t> tracking_memory_allocs;
+
     /**
      * @brief UDPSize
      * UDPSize is the maximum size theorically that we can send over
@@ -12,24 +15,42 @@ namespace XLib
      */
     constexpr auto UDPSize = 508;
 
-    template <typename T>
+    template <typename T = ptr_t>
     /**
      * @brief alloc
      * @param size
      */
     constexpr inline auto alloc(safesize_t size)
     {
-        return view_as<T>(::operator new(static_cast<size_t>(size)));
+        auto ptr = view_as<T>(::operator new(static_cast<size_t>(size)));
+
+        tracking_memory_allocs.push_back(view_as<ptr_t>(ptr));
+
+        return ptr;
     }
 
-    template <typename T>
+    template <typename T = ptr_t>
     /**
      * @brief free
      * @param pBuf
      */
-    constexpr inline void free(T& pBuf)
+    constexpr inline auto free(T& pBuf)
     {
-        ::operator delete(view_as<ptr_t>(pBuf));
+        auto it = std::find(tracking_memory_allocs.begin(),
+                            tracking_memory_allocs.end(),
+                            view_as<ptr_t>(pBuf));
+
+        if (it != tracking_memory_allocs.end())
+        {
+            ::operator delete(view_as<ptr_t>(pBuf));
+            tracking_memory_allocs.erase(it);
+
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
     /**
      * @brief The typesize_t enum
@@ -77,16 +98,16 @@ namespace XLib
             return type_wrapper<void>;
     }
     /**
-     * @brief GetVariableTypeStr
+     * @brief get_variable_type_str
      * @param typeSize
      * @return Returns the string of the variable type.
      */
-    std::string GetVariableTypeStr(typesize_t typeSize);
+    std::string get_variable_type_str(typesize_t typeSize);
 
-    template <typesize_t typesize>
-    using gvt = typename decltype(_gvt<typesize>())::type;
-    template <typesize_t typesize>
-    using gvt = gvt<typesize>;
+    template <typesize_t typesize_T>
+    using get_variable_t = typename decltype(_gvt<typesize_T>())::type;
+    template <typesize_t typesize_T>
+    using gv_t = get_variable_t<typesize_T>;
 
     template <safesize_t max_size = 0>
     /**
@@ -155,23 +176,23 @@ namespace XLib
         {
             if (size == 0)
             {
-                return view_as<cast_t>(_pData);
+                return view_as<cast_t>(_data);
             }
             else
             {
-                return view_as<cast_t>(view_as<uintptr_t>(_pData) + size);
+                return view_as<cast_t>(view_as<uintptr_t>(_data) + size);
             }
         }
 
       protected:
         /**
-         * @brief _pData
+         * @brief _data
          */
-        array_t _pData {};
+        array_t _data {};
         /**
-         * @brief _maxSize
+         * @brief _max_size
          */
-        safesize_t _maxSize;
+        safesize_t _max_size;
         /**
          * @brief _allocated
          */
@@ -180,26 +201,27 @@ namespace XLib
 
     template <safesize_t max_size>
     Buffer<max_size>::Buffer()
-     : _maxSize(max_size), _allocated(max_size != 0)
+     : _max_size(max_size), _allocated(max_size != 0)
     {
         // Allocate with the maximum size for performance.
         if (max_size != 0)
-            _pData = alloc<decltype(_pData)>(max_size);
+            _data = alloc<decltype(_data)>(max_size);
     }
 
     template <safesize_t max_size>
     Buffer<max_size>::Buffer(array_t pData,
                              bool allocated,
                              safesize_t maxSize)
-     : _pData(pData), _maxSize(maxSize), _allocated(allocated)
-    {}
+     : _data(pData), _max_size(maxSize), _allocated(allocated)
+    {
+    }
 
     template <safesize_t max_size>
     Buffer<max_size>::~Buffer()
     {
         // Free data.
         if (_allocated)
-            free(_pData);
+            free(_data);
     }
 
     template <safesize_t max_size>
@@ -211,32 +233,32 @@ namespace XLib
     template <safesize_t max_size>
     inline auto Buffer<max_size>::pData() const
     {
-        return _pData;
+        return _data;
     }
 
     template <safesize_t max_size>
     inline auto Buffer<max_size>::setPData(const array_t& pData)
     {
-        _pData = pData;
+        _data = pData;
     }
 
     template <safesize_t max_size>
     inline auto Buffer<max_size>::maxSize() const
     {
-        return _maxSize;
+        return _max_size;
     }
 
     template <safesize_t max_size>
     inline auto Buffer<max_size>::setMaxSize(const safesize_t& maxSize)
     {
-        _maxSize = maxSize;
+        _max_size = maxSize;
     }
 
     template <safesize_t max_size>
     inline auto Buffer<max_size>::toBytes()
     {
         bytes_t bs(max_size);
-        copy(this->_pData, this->_pData + max_size, bs.begin());
+        copy(this->_data, this->_data + max_size, bs.begin());
 
         return bs;
     }

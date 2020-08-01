@@ -23,11 +23,11 @@ namespace XLib
 
             for (auto&& map : maps)
             {
-                auto startPtr = view_as<uintptr_t>(map.begin());
-                auto endPtr   = view_as<uintptr_t>(map.end());
+                auto start_ptr = view_as<uintptr_t>(map.begin());
+                auto end_ptr   = view_as<uintptr_t>(map.end());
 
-                if (view_as<uintptr_t>(address) >= startPtr
-                    && view_as<uintptr_t>(address) < endPtr)
+                if (view_as<uintptr_t>(address) >= start_ptr
+                    && view_as<uintptr_t>(address) < end_ptr)
                 {
                     if (pMap)
                         *pMap = map;
@@ -49,25 +49,28 @@ namespace XLib
                                   size_t size,
                                   map_t::protection_t newFlags,
                                   map_t::protection_t* pFlags = nullptr)
-        {}
+        {
+        }
 
         template <typename T>
         static auto allocMap(T address,
                              size_t size,
                              map_t::protection_t newFlags)
-        {}
+        {
+        }
 
         template <typename T>
         static auto freeMap(T address, size_t size)
-        {}
+        {
+        }
     };
 
     template <typename T>
     constexpr inline auto align(T value, safesize_t size)
     {
-        auto originalValue = view_as<uintptr_t>(value);
-        originalValue -= originalValue % size;
-        return view_as<T>(originalValue);
+        auto original_value = view_as<uintptr_t>(value);
+        original_value -= original_value % size;
+        return view_as<T>(original_value);
     }
 }
 
