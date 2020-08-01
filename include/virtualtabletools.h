@@ -23,10 +23,24 @@ namespace XLib
         return view_as<T>(vtable(classPtr)[index_T]);
     }
 
+    template <typename T = ptr_t>
+    constexpr inline auto view_vfunc_dyn_index_as(ptr_t classPtr,
+                                                  safesize_t index)
+    {
+        return view_as<T>(vtable(classPtr)[index]);
+    }
+
     template <safesize_t index_T, typename T = ptr_t>
     constexpr inline auto vfunc_ptr(ptr_t classPtr)
     {
         return view_as<T>(&vtable(classPtr)[index_T]);
+    }
+
+    template <typename T = ptr_t>
+    constexpr inline auto vfunc_ptr_dyn_index(ptr_t classPtr,
+                                              safesize_t index)
+    {
+        return view_as<T>(&vtable(classPtr)[index]);
     }
 
     template <safesize_t index_T,
@@ -44,6 +58,20 @@ namespace XLib
 #endif
     }
 
+    template <typename ret_type_T = void, typename... args_T>
+    constexpr inline auto vfunc_dyn_index(ptr_t classPtr,
+                                          safesize_t index)
+    {
+#ifdef WINDOWS
+        return view_vfunc_dyn_index_as<ret_type_T(
+          __thiscall*)(ptr_t, args_T...)>(classPtr, index);
+#else
+        return view_vfunc_dyn_index_as<ret_type_T (*)(ptr_t, args_T...)>(
+          classPtr,
+          index);
+#endif
+    }
+
     template <safesize_t index_T,
               typename ret_type_T = void,
               typename... args_T>
@@ -51,6 +79,16 @@ namespace XLib
     {
         return vfunc<index_T, ret_type_T, args_T...>(classPtr)(classPtr,
                                                                args...);
+    }
+
+    template <typename ret_type_T = void, typename... args_T>
+    constexpr inline auto call_vfunc_dyn_index(ptr_t classPtr,
+                                               safesize_t index,
+                                               args_T... args)
+    {
+        return vfunc_dyn_index<ret_type_T, args_T...>(classPtr,
+                                                      index)(classPtr,
+                                                             args...);
     }
 
     template <class T>
@@ -93,21 +131,54 @@ namespace XLib
                   typename... args_T>
         constexpr inline auto callVFunc(args_T... args)
         {
-            return XLib::call_vfunc<index_T, ret_type_T, args_T...>(
-              this,
-              args...);
+            return call_vfunc<index_T, ret_type_T, args_T...>(this,
+                                                              args...);
+        }
+
+        template <typename ret_type_T = void, typename... args_T>
+        constexpr inline auto callVFunc(safesize_t index, args_T... args)
+        {
+            return call_vfunc_dyn_index<ret_type_T, args_T...>(this,
+                                                               index,
+                                                               args...);
+        }
+
+        template <safesize_t index_T,
+                  typename ret_type_T = void,
+                  typename... args_T>
+        constexpr inline auto VFunc()
+        {
+            return vfunc<index_T, ret_type_T, args_T...>(this);
+        }
+
+        template <typename ret_type_T = void, typename... args_T>
+        constexpr inline auto VFuncDynIndex(safesize_t index)
+        {
+            return vfunc_dyn_index<ret_type_T, args_T...>(this, index);
         }
 
         template <safesize_t index_T, typename T2 = ptr_t>
-        constexpr inline auto VFunc()
+        constexpr inline auto ViewVFuncAs()
         {
-            return XLib::vfunc<index_T, T2>(this);
+            return view_vfunc_as<index_T, T2>(this);
+        }
+
+        template <typename T2 = ptr_t>
+        constexpr inline auto ViewVFuncDynIndexAs(safesize_t index)
+        {
+            return view_vfunc_dyn_index_as<T2>(this, index);
         }
 
         template <safesize_t index_T, typename T2 = ptr_t>
         constexpr inline auto VFuncPtr()
         {
-            return XLib::vfunc_ptr<index_T, T2>(this);
+            return vfunc_ptr<index_T, T2>(this);
+        }
+
+        template <typename T2 = ptr_t>
+        constexpr inline auto VFuncPtrDynIndex(safesize_t index)
+        {
+            return vfunc_ptr_dyn_index<T2>(this, index);
         }
 
         template <safesize_t index_T, typename T2 = ptr_t>

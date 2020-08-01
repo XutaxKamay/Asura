@@ -152,9 +152,8 @@ namespace XLib
                                        bool allocated,
                                        safesize_t readSize,
                                        safesize_t maxSize)
-     : Buffer<max_size_T>(data, allocated, maxSize)
+     : Buffer<max_size_T>(data, allocated, maxSize), _read_size(readSize)
     {
-        _read_size = readSize;
     }
 
     template <safesize_t max_size_T>

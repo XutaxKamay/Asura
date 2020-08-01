@@ -17,8 +17,8 @@ namespace XLib
 
         enum push_type_t
         {
-            FILLING,
-            UPDATING
+            Filling,
+            Updating
         };
 
       public:
@@ -85,7 +85,7 @@ namespace XLib
                 _index++;
             }
 
-            return UPDATING;
+            return Updating;
         }
 
         _buffer[_filled_history] = element;
@@ -97,7 +97,7 @@ namespace XLib
         _index = _filled_history;
         _filled_history++;
 
-        return FILLING;
+        return Filling;
     }
 
     template <typename T, safesize_t max_history_T>
