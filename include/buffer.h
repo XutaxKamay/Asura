@@ -258,7 +258,7 @@ namespace XLib
     inline auto Buffer<max_size_T>::toBytes()
     {
         bytes_t bs(max_size_T);
-        copy(this->_data, this->_data + max_size_T, bs.begin());
+        std::copy(this->_data, this->_data + max_size_T, bs.begin());
 
         return bs;
     }

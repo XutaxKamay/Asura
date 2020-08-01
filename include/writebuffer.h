@@ -5,8 +5,6 @@
 
 namespace XLib
 {
-    using namespace std;
-
     template <safesize_t max_size_T = 0>
     /**
      * @brief The WriteBuffer class
@@ -186,7 +184,7 @@ namespace XLib
     inline auto WriteBuffer<max_size_T>::toBytes()
     {
         bytes_t bs(_write_size);
-        copy(this->_data, this->_data + _write_size, bs.begin());
+        std::copy(this->_data, this->_data + _write_size, bs.begin());
 
         return bs;
     }
