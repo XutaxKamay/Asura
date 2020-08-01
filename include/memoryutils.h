@@ -72,6 +72,6 @@ namespace XLib
         original_value -= original_value % size;
         return view_as<T>(original_value);
     }
-}
+} // namespace XLib
 
 #endif // MEMORYUTILS_H

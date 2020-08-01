@@ -252,6 +252,6 @@ namespace XLib
 
         return vfuncs;
     }
-}
+} // namespace XLib
 
 #endif // VIRTUALTABLETOOLS_H

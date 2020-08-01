@@ -137,6 +137,6 @@ namespace XLib
             return (_filled_history - 1) - wantedSlot;
         }
     }
-}
+} // namespace XLib
 
 #endif // CIRCULARBUFFER_H

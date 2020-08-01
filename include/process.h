@@ -25,6 +25,6 @@ namespace XLib
         std::string _full_name {};
         pid_t _pid {};
     };
-}
+} // namespace XLib
 
 #endif

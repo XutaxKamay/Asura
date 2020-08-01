@@ -181,6 +181,6 @@ namespace XLib
         _read_size = readSize;
     }
 
-}
+} // namespace XLib
 
 #endif

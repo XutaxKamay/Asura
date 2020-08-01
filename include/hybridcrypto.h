@@ -259,7 +259,9 @@ namespace XLib
     auto HybridCrypt<rsa_key_size_T>::setAESData(const AESData_t& AESData)
       -> void
     {
-        std::memcpy(_aes_data, &AESData, sizeof(AESData_t));
+        std::copy(&AESData,
+                  view_as<byte_t*>(&AESData) + sizeof(AESData_t),
+                  _aes_data);
     }
 
     template <safesize_t rsa_key_size_T>
@@ -377,6 +379,6 @@ namespace XLib
         _rng = rng;
     }
 
-}
+} // namespace XLib
 
 #endif // HYBRIDCRYPT_H

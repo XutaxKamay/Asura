@@ -34,7 +34,7 @@ namespace XLib
     {
         return reinterpret_cast<T1>(var);
     }
-}
+} // namespace XLib
 
 #define ConsoleOutput(format) std::cout << "[XLib] -> " << format
 

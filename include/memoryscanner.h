@@ -29,6 +29,6 @@ namespace XLib
         uint32_t _pid {};
 
     } extern* g_pMemoryScanner;
-}
+} // namespace XLib
 
 #endif // MEMORYSCANNER_H

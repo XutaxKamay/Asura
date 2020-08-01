@@ -263,6 +263,6 @@ namespace XLib
         return bs;
     }
 
-}
+} // namespace XLib
 
 #endif // BUFFER_H

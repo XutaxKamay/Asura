@@ -156,7 +156,10 @@ namespace XLib
     inline auto WriteBuffer<max_size_T>::addData(ptr_t data,
                                                  safesize_t size) -> void
     {
-        memcpy(shift(_write_size), data, static_cast<size_t>(size));
+        std::copy(view_as<byte_t*>(data),
+                  view_as<byte_t*>(data) + static_cast<size_t>(size),
+                  view_as<byte_t*>(shift(_write_size)));
+
         advance(size);
     }
 
@@ -188,6 +191,6 @@ namespace XLib
         return bs;
     }
 
-}
+} // namespace XLib
 
 #endif // WRITEBUFFER_H

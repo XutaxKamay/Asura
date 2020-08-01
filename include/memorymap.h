@@ -107,6 +107,6 @@ namespace XLib
     {
         return _protection;
     }
-}
+} // namespace XLib
 
 #endif // MEMORYMAP_H

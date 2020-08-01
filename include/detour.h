@@ -40,21 +40,22 @@ namespace XLib
         /* This case is only for windows 32 bits program */
 #ifdef _WIN32
         /**
-         * @brief GenCallBackFuncType
+         * @brief generateCallbackFuncType
          *
          * @return auto
          */
-        constexpr auto GenCallBackFuncType();
+        constexpr auto generateCallbackFuncType();
         /**
-         * @brief GenCallBackFuncType
+         * @brief generateNewFuncType
          *
          * @return auto
          */
-        constexpr auto GenNewFuncType();
+        constexpr auto generateNewFuncType();
 
       public:
-        using cbfunc_t = typename decltype(GenCallBackFuncType())::type;
-        using func_t   = typename decltype(GenNewFuncType())::type;
+        using cbfunc_t = typename decltype(
+          generateCallbackFuncType())::type;
+        using func_t = typename decltype(generateNewFuncType())::type;
 
 #else /* Otherwhise it should be always the same convention */
         using cbfunc_t = ret_type_T (*)(args_T...);
@@ -76,20 +77,20 @@ namespace XLib
         func_t _new_func {};
     };
 
-    /**
-     * On windows 32 bits programs, the calling convention needs to be
-     * specified in order to call back the original function when
-     * detoured. It is not needed on others architectures/os because the
-     * calling conventions are always the same (64 bits is fastcall on
-     * Windows, same for Linux), and 32 bits on Linux the parameters are
-     * always pushed to the stack.
-     */
+/**
+ * On windows 32 bits programs, the calling convention needs to be
+ * specified in order to call back the original function when
+ * detoured. It is not needed on others architectures/os because the
+ * calling conventions are always the same (64 bits is fastcall on
+ * Windows, same for Linux), and 32 bits on Linux the parameters are
+ * always pushed to the stack.
+ */
 #ifdef _WIN32
     template <calling_conventions_t calling_convention_T,
               typename ret_type_T,
               typename... args_T>
     constexpr auto Detour<calling_convention_T, ret_type_T, args_T...>::
-      GenCallBackFuncType()
+      generateCallbackFuncType()
     {
         if constexpr (calling_convention_T == cc_fastcall)
         {
@@ -110,7 +111,7 @@ namespace XLib
               typename ret_type_T,
               typename... args_T>
     constexpr auto Detour<calling_convention_T, ret_type_T, args_T...>::
-      GenNewFuncType()
+      generateNewFuncType()
     {
         if constexpr (calling_convention_T == cc_fastcall)
         {
@@ -128,6 +129,6 @@ namespace XLib
         }
     }
 #endif
-}
+} // namespace XLib
 
 #endif // DETOUR_H
