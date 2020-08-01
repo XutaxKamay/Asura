@@ -6,7 +6,7 @@
 
 namespace XLib
 {
-    inline static std::vector<ptr_t> tracking_memory_allocs;
+    inline std::vector<ptr_t> tracking_memory_allocs;
 
     /**
      * @brief UDPSize

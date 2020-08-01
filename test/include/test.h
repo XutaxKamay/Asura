@@ -26,8 +26,8 @@ namespace XLib
         static auto run() -> void;
     };
 
-    extern Test::API g_API;
-    extern bool g_PassedTests;
+    inline Test::API g_API;
+    inline bool g_PassedTests = true;
 }
 
 #endif

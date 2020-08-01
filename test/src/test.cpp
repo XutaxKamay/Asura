@@ -7,9 +7,6 @@
 
 using namespace XLib;
 
-XLib::Test::API XLib::g_API;
-bool XLib::g_PassedTests = true;
-
 #ifndef WINDOWS
 auto vfunc_hook(ptr_t thisptr) -> void
 {
@@ -196,3 +193,4 @@ std::vector<int> XLib::Test::API::func2(const char* str, ...)
 
     return result;
 }
+
