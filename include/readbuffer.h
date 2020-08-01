@@ -6,7 +6,7 @@
 
 namespace XLib
 {
-    template <safesize_t max_size = 0>
+    template <safesize_t max_size_T = 0>
     /**
      * @brief The ReadBuffer class
      * This class permits to read a buffer easily.
@@ -14,7 +14,7 @@ namespace XLib
      * ReadBuffer<1024> readBuffer;
      * auto b = readBuffer.readVar<type_8>();
      */
-    class ReadBuffer : public Buffer<max_size>
+    class ReadBuffer : public Buffer<max_size_T>
     {
       public:
         /**
@@ -23,12 +23,12 @@ namespace XLib
         ReadBuffer();
         /**
          * @brief ReadBuffer
-         * @param pData
+         * @param data
          * @param allocated
          * @param readSize
          * @param maxSize
          */
-        explicit ReadBuffer(array_t pData,
+        explicit ReadBuffer(array_t data,
                             bool allocated      = false,
                             safesize_t readSize = 0,
                             safesize_t maxSize  = 0);
@@ -97,7 +97,7 @@ namespace XLib
             return data;
         }
 
-        template <typename cast_t = ptr_t>
+        template <typename cast_T = ptr_t>
         /**
          * @brief shift
          * @param size
@@ -106,11 +106,11 @@ namespace XLib
         {
             if (size == 0)
             {
-                return view_as<cast_t>(this->pData());
+                return view_as<cast_T>(this->data());
             }
             else
             {
-                return view_as<cast_t>(view_as<uintptr_t>(this->pData())
+                return view_as<cast_T>(view_as<uintptr_t>(this->data())
                                        + static_cast<uintptr_t>(size));
             }
         }
@@ -142,41 +142,41 @@ namespace XLib
         safesize_t _read_size {};
     };
 
-    template <safesize_t max_size>
-    ReadBuffer<max_size>::ReadBuffer() : Buffer<max_size>()
+    template <safesize_t max_size_T>
+    ReadBuffer<max_size_T>::ReadBuffer() : Buffer<max_size_T>()
     {
     }
 
-    template <safesize_t max_size>
-    ReadBuffer<max_size>::ReadBuffer(array_t pData,
-                                     bool allocated,
-                                     safesize_t readSize,
-                                     safesize_t maxSize)
-     : Buffer<max_size>(pData, allocated, maxSize)
+    template <safesize_t max_size_T>
+    ReadBuffer<max_size_T>::ReadBuffer(array_t data,
+                                       bool allocated,
+                                       safesize_t readSize,
+                                       safesize_t maxSize)
+     : Buffer<max_size_T>(data, allocated, maxSize)
     {
         _read_size = readSize;
     }
 
-    template <safesize_t max_size>
-    inline auto ReadBuffer<max_size>::reset() -> void
+    template <safesize_t max_size_T>
+    inline auto ReadBuffer<max_size_T>::reset() -> void
     {
         _read_size = 0;
     }
 
-    template <safesize_t max_size>
-    inline auto ReadBuffer<max_size>::advance(safesize_t size) -> void
+    template <safesize_t max_size_T>
+    inline auto ReadBuffer<max_size_T>::advance(safesize_t size) -> void
     {
         _read_size += size;
     }
 
-    template <safesize_t max_size>
-    inline auto ReadBuffer<max_size>::readSize() const
+    template <safesize_t max_size_T>
+    inline auto ReadBuffer<max_size_T>::readSize() const
     {
         return _read_size;
     }
 
-    template <safesize_t max_size>
-    inline auto ReadBuffer<max_size>::setReadSize(
+    template <safesize_t max_size_T>
+    inline auto ReadBuffer<max_size_T>::setReadSize(
       const safesize_t& readSize)
     {
         _read_size = readSize;

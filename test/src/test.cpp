@@ -111,8 +111,8 @@ auto XLib::Test::run() -> void
 
     ReadBuffer readBuffer(bs.data());
 
-    if (std::memcmp(readBuffer.pData(),
-                    writeBuffer.pData(),
+    if (std::memcmp(readBuffer.data(),
+                    writeBuffer.data(),
                     static_cast<size_t>(writeBuffer.writeSize()))
         == 0)
     {

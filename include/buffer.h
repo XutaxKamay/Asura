@@ -109,7 +109,7 @@ namespace XLib
     template <typesize_t typesize_T>
     using gv_t = get_variable_t<typesize_T>;
 
-    template <safesize_t max_size = 0>
+    template <safesize_t max_size_T = 0>
     /**
      * @brief The Buffer class
      * Just a simple class for allocating bytes and buffer purposes.
@@ -124,11 +124,11 @@ namespace XLib
         Buffer();
         /**
          * @brief Buffer
-         * @param pData
+         * @param data
          * @param allocated
          * @param maxSize
          */
-        Buffer(array_t pData, bool allocated, safesize_t maxSize = 0);
+        Buffer(array_t data, bool allocated, safesize_t maxSize = 0);
 
         ~Buffer();
 
@@ -140,15 +140,15 @@ namespace XLib
          */
         auto& operator[](safesize_t size);
         /**
-         * @brief pData
+         * @brief data
          * @return
          */
-        auto pData() const;
+        auto data() const;
         /**
-         * @brief setPData
-         * @param pData
+         * @brief setData
+         * @param data
          */
-        auto setPData(const array_t& pData);
+        auto setData(const array_t& data);
         /**
          * @brief maxSize
          * @return
@@ -166,7 +166,7 @@ namespace XLib
         auto toBytes();
 
       public:
-        template <typename cast_t = ptr_t>
+        template <typename cast_T = ptr_t>
         /**
          * @brief shift
          * @param size
@@ -176,11 +176,11 @@ namespace XLib
         {
             if (size == 0)
             {
-                return view_as<cast_t>(_data);
+                return view_as<cast_T>(_data);
             }
             else
             {
-                return view_as<cast_t>(view_as<uintptr_t>(_data) + size);
+                return view_as<cast_T>(view_as<uintptr_t>(_data) + size);
             }
         }
 
@@ -199,66 +199,66 @@ namespace XLib
         bool _allocated;
     };
 
-    template <safesize_t max_size>
-    Buffer<max_size>::Buffer()
-     : _max_size(max_size), _allocated(max_size != 0)
+    template <safesize_t max_size_T>
+    Buffer<max_size_T>::Buffer()
+     : _max_size(max_size_T), _allocated(max_size_T != 0)
     {
         // Allocate with the maximum size for performance.
-        if (max_size != 0)
-            _data = alloc<decltype(_data)>(max_size);
+        if (max_size_T != 0)
+            _data = alloc<decltype(_data)>(max_size_T);
     }
 
-    template <safesize_t max_size>
-    Buffer<max_size>::Buffer(array_t pData,
-                             bool allocated,
-                             safesize_t maxSize)
-     : _data(pData), _max_size(maxSize), _allocated(allocated)
+    template <safesize_t max_size_T>
+    Buffer<max_size_T>::Buffer(array_t data,
+                               bool allocated,
+                               safesize_t maxSize)
+     : _data(data), _max_size(maxSize), _allocated(allocated)
     {
     }
 
-    template <safesize_t max_size>
-    Buffer<max_size>::~Buffer()
+    template <safesize_t max_size_T>
+    Buffer<max_size_T>::~Buffer()
     {
         // Free data.
         if (_allocated)
             free(_data);
     }
 
-    template <safesize_t max_size>
-    auto& Buffer<max_size>::operator[](safesize_t size)
+    template <safesize_t max_size_T>
+    auto& Buffer<max_size_T>::operator[](safesize_t size)
     {
         return *shift<byte_t*>(size);
     }
 
-    template <safesize_t max_size>
-    inline auto Buffer<max_size>::pData() const
+    template <safesize_t max_size_T>
+    inline auto Buffer<max_size_T>::data() const
     {
         return _data;
     }
 
-    template <safesize_t max_size>
-    inline auto Buffer<max_size>::setPData(const array_t& pData)
+    template <safesize_t max_size_T>
+    inline auto Buffer<max_size_T>::setData(const array_t& data)
     {
-        _data = pData;
+        _data = data;
     }
 
-    template <safesize_t max_size>
-    inline auto Buffer<max_size>::maxSize() const
+    template <safesize_t max_size_T>
+    inline auto Buffer<max_size_T>::maxSize() const
     {
         return _max_size;
     }
 
-    template <safesize_t max_size>
-    inline auto Buffer<max_size>::setMaxSize(const safesize_t& maxSize)
+    template <safesize_t max_size_T>
+    inline auto Buffer<max_size_T>::setMaxSize(const safesize_t& maxSize)
     {
         _max_size = maxSize;
     }
 
-    template <safesize_t max_size>
-    inline auto Buffer<max_size>::toBytes()
+    template <safesize_t max_size_T>
+    inline auto Buffer<max_size_T>::toBytes()
     {
-        bytes_t bs(max_size);
-        copy(this->_data, this->_data + max_size, bs.begin());
+        bytes_t bs(max_size_T);
+        copy(this->_data, this->_data + max_size_T, bs.begin());
 
         return bs;
     }

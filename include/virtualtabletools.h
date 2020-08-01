@@ -120,16 +120,20 @@ namespace XLib
             if (funcPtr && *funcPtr && newFuncPtr)
             {
                 if (pre)
+                {
                     pre(view_as<ptr_t>(funcPtr),
                         view_as<ptr_t>(newFuncPtr));
+                }
 
                 /* __builtin_trap(); */
 
                 *funcPtr = newFuncPtr;
 
                 if (post)
+                {
                     post(view_as<ptr_t>(funcPtr),
                          view_as<ptr_t>(newFuncPtr));
+                }
 
                 return true;
             }
@@ -155,7 +159,9 @@ namespace XLib
         safesize_t count = 0;
 
         while (vtable[count])
+        {
             count++;
+        }
 
         return count;
     }
@@ -168,7 +174,9 @@ namespace XLib
         auto vtable = _vptr();
 
         do
+        {
             vfuncs.push_back(view_as<vfunc_t>(*vtable));
+        }
         while (++vtable);
 
         return vfuncs;

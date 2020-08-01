@@ -5,7 +5,7 @@
 
 namespace XLib
 {
-    template <typename T, int max_history>
+    template <typename T, safesize_t max_history_T>
     /**
      * @brief The CircularBuffer class
      * Simple circular buffer with having in mind the best performance.
@@ -17,8 +17,8 @@ namespace XLib
 
         enum push_type_t
         {
-            Filling,
-            Updating
+            FILLING,
+            UPDATING
         };
 
       public:
@@ -52,7 +52,7 @@ namespace XLib
          * @brief _buffer
          * Buffer to the elements that will construct history.
          */
-        T _buffer[max_history] {};
+        T _buffer[max_history_T] {};
         /**
          * @brief _filled_history
          * Counts the elements filled into history.
@@ -65,18 +65,18 @@ namespace XLib
         int _index {};
     };
 
-    template <typename T, int max_history>
-    auto CircularBuffer<T, max_history>::push(T element)
+    template <typename T, safesize_t max_history_T>
+    auto CircularBuffer<T, max_history_T>::push(T element)
     {
         /**
          * If it has been filled,
          * we update the index/slot of the first element.
          */
-        if (_filled_history >= max_history)
+        if (_filled_history >= max_history_T)
         {
             _buffer[_index] = element;
 
-            if (_index >= (max_history - 1))
+            if (_index >= (max_history_T - 1))
             {
                 _index = 0;
             }
@@ -85,7 +85,7 @@ namespace XLib
                 _index++;
             }
 
-            return Updating;
+            return UPDATING;
         }
 
         _buffer[_filled_history] = element;
@@ -97,19 +97,19 @@ namespace XLib
         _index = _filled_history;
         _filled_history++;
 
-        return Filling;
+        return FILLING;
     }
 
-    template <typename T, int max_history>
-    auto CircularBuffer<T, max_history>::get(int wantedSlot)
+    template <typename T, safesize_t max_history_T>
+    auto CircularBuffer<T, max_history_T>::get(int wantedSlot)
     {
         auto realSlot = _slot(wantedSlot);
 
         return (realSlot == -1) ? nullptr : &_buffer[realSlot];
     }
 
-    template <typename T, int max_history>
-    auto CircularBuffer<T, max_history>::_slot(int wantedSlot)
+    template <typename T, safesize_t max_history_T>
+    auto CircularBuffer<T, max_history_T>::_slot(int wantedSlot)
     {
         if (wantedSlot >= _filled_history || wantedSlot < 0
             || _filled_history <= 0)
@@ -118,7 +118,7 @@ namespace XLib
         }
 
         /* Check if the history has been filled yet */
-        if (_filled_history >= max_history)
+        if (_filled_history >= max_history_T)
         {
             int calcSlot = (_index - wantedSlot);
 
@@ -126,7 +126,7 @@ namespace XLib
              * If it's under 0 it means that we need to rollback
              * in order to get the real slot
              */
-            return (calcSlot < 0) ? calcSlot + max_history : calcSlot;
+            return (calcSlot < 0) ? calcSlot + max_history_T : calcSlot;
         }
         else
         {
