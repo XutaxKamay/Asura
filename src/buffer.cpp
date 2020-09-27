@@ -1,5 +1,7 @@
 #include "buffer.h"
 
+using namespace XLib;
+
 std::string XLib::get_variable_type_str(typesize_t typeSize)
 {
     if (typeSize == type_safesize)
@@ -18,6 +20,8 @@ std::string XLib::get_variable_type_str(typesize_t typeSize)
         return "float";
     else if (typeSize == type_double)
         return "double";
+    else if (typeSize == type_bits)
+        return "bits";
     else
         return "unknown";
 }

@@ -20,6 +20,15 @@ namespace XLib
     using pid_t = uint32_t;
 #define __pid_t_defined
 
+    struct bits_t
+    {
+      public:
+        bits_t(safesize_t count);
+
+      private:
+        safesize_t _count;
+    };
+
     template <typename T>
     struct type_wrapper_t
     {

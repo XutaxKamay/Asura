@@ -17,7 +17,7 @@ using namespace XLib;
  * auto alignedAddress = align( address, g_pageSize );
  */
 
-maps_t XLib::MemoryUtils::queryMaps(pid_t)
+maps_t MemoryUtils::queryMaps(pid_t)
 {
     maps_t maps;
 

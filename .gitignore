@@ -12,3 +12,7 @@ XLib.*
 *.mod*
 winexts/tests/target
 winexts/tests/test_ioctl
+.cache
+.clangd
+.vscode
+compile_commands.json

@@ -59,6 +59,7 @@ namespace XLib
      */
     enum typesize_t : byte_t
     {
+        type_bits,
         type_float,
         type_double,
         type_safesize,
@@ -94,6 +95,8 @@ namespace XLib
             return type_wrapper<float>;
         else if constexpr (type == type_double)
             return type_wrapper<double>;
+        else if constexpr (type == type_bits)
+            return type_wrapper<bits_t>;
         else
             return type_wrapper<void>;
     }
@@ -107,7 +110,7 @@ namespace XLib
     template <typesize_t typesize_T>
     using get_variable_t = typename decltype(_gvt<typesize_T>())::type;
     template <typesize_t typesize_T>
-    using gv_t = get_variable_t<typesize_T>;
+    using g_v_t = get_variable_t<typesize_T>;
 
     template <safesize_t max_size_T = 0>
     /**

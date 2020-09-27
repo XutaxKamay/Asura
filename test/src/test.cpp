@@ -47,11 +47,11 @@ auto XLib::Test::run() -> void
 
     auto strSize = static_cast<safesize_t>(str.size());
 
-    writeBuffer.addVar<type_array>(view_as<gv_t<type_array>>(str.data()),
+    writeBuffer.addVar<type_array>(view_as<get_variable_t<type_array>>(str.data()),
                                    strSize);
-    writeBuffer.addVar<type_array>(view_as<gv_t<type_array>>(str.data()),
+    writeBuffer.addVar<type_array>(view_as<get_variable_t<type_array>>(str.data()),
                                    strSize);
-    writeBuffer.addVar<type_array>(view_as<gv_t<type_array>>(str.data()),
+    writeBuffer.addVar<type_array>(view_as<get_variable_t<type_array>>(str.data()),
                                    strSize);
 
     writeBuffer.addVar<type_8>(1);

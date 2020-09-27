@@ -53,14 +53,15 @@ namespace XLib
         }
 
         template <typename T>
-        static auto allocMap(T address,
+        static auto allocMap(pid_t pid,
+                             T address,
                              size_t size,
                              map_t::protection_t newFlags)
         {
         }
 
         template <typename T>
-        static auto freeMap(T address, size_t size)
+        static auto freeMap(pid_t pid, T address, size_t size)
         {
         }
     };

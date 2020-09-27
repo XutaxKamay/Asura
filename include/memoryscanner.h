@@ -21,13 +21,6 @@ namespace XLib
          */
         static auto Get();
 
-      private:
-        /**
-         * @brief _pid
-         * Process ID
-         */
-        uint32_t _pid {};
-
     } extern* g_pMemoryScanner;
 } // namespace XLib
 
