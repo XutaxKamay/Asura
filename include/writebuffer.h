@@ -28,7 +28,7 @@ namespace XLib
          * @param writeSize
          * @param maxSize
          */
-        explicit WriteBuffer(array_t data,
+        explicit WriteBuffer(data_t data,
                              bool allocated       = false,
                              safesize_t writeSize = 0,
                              safesize_t maxSize   = 0);
@@ -128,7 +128,7 @@ namespace XLib
     }
 
     template <safesize_t max_size_T>
-    WriteBuffer<max_size_T>::WriteBuffer(array_t data,
+    WriteBuffer<max_size_T>::WriteBuffer(data_t data,
                                          bool allocated,
                                          safesize_t writeSize,
                                          safesize_t maxSize)

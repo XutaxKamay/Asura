@@ -2,10 +2,51 @@
 #define MEMORYUTILS_H
 
 #include "memorymap.h"
+
+#include <sys/file.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include <exception>
 #include <unordered_map>
 
 namespace XLib
 {
+    template <typename T>
+    constexpr inline auto align(T value, safesize_t size)
+    {
+        auto original_value = view_as<uintptr_t>(value);
+        original_value -= original_value % size;
+        return view_as<T>(original_value);
+    }
+
+    template <typename T>
+    constexpr inline auto align_to_page_size(T sizeToAlign,
+                                             safesize_t pageSize)
+    {
+        return view_as<T>(((sizeToAlign + pageSize) / pageSize)
+                          * pageSize);
+    }
+
+    class MemoryException : std::exception
+    {
+      public:
+        MemoryException(const std::string& msg)
+        {
+            _msg = msg;
+        }
+
+        auto& msg()
+        {
+            return _msg;
+        }
+
+      private:
+        std::string _msg;
+    };
+
     /**
      * @brief MemoryUtils
      * Memory utils, mainly used for making compabilities between Linux
@@ -14,12 +55,12 @@ namespace XLib
     class MemoryUtils
     {
       public:
-        static maps_t queryMaps(pid_t pid);
+        static maps_t QueryMaps(pid_t pid);
 
         template <typename T>
-        static auto searchMap(pid_t pid, T address, map_t* pMap = nullptr)
+        static auto SearchMap(pid_t pid, T address, map_t* pMap = nullptr)
         {
-            auto maps = queryMaps(pid);
+            auto maps = QueryMaps(pid);
 
             for (auto&& map : maps)
             {
@@ -39,21 +80,84 @@ namespace XLib
             return false;
         }
 
-        static auto protectMap(pid_t pid,
+        static auto ProtectMap(pid_t pid,
                                map_t& map,
-                               map_t::protection_t newFlags);
+                               map_t::protection_t newFlags,
+                               map_t::protection_t* pFlags = nullptr);
 
         template <typename T>
-        static auto protectMemory(pid_t pid,
+        static auto ProtectMemory(pid_t pid,
                                   T address,
                                   size_t size,
                                   map_t::protection_t newFlags,
                                   map_t::protection_t* pFlags = nullptr)
         {
+            map_t map;
+            auto aligned_address = view_as<ptr_t>(
+              align(address, GetPageSize()));
+            auto aligned_size = align_to_page_size(size, GetPageSize());
+
+            if (!SearchMap(pid, aligned_address, &map))
+            {
+                throw MemoryException("Could not find mapped memory");
+            }
+
+            if (pFlags)
+            {
+                *pFlags = map.protection();
+            }
+
+#ifdef WINDOWS
+            auto handle_process = GetCurrentProcessId() == pid ?
+                                    GetCurrentProcess() :
+                                    OpenProcess(PROCESS_VM_OPERATION,
+                                                false,
+                                                pid);
+
+            if (handle_process == nullptr)
+            {
+                throw MemoryException("Couldn't open process");
+            }
+
+            DWORD dwOldFlags;
+            auto ret = VirtualProtectEx(handle_process,
+                                        aligned_address,
+                                        aligned_size,
+                                        ConvertOwnProtToOS(newFlags),
+                                        &dwOldFlags);
+
+            if (!ret)
+            {
+                throw MemoryException("VirtualProtectEx failed");
+            }
+
+            if (pFlags)
+            {
+                *pFlags = ConvertOSProtToOwn(dwOldFlags);
+            }
+
+            CloseHandle(handle_process);
+#else
+            /**
+             * linux-xkmod kernel
+             */
+
+            auto ret = syscall(441,
+                               pid,
+                               aligned_address,
+                               aligned_size,
+                               newFlags);
+
+            if (ret < 0)
+            {
+                throw MemoryException("System call rmprotect failed");
+            }
+#endif
+            return true;
         }
 
         template <typename T>
-        static auto allocMap(pid_t pid,
+        static auto AllocMap(pid_t pid,
                              T address,
                              size_t size,
                              map_t::protection_t newFlags)
@@ -61,18 +165,19 @@ namespace XLib
         }
 
         template <typename T>
-        static auto freeMap(pid_t pid, T address, size_t size)
-        {
-        }
+        static auto FreeMap(pid_t pid, T address, size_t size);
+
+        static auto FreeMap(pid_t pid, map_t map, size_t size);
+
+        static size_t GetPageSize();
+
+        static map_t::protection_t ConvertOSProtToOwn(int flags);
+        static int ConvertOwnProtToOS(map_t::protection_t flags);
+
+      private:
+        static size_t _page_size;
     };
 
-    template <typename T>
-    constexpr inline auto align(T value, safesize_t size)
-    {
-        auto original_value = view_as<uintptr_t>(value);
-        original_value -= original_value % size;
-        return view_as<T>(original_value);
-    }
 } // namespace XLib
 
 #endif // MEMORYUTILS_H

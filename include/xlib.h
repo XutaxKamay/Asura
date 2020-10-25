@@ -2,7 +2,7 @@
 #define XLIB_H
 
 #include "circularbuffer.h"
-#include "detour.h"
+#include "detourx86.h"
 #include "hybridcrypto.h"
 #include "memoryscanner.h"
 #include "process.h"

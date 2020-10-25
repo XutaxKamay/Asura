@@ -90,7 +90,7 @@ namespace XLib
         else if constexpr (type == type_64)
             return type_wrapper<uint64_t>;
         else if constexpr (type == type_array)
-            return type_wrapper<array_t>;
+            return type_wrapper<data_t>;
         else if constexpr (type == type_float)
             return type_wrapper<float>;
         else if constexpr (type == type_double)
@@ -131,7 +131,7 @@ namespace XLib
          * @param allocated
          * @param maxSize
          */
-        Buffer(array_t data, bool allocated, safesize_t maxSize = 0);
+        Buffer(data_t data, bool allocated, safesize_t maxSize = 0);
 
         ~Buffer();
 
@@ -151,7 +151,7 @@ namespace XLib
          * @brief setData
          * @param data
          */
-        auto setData(const array_t& data);
+        auto setData(const data_t& data);
         /**
          * @brief maxSize
          * @return
@@ -191,7 +191,7 @@ namespace XLib
         /**
          * @brief _data
          */
-        array_t _data {};
+        data_t _data {};
         /**
          * @brief _max_size
          */
@@ -212,7 +212,7 @@ namespace XLib
     }
 
     template <safesize_t max_size_T>
-    Buffer<max_size_T>::Buffer(array_t data,
+    Buffer<max_size_T>::Buffer(data_t data,
                                bool allocated,
                                safesize_t maxSize)
      : _data(data), _max_size(maxSize), _allocated(allocated)
@@ -240,7 +240,7 @@ namespace XLib
     }
 
     template <safesize_t max_size_T>
-    inline auto Buffer<max_size_T>::setData(const array_t& data)
+    inline auto Buffer<max_size_T>::setData(const data_t& data)
     {
         _data = data;
     }

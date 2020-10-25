@@ -40,11 +40,11 @@ namespace XLib
         /* This case is only for windows 32 bits program */
 #ifdef _WIN32
         /**
-         * @brief generateCallbackFuncType
+         * @brief generateCallBackFuncType
          *
          * @return auto
          */
-        constexpr auto generateCallbackFuncType();
+        constexpr auto generateCallBackFuncType();
         /**
          * @brief generateNewFuncType
          *
@@ -54,7 +54,7 @@ namespace XLib
 
       public:
         using cbfunc_t = typename decltype(
-          generateCallbackFuncType())::type;
+          generateCallBackFuncType())::type;
         using func_t = typename decltype(generateNewFuncType())::type;
 
 #else /* Otherwhise it should be always the same convention */
@@ -90,7 +90,7 @@ namespace XLib
               typename ret_type_T,
               typename... args_T>
     constexpr auto Detour<calling_convention_T, ret_type_T, args_T...>::
-      generateCallbackFuncType()
+      generateCallBackFuncType()
     {
         if constexpr (calling_convention_T == cc_fastcall)
         {
@@ -132,3 +132,4 @@ namespace XLib
 } // namespace XLib
 
 #endif // DETOUR_H
+

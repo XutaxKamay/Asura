@@ -28,7 +28,7 @@ namespace XLib
          * @param readSize
          * @param maxSize
          */
-        explicit ReadBuffer(array_t data,
+        explicit ReadBuffer(data_t data,
                             bool allocated      = false,
                             safesize_t readSize = 0,
                             safesize_t maxSize  = 0);
@@ -148,7 +148,7 @@ namespace XLib
     }
 
     template <safesize_t max_size_T>
-    ReadBuffer<max_size_T>::ReadBuffer(array_t data,
+    ReadBuffer<max_size_T>::ReadBuffer(data_t data,
                                        bool allocated,
                                        safesize_t readSize,
                                        safesize_t maxSize)

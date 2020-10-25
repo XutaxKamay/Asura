@@ -13,7 +13,7 @@ namespace XLib
 {
     using ptr_t      = void*;
     using byte_t     = unsigned char;
-    using array_t    = byte_t*;
+    using data_t     = byte_t*;
     using bytes_t    = std::vector<byte_t>;
     using safesize_t = int32_t;
     /* linux pid_t */
@@ -41,7 +41,7 @@ namespace XLib
     template <typename T1, typename T2>
     auto view_as(T2 var)
     {
-        return reinterpret_cast<T1>(var);
+        return (T1)(var);
     }
 } // namespace XLib
 

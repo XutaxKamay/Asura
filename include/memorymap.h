@@ -21,9 +21,9 @@ namespace XLib
          */
         enum protection_t
         {
-            READ    = 0x1,
-            WRITE   = 0x2,
-            EXECUTE = 0x4
+            READ    = (1 << 0),
+            WRITE   = (1 << 1),
+            EXECUTE = (1 << 2),
         };
 
         /**
@@ -72,7 +72,7 @@ namespace XLib
          * @brief _protection
          * Protection flags on the memory map.
          */
-        int _protection {};
+        protection_t _protection {};
     };
 
     using map_t  = MemoryMap<ptr_t>;

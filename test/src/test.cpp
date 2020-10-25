@@ -1,6 +1,7 @@
 #include "test.h"
 #ifndef WINDOWS
     #include <sys/mman.h>
+    #include <unistd.h>
 #else
     #include <windows.h>
 #endif
@@ -47,11 +48,14 @@ auto XLib::Test::run() -> void
 
     auto strSize = static_cast<safesize_t>(str.size());
 
-    writeBuffer.addVar<type_array>(view_as<get_variable_t<type_array>>(str.data()),
+    writeBuffer.addVar<type_array>(view_as<get_variable_t<type_array>>(
+                                     str.data()),
                                    strSize);
-    writeBuffer.addVar<type_array>(view_as<get_variable_t<type_array>>(str.data()),
+    writeBuffer.addVar<type_array>(view_as<get_variable_t<type_array>>(
+                                     str.data()),
                                    strSize);
-    writeBuffer.addVar<type_array>(view_as<get_variable_t<type_array>>(str.data()),
+    writeBuffer.addVar<type_array>(view_as<get_variable_t<type_array>>(
+                                     str.data()),
                                    strSize);
 
     writeBuffer.addVar<type_8>(1);
@@ -157,12 +161,25 @@ auto XLib::Test::run() -> void
     api->callVFunc<0, void>();
 
     /** TODO: finish MemoryUtils so we can use this */
-    api->hook<0>(vfunc_hook);
+    // api->hook<0>(vfunc_hook);
 
     api->callVFunc<0, void>();
 
     ConsoleOutput("Number of virtual funcs: ")
       << api->countVFuncs() << std::endl;
+
+#ifdef WINDOWS
+    auto maps = MemoryUtils::QueryMaps(GetCurrentProcessId());
+# else
+    auto maps = MemoryUtils::QueryMaps(getpid());
+# endif
+    ConsoleOutput("maps:") << std::endl;
+
+    for (auto&& map : maps)
+    {
+        ConsoleOutput(map.begin())
+          << " - " << map.end() << ":" << map.protection() << std::endl;
+    }
 }
 
 void XLib::Test::API::func1()
@@ -193,4 +210,3 @@ std::vector<int> XLib::Test::API::func2(const char* str, ...)
 
     return result;
 }
-

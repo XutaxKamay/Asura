@@ -9,7 +9,7 @@ Process::Process(const maps_t& maps, const std::string fullName, pid_t pid)
 
 auto Process::refresh() -> void
 {
-    _maps = MemoryUtils::queryMaps(_pid);
+    _maps = MemoryUtils::QueryMaps(_pid);
 }
 
 auto Process::maps()
