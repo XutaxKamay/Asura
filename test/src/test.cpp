@@ -182,7 +182,7 @@ auto XLib::Test::run() -> void
           << " - " << map.end() << ":" << map.protection() << std::endl;
     }
 
-    ConsoleOutput("Protecting map test\n") << std::endl;
+    ConsoleOutput("Protecting map test") << std::endl;
 
     try
     {

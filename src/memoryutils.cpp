@@ -114,6 +114,7 @@ maps_t MemoryUtils::QueryMaps(pid_t pid)
         map_t map;
         map.setAddress(bs);
         map.setSize(info.RegionSize);
+        map.protection() = ConvertOSProtToOwn(info.Protect);
 
         maps.push_back(map);
     }
