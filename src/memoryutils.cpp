@@ -127,17 +127,26 @@ maps_t MemoryUtils::QueryMaps(pid_t pid)
     return maps;
 }
 
-auto MemoryUtils::ProtectMap(pid_t pid,
+void MemoryUtils::ProtectMap(pid_t pid,
                              map_t& map,
                              map_t::protection_t newFlags,
                              map_t::protection_t* pFlags)
 {
-    return ProtectMemory(pid,
-                         map.begin(),
-                         view_as<uintptr_t>(map.end())
-                           - view_as<uintptr_t>(map.begin()),
-                         newFlags,
-                         pFlags);
+    try
+    {
+        ProtectMemory(pid,
+                      map.begin(),
+                      view_as<uintptr_t>(map.end())
+                        - view_as<uintptr_t>(map.begin()),
+                      newFlags,
+                      pFlags);
+    }
+    catch (MemoryException& me)
+    {
+        throw me;
+    }
+
+    map.protection() = newFlags;
 }
 
 size_t MemoryUtils::GetPageSize()

@@ -26,7 +26,7 @@ namespace XLib
     constexpr inline auto align_to_page_size(T sizeToAlign,
                                              safesize_t pageSize)
     {
-        return view_as<T>(((sizeToAlign + pageSize) / pageSize)
+        return view_as<T>(((sizeToAlign + (pageSize - 1)) / pageSize)
                           * pageSize);
     }
 
@@ -80,13 +80,13 @@ namespace XLib
             return false;
         }
 
-        static auto ProtectMap(pid_t pid,
+        static void ProtectMap(pid_t pid,
                                map_t& map,
                                map_t::protection_t newFlags,
                                map_t::protection_t* pFlags = nullptr);
 
         template <typename T>
-        static auto ProtectMemory(pid_t pid,
+        static void ProtectMemory(pid_t pid,
                                   T address,
                                   size_t size,
                                   map_t::protection_t newFlags,
@@ -96,6 +96,9 @@ namespace XLib
             auto aligned_address = view_as<ptr_t>(
               align(address, GetPageSize()));
             auto aligned_size = align_to_page_size(size, GetPageSize());
+
+            std::cout << aligned_address << " " << aligned_size
+                      << std::endl;
 
             if (!SearchMap(pid, aligned_address, &map))
             {
@@ -153,7 +156,6 @@ namespace XLib
                 throw MemoryException("System call rmprotect failed");
             }
 #endif
-            return true;
         }
 
         template <typename T>

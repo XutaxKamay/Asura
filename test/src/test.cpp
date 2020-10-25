@@ -170,9 +170,9 @@ auto XLib::Test::run() -> void
 
 #ifdef WINDOWS
     auto maps = MemoryUtils::QueryMaps(GetCurrentProcessId());
-# else
+#else
     auto maps = MemoryUtils::QueryMaps(getpid());
-# endif
+#endif
     ConsoleOutput("maps:") << std::endl;
 
     for (auto&& map : maps)
@@ -180,6 +180,32 @@ auto XLib::Test::run() -> void
         ConsoleOutput(map.begin())
           << " - " << map.end() << ":" << map.protection() << std::endl;
     }
+
+    std::getchar();
+
+    try
+    {
+        MemoryUtils::ProtectMap(getpid(),
+                                maps[0],
+                                static_cast<map_t::protection_t>(
+                                  map_t::protection_t::EXECUTE
+                                  | map_t::protection_t::READ
+                                  | map_t::protection_t::WRITE));
+    }
+    catch (MemoryException& me)
+    {
+        std::cout << me.msg() << std::endl;
+    }
+
+    ConsoleOutput("Protecting map test\n") << std::endl;
+
+    for (auto&& map : maps)
+    {
+        ConsoleOutput(map.begin())
+          << " - " << map.end() << ":" << map.protection() << std::endl;
+    }
+
+    std::getchar();
 }
 
 void XLib::Test::API::func1()
