@@ -217,5 +217,56 @@ map_t::protection_t MemoryUtils::ConvertOSProtToOwn(int flags)
 
 int MemoryUtils::ConvertOwnProtToOS(map_t::protection_t flags)
 {
+#ifdef WINDOWS
+    int os_flags;
+
+    switch (view_as<int>(flags))
+    {
+        case map_t::protection_t::EXECUTE:
+        {
+            os_flags = PAGE_EXECUTE;
+            break;
+        }
+        case map_t::protection_t::EXECUTE | map_t::protection_t::READ:
+        {
+            os_flags = PAGE_EXECUTE_READ;
+            break;
+        }
+        case map_t::protection_t::EXECUTE | map_t::protection_t::READ
+          | map_t::protection_t::WRITE:
+        {
+            os_flags = PAGE_EXECUTE_READWRITE;
+            break;
+        }
+        case map_t::protection_t::READ:
+        {
+            os_flags = PAGE_READONLY;
+            break;
+        }
+        case map_t::protection_t::READ | map_t::protection_t::WRITE:
+        {
+            os_flags = PAGE_READWRITE;
+            break;
+        }
+        case map_t::protection_t::EXECUTE | map_t::protection_t::WRITE:
+        {
+            os_flags = PAGE_EXECUTE_WRITECOPY;
+            break;
+        }
+        case map_t::protection_t::WRITE:
+        {
+            os_flags = PAGE_WRITECOPY;
+            break;
+        }
+        default:
+        {
+            os_flags = 0;
+            break;
+        }
+    }
+
+    return os_flags;
+#else
     return flags;
+#endif
 }

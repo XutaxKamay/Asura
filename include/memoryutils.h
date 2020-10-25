@@ -134,7 +134,7 @@ namespace XLib
                                pid,
                                aligned_address,
                                aligned_size,
-                               newFlags);
+                               ConvertOwnProtToOS(newFlags));
 
             if (ret < 0)
             {
