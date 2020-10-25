@@ -1,13 +1,18 @@
 #ifndef MEMORYUTILS_H
 #define MEMORYUTILS_H
 
+#include "memoryexception.h"
 #include "memorymap.h"
 
-#include <sys/file.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <unistd.h>
+#ifndef WINDOWS
+    #include <sys/file.h>
+    #include <sys/ioctl.h>
+    #include <sys/mman.h>
+    #include <sys/types.h>
+    #include <unistd.h>
+#else
+    #include <windows.h>
+#endif
 
 #include <exception>
 #include <unordered_map>
@@ -29,23 +34,6 @@ namespace XLib
         return view_as<T>(((sizeToAlign + (pageSize - 1)) / pageSize)
                           * pageSize);
     }
-
-    class MemoryException : std::exception
-    {
-      public:
-        MemoryException(const std::string& msg)
-        {
-            _msg = msg;
-        }
-
-        auto& msg()
-        {
-            return _msg;
-        }
-
-      private:
-        std::string _msg;
-    };
 
     /**
      * @brief MemoryUtils
@@ -96,9 +84,6 @@ namespace XLib
             auto aligned_address = view_as<ptr_t>(
               align(address, GetPageSize()));
             auto aligned_size = align_to_page_size(size, GetPageSize());
-
-            std::cout << aligned_address << " " << aligned_size
-                      << std::endl;
 
             if (!SearchMap(pid, aligned_address, &map))
             {

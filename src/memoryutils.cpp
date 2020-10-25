@@ -1,10 +1,7 @@
 #include "memoryutils.h"
-#ifdef WINDOWS
-    #include <windows.h>
-#else
+#ifndef WINDOWS
     #include <fstream>
 #endif
-#include <unistd.h>
 
 /**
  * +440    common  rmmap                   sys_rmmap
@@ -24,7 +21,7 @@ using namespace XLib;
  */
 
 #ifdef WINDOWS
-static auto GetPageSize()
+static auto _GetPageSize()
 {
     SYSTEM_INFO sysInfo;
 
@@ -33,7 +30,7 @@ static auto GetPageSize()
     return sysInfo.dwPageSize;
 }
 
-size_t MemoryUtils::_page_size = GetPageSize();
+size_t MemoryUtils::_page_size = _GetPageSize();
 #else
 size_t MemoryUtils::_page_size = sysconf(_SC_PAGESIZE);
 #endif
@@ -77,7 +74,7 @@ maps_t MemoryUtils::QueryMaps(pid_t pid)
             return true;
         };
 
-        map.protection() = static_cast<map_t::protection_t>(
+        map.protection() = view_as<map_t::protection_t>(
           (is_on(prot[0]) ? map_t::protection_t::READ : 0)
           | (is_on(prot[1]) ? map_t::protection_t::WRITE : 0)
           | (is_on(prot[2]) ? map_t::protection_t::EXECUTE : 0));
@@ -162,53 +159,58 @@ map_t::protection_t MemoryUtils::ConvertOSProtToOwn(int flags)
     {
         case PAGE_EXECUTE:
         {
-            own_flags = map_t::protection_t::EXECUTE;
+            own_flags = view_as<map_t::protection_t>(
+              map_t::protection_t::EXECUTE);
             break;
         }
         case PAGE_EXECUTE_READ:
         {
-            own_flags = map_t::protection_t::EXECUTE
-                        | map_t::protection_t::READ;
+            own_flags = view_as<map_t::protection_t>(
+              map_t::protection_t::EXECUTE | map_t::protection_t::READ);
             break;
         }
         case PAGE_EXECUTE_READWRITE:
         {
-            own_flags = map_t::protection_t::EXECUTE
-                        | map_t::protection_t::READ
-                        | map_t::protection_t::WRITE;
+            own_flags = view_as<map_t::protection_t>(
+              map_t::protection_t::EXECUTE | map_t::protection_t::READ
+              | map_t::protection_t::WRITE);
             break;
         }
         case PAGE_READONLY:
         {
-            own_flags = map_t::protection_t::READ;
+            own_flags = view_as<map_t::protection_t>(
+              map_t::protection_t::READ);
             break;
         }
         case PAGE_READWRITE:
         {
-            own_flags = map_t::protection_t::READ
-                        | map_t::protection_t::WRITE;
+            own_flags = view_as<map_t::protection_t>(
+              map_t::protection_t::READ | map_t::protection_t::WRITE);
             break;
         }
         case PAGE_EXECUTE_WRITECOPY:
         {
-            own_flags = map_t::protection_t::EXECUTE
-                        | map_t::protection_t::WRITE;
+            own_flags = view_as<map_t::protection_t>(
+              map_t::protection_t::EXECUTE | map_t::protection_t::WRITE);
             break;
         }
         case PAGE_WRITECOPY:
         {
-            own_flags = map_t::protection_t::WRITE;
+            own_flags = view_as<map_t::protection_t>(
+              map_t::protection_t::WRITE);
             break;
         }
         default:
         {
-            own_flags = 0;
+            own_flags = map_t::protection_t::NONE;
             break;
         }
     }
 
+    return own_flags;
+
 #else
-    return static_cast<map_t::protection_t>(flags);
+    return view_as<map_t::protection_t>(flags);
 #endif
 }
 

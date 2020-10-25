@@ -46,7 +46,7 @@ auto XLib::Test::run() -> void
 
     WriteBuffer<4096> writeBuffer;
 
-    auto strSize = static_cast<safesize_t>(str.size());
+    auto strSize = view_as<safesize_t>(str.size());
 
     writeBuffer.addVar<type_array>(view_as<get_variable_t<type_array>>(
                                      str.data()),
@@ -73,7 +73,7 @@ auto XLib::Test::run() -> void
 
     for (auto&& b : bs)
     {
-        std::cout << std::hex << static_cast<int>(b);
+        std::cout << std::hex << view_as<int>(b);
     }
 
     std::cout << std::endl;
@@ -90,7 +90,7 @@ auto XLib::Test::run() -> void
     ConsoleOutput("Raw encrypted bytes:") << std::endl;
     for (auto&& b : bs)
     {
-        std::cout << std::hex << static_cast<int>(b);
+        std::cout << std::hex << view_as<int>(b);
     }
 
     std::cout << std::endl;
@@ -105,7 +105,7 @@ auto XLib::Test::run() -> void
     ConsoleOutput("Raw decrypted bytes:") << std::endl;
     for (auto&& b : bs)
     {
-        std::cout << std::hex << static_cast<int>(b);
+        std::cout << std::hex << view_as<int>(b);
     }
 
     std::cout << std::endl;
@@ -114,7 +114,7 @@ auto XLib::Test::run() -> void
 
     if (std::memcmp(readBuffer.data(),
                     writeBuffer.data(),
-                    static_cast<size_t>(writeBuffer.writeSize()))
+                    view_as<size_t>(writeBuffer.writeSize()))
         == 0)
     {
         ConsoleOutput("Passed decryption test") << std::endl;
@@ -157,7 +157,7 @@ auto XLib::Test::run() -> void
 
     using VAPI_t = VirtualTable<Test::API>;
 
-    VAPI_t* api = static_cast<VAPI_t*>(&g_API);
+    VAPI_t* api = view_as<VAPI_t*>(&g_API);
     api->callVFunc<0, void>();
 
     /** TODO: finish MemoryUtils so we can use this */
@@ -173,6 +173,7 @@ auto XLib::Test::run() -> void
 #else
     auto maps = MemoryUtils::QueryMaps(getpid());
 #endif
+
     ConsoleOutput("maps:") << std::endl;
 
     for (auto&& map : maps)
@@ -181,31 +182,42 @@ auto XLib::Test::run() -> void
           << " - " << map.end() << ":" << map.protection() << std::endl;
     }
 
-    std::getchar();
+    ConsoleOutput("Protecting map test\n") << std::endl;
 
     try
     {
-        MemoryUtils::ProtectMap(getpid(),
+#ifdef WINDOWS
+        MemoryUtils::ProtectMap(GetCurrentProcessId(),
                                 maps[0],
-                                static_cast<map_t::protection_t>(
+                                view_as<map_t::protection_t>(
                                   map_t::protection_t::EXECUTE
                                   | map_t::protection_t::READ
                                   | map_t::protection_t::WRITE));
+#else
+        MemoryUtils::ProtectMap(getpid(),
+                                maps[0],
+                                view_as<map_t::protection_t>(
+                                  map_t::protection_t::EXECUTE
+                                  | map_t::protection_t::READ
+                                  | map_t::protection_t::WRITE));
+#endif
     }
     catch (MemoryException& me)
     {
-        std::cout << me.msg() << std::endl;
+        ConsoleOutput(me.msg()) << std::endl;
     }
 
-    ConsoleOutput("Protecting map test\n") << std::endl;
+#ifdef WINDOWS
+    maps = MemoryUtils::QueryMaps(GetCurrentProcessId());
+#else
+    maps = MemoryUtils::QueryMaps(getpid());
+#endif
 
     for (auto&& map : maps)
     {
         ConsoleOutput(map.begin())
           << " - " << map.end() << ":" << map.protection() << std::endl;
     }
-
-    std::getchar();
 }
 
 void XLib::Test::API::func1()

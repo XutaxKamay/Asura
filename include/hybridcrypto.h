@@ -325,7 +325,7 @@ namespace XLib
 
         for (auto b : AESData->iv)
         {
-            std::cout << std::hex << static_cast<int>(b);
+            std::cout << std::hex << view_as<int>(b);
         }
 
         std::cout << std::endl;
@@ -334,7 +334,7 @@ namespace XLib
 
         for (auto b : AESData->key)
         {
-            std::cout << std::hex << static_cast<int>(b);
+            std::cout << std::hex << view_as<int>(b);
         }
 
         std::cout << std::endl;

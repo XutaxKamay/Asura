@@ -22,7 +22,7 @@ namespace XLib
      */
     constexpr inline auto alloc(safesize_t size)
     {
-        auto ptr = view_as<T>(::operator new(static_cast<size_t>(size)));
+        auto ptr = view_as<T>(::operator new(view_as<size_t>(size)));
 
         tracking_memory_allocs.push_back(view_as<ptr_t>(ptr));
 

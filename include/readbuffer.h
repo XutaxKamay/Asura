@@ -111,7 +111,7 @@ namespace XLib
             else
             {
                 return view_as<cast_T>(view_as<uintptr_t>(this->data())
-                                       + static_cast<uintptr_t>(size));
+                                       + view_as<uintptr_t>(size));
             }
         }
 

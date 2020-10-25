@@ -88,12 +88,12 @@ namespace XLib
             if constexpr (typesize_T == type_array)
             {
                 /* Add the size of the array if it's an array */
-                addData(&size, static_cast<safesize_t>(sizeof(size)));
-                addData(value, static_cast<safesize_t>(size));
+                addData(&size, view_as<safesize_t>(sizeof(size)));
+                addData(value, view_as<safesize_t>(size));
             }
             else
             {
-                addData(&value, static_cast<safesize_t>(sizeof(value)));
+                addData(&value, view_as<safesize_t>(sizeof(value)));
             }
         }
 
@@ -111,7 +111,7 @@ namespace XLib
             else
             {
                 return view_as<cast_t>(view_as<uintptr_t>(this->data())
-                                       + static_cast<uintptr_t>(size));
+                                       + view_as<uintptr_t>(size));
             }
         }
 
@@ -141,7 +141,7 @@ namespace XLib
     inline auto WriteBuffer<max_size_T>::addType(typesize_t typeSize)
       -> void
     {
-        addData(&typeSize, static_cast<safesize_t>(sizeof(typeSize)));
+        addData(&typeSize, view_as<safesize_t>(sizeof(typeSize)));
     }
 
     template <safesize_t max_size_T>
@@ -155,7 +155,7 @@ namespace XLib
                                                  safesize_t size) -> void
     {
         std::copy(view_as<byte_t*>(data),
-                  view_as<byte_t*>(data) + static_cast<size_t>(size),
+                  view_as<byte_t*>(data) + view_as<size_t>(size),
                   view_as<byte_t*>(shift(_write_size)));
 
         advance(size);
