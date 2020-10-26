@@ -1,7 +1,7 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
-#include "memoryutils.h"
+#include "processmap.h"
 
 namespace XLib
 {
@@ -9,10 +9,7 @@ namespace XLib
     {
       public:
         Process() = default;
-        Process(const maps_t& maps, const std::string fullName, pid_t pid);
-
-        auto refresh() -> void;
-        auto maps();
+        Process(const std::string& fullName, pid_t pid);
 
         auto setFullName(const std::string& fullName) -> void;
         auto fullName() const;
@@ -21,7 +18,6 @@ namespace XLib
         auto pid();
 
       private:
-        maps_t _maps {};
         std::string _full_name {};
         pid_t _pid {};
     };

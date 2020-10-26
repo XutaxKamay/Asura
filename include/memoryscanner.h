@@ -12,16 +12,7 @@ namespace XLib
      */
     class MemoryScanner
     {
-        /* Static methods */
-      public:
-        /**
-         * @brief Get
-         *
-         * @return XLib::MemoryScanner*
-         */
-        static auto Get();
-
-    } extern* g_pMemoryScanner;
+    };
 } // namespace XLib
 
 #endif // MEMORYSCANNER_H

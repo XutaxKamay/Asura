@@ -103,9 +103,9 @@ namespace XLib
     template <typename T, safesize_t max_history_T>
     auto CircularBuffer<T, max_history_T>::get(int wantedSlot)
     {
-        auto realSlot = _slot(wantedSlot);
+        auto real_slot = _slot(wantedSlot);
 
-        return (realSlot == -1) ? nullptr : &_buffer[realSlot];
+        return (real_slot == -1) ? nullptr : &_buffer[real_slot];
     }
 
     template <typename T, safesize_t max_history_T>
@@ -120,13 +120,14 @@ namespace XLib
         /* Check if the history has been filled yet */
         if (_filled_history >= max_history_T)
         {
-            int calcSlot = (_index - wantedSlot);
+            int calc_slot = (_index - wantedSlot);
 
             /**
              * If it's under 0 it means that we need to rollback
              * in order to get the real slot
              */
-            return (calcSlot < 0) ? calcSlot + max_history_T : calcSlot;
+            return (calc_slot < 0) ? calc_slot + max_history_T :
+                                     calc_slot;
         }
         else
         {

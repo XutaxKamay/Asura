@@ -132,4 +132,3 @@ namespace XLib
 } // namespace XLib
 
 #endif // DETOUR_H
-

@@ -195,11 +195,11 @@ namespace XLib
         /**
          * @brief _max_size
          */
-        safesize_t _max_size;
+        safesize_t _max_size {};
         /**
          * @brief _allocated
          */
-        bool _allocated;
+        bool _allocated {};
     };
 
     template <safesize_t max_size_T>

@@ -2,20 +2,9 @@
 
 using namespace XLib;
 
-Process::Process(const maps_t& maps, const std::string fullName, pid_t pid)
- : _maps(maps), _full_name(fullName), _pid(pid)
+Process::Process(const std::string& fullName, pid_t pid)
+ : _full_name(fullName), _pid(pid)
 {
-}
-
-auto Process::refresh() -> void
-{
-    _maps = MemoryUtils::QueryMaps(_pid);
-}
-
-auto Process::maps()
-{
-    refresh();
-    return _maps;
 }
 
 auto Process::setFullName(const std::string& fullName) -> void
@@ -31,7 +20,6 @@ auto Process::fullName() const
 auto Process::setPID(pid_t pid)
 {
     _pid = pid;
-    refresh();
 }
 
 auto Process::pid()

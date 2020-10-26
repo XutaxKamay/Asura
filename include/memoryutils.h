@@ -15,7 +15,6 @@
 #endif
 
 #include <exception>
-#include <unordered_map>
 
 namespace XLib
 {
@@ -43,23 +42,25 @@ namespace XLib
     class MemoryUtils
     {
       public:
-        static maps_t QueryMaps(pid_t pid);
+        static auto QueryMap(pid_t pid) -> memory_map_t;
 
         template <typename T>
-        static auto SearchMap(pid_t pid, T address, map_t* pMap = nullptr)
+        static auto SearchArea(pid_t pid,
+                               T address,
+                               memory_area_t* pArea = nullptr)
         {
-            auto maps = QueryMaps(pid);
+            auto memory_map = QueryMap(pid);
 
-            for (auto&& map : maps)
+            for (auto&& area : memory_map)
             {
-                auto start_ptr = view_as<uintptr_t>(map.begin());
-                auto end_ptr   = view_as<uintptr_t>(map.end());
+                auto start_ptr = view_as<uintptr_t>(area.begin());
+                auto end_ptr   = view_as<uintptr_t>(area.end());
 
                 if (view_as<uintptr_t>(address) >= start_ptr
                     && view_as<uintptr_t>(address) < end_ptr)
                 {
-                    if (pMap)
-                        *pMap = map;
+                    if (pArea)
+                        *pArea = area;
 
                     return true;
                 }
@@ -68,47 +69,50 @@ namespace XLib
             return false;
         }
 
-        static void ProtectMap(pid_t pid,
-                               map_t& map,
-                               map_t::protection_t newFlags,
-                               map_t::protection_t* pFlags = nullptr);
+        static auto ProtectArea(
+          pid_t pid,
+          memory_area_t& area,
+          memory_area_t::protection_t newFlags,
+          memory_area_t::protection_t* pFlags = nullptr) -> void;
 
         template <typename T>
-        static void ProtectMemory(pid_t pid,
-                                  T address,
-                                  size_t size,
-                                  map_t::protection_t newFlags,
-                                  map_t::protection_t* pFlags = nullptr)
+        static auto ProtectMemory(
+          pid_t pid,
+          T address,
+          size_t size,
+          memory_area_t::protection_t newFlags,
+          memory_area_t::protection_t* pFlags = nullptr) -> void
         {
-            map_t map;
+            memory_area_t area;
             auto aligned_address = view_as<ptr_t>(
               align(address, GetPageSize()));
             auto aligned_size = align_to_page_size(size, GetPageSize());
 
-            if (!SearchMap(pid, aligned_address, &map))
+            if (!SearchArea(pid, aligned_address, &area))
             {
-                throw MemoryException("Could not find mapped memory");
+                throw MemoryException("Could not find area in mapped "
+                                      "memory");
             }
 
             if (pFlags)
             {
-                *pFlags = map.protection();
+                *pFlags = area.protection();
             }
 
 #ifdef WINDOWS
-            auto handle_process = GetCurrentProcessId() == pid ?
+            auto process_handle = GetCurrentProcessId() == pid ?
                                     GetCurrentProcess() :
                                     OpenProcess(PROCESS_VM_OPERATION,
                                                 false,
                                                 pid);
 
-            if (handle_process == nullptr)
+            if (process_handle == nullptr)
             {
                 throw MemoryException("Couldn't open process");
             }
 
             DWORD dwOldFlags;
-            auto ret = VirtualProtectEx(handle_process,
+            auto ret = VirtualProtectEx(process_handle,
                                         aligned_address,
                                         aligned_size,
                                         ConvertOwnProtToOS(newFlags),
@@ -124,12 +128,8 @@ namespace XLib
                 *pFlags = ConvertOSProtToOwn(dwOldFlags);
             }
 
-            CloseHandle(handle_process);
+            CloseHandle(process_handle);
 #else
-            /**
-             * linux-xkmod kernel
-             */
-
             auto ret = syscall(441,
                                pid,
                                aligned_address,
@@ -144,22 +144,90 @@ namespace XLib
         }
 
         template <typename T>
-        static auto AllocMap(pid_t pid,
-                             T address,
-                             size_t size,
-                             map_t::protection_t newFlags)
+        static auto AllocArea(pid_t pid,
+                              T address,
+                              size_t size,
+                              memory_area_t::protection_t newFlags)
         {
+#ifdef WINDOWS
+            auto process_handle = GetCurrentProcessId() == pid ?
+                                    GetCurrentProcess() :
+                                    OpenProcess(PROCESS_VM_OPERATION,
+                                                false,
+                                                pid);
+
+            if (process_handle == nullptr)
+            {
+                throw MemoryException("Couldn't open process");
+            }
+
+            auto area_start = VirtualAllocEx(process_handle,
+                                             address,
+                                             size,
+                                             MEM_COMMIT | MEM_RESERVE,
+                                             ConvertOwnProtToOS(newFlags));
+
+            CloseHandle(process_handle);
+
+            return area_start;
+#else
+            return syscall(440,
+                           pid,
+                           address,
+                           size,
+                           ConvertOwnProtToOS(newFlags),
+                           MAP_PRIVATE | MAP_ANONYMOUS,
+                           0,
+                           0);
+#endif
         }
 
         template <typename T>
-        static auto FreeMap(pid_t pid, T address, size_t size);
+        static auto FreeArea(pid_t pid, T address, size_t size = 0)
+          -> void
+        {
+#ifdef WINDOWS
+            auto process_handle = GetCurrentProcessId() == pid ?
+                                    GetCurrentProcess() :
+                                    OpenProcess(PROCESS_VM_OPERATION,
+                                                false,
+                                                pid);
 
-        static auto FreeMap(pid_t pid, map_t map, size_t size);
+            if (process_handle == nullptr)
+            {
+                throw MemoryException("Couldn't open process");
+            }
 
-        static size_t GetPageSize();
+            auto ret = VirtualFreeEx(process_handle,
+                                     address,
+                                     size,
+                                     MEM_RELEASE);
 
-        static map_t::protection_t ConvertOSProtToOwn(int flags);
-        static int ConvertOwnProtToOS(map_t::protection_t flags);
+            if (!ret)
+            {
+                throw MemoryException("VirtualFreeEx failed");
+            }
+
+            CloseHandle(process_handle);
+
+#else
+            auto ret = syscall(443, pid, address, size);
+
+            if (ret < 0)
+            {
+                throw MemoryException("System call rmunmap failed");
+            }
+#endif
+        }
+
+        static auto FreeArea(pid_t pid, memory_area_t area) -> void;
+
+        static auto GetPageSize() -> size_t;
+
+        static auto ConvertOSProtToOwn(int flags)
+          -> memory_area_t::protection_t;
+        static auto ConvertOwnProtToOS(memory_area_t::protection_t flags)
+          -> int;
 
       private:
         static size_t _page_size;

@@ -20,7 +20,7 @@ namespace XLib
         }
 
       private:
-        std::string _msg;
+        std::string _msg {};
     };
 };
 

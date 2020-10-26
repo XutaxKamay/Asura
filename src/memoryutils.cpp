@@ -4,10 +4,10 @@
 #endif
 
 /**
- * +440    common  rmmap                   sys_rmmap
+ * +440    common  rmarea                   sys_rmarea
  * +441    common  rmprotect               sys_rmprotect
  * +442    common  pkey_rmprotect          sys_pkey_rmprotect
- * +443    common  rmunmap                 sys_rmunmap
+ * +443    common  rmunarea                 sys_rmunarea
  * +444    common  rclone                  sys_rclone
  */
 
@@ -23,11 +23,11 @@ using namespace XLib;
 #ifdef WINDOWS
 static auto _GetPageSize()
 {
-    SYSTEM_INFO sysInfo;
+    SYSTEM_INFO sys_info;
 
-    GetSystemInfo(&sysInfo);
+    GetSystemInfo(&sys_info);
 
-    return sysInfo.dwPageSize;
+    return sys_info.dwPageSize;
 }
 
 size_t MemoryUtils::_page_size = _GetPageSize();
@@ -35,23 +35,24 @@ size_t MemoryUtils::_page_size = _GetPageSize();
 size_t MemoryUtils::_page_size = sysconf(_SC_PAGESIZE);
 #endif
 
-maps_t MemoryUtils::QueryMaps(pid_t pid)
+auto MemoryUtils::QueryMap(pid_t pid) -> memory_map_t
 {
-    maps_t maps;
+    memory_map_t memory_map;
 
 #ifndef WINDOWS
-    std::ifstream file_maps("/proc/" + std::to_string(pid) + "/maps");
+    std::ifstream file_memory_map("/proc/" + std::to_string(pid)
+                                  + "/memory_map");
     std::string line;
 
-    if (!file_maps.is_open())
+    if (!file_memory_map.is_open())
     {
         throw MemoryException("Couldn't open /proc/" + std::to_string(pid)
-                              + "/maps");
+                              + "/memory_map");
     }
 
-    while (std::getline(file_maps, line))
+    while (std::getline(file_memory_map, line))
     {
-        map_t map;
+        memory_area_t area;
         uintptr_t start, end;
         byte_t prot[3];
 
@@ -74,22 +75,22 @@ maps_t MemoryUtils::QueryMaps(pid_t pid)
             return true;
         };
 
-        map.protection() = view_as<map_t::protection_t>(
-          (is_on(prot[0]) ? map_t::protection_t::READ : 0)
-          | (is_on(prot[1]) ? map_t::protection_t::WRITE : 0)
-          | (is_on(prot[2]) ? map_t::protection_t::EXECUTE : 0));
+        area.protection() = view_as<memory_area_t::protection_t>(
+          (is_on(prot[0]) ? memory_area_t::protection_t::READ : 0)
+          | (is_on(prot[1]) ? memory_area_t::protection_t::WRITE : 0)
+          | (is_on(prot[2]) ? memory_area_t::protection_t::EXECUTE : 0));
 
-        map.setAddress(view_as<ptr_t>(start));
-        map.setSize(end - start);
-        maps.push_back(map);
+        area.setAddress(view_as<ptr_t>(start));
+        area.setSize(end - start);
+        memory_map.push_back(area);
     }
 
 #else
-    auto handle_process = OpenProcess(PROCESS_QUERY_INFORMATION,
+    auto process_handle = OpenProcess(PROCESS_QUERY_INFORMATION,
                                       false,
                                       pid);
 
-    if (handle_process == nullptr)
+    if (process_handle == nullptr)
     {
         throw MemoryException("Couldn't open process from pid: "
                               + std::to_string(pid));
@@ -99,7 +100,7 @@ maps_t MemoryUtils::QueryMaps(pid_t pid)
     data_t bs;
 
     for (bs = nullptr;
-         VirtualQueryEx(handle_process, bs, &info, sizeof(info))
+         VirtualQueryEx(process_handle, bs, &info, sizeof(info))
          == sizeof(info);
          bs += info.RegionSize)
     {
@@ -111,31 +112,31 @@ maps_t MemoryUtils::QueryMaps(pid_t pid)
             continue;
         }
 
-        map_t map;
-        map.setAddress(bs);
-        map.setSize(info.RegionSize);
-        map.protection() = ConvertOSProtToOwn(info.Protect);
+        memory_area_t area;
+        area.setAddress(bs);
+        area.setSize(info.RegionSize);
+        area.protection() = ConvertOSProtToOwn(info.Protect);
 
-        maps.push_back(map);
+        memory_map.push_back(area);
     }
 
-    CloseHandle(handle_process);
+    CloseHandle(process_handle);
 #endif
 
-    return maps;
+    return memory_map;
 }
 
-void MemoryUtils::ProtectMap(pid_t pid,
-                             map_t& map,
-                             map_t::protection_t newFlags,
-                             map_t::protection_t* pFlags)
+auto MemoryUtils::ProtectArea(pid_t pid,
+                              memory_area_t& area,
+                              memory_area_t::protection_t newFlags,
+                              memory_area_t::protection_t* pFlags) -> void
 {
     try
     {
         ProtectMemory(pid,
-                      map.begin(),
-                      view_as<uintptr_t>(map.end())
-                        - view_as<uintptr_t>(map.begin()),
+                      area.begin(),
+                      view_as<uintptr_t>(area.end())
+                        - view_as<uintptr_t>(area.begin()),
                       newFlags,
                       pFlags);
     }
@@ -144,66 +145,71 @@ void MemoryUtils::ProtectMap(pid_t pid,
         throw me;
     }
 
-    map.protection() = newFlags;
+    area.protection() = newFlags;
 }
 
-size_t MemoryUtils::GetPageSize()
+auto MemoryUtils::GetPageSize() -> size_t
 {
     return _page_size;
 }
 
-map_t::protection_t MemoryUtils::ConvertOSProtToOwn(int flags)
+auto MemoryUtils::ConvertOSProtToOwn(int flags)
+  -> memory_area_t::protection_t
 {
 #ifdef WINDOWS
-    map_t::protection_t own_flags;
+    memory_area_t::protection_t own_flags;
     switch (flags)
     {
         case PAGE_EXECUTE:
         {
-            own_flags = view_as<map_t::protection_t>(
-              map_t::protection_t::EXECUTE);
+            own_flags = view_as<memory_area_t::protection_t>(
+              memory_area_t::protection_t::EXECUTE);
             break;
         }
         case PAGE_EXECUTE_READ:
         {
-            own_flags = view_as<map_t::protection_t>(
-              map_t::protection_t::EXECUTE | map_t::protection_t::READ);
+            own_flags = view_as<memory_area_t::protection_t>(
+              memory_area_t::protection_t::EXECUTE
+              | memory_area_t::protection_t::READ);
             break;
         }
         case PAGE_EXECUTE_READWRITE:
         {
-            own_flags = view_as<map_t::protection_t>(
-              map_t::protection_t::EXECUTE | map_t::protection_t::READ
-              | map_t::protection_t::WRITE);
+            own_flags = view_as<memory_area_t::protection_t>(
+              memory_area_t::protection_t::EXECUTE
+              | memory_area_t::protection_t::READ
+              | memory_area_t::protection_t::WRITE);
             break;
         }
         case PAGE_READONLY:
         {
-            own_flags = view_as<map_t::protection_t>(
-              map_t::protection_t::READ);
+            own_flags = view_as<memory_area_t::protection_t>(
+              memory_area_t::protection_t::READ);
             break;
         }
         case PAGE_READWRITE:
         {
-            own_flags = view_as<map_t::protection_t>(
-              map_t::protection_t::READ | map_t::protection_t::WRITE);
+            own_flags = view_as<memory_area_t::protection_t>(
+              memory_area_t::protection_t::READ
+              | memory_area_t::protection_t::WRITE);
             break;
         }
         case PAGE_EXECUTE_WRITECOPY:
         {
-            own_flags = view_as<map_t::protection_t>(
-              map_t::protection_t::EXECUTE | map_t::protection_t::WRITE);
+            own_flags = view_as<memory_area_t::protection_t>(
+              memory_area_t::protection_t::EXECUTE
+              | memory_area_t::protection_t::WRITE);
             break;
         }
         case PAGE_WRITECOPY:
         {
-            own_flags = view_as<map_t::protection_t>(
-              map_t::protection_t::WRITE);
+            own_flags = view_as<memory_area_t::protection_t>(
+              memory_area_t::protection_t::WRITE);
             break;
         }
         default:
         {
-            own_flags = map_t::protection_t::NONE;
+            own_flags = memory_area_t::protection_t::NONE;
             break;
         }
     }
@@ -211,49 +217,54 @@ map_t::protection_t MemoryUtils::ConvertOSProtToOwn(int flags)
     return own_flags;
 
 #else
-    return view_as<map_t::protection_t>(flags);
+    return view_as<memory_area_t::protection_t>(flags);
 #endif
 }
 
-int MemoryUtils::ConvertOwnProtToOS(map_t::protection_t flags)
+auto MemoryUtils::ConvertOwnProtToOS(memory_area_t::protection_t flags)
+  -> int
 {
 #ifdef WINDOWS
     int os_flags;
 
     switch (view_as<int>(flags))
     {
-        case map_t::protection_t::EXECUTE:
+        case memory_area_t::protection_t::EXECUTE:
         {
             os_flags = PAGE_EXECUTE;
             break;
         }
-        case map_t::protection_t::EXECUTE | map_t::protection_t::READ:
+        case memory_area_t::protection_t::EXECUTE
+          | memory_area_t::protection_t::READ:
         {
             os_flags = PAGE_EXECUTE_READ;
             break;
         }
-        case map_t::protection_t::EXECUTE | map_t::protection_t::READ
-          | map_t::protection_t::WRITE:
+        case memory_area_t::protection_t::EXECUTE
+          | memory_area_t::protection_t::READ
+          | memory_area_t::protection_t::WRITE:
         {
             os_flags = PAGE_EXECUTE_READWRITE;
             break;
         }
-        case map_t::protection_t::READ:
+        case memory_area_t::protection_t::READ:
         {
             os_flags = PAGE_READONLY;
             break;
         }
-        case map_t::protection_t::READ | map_t::protection_t::WRITE:
+        case memory_area_t::protection_t::READ
+          | memory_area_t::protection_t::WRITE:
         {
             os_flags = PAGE_READWRITE;
             break;
         }
-        case map_t::protection_t::EXECUTE | map_t::protection_t::WRITE:
+        case memory_area_t::protection_t::EXECUTE
+          | memory_area_t::protection_t::WRITE:
         {
             os_flags = PAGE_EXECUTE_WRITECOPY;
             break;
         }
-        case map_t::protection_t::WRITE:
+        case memory_area_t::protection_t::WRITE:
         {
             os_flags = PAGE_WRITECOPY;
             break;
@@ -269,4 +280,12 @@ int MemoryUtils::ConvertOwnProtToOS(map_t::protection_t flags)
 #else
     return flags;
 #endif
+}
+
+auto MemoryUtils::FreeArea(pid_t pid, memory_area_t area) -> void
+{
+    FreeArea(pid,
+             area.begin(),
+             view_as<uintptr_t>(area.end())
+               - view_as<uintptr_t>(area.begin()));
 }

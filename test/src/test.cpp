@@ -169,37 +169,37 @@ auto XLib::Test::run() -> void
       << api->countVFuncs() << std::endl;
 
 #ifdef WINDOWS
-    auto maps = MemoryUtils::QueryMaps(GetCurrentProcessId());
+    auto memory_map = MemoryUtils::QueryAreas(GetCurrentProcessId());
 #else
-    auto maps = MemoryUtils::QueryMaps(getpid());
+    auto memory_map = MemoryUtils::QueryAreas(getpid());
 #endif
 
-    ConsoleOutput("maps:") << std::endl;
+    ConsoleOutput("memory_map:") << std::endl;
 
-    for (auto&& map : maps)
+    for (auto&& area : memory_map)
     {
-        ConsoleOutput(map.begin())
-          << " - " << map.end() << ":" << map.protection() << std::endl;
+        ConsoleOutput(area.begin())
+          << " - " << area.end() << ":" << area.protection() << std::endl;
     }
 
-    ConsoleOutput("Protecting map test") << std::endl;
+    ConsoleOutput("Protecting area test") << std::endl;
 
     try
     {
 #ifdef WINDOWS
-        MemoryUtils::ProtectMap(GetCurrentProcessId(),
-                                maps[0],
-                                view_as<map_t::protection_t>(
-                                  map_t::protection_t::EXECUTE
-                                  | map_t::protection_t::READ
-                                  | map_t::protection_t::WRITE));
+        MemoryUtils::ProtectArea(GetCurrentProcessId(),
+                                memory_map[0],
+                                view_as<memory_area_t::protection_t>(
+                                  memory_area_t::protection_t::EXECUTE
+                                  | memory_area_t::protection_t::READ
+                                  | memory_area_t::protection_t::WRITE));
 #else
-        MemoryUtils::ProtectMap(getpid(),
-                                maps[0],
-                                view_as<map_t::protection_t>(
-                                  map_t::protection_t::EXECUTE
-                                  | map_t::protection_t::READ
-                                  | map_t::protection_t::WRITE));
+        MemoryUtils::ProtectArea(getpid(),
+                                memory_map[0],
+                                view_as<memory_area_t::protection_t>(
+                                  memory_area_t::protection_t::EXECUTE
+                                  | memory_area_t::protection_t::READ
+                                  | memory_area_t::protection_t::WRITE));
 #endif
     }
     catch (MemoryException& me)
@@ -208,15 +208,15 @@ auto XLib::Test::run() -> void
     }
 
 #ifdef WINDOWS
-    maps = MemoryUtils::QueryMaps(GetCurrentProcessId());
+    memory_map = MemoryUtils::QueryAreas(GetCurrentProcessId());
 #else
-    maps = MemoryUtils::QueryMaps(getpid());
+    memory_map = MemoryUtils::QueryAreas(getpid());
 #endif
 
-    for (auto&& map : maps)
+    for (auto&& area : memory_map)
     {
-        ConsoleOutput(map.begin())
-          << " - " << map.end() << ":" << map.protection() << std::endl;
+        ConsoleOutput(area.begin())
+          << " - " << area.end() << ":" << area.protection() << std::endl;
     }
 }
 

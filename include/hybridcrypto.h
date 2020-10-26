@@ -143,10 +143,10 @@ namespace XLib
         /**
          * @brief _aes_data
          */
-        byte _aes_data[rsa_key_size_T];
-        bool _is_aes_data_encrypted;
-        int _encoded_aes_data_size;
-        AutoSeededRandomPool _rng;
+        byte _aes_data[rsa_key_size_T] {};
+        bool _is_aes_data_encrypted {};
+        int _encoded_aes_data_size {};
+        AutoSeededRandomPool _rng {};
     };
 
     template <safesize_t rsa_key_size_T>
