@@ -1,8 +1,9 @@
 #ifndef MEMORYUTILS_H
 #define MEMORYUTILS_H
 
+#include "memoryarea.h"
 #include "memoryexception.h"
-#include "memorymap.h"
+#include "types.h"
 
 #ifndef WINDOWS
     #include <sys/file.h>
@@ -14,26 +15,8 @@
     #include <windows.h>
 #endif
 
-#include <exception>
-
 namespace XLib
 {
-    template <typename T>
-    constexpr inline auto align(T value, safesize_t size)
-    {
-        auto original_value = view_as<uintptr_t>(value);
-        original_value -= original_value % size;
-        return view_as<T>(original_value);
-    }
-
-    template <typename T>
-    constexpr inline auto align_to_page_size(T sizeToAlign,
-                                             safesize_t pageSize)
-    {
-        return view_as<T>(((sizeToAlign + (pageSize - 1)) / pageSize)
-                          * pageSize);
-    }
-
     /**
      * @brief MemoryUtils
      * Memory utils, mainly used for making compabilities between Linux
@@ -42,63 +25,33 @@ namespace XLib
     class MemoryUtils
     {
       public:
-        static auto QueryMap(pid_t pid) -> memory_map_t;
-
         template <typename T>
-        static auto SearchArea(pid_t pid,
-                               T address,
-                               memory_area_t* pArea = nullptr)
+        static constexpr inline auto align(T value, safesize_t size)
         {
-            auto memory_map = QueryMap(pid);
-
-            for (auto&& area : memory_map)
-            {
-                auto start_ptr = view_as<uintptr_t>(area.begin());
-                auto end_ptr   = view_as<uintptr_t>(area.end());
-
-                if (view_as<uintptr_t>(address) >= start_ptr
-                    && view_as<uintptr_t>(address) < end_ptr)
-                {
-                    if (pArea)
-                        *pArea = area;
-
-                    return true;
-                }
-            }
-
-            return false;
+            auto original_value = view_as<uintptr_t>(value);
+            original_value -= original_value % size;
+            return view_as<T>(original_value);
         }
 
-        static auto ProtectArea(
-          pid_t pid,
-          memory_area_t& area,
-          memory_area_t::protection_t newFlags,
-          memory_area_t::protection_t* pFlags = nullptr) -> void;
-
         template <typename T>
-        static auto ProtectMemory(
-          pid_t pid,
-          T address,
-          size_t size,
-          memory_area_t::protection_t newFlags,
-          memory_area_t::protection_t* pFlags = nullptr) -> void
+        static constexpr inline auto align_to_page_size(
+          T sizeToAlign,
+          safesize_t pageSize)
         {
-            memory_area_t area;
+            return view_as<T>(
+              ((view_as<size_t>(sizeToAlign) + (pageSize - 1)) / pageSize)
+              * pageSize);
+        }
+
+        template <typename T = uintptr_t>
+        static auto ProtectMemoryArea(pid_t pid,
+                                  T address,
+                                  size_t size,
+                                  memory_protection_flags_t flags) -> void
+        {
             auto aligned_address = view_as<ptr_t>(
               align(address, GetPageSize()));
             auto aligned_size = align_to_page_size(size, GetPageSize());
-
-            if (!SearchArea(pid, aligned_address, &area))
-            {
-                throw MemoryException("Could not find area in mapped "
-                                      "memory");
-            }
-
-            if (pFlags)
-            {
-                *pFlags = area.protection();
-            }
-
 #ifdef WINDOWS
             auto process_handle = GetCurrentProcessId() == pid ?
                                     GetCurrentProcess() :
@@ -115,7 +68,8 @@ namespace XLib
             auto ret = VirtualProtectEx(process_handle,
                                         aligned_address,
                                         aligned_size,
-                                        ConvertOwnProtToOS(newFlags),
+                                        MemoryArea::Protection::toOS(
+                                          flags),
                                         &dwOldFlags);
 
             if (!ret)
@@ -134,7 +88,7 @@ namespace XLib
                                pid,
                                aligned_address,
                                aligned_size,
-                               ConvertOwnProtToOS(newFlags));
+                               MemoryArea::Protection::toOS(flags));
 
             if (ret < 0)
             {
@@ -143,11 +97,11 @@ namespace XLib
 #endif
         }
 
-        template <typename T>
+        template <typename T = uintptr_t>
         static auto AllocArea(pid_t pid,
                               T address,
                               size_t size,
-                              memory_area_t::protection_t newFlags)
+                              memory_protection_flags_t flags)
         {
 #ifdef WINDOWS
             auto process_handle = GetCurrentProcessId() == pid ?
@@ -162,10 +116,11 @@ namespace XLib
             }
 
             auto area_start = VirtualAllocEx(process_handle,
-                                             address,
+                                             view_as<ptr_t>(address),
                                              size,
                                              MEM_COMMIT | MEM_RESERVE,
-                                             ConvertOwnProtToOS(newFlags));
+                                             MemoryArea::Protection::toOS(
+                                               flags));
 
             CloseHandle(process_handle);
 
@@ -175,14 +130,14 @@ namespace XLib
                            pid,
                            address,
                            size,
-                           ConvertOwnProtToOS(newFlags),
+                           MemoryArea::Protection::toOS(flags),
                            MAP_PRIVATE | MAP_ANONYMOUS,
                            0,
                            0);
 #endif
         }
 
-        template <typename T>
+        template <typename T = uintptr_t>
         static auto FreeArea(pid_t pid, T address, size_t size = 0)
           -> void
         {
@@ -199,7 +154,7 @@ namespace XLib
             }
 
             auto ret = VirtualFreeEx(process_handle,
-                                     address,
+                                     view_as<ptr_t>(address),
                                      size,
                                      MEM_RELEASE);
 
@@ -209,7 +164,6 @@ namespace XLib
             }
 
             CloseHandle(process_handle);
-
 #else
             auto ret = syscall(443, pid, address, size);
 
@@ -220,14 +174,7 @@ namespace XLib
 #endif
         }
 
-        static auto FreeArea(pid_t pid, memory_area_t area) -> void;
-
         static auto GetPageSize() -> size_t;
-
-        static auto ConvertOSProtToOwn(int flags)
-          -> memory_area_t::protection_t;
-        static auto ConvertOwnProtToOS(memory_area_t::protection_t flags)
-          -> int;
 
       private:
         static size_t _page_size;

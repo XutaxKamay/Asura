@@ -9,6 +9,8 @@
     #define WINDOWS
 #endif
 
+#define CURRENT_CONTEXT __FILE__ ":" #(__FUNCTION__) ":" #(__LINE__)
+
 namespace XLib
 {
     using ptr_t      = void*;

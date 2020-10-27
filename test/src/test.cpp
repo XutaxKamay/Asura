@@ -169,9 +169,9 @@ auto XLib::Test::run() -> void
       << api->countVFuncs() << std::endl;
 
 #ifdef WINDOWS
-    auto memory_map = MemoryUtils::QueryAreas(GetCurrentProcessId());
+    auto memory_map = MemoryMap::Query(GetCurrentProcessId());
 #else
-    auto memory_map = MemoryUtils::QueryAreas(getpid());
+    auto memory_map = MemoryMap::Query(getpid());
 #endif
 
     ConsoleOutput("memory_map:") << std::endl;
@@ -187,19 +187,21 @@ auto XLib::Test::run() -> void
     try
     {
 #ifdef WINDOWS
-        MemoryUtils::ProtectArea(GetCurrentProcessId(),
-                                memory_map[0],
-                                view_as<memory_area_t::protection_t>(
-                                  memory_area_t::protection_t::EXECUTE
-                                  | memory_area_t::protection_t::READ
-                                  | memory_area_t::protection_t::WRITE));
+        MemoryMap::ProtectArea(
+          GetCurrentProcessId(),
+          memory_map[0],
+          view_as<memory_protection_flags_t>(
+            memory_protection_flags_t::EXECUTE
+            | memory_protection_flags_t::READ
+            | memory_protection_flags_t::WRITE));
 #else
-        MemoryUtils::ProtectArea(getpid(),
-                                memory_map[0],
-                                view_as<memory_area_t::protection_t>(
-                                  memory_area_t::protection_t::EXECUTE
-                                  | memory_area_t::protection_t::READ
-                                  | memory_area_t::protection_t::WRITE));
+        MemoryMap::ProtectArea(
+          getpid(),
+          memory_map[0],
+          view_as<memory_protection_flags_t>(
+            memory_protection_flags_t::EXECUTE
+            | memory_protection_flags_t::READ
+            | memory_protection_flags_t::WRITE));
 #endif
     }
     catch (MemoryException& me)
@@ -208,9 +210,9 @@ auto XLib::Test::run() -> void
     }
 
 #ifdef WINDOWS
-    memory_map = MemoryUtils::QueryAreas(GetCurrentProcessId());
+    memory_map = MemoryMap::Query(GetCurrentProcessId());
 #else
-    memory_map = MemoryUtils::QueryAreas(getpid());
+    memory_map = MemoryMap::Query(getpid());
 #endif
 
     for (auto&& area : memory_map)
