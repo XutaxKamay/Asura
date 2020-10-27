@@ -34,6 +34,12 @@ namespace XLib
                                size_t size,
                                memory_protection_flags_t flags) -> void;
 
+        template <typename T>
+        auto read(T address, size_t size) -> bytes_t;
+
+        template <typename T>
+        auto write(T address, const bytes_t& bytes) -> void;
+
       private:
         std::string _full_name {};
         pid_t _pid {};

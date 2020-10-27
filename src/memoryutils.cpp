@@ -3,6 +3,7 @@
     #include <errno.h>
     #include <fstream>
     #include <string.h>
+    #include <sys/uio.h>
 #endif
 
 using namespace XLib;
@@ -48,7 +49,8 @@ auto MemoryUtils::ProtectMemoryArea(pid_t pid,
 
     if (process_handle == nullptr)
     {
-        throw MemoryException(std::string(CURRENT_CONTEXT) + "Couldn't open process");
+        throw MemoryException(std::string(CURRENT_CONTEXT)
+                              + "Couldn't open process");
     }
 
     DWORD dwOldFlags;
@@ -60,7 +62,8 @@ auto MemoryUtils::ProtectMemoryArea(pid_t pid,
 
     if (!ret)
     {
-        throw MemoryException(std::string(CURRENT_CONTEXT) + "VirtualProtectEx failed");
+        throw MemoryException(std::string(CURRENT_CONTEXT)
+                              + "VirtualProtectEx failed");
     }
 
     CloseHandle(process_handle);
@@ -73,7 +76,8 @@ auto MemoryUtils::ProtectMemoryArea(pid_t pid,
 
     if (ret < 0)
     {
-        throw MemoryException(std::string(CURRENT_CONTEXT) + "System call rmprotect failed");
+        throw MemoryException(std::string(CURRENT_CONTEXT)
+                              + "System call rmprotect failed");
     }
 #endif
 }
@@ -91,7 +95,8 @@ auto MemoryUtils::AllocArea(pid_t pid,
 
     if (process_handle == nullptr)
     {
-        throw MemoryException(std::string(CURRENT_CONTEXT) + "Couldn't open process");
+        throw MemoryException(std::string(CURRENT_CONTEXT)
+                              + "Couldn't open process");
     }
 
     auto area_start = VirtualAllocEx(process_handle,
@@ -126,7 +131,8 @@ auto MemoryUtils::FreeArea(pid_t pid, T address, size_t size) -> void
 
     if (process_handle == nullptr)
     {
-        throw MemoryException(std::string(CURRENT_CONTEXT) + "Couldn't open process");
+        throw MemoryException(std::string(CURRENT_CONTEXT)
+                              + "Couldn't open process");
     }
 
     auto ret = VirtualFreeEx(process_handle,
@@ -136,7 +142,8 @@ auto MemoryUtils::FreeArea(pid_t pid, T address, size_t size) -> void
 
     if (!ret)
     {
-        throw MemoryException(std::string(CURRENT_CONTEXT) + "VirtualFreeEx failed");
+        throw MemoryException(std::string(CURRENT_CONTEXT)
+                              + "VirtualFreeEx failed");
     }
 
     CloseHandle(process_handle);
@@ -145,8 +152,101 @@ auto MemoryUtils::FreeArea(pid_t pid, T address, size_t size) -> void
 
     if (ret < 0)
     {
-        throw MemoryException(std::string(CURRENT_CONTEXT) + "System call rmunmap failed");
+        throw MemoryException(std::string(CURRENT_CONTEXT)
+                              + "System call rmunmap failed");
     }
+#endif
+}
+
+template <typename T>
+auto MemoryUtils::ReadProcessMemoryArea(pid_t pid, T address, size_t size)
+  -> bytes_t
+{
+    bytes_t result(size);
+
+#ifndef WINDOWS
+    iovec local = { .iov_base = result.data(), .iov_len = result.size() };
+    iovec remote = { .iov_base = view_as<ptr_t>(address),
+                     .iov_len  = result.size() };
+
+    auto ret = process_vm_readv(pid, &local, 1, &remote, 1, 0);
+
+    if (ret != size)
+    {
+        throw MemoryException(std::string(CURRENT_CONTEXT)
+                              + "process_vm_readv failed");
+    }
+#else
+    auto process_handle = GetCurrentProcessId() == pid ?
+                            GetCurrentProcess() :
+                            OpenProcess(PROCESS_VM_OPERATION, false, pid);
+
+    if (process_handle == nullptr)
+    {
+        throw MemoryException(std::string(CURRENT_CONTEXT)
+                              + "Couldn't open process");
+    }
+
+    auto ret = ReadProcessMemory(process_handle,
+                                 address,
+                                 result.data(),
+                                 result.size(),
+                                 nullptr);
+
+    if (!ret)
+    {
+        throw MemoryException(std::string(CURRENT_CONTEXT)
+                              + "ReadProcessMemory failed");
+    }
+
+    CloseHandle(process_handle);
+#endif
+
+    return result;
+}
+
+template <typename T>
+auto MemoryUtils::WriteProcessMemoryArea(pid_t pid,
+                                         bytes_t bytes,
+                                         T address) -> void
+{
+#ifndef WINDOWS
+    iovec local  = { .iov_base = bytes.data(), .iov_len = bytes.size() };
+    iovec remote = { .iov_base = view_as<ptr_t>(address),
+                     .iov_len  = bytes.size() };
+
+    auto ret = process_vm_writev(pid, &local, 1, &remote, 1, 0);
+
+    if (ret != bytes.size())
+    {
+        throw MemoryException(std::string(CURRENT_CONTEXT)
+                              + "process_vm_writev failed");
+    }
+
+#else
+    auto process_handle = GetCurrentProcessId() == pid ?
+                            GetCurrentProcess() :
+                            OpenProcess(PROCESS_VM_OPERATION, false, pid);
+
+    if (process_handle == nullptr)
+    {
+        throw MemoryException(std::string(CURRENT_CONTEXT)
+                              + "Couldn't open process");
+    }
+
+    auto ret = WriteProcessMemory(process_handle,
+                                  address,
+                                  result.data(),
+                                  result.size(),
+                                  nullptr);
+
+    if (!ret)
+    {
+        throw MemoryException(std::string(CURRENT_CONTEXT)
+                              + "WriteProcessMemory failed");
+    }
+
+    CloseHandle(process_handle);
 #endif
 }
 

@@ -50,6 +50,16 @@ namespace XLib
         static auto FreeArea(pid_t pid, T address, size_t size = 0)
           -> void;
 
+        template <typename T = uintptr_t>
+        static auto ReadProcessMemoryArea(pid_t pid,
+                                          T address,
+                                          size_t size) -> bytes_t;
+
+        template <typename T = uintptr_t>
+        static auto WriteProcessMemoryArea(pid_t pid,
+                                           bytes_t bytes,
+                                           T address) -> void;
+
         static auto GetPageSize() -> size_t;
 
       private:

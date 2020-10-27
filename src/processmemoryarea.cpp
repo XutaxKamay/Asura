@@ -42,6 +42,36 @@ auto ProcessMemoryArea::ModifiableProtection::flags()
     return _flags;
 }
 
+auto ProcessMemoryArea::ModifiableProtection::operator|(
+  memory_protection_flags_t flags) -> memory_protection_flags_t
+{
+    return view_as<memory_protection_flags_t>(flags | _flags);
+}
+
+auto ProcessMemoryArea::ModifiableProtection::operator&(
+  memory_protection_flags_t flags) -> memory_protection_flags_t
+{
+    return view_as<memory_protection_flags_t>(flags & _flags);
+}
+
+auto ProcessMemoryArea::ModifiableProtection::operator=(
+  memory_protection_flags_t flags) -> void
+{
+    change(flags);
+}
+
+auto ProcessMemoryArea::ModifiableProtection::operator|=(
+  memory_protection_flags_t flags) -> void
+{
+    change(view_as<memory_protection_flags_t>(flags | _flags));
+}
+
+auto ProcessMemoryArea::ModifiableProtection::operator&=(
+  memory_protection_flags_t flags) -> void
+{
+    change(view_as<memory_protection_flags_t>(flags & _flags));
+}
+
 ProcessMemoryArea::ProcessMemoryArea(Process* process)
  : _protection(ModifiableProtection(this)), _process(process)
 {
@@ -54,7 +84,7 @@ auto ProcessMemoryArea::protection() -> ModifiableProtection&
 
 auto ProcessMemoryArea::resetToDefaultFlags() -> memory_protection_flags_t
 {
-    return _protection.change( _protection.defaultFlags());
+    return _protection.change(_protection.defaultFlags());
 }
 
 auto ProcessMemoryArea::initProtectionFlags(
@@ -67,4 +97,18 @@ auto ProcessMemoryArea::initProtectionFlags(
 auto ProcessMemoryArea::process() -> Process*
 {
     return _process;
+}
+
+auto ProcessMemoryArea::read() -> bytes_t
+{
+    return MemoryUtils::ReadProcessMemoryArea(_process->pid(),
+                                              begin(),
+                                              size());
+}
+
+auto ProcessMemoryArea::write(const bytes_t& bytes) -> void
+{
+    return MemoryUtils::WriteProcessMemoryArea(_process->pid(),
+                                               bytes,
+                                               begin());
 }

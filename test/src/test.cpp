@@ -184,7 +184,7 @@ auto XLib::Test::run() -> void
             ConsoleOutput(area->begin())
               << "-" << area->end() << ":" << area->protection().flags();
 
-            area->protection().change(view_as<memory_protection_flags_t>(
+            area->protection() = (view_as<memory_protection_flags_t>(
               memory_protection_flags_t::EXECUTE
               | memory_protection_flags_t::READ
               | memory_protection_flags_t::WRITE));

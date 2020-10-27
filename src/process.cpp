@@ -55,6 +55,18 @@ auto Process::protectMemoryArea(T address,
     _mmap.protectMemoryArea(address, size, flags);
 }
 
+template <typename T>
+auto Process::read(T address, size_t size) -> bytes_t
+{
+    return _mmap.read(address, size);
+}
+
+template <typename T>
+auto Process::write(T address, const bytes_t& bytes) -> void
+{
+    _mmap.write(address, bytes);
+}
+
 template auto Process::protectMemoryArea<uintptr_t>(
   uintptr_t,
   size_t,

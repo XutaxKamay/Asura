@@ -17,8 +17,8 @@ namespace XLib
         {
             for (auto&& area : *this)
             {
-                auto start_ptr = (*area).begin();
-                auto end_ptr   = (*area).end();
+                auto start_ptr = area->begin();
+                auto end_ptr   = area->end();
 
                 if (view_as<uintptr_t>(address) >= start_ptr
                     && view_as<uintptr_t>(address) < end_ptr)
@@ -26,6 +26,8 @@ namespace XLib
                     return area;
                 }
             }
+
+            return nullptr;
         }
     };
 

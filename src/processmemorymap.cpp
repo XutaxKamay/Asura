@@ -127,6 +127,38 @@ auto ProcessMemoryMap::protectMemoryArea(T address,
     MemoryUtils::ProtectMemoryArea(_process->pid(), address, size, flags);
 }
 
+template <typename T>
+auto ProcessMemoryMap::read(T address, size_t size) -> bytes_t
+{
+    auto area = search(address);
+
+    if (!area)
+    {
+        throw MemoryException(std::string(CURRENT_CONTEXT)
+                              + "Couldn't find area");
+    }
+
+    return MemoryUtils::ReadProcessMemoryArea(_process->pid(),
+                                              address,
+                                              size);
+}
+
+template <typename T>
+auto ProcessMemoryMap::write(T address, const bytes_t& bytes) -> void
+{
+    auto area = search(address);
+
+    if (!area)
+    {
+        throw MemoryException(std::string(CURRENT_CONTEXT)
+                              + "Couldn't find area");
+    }
+
+    return MemoryUtils::WriteProcessMemoryArea(_process->pid(),
+                                               address,
+                                               bytes);
+}
+
 template auto ProcessMemoryMap::protectMemoryArea<uintptr_t>(
   uintptr_t,
   size_t,
