@@ -1,4 +1,5 @@
 #include "processmemorymap.h"
+#include "process.h"
 
 #ifndef WINDOWS
     #include <fstream>
@@ -16,11 +17,13 @@ using namespace XLib;
 
 ProcessMemoryMap::ProcessMemoryMap(Process* process) : _process(process)
 {
-    fetch();
+    refresh();
 }
 
-auto ProcessMemoryMap::fetch() -> void
+auto ProcessMemoryMap::refresh() -> void
 {
+    clear();
+
 #ifndef WINDOWS
     std::ifstream file_memory_map(
       "/proc/" + std::to_string(_process->pid()) + "/maps");
@@ -28,14 +31,13 @@ auto ProcessMemoryMap::fetch() -> void
 
     if (!file_memory_map.is_open())
     {
-        throw MemoryException("Couldn't open /proc/"
-                              + std::to_string(_process->pid())
-                              + "/maps");
+        throw MemoryException(
+          std::string(CURRENT_CONTEXT) + "Couldn't open /proc/"
+          + std::to_string(_process->pid()) + "/maps");
     }
 
     while (std::getline(file_memory_map, line))
     {
-        ProcessMemoryArea area(_process);
         uintptr_t start, end;
         byte_t prot[3];
 
@@ -58,25 +60,27 @@ auto ProcessMemoryMap::fetch() -> void
             return true;
         };
 
-        area.setDefaultProtectionFlags(view_as<memory_protection_flags_t>(
+        auto area = std::make_unique<ProcessMemoryArea>(_process);
+        area->initProtectionFlags((view_as<memory_protection_flags_t>(
           (is_on(prot[0]) ? memory_protection_flags_t::READ : 0)
           | (is_on(prot[1]) ? memory_protection_flags_t::WRITE : 0)
-          | (is_on(prot[2]) ? memory_protection_flags_t::EXECUTE : 0)));
+          | (is_on(prot[2]) ? memory_protection_flags_t::EXECUTE : 0))));
 
-        area.setAddress(view_as<ptr_t>(start));
-        area.setSize(end - start);
-        push_back(area);
+        area->setAddress(view_as<ptr_t>(start));
+        area->setSize(end - start);
+
+        push_back(std::move(area));
     }
-
 #else
     auto process_handle = OpenProcess(PROCESS_QUERY_INFORMATION,
                                       false,
-        _process->pid()));
+                                      _process->pid());
 
     if (process_handle == nullptr)
     {
-        throw MemoryException("Couldn't open process from pid: "
-            + std::to_string(_process->pid())));
+        throw MemoryException(std::string(CURRENT_CONTEXT)
+                              + "Couldn't open process from pid: "
+                              + std::to_string(_process->pid()));
     }
 
     MEMORY_BASIC_INFORMATION info;
@@ -87,23 +91,48 @@ auto ProcessMemoryMap::fetch() -> void
          == sizeof(info);
          bs += info.RegionSize)
     {
-        /**
-         * We care only about virtual memory that has physical memory.
-         */
-        if (info.State != MEM_COMMIT)
-        {
-            continue;
-        }
-
-        ProcessMemoryArea area(_process);
-        area.setAddress(bs);
-        area.setSize(info.RegionSize);
-        area.setDefaultProtectionFlags(
+        auto area = std::make_unique<ProcessMemoryArea>(_process);
+        area->setAddress(bs);
+        area->setSize(info.RegionSize);
+        area->initProtectionFlags(
           ProcessMemoryArea::Protection::toOwn(info.Protect));
 
-        push_back(area);
+        push_back(std::move(area));
     }
 
     CloseHandle(process_handle);
 #endif
 }
+
+template <typename T>
+auto ProcessMemoryMap::allocArea(T address,
+                                 size_t size,
+                                 memory_protection_flags_t flags) -> void
+{
+    MemoryUtils::AllocArea(_process->pid(), address, size, flags);
+}
+
+template <typename T>
+auto ProcessMemoryMap::freeArea(T address, size_t size) -> void
+{
+    MemoryUtils::FreeArea(_process->pid(), address, size);
+}
+
+template <typename T>
+auto ProcessMemoryMap::protectMemoryArea(T address,
+                                         size_t size,
+                                         memory_protection_flags_t flags)
+  -> void
+{
+    MemoryUtils::ProtectMemoryArea(_process->pid(), address, size, flags);
+}
+
+template auto ProcessMemoryMap::protectMemoryArea<uintptr_t>(
+  uintptr_t,
+  size_t,
+  memory_protection_flags_t) -> void;
+
+template auto ProcessMemoryMap::protectMemoryArea<ptr_t>(
+  ptr_t,
+  size_t,
+  memory_protection_flags_t) -> void;

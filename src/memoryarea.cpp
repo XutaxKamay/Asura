@@ -1,4 +1,9 @@
 #include "memoryarea.h"
+#include "memoryexception.h"
+
+#ifdef WINDOWS
+    #include "windows.h"
+#endif
 
 using namespace XLib;
 
@@ -6,6 +11,7 @@ auto MemoryArea::Protection::toOwn(int flags) -> memory_protection_flags_t
 {
 #ifdef WINDOWS
     memory_protection_flags_t own_flags;
+
     switch (flags)
     {
         case PAGE_EXECUTE:
@@ -58,8 +64,6 @@ auto MemoryArea::Protection::toOwn(int flags) -> memory_protection_flags_t
         default:
         {
             own_flags = memory_protection_flags_t::NONE;
-            throw MemoryException("Unexpected memory protection from "
-                                  "windows");
             break;
         }
     }
@@ -145,14 +149,22 @@ auto MemoryArea::setSize(size_t size) -> void
     _size = size;
 }
 
-auto MemoryArea::protection() -> memory_protection_flags_t&
+template <typename T>
+auto MemoryArea::begin() -> T
 {
-    return _flags;
+    return view_as<T>(_address);
 }
 
-void MemoryArea::setDefaultProtectionFlags(
-  memory_protection_flags_t flags)
+template <typename T>
+auto MemoryArea::end() -> T
 {
-    _default_flags = flags;
-    _flags         = flags;
+    return view_as<T>(view_as<uintptr_t>(_address) + _size);
 }
+
+template <typename T>
+auto MemoryArea::size() -> T
+{
+    return view_as<T>(end<size_t>() - begin<size_t>());
+}
+
+template auto MemoryArea::size<size_t>() -> size_t;

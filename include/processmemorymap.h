@@ -3,11 +3,12 @@
 
 #include "memorymap.h"
 #include "memoryutils.h"
-#include "process.h"
 #include "processmemoryarea.h"
 
 namespace XLib
 {
+    class Process;
+
     class ProcessMemoryMap : public MemoryMap<ProcessMemoryArea>
     {
       public:
@@ -17,33 +18,18 @@ namespace XLib
         template <typename T = uintptr_t>
         auto allocArea(T address,
                        size_t size,
-                       memory_protection_flags_t flags)
-        {
-            return MemoryUtils::AllocArea<T>(_process->pid(),
-                                             address,
-                                             size,
-                                             flags);
-        }
+                       memory_protection_flags_t flags) -> void;
 
         template <typename T = uintptr_t>
-        auto freeArea(T address, size_t size)
-        {
-            return MemoryUtils::FreeArea(_process->pid(), address, size);
-        }
+        auto freeArea(T address, size_t size) -> void;
 
         template <typename T = uintptr_t>
         auto protectMemoryArea(T address,
                                size_t size,
-                               memory_protection_flags_t flags)
-        {
-            return MemoryUtils::ProtectMemoryArea(_process->pid(),
-                                                  address,
-                                                  size,
-                                                  flags);
-        }
+                               memory_protection_flags_t flags) -> void;
 
       public:
-        auto fetch() -> void;
+        auto refresh() -> void;
 
       private:
         Process* _process;

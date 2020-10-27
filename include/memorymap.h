@@ -4,10 +4,12 @@
 #include "memoryarea.h"
 #include "memoryutils.h"
 
+#include <memory>
+
 namespace XLib
 {
     template <class MemoryArea_T = MemoryArea>
-    class MemoryMap : public std::vector<MemoryArea_T>
+    class MemoryMap : public std::vector<std::unique_ptr<MemoryArea_T>>
     {
       public:
         template <typename T = uintptr_t>
@@ -15,8 +17,8 @@ namespace XLib
         {
             for (auto&& area : *this)
             {
-                auto start_ptr = area.begin();
-                auto end_ptr   = area.end();
+                auto start_ptr = (*area).begin();
+                auto end_ptr   = (*area).end();
 
                 if (view_as<uintptr_t>(address) >= start_ptr
                     && view_as<uintptr_t>(address) < end_ptr)

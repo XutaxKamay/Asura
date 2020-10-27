@@ -11,33 +11,28 @@ namespace XLib
         Process() = default;
         Process(const std::string& fullName, pid_t pid);
 
+      public:
         auto setFullName(const std::string& fullName) -> void;
         auto fullName() -> std::string;
 
         auto setPID(pid_t pid);
         auto pid() -> pid_t;
 
+        auto mmap() -> ProcessMemoryMap&;
+
+      public:
         template <typename T = uintptr_t>
         auto allocArea(T address,
                        size_t size,
-                       memory_protection_flags_t flags)
-        {
-            return _mmap.allocArea<T>(address, size, flags);
-        }
+                       memory_protection_flags_t flags) -> void;
 
         template <typename T = uintptr_t>
-        auto freeArea(T address, size_t size)
-        {
-            return _mmap.freeArea<T>(address, size);
-        }
+        auto freeArea(T address, size_t size) -> void;
 
         template <typename T = uintptr_t>
         auto protectMemoryArea(T address,
                                size_t size,
-                               memory_protection_flags_t flags)
-        {
-            return _mmap.protectMemoryArea(address, size, flags);
-        }
+                               memory_protection_flags_t flags) -> void;
 
       private:
         std::string _full_name {};

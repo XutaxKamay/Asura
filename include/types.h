@@ -9,7 +9,12 @@
     #define WINDOWS
 #endif
 
-#define CURRENT_CONTEXT __FILE__ ":" #(__FUNCTION__) ":" #(__LINE__)
+#define _MAKE_STRING(x) #x
+#define MAKE_STRING(x)  _MAKE_STRING(x)
+
+#define CURRENT_CONTEXT                                                  \
+    "[" __FILE__                                                         \
+    ":" MAKE_STRING(__func__) ":" MAKE_STRING(__LINE__) "] -> "
 
 namespace XLib
 {

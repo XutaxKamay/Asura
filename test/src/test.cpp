@@ -168,57 +168,33 @@ auto XLib::Test::run() -> void
     ConsoleOutput("Number of virtual funcs: ")
       << api->countVFuncs() << std::endl;
 
-#ifdef WINDOWS
-    auto memory_map = MemoryMap::Query(GetCurrentProcessId());
-#else
-    auto memory_map = MemoryMap::Query(getpid());
-#endif
-
-    ConsoleOutput("memory_map:") << std::endl;
-
-    for (auto&& area : memory_map)
-    {
-        ConsoleOutput(area.begin())
-          << " - " << area.end() << ":" << area.protection() << std::endl;
-    }
-
-    ConsoleOutput("Protecting area test") << std::endl;
-
     try
     {
 #ifdef WINDOWS
-        MemoryMap::ProtectArea(
-          GetCurrentProcessId(),
-          memory_map[0],
-          view_as<memory_protection_flags_t>(
-            memory_protection_flags_t::EXECUTE
-            | memory_protection_flags_t::READ
-            | memory_protection_flags_t::WRITE));
+        Process currentProcess("current", GetCurrentProcessId());
+
 #else
-        MemoryMap::ProtectArea(
-          getpid(),
-          memory_map[0],
-          view_as<memory_protection_flags_t>(
-            memory_protection_flags_t::EXECUTE
-            | memory_protection_flags_t::READ
-            | memory_protection_flags_t::WRITE));
+        Process currentProcess("current", getpid());
 #endif
+
+        auto& mmap = currentProcess.mmap();
+
+        for (auto&& area : mmap)
+        {
+            ConsoleOutput(area->begin())
+              << "-" << area->end() << ":" << area->protection().flags();
+
+            area->protection().change(view_as<memory_protection_flags_t>(
+              memory_protection_flags_t::EXECUTE
+              | memory_protection_flags_t::READ
+              | memory_protection_flags_t::WRITE));
+
+            std::cout << ":" << area->protection().flags() << std::endl;
+        }
     }
     catch (MemoryException& me)
     {
-        ConsoleOutput(me.msg()) << std::endl;
-    }
-
-#ifdef WINDOWS
-    memory_map = MemoryMap::Query(GetCurrentProcessId());
-#else
-    memory_map = MemoryMap::Query(getpid());
-#endif
-
-    for (auto&& area : memory_map)
-    {
-        ConsoleOutput(area.begin())
-          << " - " << area.end() << ":" << area.protection() << std::endl;
+        std::cout << me.msg() << std::endl;
     }
 }
 
