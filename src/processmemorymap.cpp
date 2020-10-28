@@ -15,7 +15,8 @@
 
 using namespace XLib;
 
-ProcessMemoryMap::ProcessMemoryMap(Process* process) : _process(process)
+ProcessMemoryMap::ProcessMemoryMap(ProcessBase* process)
+ : _process(process)
 {
     refresh();
 }
@@ -61,10 +62,10 @@ auto ProcessMemoryMap::refresh() -> void
         };
 
         auto area = std::make_unique<ProcessMemoryArea>(_process);
-        area->initProtectionFlags((view_as<memory_protection_flags_t>(
-          (is_on(prot[0]) ? memory_protection_flags_t::READ : 0)
-          | (is_on(prot[1]) ? memory_protection_flags_t::WRITE : 0)
-          | (is_on(prot[2]) ? memory_protection_flags_t::EXECUTE : 0))));
+        area->initProtectionFlags(
+          (is_on(prot[0]) ? MemoryArea::ProtectionFlags::READ : 0)
+          | (is_on(prot[1]) ? MemoryArea::ProtectionFlags::WRITE : 0)
+          | (is_on(prot[2]) ? MemoryArea::ProtectionFlags::EXECUTE : 0));
 
         area->setAddress(view_as<ptr_t>(start));
         area->setSize(end - start);
@@ -95,7 +96,7 @@ auto ProcessMemoryMap::refresh() -> void
         area->setAddress(bs);
         area->setSize(info.RegionSize);
         area->initProtectionFlags(
-          ProcessMemoryArea::Protection::toOwn(info.Protect));
+          ProcessMemoryArea::ProtectionFlags::toOwn(info.Protect));
 
         push_back(std::move(area));
     }
@@ -103,68 +104,3 @@ auto ProcessMemoryMap::refresh() -> void
     CloseHandle(process_handle);
 #endif
 }
-
-template <typename T>
-auto ProcessMemoryMap::allocArea(T address,
-                                 size_t size,
-                                 memory_protection_flags_t flags) -> void
-{
-    MemoryUtils::AllocArea(_process->pid(), address, size, flags);
-}
-
-template <typename T>
-auto ProcessMemoryMap::freeArea(T address, size_t size) -> void
-{
-    MemoryUtils::FreeArea(_process->pid(), address, size);
-}
-
-template <typename T>
-auto ProcessMemoryMap::protectMemoryArea(T address,
-                                         size_t size,
-                                         memory_protection_flags_t flags)
-  -> void
-{
-    MemoryUtils::ProtectMemoryArea(_process->pid(), address, size, flags);
-}
-
-template <typename T>
-auto ProcessMemoryMap::read(T address, size_t size) -> bytes_t
-{
-    auto area = search(address);
-
-    if (!area)
-    {
-        throw MemoryException(std::string(CURRENT_CONTEXT)
-                              + "Couldn't find area");
-    }
-
-    return MemoryUtils::ReadProcessMemoryArea(_process->pid(),
-                                              address,
-                                              size);
-}
-
-template <typename T>
-auto ProcessMemoryMap::write(T address, const bytes_t& bytes) -> void
-{
-    auto area = search(address);
-
-    if (!area)
-    {
-        throw MemoryException(std::string(CURRENT_CONTEXT)
-                              + "Couldn't find area");
-    }
-
-    return MemoryUtils::WriteProcessMemoryArea(_process->pid(),
-                                               address,
-                                               bytes);
-}
-
-template auto ProcessMemoryMap::protectMemoryArea<uintptr_t>(
-  uintptr_t,
-  size_t,
-  memory_protection_flags_t) -> void;
-
-template auto ProcessMemoryMap::protectMemoryArea<ptr_t>(
-  ptr_t,
-  size_t,
-  memory_protection_flags_t) -> void;

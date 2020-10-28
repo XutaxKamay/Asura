@@ -2,22 +2,20 @@
 #define MEMORYAREA_H
 
 #include "types.h"
+#ifdef WINDOWS
+    #include "windows.h"
+#endif
 
 namespace XLib
 {
     /**
-     * @brief memory_protection_flags_t
-     * Modern OS have generally protections on each memory areas,
-     * combined of these three flags:
-     * READ, WRITE, EXECUTE
+     * memory area protection flags
      */
-    enum memory_protection_flags_t
-    {
-        NONE    = 0,
-        READ    = (1 << 0),
-        WRITE   = (1 << 1),
-        EXECUTE = (1 << 2),
-    };
+#ifdef WINDOWS
+    using mapf_t = DWORD;
+#else
+    using mapf_t = int;
+#endif
 
     /**
      * @brief MemoryArea
@@ -26,11 +24,23 @@ namespace XLib
     class MemoryArea
     {
       public:
-        class Protection
+        class ProtectionFlags
         {
           public:
-            static auto toOwn(int flags) -> memory_protection_flags_t;
-            static auto toOS(memory_protection_flags_t flags) -> int;
+            static auto toOwn(mapf_t flags) -> mapf_t;
+            static auto toOS(mapf_t flags) -> mapf_t;
+
+            inline static mapf_t NONE    = 0;
+            inline static mapf_t READ    = (1 << 0);
+            inline static mapf_t WRITE   = (1 << 1);
+            inline static mapf_t EXECUTE = (1 << 2);
+            inline static mapf_t RWX     = READ | WRITE | EXECUTE;
+            inline static mapf_t RX      = READ | EXECUTE;
+            inline static mapf_t WX      = WRITE | EXECUTE;
+            inline static mapf_t RW      = READ | WRITE;
+            inline static mapf_t R       = READ;
+            inline static mapf_t W       = WRITE;
+            inline static mapf_t X       = EXECUTE;
         };
 
       public:
@@ -49,13 +59,22 @@ namespace XLib
 
       public:
         template <typename T = uintptr_t>
-        auto begin() -> T;
+        auto begin() -> T
+        {
+            return view_as<T>(_address);
+        }
 
         template <typename T = uintptr_t>
-        auto end() -> T;
+        auto end() -> T
+        {
+            return view_as<T>(view_as<uintptr_t>(_address) + _size);
+        }
 
-        template <typename T = size_t>
-        auto size() -> T;
+        template <typename T = uintptr_t>
+        auto size() -> T
+        {
+            return view_as<T>(end<size_t>() - begin<size_t>());
+        }
 
       private:
         /**

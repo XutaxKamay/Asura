@@ -182,14 +182,15 @@ auto XLib::Test::run() -> void
         for (auto&& area : mmap)
         {
             ConsoleOutput(area->begin())
-              << "-" << area->end() << ":" << area->protection().flags();
+              << "-" << area->end() << ":"
+              << area->protectionFlags().cachedValue();
 
-            area->protection() = (view_as<memory_protection_flags_t>(
-              memory_protection_flags_t::EXECUTE
-              | memory_protection_flags_t::READ
-              | memory_protection_flags_t::WRITE));
+            area->protectionFlags() = MemoryArea::ProtectionFlags::EXECUTE
+                                      | MemoryArea::ProtectionFlags::READ
+                                      | MemoryArea::ProtectionFlags::WRITE;
 
-            std::cout << ":" << area->protection().flags() << std::endl;
+            std::cout << ":" << area->protectionFlags().cachedValue()
+                      << std::endl;
         }
     }
     catch (MemoryException& me)

@@ -1,24 +1,25 @@
 #include "processmemoryarea.h"
-#include "process.h"
+#include "processbase.h"
 
 using namespace XLib;
 
-ProcessMemoryArea::ModifiableProtection::ModifiableProtection(
+ProcessMemoryArea::ModifiableProtectionFlags::ModifiableProtectionFlags(
   ProcessMemoryArea* pma)
  : _pma(pma)
 {
 }
 
-auto ProcessMemoryArea::ModifiableProtection::change(
-  memory_protection_flags_t flags) -> memory_protection_flags_t
+auto ProcessMemoryArea::ModifiableProtectionFlags::change(mapf_t flags)
+  -> mapf_t
 {
-    memory_protection_flags_t old_flags = _flags;
+    mapf_t old_flags = _flags;
 
     try
     {
-        _pma->process()->protectMemoryArea(_pma->begin(),
-                                           _pma->size(),
-                                           flags);
+        MemoryUtils::ProtectMemoryArea(_pma->_process->pid(),
+                                       _pma->begin(),
+                                       _pma->size(),
+                                       flags);
     }
     catch (MemoryException& me)
     {
@@ -30,71 +31,70 @@ auto ProcessMemoryArea::ModifiableProtection::change(
     return old_flags;
 }
 
-auto ProcessMemoryArea::ModifiableProtection::defaultFlags()
-  -> memory_protection_flags_t&
+auto ProcessMemoryArea::ModifiableProtectionFlags::defaultValue()
+  -> mapf_t&
 {
     return _default_flags;
 }
 
-auto ProcessMemoryArea::ModifiableProtection::flags()
-  -> memory_protection_flags_t&
+auto ProcessMemoryArea::ModifiableProtectionFlags::cachedValue()
+  -> mapf_t&
 {
     return _flags;
 }
 
-auto ProcessMemoryArea::ModifiableProtection::operator|(
-  memory_protection_flags_t flags) -> memory_protection_flags_t
+auto ProcessMemoryArea::ModifiableProtectionFlags::operator|(mapf_t flags)
+  -> mapf_t
 {
-    return view_as<memory_protection_flags_t>(flags | _flags);
+    return flags | _flags;
 }
 
-auto ProcessMemoryArea::ModifiableProtection::operator&(
-  memory_protection_flags_t flags) -> memory_protection_flags_t
+auto ProcessMemoryArea::ModifiableProtectionFlags::operator&(mapf_t flags)
+  -> mapf_t
 {
-    return view_as<memory_protection_flags_t>(flags & _flags);
+    return flags & _flags;
 }
 
-auto ProcessMemoryArea::ModifiableProtection::operator=(
-  memory_protection_flags_t flags) -> void
+auto ProcessMemoryArea::ModifiableProtectionFlags::operator=(mapf_t flags)
+  -> void
 {
     change(flags);
 }
 
-auto ProcessMemoryArea::ModifiableProtection::operator|=(
-  memory_protection_flags_t flags) -> void
+auto ProcessMemoryArea::ModifiableProtectionFlags::operator|=(mapf_t flags)
+  -> void
 {
-    change(view_as<memory_protection_flags_t>(flags | _flags));
+    change(flags | _flags);
 }
 
-auto ProcessMemoryArea::ModifiableProtection::operator&=(
-  memory_protection_flags_t flags) -> void
+auto ProcessMemoryArea::ModifiableProtectionFlags::operator&=(mapf_t flags)
+  -> void
 {
-    change(view_as<memory_protection_flags_t>(flags & _flags));
+    change(flags & _flags);
 }
 
-ProcessMemoryArea::ProcessMemoryArea(Process* process)
- : _protection(ModifiableProtection(this)), _process(process)
+ProcessMemoryArea::ProcessMemoryArea(ProcessBase* process)
+ : _protection_flags(ModifiableProtectionFlags(this)), _process(process)
 {
 }
 
-auto ProcessMemoryArea::protection() -> ModifiableProtection&
+auto ProcessMemoryArea::protectionFlags() -> ModifiableProtectionFlags&
 {
-    return _protection;
+    return _protection_flags;
 }
 
-auto ProcessMemoryArea::resetToDefaultFlags() -> memory_protection_flags_t
+auto ProcessMemoryArea::resetToDefaultFlags() -> mapf_t
 {
-    return _protection.change(_protection.defaultFlags());
+    return _protection_flags.change(_protection_flags.cachedValue());
 }
 
-auto ProcessMemoryArea::initProtectionFlags(
-  memory_protection_flags_t flags) -> void
+auto ProcessMemoryArea::initProtectionFlags(mapf_t flags) -> void
 {
-    _protection.defaultFlags() = flags;
-    _protection.flags()        = flags;
+    _protection_flags.cachedValue()  = flags;
+    _protection_flags.defaultValue() = flags;
 }
 
-auto ProcessMemoryArea::process() -> Process*
+auto ProcessMemoryArea::process() -> ProcessBase*
 {
     return _process;
 }
@@ -108,7 +108,5 @@ auto ProcessMemoryArea::read() -> bytes_t
 
 auto ProcessMemoryArea::write(const bytes_t& bytes) -> void
 {
-    return MemoryUtils::WriteProcessMemoryArea(_process->pid(),
-                                               bytes,
-                                               begin());
+    MemoryUtils::WriteProcessMemoryArea(_process->pid(), bytes, begin());
 }

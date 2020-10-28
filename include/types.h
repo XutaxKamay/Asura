@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <iostream>
+#include <type_traits>
 #include <vector>
 
 #if defined _WIN32 || defined _WIN64
@@ -13,7 +14,7 @@
 #define MAKE_STRING(x)  _MAKE_STRING(x)
 
 #define CURRENT_CONTEXT                                                  \
-    "[" __FILE__                                                         \
+    "(XLib)[" __FILE__                                                   \
     ":" MAKE_STRING(__func__) ":" MAKE_STRING(__LINE__) "] -> "
 
 namespace XLib
@@ -43,7 +44,7 @@ namespace XLib
     };
 
     template <typename T>
-    inline constexpr type_wrapper_t<T> type_wrapper {};
+    constexpr inline type_wrapper_t<T> type_wrapper {};
 
     template <typename T1, typename T2>
     auto view_as(T2 var)

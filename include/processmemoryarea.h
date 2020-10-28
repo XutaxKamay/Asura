@@ -3,58 +3,53 @@
 
 #include "memoryarea.h"
 #include "memoryutils.h"
+#include "processbase.h"
 
 namespace XLib
 {
-    class Process;
     class ProcessMemoryArea : public MemoryArea
     {
       private:
-        class ModifiableProtection : private Protection
+        class ModifiableProtectionFlags : private ProtectionFlags
         {
+            friend class ProcessMemoryArea;
+
           public:
-            ModifiableProtection(ProcessMemoryArea* _pma);
+            ModifiableProtectionFlags(ProcessMemoryArea* _pma);
 
-            auto change(memory_protection_flags_t flags)
-              -> memory_protection_flags_t;
+            auto change(mapf_t flags) -> mapf_t;
 
-            auto flags() -> memory_protection_flags_t&;
-            auto defaultFlags() -> memory_protection_flags_t&;
+            auto operator|(mapf_t flags) -> mapf_t;
+            auto operator&(mapf_t flags) -> mapf_t;
 
-            auto operator|(memory_protection_flags_t flags)
-              -> memory_protection_flags_t;
-            auto operator&(memory_protection_flags_t flags)
-              -> memory_protection_flags_t;
+            auto operator=(mapf_t flags) -> void;
+            auto operator|=(mapf_t flags) -> void;
+            auto operator&=(mapf_t flags) -> void;
 
-            auto operator=(memory_protection_flags_t flags) -> void;
-            auto operator|=(memory_protection_flags_t flags) -> void;
-            auto operator&=(memory_protection_flags_t flags) -> void;
+          public:
+            auto cachedValue() -> mapf_t&;
+            auto defaultValue() -> mapf_t&;
 
           private:
-            memory_protection_flags_t _flags {};
-            memory_protection_flags_t _default_flags {};
+            mapf_t _flags {};
+            mapf_t _default_flags {};
 
-          private:
             ProcessMemoryArea* _pma;
         };
 
       public:
-        ProcessMemoryArea(Process* process);
+        ProcessMemoryArea(ProcessBase* process);
 
-        auto protection() -> ModifiableProtection&;
-
-        auto resetToDefaultFlags() -> memory_protection_flags_t;
-
-        auto initProtectionFlags(memory_protection_flags_t flags) -> void;
-
-        auto process() -> Process*;
-
+        auto protectionFlags() -> ModifiableProtectionFlags&;
+        auto resetToDefaultFlags() -> mapf_t;
+        auto initProtectionFlags(mapf_t flags) -> void;
+        auto process() -> ProcessBase*;
         auto read() -> bytes_t;
         auto write(const bytes_t& bytes) -> void;
 
       private:
-        ModifiableProtection _protection;
-        Process* _process;
+        ModifiableProtectionFlags _protection_flags;
+        ProcessBase* _process;
     };
 };
 

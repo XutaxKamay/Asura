@@ -7,63 +7,56 @@
 
 using namespace XLib;
 
-auto MemoryArea::Protection::toOwn(int flags) -> memory_protection_flags_t
+auto MemoryArea::ProtectionFlags::toOwn(mapf_t flags) -> mapf_t
 {
 #ifdef WINDOWS
-    memory_protection_flags_t own_flags;
+    mapf_t own_flags;
 
     switch (flags)
     {
         case PAGE_EXECUTE:
         {
-            own_flags = view_as<memory_protection_flags_t>(
-              memory_protection_flags_t::EXECUTE);
+            own_flags = MemoryArea::ProtectionFlags::EXECUTE;
             break;
         }
         case PAGE_EXECUTE_READ:
         {
-            own_flags = view_as<memory_protection_flags_t>(
-              memory_protection_flags_t::EXECUTE
-              | memory_protection_flags_t::READ);
+            own_flags = MemoryArea::ProtectionFlags::EXECUTE
+                        | MemoryArea::ProtectionFlags::READ;
             break;
         }
         case PAGE_EXECUTE_READWRITE:
         {
-            own_flags = view_as<memory_protection_flags_t>(
-              memory_protection_flags_t::EXECUTE
-              | memory_protection_flags_t::READ
-              | memory_protection_flags_t::WRITE);
+            own_flags = MemoryArea::ProtectionFlags::EXECUTE
+                        | MemoryArea::ProtectionFlags::READ
+                        | MemoryArea::ProtectionFlags::WRITE;
             break;
         }
         case PAGE_READONLY:
         {
-            own_flags = view_as<memory_protection_flags_t>(
-              memory_protection_flags_t::READ);
+            own_flags = MemoryArea::ProtectionFlags::READ;
             break;
         }
         case PAGE_READWRITE:
         {
-            own_flags = view_as<memory_protection_flags_t>(
-              memory_protection_flags_t::READ
-              | memory_protection_flags_t::WRITE);
+            own_flags = MemoryArea::ProtectionFlags::READ
+                        | MemoryArea::ProtectionFlags::WRITE;
             break;
         }
         case PAGE_EXECUTE_WRITECOPY:
         {
-            own_flags = view_as<memory_protection_flags_t>(
-              memory_protection_flags_t::EXECUTE
-              | memory_protection_flags_t::WRITE);
+            own_flags = MemoryArea::ProtectionFlags::EXECUTE
+                        | MemoryArea::ProtectionFlags::WRITE;
             break;
         }
         case PAGE_WRITECOPY:
         {
-            own_flags = view_as<memory_protection_flags_t>(
-              memory_protection_flags_t::WRITE);
+            own_flags = MemoryArea::ProtectionFlags::WRITE;
             break;
         }
         default:
         {
-            own_flags = memory_protection_flags_t::NONE;
+            own_flags = MemoryArea::ProtectionFlags::NONE;
             break;
         }
     }
@@ -71,57 +64,56 @@ auto MemoryArea::Protection::toOwn(int flags) -> memory_protection_flags_t
     return own_flags;
 
 #else
-    return view_as<memory_protection_flags_t>(
-      flags
-      & (memory_protection_flags_t::EXECUTE
-         | memory_protection_flags_t::READ
-         | memory_protection_flags_t::WRITE));
+    return flags
+           & (MemoryArea::ProtectionFlags::EXECUTE
+              | MemoryArea::ProtectionFlags::READ
+              | MemoryArea::ProtectionFlags::WRITE);
 #endif
 }
 
-auto MemoryArea::Protection::toOS(memory_protection_flags_t flags) -> int
+auto MemoryArea::ProtectionFlags::toOS(mapf_t flags) -> mapf_t
 {
 #ifdef WINDOWS
     int os_flags;
 
     switch (view_as<int>(flags))
     {
-        case memory_protection_flags_t::EXECUTE:
+        case MemoryArea::ProtectionFlags::EXECUTE:
         {
             os_flags = PAGE_EXECUTE;
             break;
         }
-        case memory_protection_flags_t::EXECUTE
-          | memory_protection_flags_t::READ:
+        case MemoryArea::ProtectionFlags::EXECUTE
+          | MemoryArea::ProtectionFlags::READ:
         {
             os_flags = PAGE_EXECUTE_READ;
             break;
         }
-        case memory_protection_flags_t::EXECUTE
-          | memory_protection_flags_t::READ
-          | memory_protection_flags_t::WRITE:
+        case MemoryArea::ProtectionFlags::EXECUTE
+          | MemoryArea::ProtectionFlags::READ
+          | MemoryArea::ProtectionFlags::WRITE:
         {
             os_flags = PAGE_EXECUTE_READWRITE;
             break;
         }
-        case memory_protection_flags_t::READ:
+        case MemoryArea::ProtectionFlags::READ:
         {
             os_flags = PAGE_READONLY;
             break;
         }
-        case memory_protection_flags_t::READ
-          | memory_protection_flags_t::WRITE:
+        case MemoryArea::ProtectionFlags::READ
+          | MemoryArea::ProtectionFlags::WRITE:
         {
             os_flags = PAGE_READWRITE;
             break;
         }
-        case memory_protection_flags_t::EXECUTE
-          | memory_protection_flags_t::WRITE:
+        case MemoryArea::ProtectionFlags::EXECUTE
+          | MemoryArea::ProtectionFlags::WRITE:
         {
             os_flags = PAGE_EXECUTE_WRITECOPY;
             break;
         }
-        case memory_protection_flags_t::WRITE:
+        case MemoryArea::ProtectionFlags::WRITE:
         {
             os_flags = PAGE_WRITECOPY;
             break;
@@ -148,23 +140,3 @@ auto MemoryArea::setSize(size_t size) -> void
 {
     _size = size;
 }
-
-template <typename T>
-auto MemoryArea::begin() -> T
-{
-    return view_as<T>(_address);
-}
-
-template <typename T>
-auto MemoryArea::end() -> T
-{
-    return view_as<T>(view_as<uintptr_t>(_address) + _size);
-}
-
-template <typename T>
-auto MemoryArea::size() -> T
-{
-    return view_as<T>(end<size_t>() - begin<size_t>());
-}
-
-template auto MemoryArea::size<size_t>() -> size_t;

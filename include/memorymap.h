@@ -13,7 +13,7 @@ namespace XLib
     {
       public:
         template <typename T = uintptr_t>
-        auto search(T address)
+        auto search(T address) -> std::unique_ptr<MemoryArea_T>
         {
             for (auto&& area : *this)
             {

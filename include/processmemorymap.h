@@ -1,44 +1,97 @@
-#ifndef PROCESSMAP_H
-#define PROCESSMAP_H
+#ifndef PROCESSMEMORYMAP_H
+#define PROCESSMEMORYMAP_H
 
 #include "memorymap.h"
 #include "memoryutils.h"
+#include "processbase.h"
 #include "processmemoryarea.h"
 
 namespace XLib
 {
-    class Process;
-
+    class ProcessMemoryArea;
     class ProcessMemoryMap : public MemoryMap<ProcessMemoryArea>
     {
       public:
         ProcessMemoryMap() = default;
-        ProcessMemoryMap(Process* process);
-
-        template <typename T = uintptr_t>
-        auto allocArea(T address,
-                       size_t size,
-                       memory_protection_flags_t flags) -> void;
-
-        template <typename T = uintptr_t>
-        auto freeArea(T address, size_t size) -> void;
-
-        template <typename T = uintptr_t>
-        auto protectMemoryArea(T address,
-                               size_t size,
-                               memory_protection_flags_t flags) -> void;
-
-        template <typename T>
-        auto read(T address, size_t size) -> bytes_t;
-
-        template <typename T>
-        auto write(T address, const bytes_t& bytes) -> void;
+        ProcessMemoryMap(ProcessBase* process);
 
       public:
         auto refresh() -> void;
 
+      public:
+        template <typename T = uintptr_t>
+        auto allocArea(T address, size_t size, mapf_t flags) -> ptr_t
+        {
+            auto ret = MemoryUtils::AllocArea(_process->pid(),
+                                              address,
+                                              size,
+                                              flags);
+
+            refresh();
+
+            return ret;
+        }
+
+        template <typename T = uintptr_t>
+        auto freeArea(T address, size_t size) -> void
+        {
+            MemoryUtils::FreeArea(_process->pid(), address, size);
+
+            refresh();
+        }
+
+        template <typename T = uintptr_t>
+        auto protectMemoryArea(T address, size_t size, mapf_t flags)
+          -> void
+        {
+            MemoryUtils::ProtectMemoryArea(_process->pid(),
+                                           address,
+                                           size,
+                                           flags);
+
+            refresh();
+        }
+
+        template <typename T = uintptr_t>
+        auto read(T address, size_t size) -> bytes_t
+        {
+            return MemoryUtils::ReadProcessMemoryArea(_process->pid(),
+                                                      address,
+                                                      size);
+        }
+
+        template <typename T = uintptr_t>
+        auto write(T address, const bytes_t& bytes) -> void
+        {
+            MemoryUtils::WriteProcessMemoryArea(_process->pid(),
+                                                address,
+                                                bytes);
+        }
+
+        template <typename T = uintptr_t>
+        auto forceWrite(T address, const bytes_t& bytes) -> void
+        {
+            refresh();
+
+            auto area = search(address);
+
+            if (!area)
+            {
+                throw MemoryException(std::string(CURRENT_CONTEXT)
+                                      + "Could not find area");
+            }
+
+            area->protectionFlags() |= MemoryArea::ProtectionFlags::W;
+
+            MemoryUtils::WriteProcessMemoryArea(_process->pid(),
+                                                address,
+                                                bytes);
+
+            area->resetToDefaultFlags();
+        }
+
       private:
-        Process* _process;
+        ProcessBase* _process;
     };
 };
 
