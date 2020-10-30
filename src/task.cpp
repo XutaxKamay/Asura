@@ -94,7 +94,12 @@ Task::Task(ProcessBase* processBase, tid_t id)
 {
 }
 
-auto Task::id() -> tid_t
+Task::Task(ProcessBase* processBase)
+ : _process_base(processBase), _id(INVALID_ID)
+{
+}
+
+auto Task::id() -> tid_t&
 {
     return _id;
 }

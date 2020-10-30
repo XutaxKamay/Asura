@@ -6,19 +6,20 @@
 
 namespace XLib
 {
-    template <size_t arg_size_T = 0>
     class RunnableTask : public Task
     {
       public:
-        RunnableTask(ProcessBase* processBase,
-                     ptr_t routineAddress,
-                     tid_t id,
-                     Buffer<arg_size_T> arg);
+        RunnableTask(ProcessBase* processBase, ptr_t routineAddress);
 
         auto run() -> void;
 
       private:
-        Buffer<arg_size_T> _arg;
+        ptr_t _routine_address;
+        ptr_t _args;
+        size_t _stack_size;
+#ifdef WINDOWS
+        HANDLE _thread_handle;
+#endif
     };
 };
 

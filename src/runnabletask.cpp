@@ -1,1 +1,92 @@
 #include "runnabletask.h"
+#include "taskexception.h"
+
+using namespace XLib;
+
+RunnableTask::RunnableTask(ProcessBase* processBase, ptr_t routineAddress)
+ : Task(processBase), _routine_address(routineAddress)
+#ifdef WINDOWS
+   ,
+   _thread_handle(nullptr)
+#endif
+{
+}
+
+auto RunnableTask::run() -> void
+{
+#ifdef WINDOWS
+    auto process_handle = OpenProcess(
+      PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION
+        | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ,
+      false,
+      _process_base->id());
+
+    if (!process_handle)
+    {
+        throw TaskException(std::string(CURRENT_CONTEXT)
+                            + "Could not get permissions to create a new "
+                              "thread");
+    }
+
+    _thread_handle = CreateRemoteThread(
+      process_handle,
+      0,
+      _stack_size,
+      (LPTHREAD_START_ROUTINE)_routine_address,
+      0,
+      0,
+      &_id);
+
+    if (!_thread_handle)
+    {
+        _id = INVALID_ID;
+        throw TaskException(std::string(CURRENT_CONTEXT)
+                            + "Could not create thread");
+    }
+
+    CloseHandle(process_handle);
+#else
+    /**
+     * CLONE_PARENT would be optional.
+     * This is the minimalist:
+     * (CLONE_VM | CLONE_SIGHAND | CLONE_THREAD)
+     *
+     * ( CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SYSVSEM
+     * CLONE_SIGHAND | CLONE_THREAD
+     * CLONE_SETTLS | CLONE_PARENT_SETTID
+     * CLONE_CHILD_CLEARTID
+     * 0)
+     *
+     */
+    auto base_stack = view_as<ptr_t>(syscall(440,
+                                             _process_base->id(),
+                                             0x13370000,
+                                             _stack_size,
+                                             PROT_EXEC | PROT_WRITE,
+                                             MAP_PRIVATE | MAP_ANONYMOUS,
+                                             0,
+                                             0));
+
+    if (base_stack == nullptr)
+    {
+        throw TaskException(std::string(CURRENT_CONTEXT)
+                            + "Could not allocate stack for the thread");
+    }
+
+    _id = syscall(444,
+                  _process_base->id(),
+                  (CLONE_VM | CLONE_SIGHAND | CLONE_THREAD),
+                  _routine_address,
+                  reinterpret_cast<void*>(
+                    reinterpret_cast<uintptr_t>(base_stack) + _stack_size
+                    - sizeof(ptr_t)),
+                  _stack_size);
+
+    if (_id == INVALID_ID)
+    {
+        throw TaskException(std::string(CURRENT_CONTEXT)
+                            + "Could not create thread");
+    }
+
+#endif
+}

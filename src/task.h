@@ -8,22 +8,32 @@
 namespace XLib
 {
     class Task;
+    class RunnableTask;
+
     using tasks_t = std::list<Task>;
     using tid_t   = int;
 
     class Task
     {
+        friend RunnableTask;
+
       public:
-        static inline auto EXIT_CODE = 0x1338;
+        static inline auto EXIT_CODE  = 0x1338;
+        static inline auto INVALID_ID = -1;
+
+      public:
         static auto list(ProcessBase* processBase) -> tasks_t;
 
       public:
         Task(ProcessBase* processBase, tid_t id);
 
+      private:
+        Task(ProcessBase* processBase);
+
       public:
         auto wait() -> void;
         auto kill() -> void;
-        auto id() -> tid_t;
+        auto id() -> tid_t&;
 
       private:
         ProcessBase* _process_base;
