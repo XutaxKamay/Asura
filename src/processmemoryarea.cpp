@@ -16,7 +16,7 @@ auto ProcessMemoryArea::ModifiableProtectionFlags::change(mapf_t flags)
 
     try
     {
-        MemoryUtils::ProtectMemoryArea(_pma->_process->pid(),
+        MemoryUtils::ProtectMemoryArea(_pma->_process_base->id(),
                                        _pma->begin(),
                                        _pma->size(),
                                        flags);
@@ -74,7 +74,8 @@ auto ProcessMemoryArea::ModifiableProtectionFlags::operator&=(mapf_t flags)
 }
 
 ProcessMemoryArea::ProcessMemoryArea(ProcessBase* process)
- : _protection_flags(ModifiableProtectionFlags(this)), _process(process)
+ : _protection_flags(ModifiableProtectionFlags(this)),
+   _process_base(process)
 {
 }
 
@@ -94,19 +95,21 @@ auto ProcessMemoryArea::initProtectionFlags(mapf_t flags) -> void
     _protection_flags.defaultValue() = flags;
 }
 
-auto ProcessMemoryArea::process() -> ProcessBase*
+auto ProcessMemoryArea::processBase() -> ProcessBase*
 {
-    return _process;
+    return _process_base;
 }
 
 auto ProcessMemoryArea::read() -> bytes_t
 {
-    return MemoryUtils::ReadProcessMemoryArea(_process->pid(),
+    return MemoryUtils::ReadProcessMemoryArea(_process_base->id(),
                                               begin(),
                                               size());
 }
 
 auto ProcessMemoryArea::write(const bytes_t& bytes) -> void
 {
-    MemoryUtils::WriteProcessMemoryArea(_process->pid(), bytes, begin());
+    MemoryUtils::WriteProcessMemoryArea(_process_base->id(),
+                                        bytes,
+                                        begin());
 }

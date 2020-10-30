@@ -43,13 +43,13 @@ namespace XLib
         auto protectionFlags() -> ModifiableProtectionFlags&;
         auto resetToDefaultFlags() -> mapf_t;
         auto initProtectionFlags(mapf_t flags) -> void;
-        auto process() -> ProcessBase*;
+        auto processBase() -> ProcessBase*;
         auto read() -> bytes_t;
         auto write(const bytes_t& bytes) -> void;
 
       private:
         ModifiableProtectionFlags _protection_flags;
-        ProcessBase* _process;
+        ProcessBase* _process_base;
     };
 };
 

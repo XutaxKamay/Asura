@@ -16,7 +16,7 @@
 using namespace XLib;
 
 ProcessMemoryMap::ProcessMemoryMap(ProcessBase* process)
- : _process(process)
+ : _process_base(process)
 {
     refresh();
 }
@@ -27,14 +27,14 @@ auto ProcessMemoryMap::refresh() -> void
 
 #ifndef WINDOWS
     std::ifstream file_memory_map(
-      "/proc/" + std::to_string(_process->pid()) + "/maps");
+      "/proc/" + std::to_string(_process_base->id()) + "/maps");
     std::string line;
 
     if (!file_memory_map.is_open())
     {
         throw MemoryException(
           std::string(CURRENT_CONTEXT) + "Couldn't open /proc/"
-          + std::to_string(_process->pid()) + "/maps");
+          + std::to_string(_process_base->id()) + "/maps");
     }
 
     while (std::getline(file_memory_map, line))
@@ -61,7 +61,7 @@ auto ProcessMemoryMap::refresh() -> void
             return true;
         };
 
-        auto area = std::make_unique<ProcessMemoryArea>(_process);
+        auto area = std::make_unique<ProcessMemoryArea>(_process_base);
         area->initProtectionFlags(
           (is_on(prot[0]) ? MemoryArea::ProtectionFlags::READ : 0)
           | (is_on(prot[1]) ? MemoryArea::ProtectionFlags::WRITE : 0)
@@ -75,13 +75,13 @@ auto ProcessMemoryMap::refresh() -> void
 #else
     auto process_handle = OpenProcess(PROCESS_QUERY_INFORMATION,
                                       false,
-                                      _process->pid());
+                                      _process_base->id());
 
     if (process_handle == nullptr)
     {
         throw MemoryException(std::string(CURRENT_CONTEXT)
                               + "Couldn't open process from pid: "
-                              + std::to_string(_process->pid()));
+                              + std::to_string(_process_base->id()));
     }
 
     MEMORY_BASIC_INFORMATION info;
@@ -92,7 +92,7 @@ auto ProcessMemoryMap::refresh() -> void
          == sizeof(info);
          bs += info.RegionSize)
     {
-        auto area = std::make_unique<ProcessMemoryArea>(_process);
+        auto area = std::make_unique<ProcessMemoryArea>(_process_base);
         area->setAddress(bs);
         area->setSize(info.RegionSize);
         area->initProtectionFlags(

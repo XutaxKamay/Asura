@@ -9,15 +9,9 @@ namespace XLib
     class MemoryException : std::exception
     {
       public:
-        MemoryException(const std::string& msg)
-        {
-            _msg = msg;
-        }
+        MemoryException(const std::string& msg);
 
-        auto& msg()
-        {
-            return _msg;
-        }
+        auto& msg();
 
       private:
         std::string _msg {};

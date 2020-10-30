@@ -2,8 +2,12 @@
 
 using namespace XLib;
 
+Process::Process() : ProcessBase()
+{
+}
+
 Process::Process(const std::string& fullName, pid_t pid)
- : _full_name(fullName), _pid(pid), _mmap(ProcessMemoryMap(this))
+ : ProcessBase(pid), _full_name(fullName), _mmap(ProcessMemoryMap(this))
 {
 }
 
@@ -22,4 +26,3 @@ auto Process::mmap() -> ProcessMemoryMap&
     _mmap.refresh();
     return _mmap;
 }
-

@@ -11,7 +11,7 @@ auto ProcessBase::setPID(pid_t pid)
     _pid = pid;
 }
 
-auto ProcessBase::pid() -> pid_t
+auto ProcessBase::id() -> pid_t
 {
     return _pid;
 }

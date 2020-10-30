@@ -20,9 +20,6 @@ XLIB_RELEASE:=xlib.rel
 # CRYPTOPP
 CRYPTOPP_LIB:=cryptopp
 
-# WINEXTS KERNEL MODULE
-WINEXTS_INCLUDE=
-
 # Let's see if it's asked us to compile in 32 bits.
 ifneq (,$(findstring -m32, $(CXX)))
 	CRYPTOPP_LIB:=$(CRYPTOPP_LIB)32
@@ -66,8 +63,6 @@ ifneq (,$(findstring mingw, $(CXX)))
 	XLIB_TEST_RELEASE:=$(XLIB_TEST_RELEASE).exe
 	XLIB_OBJ_DEBUG_OUT:=$(XLIB_OBJ_DEBUG_OUT)win
 	XLIB_OBJ_RELEASE_OUT:=$(XLIB_OBJ_RELEASE_OUT)win
-else
-	WINEXTS_INCLUDE=-Iwinexts/
 endif
 
 XLIB_OBJ_DEBUG=$(subst .cpp,$(XLIB_OBJ_DEBUG_OUT),$(wildcard src/*.cpp))
@@ -79,9 +74,9 @@ XLIB_TEST_OBJ_RELEASE=$(subst .cpp,$(XLIB_OBJ_RELEASE_OUT),$(wildcard test/src/*
 XLIB_DEBUG:=$(XLIB_DEBUG).a
 XLIB_RELEASE:=$(XLIB_RELEASE).a
 
-CPPFLAGS_DEBUG:= -static -static-libstdc++ -static-libgcc -std=c++17 -O0 -g -Wextra -W -Wall -Werror -Wl,--no-undefined -Iinclude/ -Itest/include/ $(WINEXTS_INCLUDE) -I$(PREFIX)/include/ -L$(PREFIX)/lib/
+CPPFLAGS_DEBUG:= -static -static-libstdc++ -static-libgcc -std=c++17 -O0 -g -Wextra -W -Wall -Werror -Wl,--no-undefined -Itest/src/ -I$(PREFIX)/src/ -L$(PREFIX)/lib/
 
-CPPFLAGS_RELEASE:= -static -static-libstdc++ -static-libgcc -std=c++17 -s -Wextra -W -Wall -Werror -Wl,--no-undefined -Iinclude/ -Itest/include/ $(WINEXTS_INCLUDE) -I$(PREFIX)/include/ -L$(PREFIX)/lib/
+CPPFLAGS_RELEASE:= -static -static-libstdc++ -static-libgcc -std=c++17 -s -Wextra -W -Wall -Werror -Wl,--no-undefined -Itest/src/ -I$(PREFIX)/src/ -L$(PREFIX)/lib/
 
 all: xlib xlib_test
 
@@ -106,7 +101,7 @@ install:
 		# Headers.
 		install -d $(DESTDIR)$(PREFIX)/include/
 		install -d $(DESTDIR)$(PREFIX)/include/xlib/
-		cp -r ./include/*.h $(DESTDIR)$(PREFIX)/include/xlib/
+		cp ./src/*.h $(DESTDIR)$(PREFIX)/include/xlib/
 
 
 .PHONY: all clean

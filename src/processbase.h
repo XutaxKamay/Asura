@@ -6,16 +6,19 @@
 namespace XLib
 {
     class Process;
+    class Task;
     class ProcessBase
     {
         friend Process;
+        friend Task;
 
       private:
+        ProcessBase() = default;
         ProcessBase(pid_t);
 
       public:
         auto setPID(pid_t pid);
-        auto pid() -> pid_t;
+        auto id() -> pid_t;
 
       private:
         pid_t _pid {};

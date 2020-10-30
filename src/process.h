@@ -12,6 +12,7 @@ namespace XLib
     class Process : public ProcessBase
     {
       public:
+        Process();
         Process(const std::string& fullName, pid_t pid);
 
       public:
@@ -60,7 +61,6 @@ namespace XLib
 
       private:
         std::string _full_name {};
-        pid_t _pid {};
         ProcessMemoryMap _mmap {};
     };
 }
