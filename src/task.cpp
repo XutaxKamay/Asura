@@ -2,6 +2,7 @@
 #include "taskexception.h"
 
 #ifdef WINDOWS
+    #include <tlhelp32.h>
     #include <windows.h>
 #else
     #include <cstdlib>
@@ -40,7 +41,7 @@ auto Task::list(ProcessBase* processBase) -> tasks_t
 
         do
         {
-            if (te32.th32OwnerProcessID == dwOwnerPID)
+            if (te32.th32OwnerProcessID == processBase->id())
             {
                 Task task(processBase, te32.th32ThreadID);
 
@@ -83,6 +84,11 @@ auto Task::list(ProcessBase* processBase) -> tasks_t
 
             tasks.push_back(task);
         }
+
+        /**
+         * The base process is also a task
+         */
+        tasks.push_back(Task(processBase, processBase->id()));
 #endif
     }
 

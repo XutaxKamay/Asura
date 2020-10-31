@@ -20,6 +20,24 @@ namespace XLib
 
       public:
         template <typename T = uintptr_t>
+        auto search(T address) -> ProcessMemoryArea*
+        {
+            for (auto&& area : *this)
+            {
+                auto start_ptr = area->begin();
+                auto end_ptr   = area->end();
+
+                if (view_as<uintptr_t>(address) >= start_ptr
+                    && view_as<uintptr_t>(address) < end_ptr)
+                {
+                    return area.get();
+                }
+            }
+
+            return nullptr;
+        }
+
+        template <typename T = uintptr_t>
         auto allocArea(T address, size_t size, mapf_t flags) -> ptr_t
         {
             auto ret = MemoryUtils::AllocArea(_process_base->id(),
@@ -96,3 +114,4 @@ namespace XLib
 };
 
 #endif
+

@@ -6,6 +6,7 @@
 #include "processbase.h"
 #include "processmemoryarea.h"
 #include "processmemorymap.h"
+#include "runnabletask.h"
 
 namespace XLib
 {
@@ -19,44 +20,52 @@ namespace XLib
         auto setFullName(const std::string& fullName) -> void;
         auto fullName() -> std::string;
 
+        auto tasks() -> tasks_t;
         auto mmap() -> ProcessMemoryMap&;
 
       public:
+        template <size_t stack_size_T = 0x10000>
+        auto createTask(ptr_t routineAddress)
+          -> RunnableTask<stack_size_T>
+        {
+            return RunnableTask<stack_size_T>(this, routineAddress);
+        }
+
         template <typename T = uintptr_t>
         auto allocArea(T address, size_t size, mapf_t flags) -> ptr_t
         {
-            return _mmap.allocArea<T>(address, size, flags);
+            return mmap().allocArea<T>(address, size, flags);
         }
 
         template <typename T = uintptr_t>
         auto freeArea(T address, size_t size) -> void
         {
-            _mmap.freeArea<T>(address, size);
+            mmap().freeArea<T>(address, size);
         }
 
         template <typename T = uintptr_t>
         auto protectMemoryArea(T address, size_t size, mapf_t flags)
           -> void
         {
-            _mmap.protectMemoryArea(address, size, flags);
+            mmap().protectMemoryArea(address, size, flags);
         }
 
         template <typename T = uintptr_t>
         auto read(T address, size_t size) -> bytes_t
         {
-            return _mmap.read(address, size);
+            return mmap().read(address, size);
         }
 
         template <typename T = uintptr_t>
         auto write(T address, const bytes_t& bytes) -> void
         {
-            _mmap.write(address, bytes);
+            mmap().write(address, bytes);
         }
 
         template <typename T = uintptr_t>
         auto forceWrite(T address, const bytes_t& bytes) -> void
         {
-            _mmap.forceWrite(address, bytes);
+            mmap().forceWrite(address, bytes);
         }
 
       private:

@@ -6,7 +6,7 @@ MemoryException::MemoryException(const std::string& msg) : _msg(msg)
 {
 }
 
-auto& MemoryException::msg()
+auto MemoryException::msg() -> std::string&
 {
     return _msg;
 }

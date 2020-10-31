@@ -220,7 +220,7 @@ namespace XLib
             }
 
             auto ret = ReadProcessMemory(process_handle,
-                                         address,
+                                         view_as<ptr_t>(address),
                                          result.data(),
                                          result.size(),
                                          nullptr);
@@ -270,9 +270,9 @@ namespace XLib
             }
 
             auto ret = WriteProcessMemory(process_handle,
-                                          address,
-                                          result.data(),
-                                          result.size(),
+                                          view_as<ptr_t>(address),
+                                          bytes.data(),
+                                          bytes.size(),
                                           nullptr);
 
             if (!ret)

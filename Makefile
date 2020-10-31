@@ -74,9 +74,9 @@ XLIB_TEST_OBJ_RELEASE=$(subst .cpp,$(XLIB_OBJ_RELEASE_OUT),$(wildcard test/src/*
 XLIB_DEBUG:=$(XLIB_DEBUG).a
 XLIB_RELEASE:=$(XLIB_RELEASE).a
 
-CPPFLAGS_DEBUG:= -static -static-libstdc++ -static-libgcc -std=c++17 -O0 -g -Wextra -W -Wall -Werror -Wl,--no-undefined -Itest/src/ -I$(PREFIX)/src/ -L$(PREFIX)/lib/
+CPPFLAGS_DEBUG:= -static -static-libstdc++ -static-libgcc -std=c++17 -O0 -g -Wextra -W -Wall -Werror -Wl,--no-undefined -Isrc/ -Itest/src/ -I$(PREFIX)/include/ -L$(PREFIX)/lib/
 
-CPPFLAGS_RELEASE:= -static -static-libstdc++ -static-libgcc -std=c++17 -s -Wextra -W -Wall -Werror -Wl,--no-undefined -Itest/src/ -I$(PREFIX)/src/ -L$(PREFIX)/lib/
+CPPFLAGS_RELEASE:= -static -static-libstdc++ -static-libgcc -std=c++17 -s -Wextra -W -Wall -Werror -Wl,--no-undefined -Isrc/ -Itest/src/ -I$(PREFIX)/include/ -L$(PREFIX)/lib/
 
 all: xlib xlib_test
 

@@ -3,7 +3,9 @@
 
 using namespace XLib;
 
-RunnableTask::RunnableTask(ProcessBase* processBase, ptr_t routineAddress)
+template <size_t stack_size_T>
+RunnableTask<stack_size_T>::RunnableTask(ProcessBase* processBase,
+                                         ptr_t routineAddress)
  : Task(processBase), _routine_address(routineAddress)
 #ifdef WINDOWS
    ,
@@ -12,7 +14,8 @@ RunnableTask::RunnableTask(ProcessBase* processBase, ptr_t routineAddress)
 {
 }
 
-auto RunnableTask::run() -> void
+template <size_t stack_size_T>
+auto RunnableTask<stack_size_T>::run() -> void
 {
 #ifdef WINDOWS
     auto process_handle = OpenProcess(
@@ -31,13 +34,13 @@ auto RunnableTask::run() -> void
     _thread_handle = CreateRemoteThread(
       process_handle,
       0,
-      _stack_size,
+      stack_size_T,
       (LPTHREAD_START_ROUTINE)_routine_address,
       0,
       0,
       &_id);
 
-    if (!_thread_handle)
+    if (_thread_handle == nullptr)
     {
         _id = INVALID_ID;
         throw TaskException(std::string(CURRENT_CONTEXT)
@@ -61,7 +64,7 @@ auto RunnableTask::run() -> void
     auto base_stack = view_as<ptr_t>(syscall(440,
                                              _process_base->id(),
                                              0x13370000,
-                                             _stack_size,
+                                             stack_size_T,
                                              PROT_EXEC | PROT_WRITE,
                                              MAP_PRIVATE | MAP_ANONYMOUS,
                                              0,
@@ -77,16 +80,15 @@ auto RunnableTask::run() -> void
                   _process_base->id(),
                   (CLONE_VM | CLONE_SIGHAND | CLONE_THREAD),
                   _routine_address,
-                  reinterpret_cast<void*>(
-                    reinterpret_cast<uintptr_t>(base_stack) + _stack_size
+                  reinterpret_cast<ptr_t>(
+                    reinterpret_cast<uintptr_t>(base_stack) + stack_size_T
                     - sizeof(ptr_t)),
-                  _stack_size);
+                  stack_size_T);
 
     if (_id == INVALID_ID)
     {
         throw TaskException(std::string(CURRENT_CONTEXT)
                             + "Could not create thread");
     }
-
 #endif
 }

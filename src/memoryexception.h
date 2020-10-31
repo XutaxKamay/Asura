@@ -11,7 +11,7 @@ namespace XLib
       public:
         MemoryException(const std::string& msg);
 
-        auto& msg();
+        auto msg() -> std::string&;
 
       private:
         std::string _msg {};

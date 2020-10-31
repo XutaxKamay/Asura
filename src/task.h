@@ -8,6 +8,7 @@
 namespace XLib
 {
     class Task;
+    template <size_t stack_size_T>
     class RunnableTask;
 
     using tasks_t = std::list<Task>;
@@ -15,7 +16,8 @@ namespace XLib
 
     class Task
     {
-        friend RunnableTask;
+        template <size_t>
+        friend class RunnableTask;
 
       public:
         static inline auto EXIT_CODE  = 0x1338;

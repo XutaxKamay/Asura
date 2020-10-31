@@ -6,6 +6,7 @@
 
 namespace XLib
 {
+    template <size_t stack_size_T>
     class RunnableTask : public Task
     {
       public:
@@ -15,8 +16,6 @@ namespace XLib
 
       private:
         ptr_t _routine_address;
-        ptr_t _args;
-        size_t _stack_size;
 #ifdef WINDOWS
         HANDLE _thread_handle;
 #endif

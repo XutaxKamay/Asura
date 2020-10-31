@@ -30,17 +30,17 @@ namespace XLib
             static auto toOwn(mapf_t flags) -> mapf_t;
             static auto toOS(mapf_t flags) -> mapf_t;
 
-            inline static mapf_t NONE    = 0;
-            inline static mapf_t READ    = (1 << 0);
-            inline static mapf_t WRITE   = (1 << 1);
-            inline static mapf_t EXECUTE = (1 << 2);
-            inline static mapf_t RWX     = READ | WRITE | EXECUTE;
-            inline static mapf_t RX      = READ | EXECUTE;
-            inline static mapf_t WX      = WRITE | EXECUTE;
-            inline static mapf_t RW      = READ | WRITE;
-            inline static mapf_t R       = READ;
-            inline static mapf_t W       = WRITE;
-            inline static mapf_t X       = EXECUTE;
+            const inline static mapf_t NONE    = 0;
+            const inline static mapf_t READ    = (1 << 0);
+            const inline static mapf_t WRITE   = (1 << 1);
+            const inline static mapf_t EXECUTE = (1 << 2);
+            const inline static mapf_t RWX     = READ | WRITE | EXECUTE;
+            const inline static mapf_t RX      = READ | EXECUTE;
+            const inline static mapf_t WX      = WRITE | EXECUTE;
+            const inline static mapf_t RW      = READ | WRITE;
+            const inline static mapf_t R       = READ;
+            const inline static mapf_t W       = WRITE;
+            const inline static mapf_t X       = EXECUTE;
         };
 
       public:

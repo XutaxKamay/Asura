@@ -21,6 +21,11 @@ auto Process::fullName() -> std::string
     return _full_name;
 }
 
+auto Process::tasks() -> tasks_t
+{
+    return Task::list(this);
+}
+
 auto Process::mmap() -> ProcessMemoryMap&
 {
     _mmap.refresh();
