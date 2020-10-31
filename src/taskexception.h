@@ -8,12 +8,12 @@ namespace XLib
 {
     class TaskException : std::exception
     {
-    public:
+      public:
         TaskException(const std::string& msg);
 
         auto& msg();
 
-    private:
+      private:
         std::string _msg {};
     };
 };

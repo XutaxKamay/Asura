@@ -14,8 +14,7 @@
 #define MAKE_STRING(x)  _MAKE_STRING(x)
 
 #define CURRENT_CONTEXT                                                  \
-    "(XLib)[" __FILE__                                                   \
-    ":" MAKE_STRING(__func__) ":" MAKE_STRING(__LINE__) "] -> "
+    "[XLib][" __FILE__ ":" MAKE_STRING(__LINE__) "] -> "
 
 namespace XLib
 {
