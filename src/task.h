@@ -20,7 +20,7 @@ namespace XLib
         friend class RunnableTask;
 
       public:
-        static inline auto EXIT_CODE  = 0x1338;
+        static inline auto EXIT_CODE   = 0x1338;
         static inline tid_t INVALID_ID = -1;
 
       public:

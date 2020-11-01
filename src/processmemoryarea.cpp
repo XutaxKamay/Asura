@@ -95,9 +95,16 @@ auto ProcessMemoryArea::read() -> bytes_t
                                               size());
 }
 
-auto ProcessMemoryArea::write(const bytes_t& bytes) -> void
+auto ProcessMemoryArea::read(size_t size, size_t shift) -> bytes_t
+{
+    return MemoryUtils::ReadProcessMemoryArea(_process_base.id(),
+                                              begin<size_t>() + shift,
+                                              size);
+}
+
+auto ProcessMemoryArea::write(const bytes_t& bytes, size_t shift) -> void
 {
     MemoryUtils::WriteProcessMemoryArea(_process_base.id(),
                                         bytes,
-                                        begin());
+                                        begin<size_t>() + shift);
 }

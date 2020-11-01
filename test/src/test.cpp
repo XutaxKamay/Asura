@@ -194,29 +194,27 @@ auto XLib::Test::run() -> void
           MemoryArea::ProtectionFlags::RWX);
 
 #ifdef ENVIRONMENT64
-        mmap.write(shellcode_address,
-                   { 0xC7, 0x04, 0x25, 0x00, 0x00, 0x37, 0x13,
-                     0x39, 0x05, 0x00, 0x00, 0x48, 0xC7, 0xC0,
-                     0x3C, 0x00, 0x00, 0x00, 0x0F, 0x05 });
+        area->write({ 0xC7, 0x04, 0x25, 0x00, 0x00, 0x37, 0x13,
+                      0x39, 0x05, 0x00, 0x00, 0x48, 0xC7, 0xC0,
+                      0x3C, 0x00, 0x00, 0x00, 0x0F, 0x05 });
 #else
-        mmap.write(shellcode_address,
-                   { 0xC7,
-                     0x05,
-                     0x00,
-                     0x00,
-                     0x37,
-                     0x13,
-                     0x39,
-                     0x05,
-                     0x00,
-                     0x00,
-                     0xB8,
-                     0x01,
-                     0x00,
-                     0x00,
-                     0x00,
-                     0xCD,
-                     0x80 });
+        area->write({ 0xC7,
+                      0x05,
+                      0x00,
+                      0x00,
+                      0x37,
+                      0x13,
+                      0x39,
+                      0x05,
+                      0x00,
+                      0x00,
+                      0xB8,
+                      0x01,
+                      0x00,
+                      0x00,
+                      0x00,
+                      0xCD,
+                      0x80 });
 #endif
 
         area->protectionFlags() |= MemoryArea::ProtectionFlags::RX;
