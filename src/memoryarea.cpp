@@ -140,3 +140,8 @@ auto MemoryArea::setSize(size_t size) -> void
 {
     _size = size;
 }
+
+auto MemoryArea::operator==(MemoryArea& area) -> bool
+{
+    return begin() == area.begin() && end() == area.end();
+}

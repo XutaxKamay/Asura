@@ -12,8 +12,9 @@ namespace XLib
         friend Process;
         friend Task;
 
+        static auto self() -> ProcessBase;
+
       private:
-        ProcessBase() = default;
         ProcessBase(pid_t);
 
       public:

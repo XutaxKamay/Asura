@@ -1,6 +1,16 @@
 #include "processbase.h"
+#include <unistd.h>
 
 using namespace XLib;
+
+auto ProcessBase::self() -> ProcessBase
+{
+#ifdef WINDOWS
+    return ProcessBase(GetCurrentProcessId());
+#else
+    return ProcessBase(getpid());
+#endif
+}
 
 ProcessBase::ProcessBase(pid_t pid) : _pid(pid)
 {

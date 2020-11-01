@@ -56,6 +56,7 @@ namespace XLib
          * @param size
          */
         auto setSize(size_t size) -> void;
+        auto operator==(MemoryArea& area) -> bool;
 
       public:
         template <typename T = uintptr_t>

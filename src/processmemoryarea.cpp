@@ -16,7 +16,7 @@ auto ProcessMemoryArea::ModifiableProtectionFlags::change(mapf_t flags)
 
     try
     {
-        MemoryUtils::ProtectMemoryArea(_pma->_process_base->id(),
+        MemoryUtils::ProtectMemoryArea(_pma->_process_base.id(),
                                        _pma->begin(),
                                        _pma->size(),
                                        flags);
@@ -29,12 +29,6 @@ auto ProcessMemoryArea::ModifiableProtectionFlags::change(mapf_t flags)
     _flags = flags;
 
     return old_flags;
-}
-
-auto ProcessMemoryArea::ModifiableProtectionFlags::defaultValue()
-  -> mapf_t&
-{
-    return _default_flags;
 }
 
 auto ProcessMemoryArea::ModifiableProtectionFlags::cachedValue()
@@ -73,7 +67,7 @@ auto ProcessMemoryArea::ModifiableProtectionFlags::operator&=(mapf_t flags)
     change(flags & _flags);
 }
 
-ProcessMemoryArea::ProcessMemoryArea(ProcessBase* process)
+ProcessMemoryArea::ProcessMemoryArea(ProcessBase process)
  : _protection_flags(ModifiableProtectionFlags(this)),
    _process_base(process)
 {
@@ -84,32 +78,26 @@ auto ProcessMemoryArea::protectionFlags() -> ModifiableProtectionFlags&
     return _protection_flags;
 }
 
-auto ProcessMemoryArea::resetToDefaultFlags() -> mapf_t
-{
-    return _protection_flags.change(_protection_flags.cachedValue());
-}
-
 auto ProcessMemoryArea::initProtectionFlags(mapf_t flags) -> void
 {
-    _protection_flags.cachedValue()  = flags;
-    _protection_flags.defaultValue() = flags;
+    _protection_flags.cachedValue() = flags;
 }
 
-auto ProcessMemoryArea::processBase() -> ProcessBase*
+auto ProcessMemoryArea::processBase() -> ProcessBase
 {
     return _process_base;
 }
 
 auto ProcessMemoryArea::read() -> bytes_t
 {
-    return MemoryUtils::ReadProcessMemoryArea(_process_base->id(),
+    return MemoryUtils::ReadProcessMemoryArea(_process_base.id(),
                                               begin(),
                                               size());
 }
 
 auto ProcessMemoryArea::write(const bytes_t& bytes) -> void
 {
-    MemoryUtils::WriteProcessMemoryArea(_process_base->id(),
+    MemoryUtils::WriteProcessMemoryArea(_process_base.id(),
                                         bytes,
                                         begin());
 }

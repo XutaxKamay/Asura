@@ -12,17 +12,16 @@ namespace XLib
     class ProcessMemoryMap : public MemoryMap<ProcessMemoryArea>
     {
       public:
-        ProcessMemoryMap() = default;
-        ProcessMemoryMap(ProcessBase* process);
+        ProcessMemoryMap(ProcessBase process);
 
       public:
         auto refresh() -> void;
 
       public:
         template <typename T = uintptr_t>
-        auto search(T address) -> ProcessMemoryArea*
+        auto search(T address) -> std::shared_ptr<ProcessMemoryArea>
         {
-            for (auto&& area : *this)
+            for (auto&& area : _areas)
             {
                 auto start_ptr = area->begin();
                 auto end_ptr   = area->end();
@@ -30,7 +29,7 @@ namespace XLib
                 if (view_as<uintptr_t>(address) >= start_ptr
                     && view_as<uintptr_t>(address) < end_ptr)
                 {
-                    return area.get();
+                    return area;
                 }
             }
 
@@ -40,7 +39,7 @@ namespace XLib
         template <typename T = uintptr_t>
         auto allocArea(T address, size_t size, mapf_t flags) -> ptr_t
         {
-            auto ret = MemoryUtils::AllocArea(_process_base->id(),
+            auto ret = MemoryUtils::AllocArea(_process_base.id(),
                                               address,
                                               size,
                                               flags);
@@ -53,7 +52,7 @@ namespace XLib
         template <typename T = uintptr_t>
         auto freeArea(T address, size_t size) -> void
         {
-            MemoryUtils::FreeArea(_process_base->id(), address, size);
+            MemoryUtils::FreeArea(_process_base.id(), address, size);
 
             refresh();
         }
@@ -62,7 +61,7 @@ namespace XLib
         auto protectMemoryArea(T address, size_t size, mapf_t flags)
           -> void
         {
-            MemoryUtils::ProtectMemoryArea(_process_base->id(),
+            MemoryUtils::ProtectMemoryArea(_process_base.id(),
                                            address,
                                            size,
                                            flags);
@@ -73,21 +72,21 @@ namespace XLib
         template <typename T = uintptr_t>
         auto read(T address, size_t size) -> bytes_t
         {
-            return MemoryUtils::ReadProcessMemoryArea(_process_base->id(),
+            return MemoryUtils::ReadProcessMemoryArea(_process_base.id(),
                                                       address,
                                                       size);
         }
 
         template <typename T = uintptr_t>
-        auto write(T address, const bytes_t& bytes) -> void
+        auto write(T address, bytes_t bytes) -> void
         {
-            MemoryUtils::WriteProcessMemoryArea(_process_base->id(),
-                                                address,
-                                                bytes);
+            MemoryUtils::WriteProcessMemoryArea(_process_base.id(),
+                                                bytes,
+                                                address);
         }
 
         template <typename T = uintptr_t>
-        auto forceWrite(T address, const bytes_t& bytes) -> void
+        auto forceWrite(T address, bytes_t bytes) -> void
         {
             refresh();
 
@@ -101,7 +100,7 @@ namespace XLib
 
             area->protectionFlags() |= MemoryArea::ProtectionFlags::W;
 
-            MemoryUtils::WriteProcessMemoryArea(_process_base->id(),
+            MemoryUtils::WriteProcessMemoryArea(_process_base.id(),
                                                 address,
                                                 bytes);
 
@@ -109,7 +108,7 @@ namespace XLib
         }
 
       private:
-        ProcessBase* _process_base;
+        ProcessBase _process_base;
     };
 };
 

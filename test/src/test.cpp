@@ -168,35 +168,40 @@ auto XLib::Test::run() -> void
     ConsoleOutput("Number of virtual funcs: ")
       << api->countVFuncs() << std::endl;
 
+    ptr_t shellcode_address = nullptr;
+    auto mmap               = Process::self().mmap();
+
     try
     {
-#ifdef WINDOWS
-        Process currentProcess("current", GetCurrentProcessId());
+        shellcode_address = mmap.allocArea(nullptr,
+                                           MemoryUtils::GetPageSize(),
+                                           MemoryArea::ProtectionFlags::R);
 
-#else
-        Process currentProcess("current", getpid());
-#endif
+        auto area = mmap.search(shellcode_address);
 
-        auto& mmap = currentProcess.mmap();
+        ConsoleOutput("Allocated memory at ")
+          << area->begin() << " for shellcode" << std::endl;
 
-        for (auto&& area : mmap)
-        {
-            ConsoleOutput(area->begin())
-              << "-" << area->end() << ":"
-              << area->protectionFlags().cachedValue();
+        area->protectionFlags() |= MemoryArea::ProtectionFlags::RWX;
 
-            area->protectionFlags() = MemoryArea::ProtectionFlags::EXECUTE
-                                      | MemoryArea::ProtectionFlags::READ
-                                      | MemoryArea::ProtectionFlags::WRITE;
+        mmap.write(shellcode_address, { 0x90 });
 
-            std::cout << ":" << area->protectionFlags().cachedValue()
-                      << std::endl;
-        }
+        area->protectionFlags() |= MemoryArea::ProtectionFlags::RX;
+
+        auto task = Process::self().createTask(shellcode_address);
+
+        task.run();
+
+        task.wait();
     }
     catch (MemoryException& me)
     {
+        std::cout << std::endl;
+
         std::cout << me.msg() << std::endl;
     }
+
+    std::getchar();
 }
 
 void XLib::Test::API::func1()

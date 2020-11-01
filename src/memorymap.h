@@ -8,9 +8,15 @@
 
 namespace XLib
 {
+    class ProcessMemoryMap;
+
     template <class MemoryArea_T = MemoryArea>
-    class MemoryMap : public std::vector<std::unique_ptr<MemoryArea_T>>
+    class MemoryMap
     {
+        friend ProcessMemoryMap;
+
+      private:
+        std::vector<std::shared_ptr<MemoryArea_T>> _areas {};
     };
 
 } // namespace XLib

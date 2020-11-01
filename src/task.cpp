@@ -13,94 +13,90 @@
 
 using namespace XLib;
 
-auto Task::list(ProcessBase* processBase) -> tasks_t
+auto Task::list(ProcessBase processBase) -> tasks_t
 {
     tasks_t tasks;
 
-    if (processBase)
-    {
 #ifdef WINDOWS
-        THREADENTRY32 te32;
+    THREADENTRY32 te32;
 
-        auto thread_handle_snapshot = CreateToolhelp32Snapshot(
-          TH32CS_SNAPTHREAD,
-          0);
+    auto thread_handle_snapshot = CreateToolhelp32Snapshot(
+      TH32CS_SNAPTHREAD,
+      0);
 
-        if (thread_handle_snapshot == INVALID_HANDLE_VALUE)
-            throw TaskException(std::string(CURRENT_CONTEXT)
-                                + "Could not get snapshot handle for "
-                                  "getting the thread list");
+    if (thread_handle_snapshot == INVALID_HANDLE_VALUE)
+        throw TaskException(std::string(CURRENT_CONTEXT)
+                            + "Could not get snapshot handle for "
+                              "getting the thread list");
 
-        te32.dwSize = sizeof(THREADENTRY32);
+    te32.dwSize = sizeof(THREADENTRY32);
 
-        if (!Thread32First(thread_handle_snapshot, &te32))
-        {
-            CloseHandle(thread_handle_snapshot);
-            return tasks;
-        }
-
-        do
-        {
-            if (te32.th32OwnerProcessID == processBase->id())
-            {
-                Task task(processBase, te32.th32ThreadID);
-
-                tasks.push_back(task);
-            }
-        }
-        while (Thread32Next(thread_handle_snapshot, &te32));
-
+    if (!Thread32First(thread_handle_snapshot, &te32))
+    {
         CloseHandle(thread_handle_snapshot);
+        return tasks;
+    }
+
+    do
+    {
+        if (te32.th32OwnerProcessID == processBase.id())
+        {
+            Task task(processBase, te32.th32ThreadID);
+
+            tasks.push_back(task);
+        }
+    }
+    while (Thread32Next(thread_handle_snapshot, &te32));
+
+    CloseHandle(thread_handle_snapshot);
 
 #else
-        std::filesystem::path filepath_threads(
-          "/proc/" + std::to_string(processBase->id()) + "/task/");
+    std::filesystem::path filepath_threads(
+      "/proc/" + std::to_string(processBase.id()) + "/task/");
 
-        for (auto&& threads : filepath_threads)
-        {
-            auto thread_id = threads.generic_string();
+    for (auto&& threads : filepath_threads)
+    {
+        auto thread_id = threads.generic_string();
 
-            Task task(processBase, std::stoi(thread_id));
+        Task task(processBase, std::stoi(thread_id));
 
-            tasks.push_back(task);
-        }
-
-        /**
-         * Should always exists
-         */
-        std::ifstream file_childrens("/proc/"
-                                     + std::to_string(processBase->id())
-                                     + "/task/children");
-
-        std::string line;
-        while (std::getline(file_childrens, line))
-        {
-            if (line.empty())
-            {
-                break;
-            }
-
-            Task task(processBase, std::stoi(line));
-
-            tasks.push_back(task);
-        }
-
-        /**
-         * The base process is also a task
-         */
-        tasks.push_back(Task(processBase, processBase->id()));
-#endif
+        tasks.push_back(task);
     }
+
+    /**
+     * Should always exists
+     */
+    std::ifstream file_childrens(
+      "/proc/" + std::to_string(processBase.id()) + "/task/children");
+
+    std::string line;
+    while (std::getline(file_childrens, line))
+    {
+        if (line.empty())
+        {
+            break;
+        }
+
+        Task task(processBase, std::stoi(line));
+
+        tasks.push_back(task);
+    }
+
+    /**
+     * The base process is also a task
+     */
+    tasks.push_back(Task(processBase, processBase.id()));
+#endif
 
     return tasks;
 }
 
-Task::Task(ProcessBase* processBase, tid_t id)
+Task::Task(ProcessBase processBase, tid_t id)
  : _process_base(processBase), _id(id)
 {
 }
 
-Task::Task(ProcessBase* processBase)
+Task::Task(ProcessBase processBase)
  : _process_base(processBase), _id(INVALID_ID)
 {
 }

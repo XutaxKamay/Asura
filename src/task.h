@@ -24,13 +24,13 @@ namespace XLib
         static inline auto INVALID_ID = -1;
 
       public:
-        static auto list(ProcessBase* processBase) -> tasks_t;
+        static auto list(ProcessBase processBase) -> tasks_t;
 
       public:
-        Task(ProcessBase* processBase, tid_t id);
+        Task(ProcessBase processBase, tid_t id);
 
       private:
-        Task(ProcessBase* processBase);
+        Task(ProcessBase processBase);
 
       public:
         auto wait() -> void;
@@ -38,7 +38,7 @@ namespace XLib
         auto id() -> tid_t&;
 
       private:
-        ProcessBase* _process_base;
+        ProcessBase _process_base;
         tid_t _id;
     };
 };

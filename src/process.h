@@ -13,6 +13,10 @@ namespace XLib
     class Process : public ProcessBase
     {
       public:
+        static inline constexpr pid_t INVALID_PID = -1;
+        static auto self() -> Process;
+
+      public:
         Process();
         Process(const std::string& fullName, pid_t pid);
 
@@ -21,14 +25,14 @@ namespace XLib
         auto fullName() -> std::string;
 
         auto tasks() -> tasks_t;
-        auto mmap() -> ProcessMemoryMap&;
+        auto mmap() -> ProcessMemoryMap;
 
       public:
         template <size_t stack_size_T = 0x10000>
         auto createTask(ptr_t routineAddress)
           -> RunnableTask<stack_size_T>
         {
-            return RunnableTask<stack_size_T>(this, routineAddress);
+            return RunnableTask<stack_size_T>(*this, routineAddress);
         }
 
         template <typename T = uintptr_t>
@@ -57,20 +61,20 @@ namespace XLib
         }
 
         template <typename T = uintptr_t>
-        auto write(T address, const bytes_t& bytes) -> void
+        auto write(T address, bytes_t bytes) -> void
         {
             mmap().write(address, bytes);
         }
 
         template <typename T = uintptr_t>
-        auto forceWrite(T address, const bytes_t& bytes) -> void
+        auto forceWrite(T address, bytes_t bytes) -> void
         {
             mmap().forceWrite(address, bytes);
         }
 
       private:
         std::string _full_name {};
-        ProcessMemoryMap _mmap {};
+        ProcessMemoryMap _mmap;
     };
 }
 

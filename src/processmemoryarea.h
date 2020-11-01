@@ -28,28 +28,25 @@ namespace XLib
 
           public:
             auto cachedValue() -> mapf_t&;
-            auto defaultValue() -> mapf_t&;
 
           private:
             mapf_t _flags {};
-            mapf_t _default_flags {};
 
             ProcessMemoryArea* _pma;
         };
 
       public:
-        ProcessMemoryArea(ProcessBase* process);
+        ProcessMemoryArea(ProcessBase process);
 
         auto protectionFlags() -> ModifiableProtectionFlags&;
-        auto resetToDefaultFlags() -> mapf_t;
         auto initProtectionFlags(mapf_t flags) -> void;
-        auto processBase() -> ProcessBase*;
+        auto processBase() -> ProcessBase;
         auto read() -> bytes_t;
         auto write(const bytes_t& bytes) -> void;
 
       private:
         ModifiableProtectionFlags _protection_flags;
-        ProcessBase* _process_base;
+        ProcessBase _process_base;
     };
 };
 
