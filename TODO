@@ -7,4 +7,4 @@ It will be useful for whitebox cryptography
 - Making a class for using maybe something like libtins to send data over network
 - a ELF/PE header parser ??? and aybe also classes to manual map ELF and PE binaries.
 - cross-platform menu
-
+- Implement a Bit class reader/writer for networking
