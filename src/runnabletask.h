@@ -58,7 +58,7 @@ namespace XLib
           (LPTHREAD_START_ROUTINE)_routine_address,
           0,
           0,
-          &_id);
+          view_as<PDWORD>(&_id));
 
         if (_thread_handle == nullptr)
         {

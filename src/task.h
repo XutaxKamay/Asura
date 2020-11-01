@@ -12,7 +12,7 @@ namespace XLib
     class RunnableTask;
 
     using tasks_t = std::list<Task>;
-    using tid_t   = int;
+    using tid_t   = uint32_t;
 
     class Task
     {
@@ -21,7 +21,7 @@ namespace XLib
 
       public:
         static inline auto EXIT_CODE  = 0x1338;
-        static inline auto INVALID_ID = -1;
+        static inline tid_t INVALID_ID = -1;
 
       public:
         static auto list(ProcessBase processBase) -> tasks_t;
