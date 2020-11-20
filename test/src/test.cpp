@@ -24,17 +24,6 @@ auto XLib::Test::run() -> void
 {
     ConsoleOutput("Starting test") << std::endl;
 
-    /* Let's do the tests */
-    HybridCrypt<8192> hybridCrypt;
-
-    ConsoleOutput("Generating AES keys") << std::endl;
-
-    hybridCrypt.generateAESKey();
-
-    ConsoleOutput("Generating RSA keys") << std::endl;
-
-    hybridCrypt.generateRSAKeys();
-
     std::string str("Life is a game, but you can not restart it."
                     "There might be no happy end.."
                     "But that's why people say to live your day"
@@ -78,39 +67,37 @@ auto XLib::Test::run() -> void
 
     std::cout << std::endl;
 
-    /* Let's test the hybrid crypto */
-    ConsoleOutput("Encrypting...") << std::endl << std::endl;
-    hybridCrypt.encrypt(bs);
+    ConsoleOutput("Generating RSA Key...") << std::endl;
+    auto privateKey = RSABlocks::GenerateRSAPrivateKey();
 
-    hybridCrypt.debugKeys();
-    ConsoleOutput("Encrypting AES Key...") << std::endl << std::endl;
-    hybridCrypt.encryptAESKey();
-    hybridCrypt.debugKeys();
+    ConsoleOutput("Encrypting with RSA Key...") << std::endl;
+    auto publicKey = RSA::PublicKey(privateKey);
+
+    auto enc = EncryptRSABlocks(publicKey).encrypt(bs);
 
     ConsoleOutput("Raw encrypted bytes:") << std::endl;
-    for (auto&& b : bs)
+
+    for (auto&& b : enc)
     {
         std::cout << std::hex << view_as<int>(b);
     }
 
     std::cout << std::endl;
 
-    hybridCrypt.debugKeys();
-    ConsoleOutput("Decrypting AES Key...") << std::endl << std::endl;
-    hybridCrypt.decryptAESKey();
-    hybridCrypt.debugKeys();
-    ConsoleOutput("Decrypting...") << std::endl << std::endl;
-    hybridCrypt.decrypt(bs);
+    ConsoleOutput("Decrypting with RSA Key...") << std::endl;
+
+    auto dec = DecryptRSABlocks(privateKey).decrypt(enc);
 
     ConsoleOutput("Raw decrypted bytes:") << std::endl;
-    for (auto&& b : bs)
+
+    for (auto&& b : dec)
     {
         std::cout << std::hex << view_as<int>(b);
     }
 
     std::cout << std::endl;
 
-    ReadBuffer readBuffer(bs.data());
+    ReadBuffer readBuffer(dec.data());
 
     if (std::memcmp(readBuffer.data(),
                     writeBuffer.data(),

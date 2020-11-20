@@ -7,6 +7,7 @@
 #include "memoryscanner.h"
 #include "process.h"
 #include "readbuffer.h"
+#include "rsablocks.h"
 #include "types.h"
 #include "virtualtabletools.h"
 #include "writebuffer.h"

@@ -1,4 +1,3 @@
-
 #ifndef VIRTUALTABLETOOLS_H
 #define VIRTUALTABLETOOLS_H
 
@@ -255,3 +254,8 @@ namespace XLib
 } // namespace XLib
 
 #endif // VIRTUALTABLETOOLS_H
+
+
+
+
+
