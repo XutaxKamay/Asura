@@ -147,8 +147,44 @@ auto XLib::Test::run() -> void
     VAPI_t* api = view_as<VAPI_t*>(&g_API);
     api->callVFunc<0, void>();
 
+    mapf_t flags;
+
+    auto pre_hook = [&flags](ptr_t funcPtr, ptr_t)
+    {
+        try
+        {
+            auto area = Process::self().mmap().search(funcPtr);
+
+            flags = area->protectionFlags().cachedValue();
+
+            area->protectionFlags() = MemoryArea::ProtectionFlags::RWX;
+        }
+        catch (MemoryException& me)
+        {
+            std::cout << std::endl;
+
+            std::cout << me.msg() << std::endl;
+        }
+    };
+
+    auto post_hook = [&flags](ptr_t funcPtr, ptr_t)
+    {
+        try
+        {
+            auto area = Process::self().mmap().search(funcPtr);
+
+            area->protectionFlags() = flags;
+        }
+        catch (MemoryException& me)
+        {
+            std::cout << std::endl;
+
+            std::cout << me.msg() << std::endl;
+        }
+    };
+
     /** TODO: finish MemoryUtils so we can use this */
-    // api->hook<0>(vfunc_hook);
+    api->hook<0>(vfunc_hook, pre_hook, post_hook);
 
     api->callVFunc<0, void>();
 
