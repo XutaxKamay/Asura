@@ -254,8 +254,3 @@ namespace XLib
 } // namespace XLib
 
 #endif // VIRTUALTABLETOOLS_H
-
-
-
-
-

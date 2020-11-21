@@ -44,10 +44,6 @@ namespace XLib
     using pid_t = uint32_t;
 #define __pid_t_defined
 
-    class bits_t
-    {
-    };
-
     template <typename T>
     struct type_wrapper_t
     {

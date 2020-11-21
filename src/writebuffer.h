@@ -154,9 +154,9 @@ namespace XLib
     inline auto WriteBuffer<max_size_T>::addData(ptr_t data,
                                                  safesize_t size) -> void
     {
-        std::copy(view_as<byte_t*>(data),
-                  view_as<byte_t*>(data) + view_as<size_t>(size),
-                  view_as<byte_t*>(shift(_write_size)));
+        std::copy(view_as<data_t>(data),
+                  view_as<data_t>(data) + view_as<size_t>(size),
+                  view_as<data_t>(shift(_write_size)));
 
         advance(size);
     }

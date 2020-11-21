@@ -1,6 +1,7 @@
 #ifndef BUFFER_H
 #define BUFFER_H
 
+#include "bits.h"
 #include "types.h"
 #include <algorithm>
 
@@ -59,7 +60,6 @@ namespace XLib
      */
     enum typesize_t : byte_t
     {
-        type_bits,
         type_float,
         type_double,
         type_safesize,
@@ -67,8 +67,7 @@ namespace XLib
         type_64,
         type_16,
         type_8,
-        type_array,
-        type_unknown
+        type_array
     };
 
     template <typesize_t type>
@@ -95,10 +94,8 @@ namespace XLib
             return type_wrapper<float>;
         else if constexpr (type == type_double)
             return type_wrapper<double>;
-        else if constexpr (type == type_bits)
-            return type_wrapper<bits_t>;
         else
-            return type_wrapper<void>;
+            static_assert("Not implemented");
     }
     /**
      * @brief get_variable_type_str
@@ -230,7 +227,7 @@ namespace XLib
     template <safesize_t max_size_T>
     auto& Buffer<max_size_T>::operator[](safesize_t size)
     {
-        return *shift<byte_t*>(size);
+        return *shift<data_t>(size);
     }
 
     template <safesize_t max_size_T>

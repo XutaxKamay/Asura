@@ -261,6 +261,48 @@ auto XLib::Test::run() -> void
         std::cout << me.msg() << std::endl;
     }
 
+    auto testBits = 0b0111000011110000111100001111000011110000111100001111000011110000ull;
+
+    ConsoleOutput(std::bitset<64>(testBits)) << std::endl;
+
+    constexpr int mask_test_bits[] = { 5,  6,  7,  8,  13, 14, 15, 16,
+                                       21, 22, 23, 24, 29, 30, 31, 32,
+                                       37, 38, 39, 40, 45, 46, 47, 48,
+                                       53, 54, 55, 56, 61, 62, 63 };
+
+    bool tested_test_bits = true;
+
+    for (auto i = 0; i < 31; i++)
+    {
+        if (!ReadBit(&testBits, mask_test_bits[i]))
+        {
+            tested_test_bits = false;
+            break;
+        }
+    }
+
+    if (tested_test_bits)
+    {
+        ConsoleOutput("Passed read bits") << std::endl;
+    }
+    else
+    {
+        ConsoleOutput("Didn't pass read bits test") << std::endl;
+    }
+
+    WriteBit<64, true>(&testBits);
+
+    ConsoleOutput(std::bitset<64>(testBits)) << std::endl;
+
+    if (ReadBit<64>(&testBits))
+    {
+        ConsoleOutput("Passed write bits") << std::endl;
+    }
+    else
+    {
+        ConsoleOutput("Didn't pass write bits test") << std::endl;
+    }
+
     std::getchar();
 }
 
