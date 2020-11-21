@@ -20,8 +20,6 @@ std::string XLib::get_variable_type_str(typesize_t typeSize)
         return "float";
     else if (typeSize == type_double)
         return "double";
-    else if (typeSize == type_bits)
-        return "bits";
     else
         return "unknown";
 }
