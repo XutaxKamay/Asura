@@ -261,7 +261,8 @@ auto XLib::Test::run() -> void
         std::cout << me.msg() << std::endl;
     }
 
-    auto testBits = 0b0111000011110000111100001111000011110000111100001111000011110000ull;
+    auto testBits
+      = 0b0111000011110000111100001111000011110000111100001111000011110000ull;
 
     ConsoleOutput(std::bitset<64>(testBits)) << std::endl;
 
