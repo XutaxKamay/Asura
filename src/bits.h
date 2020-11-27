@@ -2,6 +2,7 @@
 #define BITS_H
 
 #include <bitset>
+
 #include "types.h"
 
 namespace XLib
