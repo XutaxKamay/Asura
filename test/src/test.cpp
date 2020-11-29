@@ -47,10 +47,10 @@ auto XLib::Test::run() -> void
                                      str.data()),
                                    strSize);
 
-    writeBuffer.addVar<type_8>(1);
-    writeBuffer.addVar<type_16>(3);
-    writeBuffer.addVar<type_32>(3);
-    writeBuffer.addVar<type_64>(7);
+    writeBuffer.addVar<type_8s>(1);
+    writeBuffer.addVar<type_16s>(3);
+    writeBuffer.addVar<type_32s>(3);
+    writeBuffer.addVar<type_64s>(7);
     constexpr auto flValue = 42.42f;
     writeBuffer.addVar<type_float>(flValue);
     constexpr auto dlValue = 42.42;
@@ -119,10 +119,10 @@ auto XLib::Test::run() -> void
     ptr = readBuffer.readVar<type_array>(&strSize);
     ConsoleOutput(std::string(ptr, ptr + strSize)) << std::endl;
 
-    if (readBuffer.readVar<type_8>() == 1
-        && readBuffer.readVar<type_16>() == 3
-        && readBuffer.readVar<type_32>() == 3
-        && readBuffer.readVar<type_64>() == 7
+    if (readBuffer.readVar<type_8s>() == 1
+        && readBuffer.readVar<type_16s>() == 3
+        && readBuffer.readVar<type_32s>() == 3
+        && readBuffer.readVar<type_64s>() == 7
         && readBuffer.readVar<type_float>() == flValue
         && readBuffer.readVar<type_double>() == dlValue)
     {
@@ -261,8 +261,7 @@ auto XLib::Test::run() -> void
         std::cout << me.msg() << std::endl;
     }
 
-    auto testBits
-      = 0b0111000011110000111100001111000011110000111100001111000011110000ull;
+    auto testBits = 0b0111000011110000111100001111000011110000111100001111000011110000ull;
 
     ConsoleOutput(std::bitset<64>(testBits)) << std::endl;
 

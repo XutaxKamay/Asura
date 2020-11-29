@@ -42,29 +42,35 @@ namespace XLib
         template <bool... values>
         constexpr auto writeBits()
         {
-            if (!spaceLeft())
-            {
-                throw BufferException(std::string(CURRENT_CONTEXT)
-                                      + "No space left");
-            }
-
-            WriteBit<values...>(this->data(), _written_bits++);
+            writeOneBit<values...>();
         }
 
         template <typename... args_T>
         auto writeBits(args_T... args)
         {
-            if constexpr (!std::is_same<args_T..., bool>::value)
-                static_assert("One of these are not booleans, check"
-                              "your code");
+            writeOneBit(args...);
+        }
 
-            if (!spaceLeft())
+        auto writeBits(std::vector<bool>) -> void;
+
+        template <typesize_t typesize_T>
+        constexpr auto write(g_v_t<typesize_T> var, safesize_t size = 0)
+        {
+            safesize_t bits_to_write {};
+
+            if constexpr (typesize_T == type_array)
             {
-                throw BufferException(std::string(CURRENT_CONTEXT)
-                                      + "No space left");
+                bits_to_write = size * 8;
+            }
+            else
+            {
+                bits_to_write = sizeof(g_v_t<typesize_T>) * 8;
             }
 
-            WriteBit(this->data(), _written_bits++, args...);
+            for (safesize_t i = 0; i < bits_to_write; i++)
+            {
+                writeOneBit(ReadBit(var, i));
+            }
         }
 
       private:
@@ -98,6 +104,16 @@ namespace XLib
         }
 
         WriteBit(this->data(), _written_bits++, value);
+    }
+
+    template <safesize_t max_size_T>
+    auto NetworkWriteBuffer<max_size_T>::writeBits(std::vector<bool> bools)
+      -> void
+    {
+        for (auto&& b : bools)
+        {
+            writeOneBit(b);
+        }
     }
 
 } // namespace XLib

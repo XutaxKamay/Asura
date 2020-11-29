@@ -36,7 +36,7 @@ namespace XLib
         ~ReadBuffer() = default;
 
       public:
-        template <typesize_t typesize_T = type_32>
+        template <typesize_t typesize_T = type_32s>
         /**
          * @brief readVar
          * @param pSize

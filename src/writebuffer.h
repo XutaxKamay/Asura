@@ -73,7 +73,7 @@ namespace XLib
 
         /** templates */
       public:
-        template <typesize_t typesize_T = type_32>
+        template <typesize_t typesize_T = type_32s>
         /**
          * @brief addVar
          * @param value

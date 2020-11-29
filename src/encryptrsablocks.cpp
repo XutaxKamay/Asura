@@ -16,7 +16,7 @@ auto XLib::EncryptRSABlocks::encrypt(XLib::bytes_t bytes) -> bytes_t
 {
     auto min_size      = _public_key.GetModulus().MinEncodedSize();
     auto remainder     = min_size - (bytes.size() % min_size);
-    auto original_size = view_as<g_v_t<type_64>>(bytes.size());
+    auto original_size = view_as<g_v_t<type_64s>>(bytes.size());
 
     /**
      * Write header
@@ -24,7 +24,7 @@ auto XLib::EncryptRSABlocks::encrypt(XLib::bytes_t bytes) -> bytes_t
     bytes.resize(bytes.size() + remainder + min_size);
 
     WriteBuffer(bytes.data(), false, bytes.size() - min_size, bytes.size())
-      .addVar<type_64>(original_size);
+      .addVar<type_64s>(original_size);
 
     auto block_count_max = bytes.size() / min_size;
 

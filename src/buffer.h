@@ -63,10 +63,14 @@ namespace XLib
         type_float,
         type_double,
         type_safesize,
-        type_32,
-        type_64,
-        type_16,
-        type_8,
+        type_32us,
+        type_64us,
+        type_16us,
+        type_8us,
+        type_32s,
+        type_64s,
+        type_16s,
+        type_8s,
         type_array
     };
 
@@ -80,14 +84,22 @@ namespace XLib
     {
         if constexpr (type == type_safesize)
             return type_wrapper<safesize_t>;
-        else if constexpr (type == type_8)
+        else if constexpr (type == type_8us)
             return type_wrapper<byte_t>;
-        else if constexpr (type == type_16)
+        else if constexpr (type == type_16us)
             return type_wrapper<uint16_t>;
-        else if constexpr (type == type_32)
+        else if constexpr (type == type_32us)
             return type_wrapper<uint32_t>;
-        else if constexpr (type == type_64)
+        else if constexpr (type == type_64us)
             return type_wrapper<uint64_t>;
+        else if constexpr (type == type_8s)
+            return type_wrapper<char>;
+        else if constexpr (type == type_16s)
+            return type_wrapper<int16_t>;
+        else if constexpr (type == type_32s)
+            return type_wrapper<int32_t>;
+        else if constexpr (type == type_64s)
+            return type_wrapper<int64_t>;
         else if constexpr (type == type_array)
             return type_wrapper<data_t>;
         else if constexpr (type == type_float)
