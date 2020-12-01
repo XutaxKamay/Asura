@@ -144,6 +144,39 @@ namespace XLib
             *byte_value &= ~wanted_bit_value;
         }
     }
+
+    template <typename T>
+    auto BitsToInt(std::vector<bool> bits)
+    {
+        T var {};
+
+        for (size_t i = 0; i < bits.size(); i++)
+        {
+            if (bits[i])
+            {
+                var += view_as<T>(1) << view_as<T>(i);
+            }
+        }
+
+        return var;
+    }
+
+    template <typename T>
+    auto BitsToInt(data_t data, safesize_t nbBits = 1)
+    {
+        T var {};
+
+        for (size_t i = 0; i < nbBits; i++)
+        {
+            if (ReadBit(data, i))
+            {
+                var += view_as<T>(1) << view_as<T>(i);
+            }
+        }
+
+        return var;
+    }
+
 };
 
 #endif
