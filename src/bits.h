@@ -3,6 +3,7 @@
 
 #include <bitset>
 
+#include "bufferexception.h"
 #include "types.h"
 
 namespace XLib
@@ -10,20 +11,18 @@ namespace XLib
     template <safesize_t pos, typename T = data_t>
     constexpr auto ReadBit(T data)
     {
-        constexpr auto real_pos = pos - 1;
-
-        if constexpr (real_pos >= std::numeric_limits<safesize_t>::max())
+        if constexpr (pos >= std::numeric_limits<safesize_t>::max())
         {
             static_assert("Can't read bit higher");
         }
-        else if constexpr (real_pos <= 0)
+        else if constexpr (pos < 0)
         {
             static_assert("Can't read bit lower");
         }
 
-        constexpr auto read_byte_pos = real_pos / 8;
+        constexpr auto read_byte_pos = pos / 8;
 
-        constexpr auto wanted_bit_value = (1 << (real_pos % 8));
+        constexpr auto wanted_bit_value = (1 << (pos % 8));
 
         auto byte_value = *view_as<byte_t*>(view_as<uintptr_t>(data)
                                             + read_byte_pos);
@@ -34,20 +33,18 @@ namespace XLib
     template <safesize_t pos, bool val, typename T = data_t>
     constexpr auto WriteBit(T data)
     {
-        constexpr auto real_pos = pos - 1;
-
-        if constexpr (real_pos >= std::numeric_limits<safesize_t>::max())
+        if constexpr (pos >= std::numeric_limits<safesize_t>::max())
         {
             static_assert("Can't write bit higher");
         }
-        else if constexpr (real_pos <= 0)
+        else if constexpr (pos < 0)
         {
             static_assert("Can't write bit lower");
         }
 
-        constexpr auto read_byte_pos = real_pos / 8;
+        constexpr auto read_byte_pos = pos / 8;
 
-        constexpr auto wanted_bit_value = (1 << (real_pos % 8));
+        constexpr auto wanted_bit_value = (1 << (pos % 8));
 
         auto byte_value = view_as<byte_t*>(view_as<uintptr_t>(data)
                                            + read_byte_pos);
@@ -65,20 +62,20 @@ namespace XLib
     template <typename T = data_t>
     constexpr auto ReadBit(T data, safesize_t pos)
     {
-        auto real_pos = pos - 1;
-
-        if (real_pos >= std::numeric_limits<safesize_t>::max())
+        if (pos >= std::numeric_limits<safesize_t>::max())
         {
-            throw("Can't read bit higher");
+            throw BufferException(std::string(CURRENT_CONTEXT)
+                                  + "Can't read bit higher");
         }
-        else if (real_pos <= 0)
+        else if (pos < 0)
         {
-            throw("Can't read bit lower");
+            throw BufferException(std::string(CURRENT_CONTEXT)
+                                  + "Can't read bit lower");
         }
 
-        auto read_byte_pos = real_pos / 8;
+        auto read_byte_pos = pos / 8;
 
-        auto wanted_bit_value = (1 << (real_pos % 8));
+        auto wanted_bit_value = (1 << (pos % 8));
 
         auto byte_value = *view_as<byte_t*>(view_as<uintptr_t>(data)
                                             + read_byte_pos);
@@ -89,20 +86,20 @@ namespace XLib
     template <bool val, typename T = data_t>
     constexpr auto WriteBit(T data, safesize_t pos)
     {
-        auto real_pos = pos - 1;
-
-        if (real_pos >= std::numeric_limits<safesize_t>::max())
+        if (pos >= std::numeric_limits<safesize_t>::max())
         {
-            throw("Can't write bit higher");
+            throw BufferException(std::string(CURRENT_CONTEXT)
+                                  + "Can't write bit higher");
         }
-        else if (real_pos <= 0)
+        else if (pos < 0)
         {
-            throw("Can't write bit lower");
+            throw BufferException(std::string(CURRENT_CONTEXT)
+                                  + "Can't write bit lower");
         }
 
-        auto read_byte_pos = real_pos / 8;
+        auto read_byte_pos = pos / 8;
 
-        auto wanted_bit_value = (1 << (real_pos % 8));
+        auto wanted_bit_value = (1 << (pos % 8));
 
         auto byte_value = view_as<byte_t*>(view_as<uintptr_t>(data)
                                            + read_byte_pos);
@@ -120,20 +117,20 @@ namespace XLib
     template <typename T = data_t>
     constexpr auto WriteBit(T data, safesize_t pos, bool val)
     {
-        auto real_pos = pos - 1;
-
-        if (real_pos >= std::numeric_limits<safesize_t>::max())
+        if (pos >= std::numeric_limits<safesize_t>::max())
         {
-            throw("Can't write bit higher");
+            throw BufferException(std::string(CURRENT_CONTEXT)
+                                  + "Can't write bit higher");
         }
-        else if (real_pos <= 0)
+        else if (pos < 0)
         {
-            throw("Can't write bit lower");
+            throw BufferException(std::string(CURRENT_CONTEXT)
+                                  + "Can't write bit lower");
         }
 
-        auto read_byte_pos = real_pos / 8;
+        auto read_byte_pos = pos / 8;
 
-        auto wanted_bit_value = (1 << (real_pos % 8));
+        auto wanted_bit_value = (1 << (pos % 8));
 
         auto byte_value = view_as<byte_t*>(view_as<uintptr_t>(data)
                                            + read_byte_pos);

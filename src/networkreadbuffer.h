@@ -31,7 +31,7 @@ namespace XLib
 
         auto spaceLeft()
         {
-            return _read_bits / 8 < this->maxSize();
+            return _read_bits < this->maxSize() * 8;
         }
 
         template <safesize_t pos_T>
@@ -117,7 +117,8 @@ namespace XLib
             }
         }
 
-      public:
+        auto seek(safesize_t toBit) -> safesize_t;
+
       private:
         /**
          * @brief _read_bits
@@ -164,6 +165,15 @@ namespace XLib
         }
 
         return bits;
+    }
+
+    template <safesize_t max_size_T>
+    auto NetworkReadBuffer<max_size_T>::seek(safesize_t toBit)
+      -> safesize_t
+    {
+        auto backup   = _read_bits;
+        _read_bits = toBit;
+        return backup;
     }
 }
 

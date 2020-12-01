@@ -8,6 +8,8 @@
 #include "encryptrsablocks.h"
 #include "hybridcrypto.h"
 #include "memoryscanner.h"
+#include "networkreadbuffer.h"
+#include "networkwritebuffer.h"
 #include "process.h"
 #include "readbuffer.h"
 #include "virtualtabletools.h"

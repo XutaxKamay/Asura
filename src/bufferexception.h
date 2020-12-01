@@ -1,7 +1,7 @@
 #ifndef BUFFEREXCEPTION_H
 #define BUFFEREXCEPTION_H
 
-#include "buffer.h"
+#include <iostream>
 
 namespace XLib
 {
@@ -10,7 +10,7 @@ namespace XLib
       public:
         BufferException(const std::string& msg);
 
-        auto& msg();
+        auto msg() -> const std::string&;
 
       private:
         std::string _msg {};

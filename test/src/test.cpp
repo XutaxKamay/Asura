@@ -261,9 +261,9 @@ auto XLib::Test::run() -> void
         std::cout << me.msg() << std::endl;
     }
 
-    auto testBits = 0b0111000011110000111100001111000011110000111100001111000011110000ull;
+    auto test_bits = 0b0111000011110000111100001111000011110000111100001111000011110000ull;
 
-    ConsoleOutput(std::bitset<64>(testBits)) << std::endl;
+    ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
 
     constexpr int mask_test_bits[] = { 5,  6,  7,  8,  13, 14, 15, 16,
                                        21, 22, 23, 24, 29, 30, 31, 32,
@@ -274,7 +274,7 @@ auto XLib::Test::run() -> void
 
     for (auto i = 0; i < 31; i++)
     {
-        if (!ReadBit(&testBits, mask_test_bits[i]))
+        if (!ReadBit(&test_bits, mask_test_bits[i]))
         {
             tested_test_bits = false;
             break;
@@ -290,11 +290,11 @@ auto XLib::Test::run() -> void
         ConsoleOutput("Didn't pass read bits test") << std::endl;
     }
 
-    WriteBit<64, true>(&testBits);
+    WriteBit<64, true>(&test_bits);
 
-    ConsoleOutput(std::bitset<64>(testBits)) << std::endl;
+    ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
 
-    if (ReadBit<64>(&testBits))
+    if (ReadBit<64>(&test_bits))
     {
         ConsoleOutput("Passed write bits") << std::endl;
     }
@@ -302,6 +302,59 @@ auto XLib::Test::run() -> void
     {
         ConsoleOutput("Didn't pass write bits test") << std::endl;
     }
+
+    auto net_write_buf = NetworkWriteBuffer(view_as<data_t>(&test_bits),
+                                            true,
+                                            0,
+                                            sizeof(test_bits));
+
+    try
+    {
+        net_write_buf.write<type_64us>(0xFFFFFFFFFFFFFFFF);
+    }
+    catch (BufferException& be)
+    {
+        ConsoleOutput(be.msg()) << std::endl;
+    }
+
+    ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
+
+    net_write_buf.seek(0);
+
+    try
+    {
+        net_write_buf.write<type_32us>(0);
+    }
+    catch (BufferException& be)
+    {
+        ConsoleOutput(be.msg()) << std::endl;
+    }
+
+    ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
+
+    net_write_buf.seek(0);
+
+    try
+    {
+        net_write_buf.write<type_64us>(0xFFFFFFFFFFFFFFFF);
+    }
+    catch (BufferException& be)
+    {
+        ConsoleOutput(be.msg()) << std::endl;
+    }
+
+    net_write_buf.seek(32);
+
+    try
+    {
+        net_write_buf.write<type_32us>(0);
+    }
+    catch (BufferException& be)
+    {
+        ConsoleOutput(be.msg()) << std::endl;
+    }
+
+    ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
 
     std::getchar();
 }

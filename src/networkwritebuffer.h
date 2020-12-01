@@ -22,7 +22,7 @@ namespace XLib
 
         auto spaceLeft()
         {
-            return _written_bits / 8 < this->maxSize();
+            return _written_bits < this->maxSize() * 8;
         }
 
         template <bool value>
@@ -61,17 +61,24 @@ namespace XLib
             if constexpr (typesize_T == type_array)
             {
                 bits_to_write = size * 8;
+
+                for (safesize_t i = 0; i < bits_to_write; i++)
+                {
+                    writeOneBit(ReadBit(var, i));
+                }
             }
             else
             {
                 bits_to_write = sizeof(g_v_t<typesize_T>) * 8;
-            }
 
-            for (safesize_t i = 0; i < bits_to_write; i++)
-            {
-                writeOneBit(ReadBit(var, i));
+                for (safesize_t i = 0; i < bits_to_write; i++)
+                {
+                    writeOneBit(ReadBit(&var, i));
+                }
             }
         }
+
+        auto seek(safesize_t toBit) -> safesize_t;
 
       private:
         safesize_t _written_bits {};
@@ -114,6 +121,15 @@ namespace XLib
         {
             writeOneBit(b);
         }
+    }
+
+    template <safesize_t max_size_T>
+    auto NetworkWriteBuffer<max_size_T>::seek(safesize_t toBit)
+      -> safesize_t
+    {
+        auto backup   = _written_bits;
+        _written_bits = toBit;
+        return backup;
     }
 
 } // namespace XLib
