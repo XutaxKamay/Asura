@@ -356,6 +356,32 @@ auto XLib::Test::run() -> void
 
     ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
 
+    net_write_buf.seek(0);
+    net_write_buf.write<type_32us>(1337);
+    net_write_buf.write<type_32us>(1337);
+
+    ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
+
+    auto net_read_buf = NetworkReadBuffer(view_as<data_t>(&test_bits),
+                                          true,
+                                          0,
+                                          sizeof(test_bits));
+
+    auto var1337   = net_read_buf.read<type_32us>();
+    auto var1337_2 = net_read_buf.read<type_32us>();
+    net_read_buf.seek(0);
+    auto var1337_64 = net_read_buf.read<type_64us>();
+
+    std::cout << std::dec;
+
+    ConsoleOutput(var1337)
+      << " " << var1337_2 << " " << var1337_64 << std::endl;
+
+    if (var1337_64 == test_bits)
+    {
+        ConsoleOutput("Passed bits read test") << std::endl;
+    }
+
     std::getchar();
 }
 

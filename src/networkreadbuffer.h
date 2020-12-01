@@ -87,15 +87,18 @@ namespace XLib
 
             if constexpr (typesize_T == type_array)
             {
-                std::vector<byte_t> data;
+                bytes_t data;
 
-                for (int i = 0; i < bits.size(); i += 8)
+                for (size_t i = 0; i < bits.size(); i += 8)
                 {
                     byte_t byte = 0;
 
                     for (int j = 0; j < 8; j++)
                     {
-                        byte += (1 << bits[j]);
+                        if (bits[j])
+                        {
+                            byte += (1 << j);
+                        }
                     }
 
                     data.push_back(byte);
@@ -107,10 +110,13 @@ namespace XLib
             {
                 g_v_t<typesize_T> var {};
 
-                for (int i = 0; i < bits.size(); i++)
+                for (size_t i = 0; i < bits.size(); i++)
                 {
-                    var += (view_as<g_v_t<typesize_T>>(1)
-                            << view_as<g_v_t<typesize_T>>(bits[i]));
+                    if (bits[i])
+                    {
+                        var += (view_as<g_v_t<typesize_T>>(1)
+                                << view_as<g_v_t<typesize_T>>(i));
+                    }
                 }
 
                 return var;
@@ -171,8 +177,8 @@ namespace XLib
     auto NetworkReadBuffer<max_size_T>::seek(safesize_t toBit)
       -> safesize_t
     {
-        auto backup   = _read_bits;
-        _read_bits = toBit;
+        auto backup = _read_bits;
+        _read_bits  = toBit;
         return backup;
     }
 }
