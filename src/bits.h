@@ -177,6 +177,19 @@ namespace XLib
         return var;
     }
 
+    template <typename T>
+    auto IntToBits(T val)
+    {
+        std::vector<bool> bits;
+
+        for (size_t i = 0; i < sizeof(T) * 8; i++)
+        {
+            bits.push_back(ReadBit(&val, i));
+        }
+
+        return bits;
+    }
+
 };
 
 #endif

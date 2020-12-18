@@ -319,7 +319,7 @@ auto XLib::Test::run() -> void
 
     ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
 
-    net_write_buf.seek(0);
+    net_write_buf.pos(0);
 
     try
     {
@@ -332,7 +332,7 @@ auto XLib::Test::run() -> void
 
     ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
 
-    net_write_buf.seek(0);
+    net_write_buf.pos(0);
 
     try
     {
@@ -343,7 +343,7 @@ auto XLib::Test::run() -> void
         ConsoleOutput(be.msg()) << std::endl;
     }
 
-    net_write_buf.seek(32);
+    net_write_buf.pos(32);
 
     try
     {
@@ -356,7 +356,7 @@ auto XLib::Test::run() -> void
 
     ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
 
-    net_write_buf.seek(0);
+    net_write_buf.pos(0);
     net_write_buf.write<type_32us>(1337);
     net_write_buf.write<type_32us>(1337);
 
@@ -369,7 +369,7 @@ auto XLib::Test::run() -> void
 
     auto var1337   = net_read_buf.read<type_32us>();
     auto var1337_2 = net_read_buf.read<type_32us>();
-    net_read_buf.seek(0);
+    net_read_buf.pos(0);
     auto var1337_64 = net_read_buf.read<type_64us>();
 
     std::cout << std::dec;
@@ -377,10 +377,16 @@ auto XLib::Test::run() -> void
     ConsoleOutput(var1337)
       << " " << var1337_2 << " " << var1337_64 << std::endl;
 
-    if (var1337_64 == test_bits)
+    auto intBits = BitsToInt<int>({ false, true, true, true });
+
+    if (var1337_64 == test_bits && intBits == 14
+        && IntToBits(intBits)[0] == false && IntToBits(intBits)[1] == true
+        && IntToBits(intBits)[2] == true && IntToBits(intBits)[3] == true)
     {
         ConsoleOutput("Passed bits read test") << std::endl;
     }
+
+    ConsoleOutput(intBits) << std::endl;
 
     std::getchar();
 }

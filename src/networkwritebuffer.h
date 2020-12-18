@@ -78,7 +78,7 @@ namespace XLib
             }
         }
 
-        auto seek(safesize_t toBit) -> safesize_t;
+        auto pos(safesize_t toBit = -1) -> safesize_t;
 
       private:
         safesize_t _written_bits {};
@@ -124,11 +124,16 @@ namespace XLib
     }
 
     template <safesize_t max_size_T>
-    auto NetworkWriteBuffer<max_size_T>::seek(safesize_t toBit)
+    auto NetworkWriteBuffer<max_size_T>::pos(safesize_t toBit)
       -> safesize_t
     {
-        auto backup   = _written_bits;
-        _written_bits = toBit;
+        auto backup = _written_bits;
+
+        if (toBit != -1)
+        {
+            _written_bits = toBit;
+        }
+
         return backup;
     }
 

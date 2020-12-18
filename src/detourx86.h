@@ -14,6 +14,12 @@ enum calling_conventions_t
 
 namespace XLib
 {
+#ifdef ENVIRONMENT64
+    constexpr byte_t RELJMP_INST = 0xE9;
+#else
+    constexpr byte_t RELJMP_INST = 0xE9;
+#endif
+
 #ifdef _WIN32
     template <calling_conventions_t calling_convention_T,
               typename ret_type_T,
@@ -25,8 +31,8 @@ namespace XLib
      * @brief Detour
      * This class permits to hook any functions inside the current
      * process. Detour is a method to hook functions. It works generally
-     * by placing a JMP instruction on the start of the function. This one
-     * works by copying a small portion of opcodes that the JMP
+     * by placing a JMP instruction on the start of the function. This
+     * ones works by copying a small portion of opcodes that the JMP
      * instruction override, disassemble them and search the closest
      * address to the function address in order to allocate memory, so we
      * can use a relative JMP instruction. If the disassembled
@@ -34,7 +40,7 @@ namespace XLib
      * relative most of the time, it will automatically patch them by
      * checking if it's pointing to the valid address and memory or not.
      */
-    class Detour
+    class DetourX86
     {
       private:
         /* This case is only for windows 32 bits program */
@@ -61,8 +67,12 @@ namespace XLib
         using cbfunc_t = ret_type_T (*)(args_T...);
         using func_t   = cbfunc_t;
 #endif
-
       public:
+        DetourX86(cbfunc_t originalFunc, ptr_t newFunc)
+        : _original_func(originalFunc), _new_func(newFunc)
+        {
+        }
+
       private:
         /**
          * @brief _callback_func
@@ -75,6 +85,7 @@ namespace XLib
          * Pointer to the new function.
          */
         func_t _new_func {};
+        func_t _original_func {};
     };
 
 /**
@@ -89,8 +100,9 @@ namespace XLib
     template <calling_conventions_t calling_convention_T,
               typename ret_type_T,
               typename... args_T>
-    constexpr auto Detour<calling_convention_T, ret_type_T, args_T...>::
-      generateCallBackFuncType()
+    constexpr auto DetourX86<calling_convention_T,
+                             ret_type_T,
+                             args_T...>::generateCallBackFuncType()
     {
         if constexpr (calling_convention_T == cc_fastcall)
         {
@@ -110,8 +122,9 @@ namespace XLib
     template <calling_conventions_t calling_convention_T,
               typename ret_type_T,
               typename... args_T>
-    constexpr auto Detour<calling_convention_T, ret_type_T, args_T...>::
-      generateNewFuncType()
+    constexpr auto DetourX86<calling_convention_T,
+                             ret_type_T,
+                             args_T...>::generateNewFuncType()
     {
         if constexpr (calling_convention_T == cc_fastcall)
         {
