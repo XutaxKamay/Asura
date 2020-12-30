@@ -82,7 +82,7 @@ namespace XLib
          *
          */
         auto base_stack = view_as<ptr_t>(
-          syscall(440,
+          syscall(__NR_rmmap,
                   _process_base.id(),
                   0,
                   stack_size_T,
@@ -98,7 +98,7 @@ namespace XLib
                                   "thread");
         }
 
-        _id = syscall(444,
+        _id = syscall(__NR_rclone,
                       _process_base.id(),
                       (CLONE_VM | CLONE_SIGHAND | CLONE_THREAD),
                       _routine_address,

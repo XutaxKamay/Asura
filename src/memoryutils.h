@@ -1,6 +1,7 @@
 #ifndef MEMORYUTILS_H
 #define MEMORYUTILS_H
 
+#include "custom_linux_syscalls.h"
 #include "memoryarea.h"
 #include "memoryexception.h"
 #include "types.h"
@@ -90,7 +91,7 @@ namespace XLib
 
             CloseHandle(process_handle);
 #else
-            auto ret = syscall(441,
+            auto ret = syscall(__NR_rmprotect,
                                pid,
                                aligned_address,
                                aligned_size,
@@ -134,7 +135,7 @@ namespace XLib
 
             return view_as<ptr_t>(area_start);
 #else
-            auto area_start = syscall(440,
+            auto area_start = syscall(__NR_rmmap,
                                       pid,
                                       address,
                                       size,
@@ -176,7 +177,7 @@ namespace XLib
 
             CloseHandle(process_handle);
 #else
-            auto ret = syscall(443, pid, address, size);
+            auto ret = syscall(__NR_rmunmap, pid, address, size);
 
             if (ret < 0)
             {
