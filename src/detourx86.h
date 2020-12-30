@@ -1,7 +1,8 @@
-#ifndef DETOUR_H
-#define DETOUR_H
+#ifndef DETOURX86_H
+#define DETOURX86_H
 
-#include "types.h"
+#include "process.h"
+#include <functional>
 
 #ifdef WINDOWS
 enum calling_conventions_t
@@ -14,12 +15,60 @@ enum calling_conventions_t
 
 namespace XLib
 {
-#ifdef ENVIRONMENT64
-    constexpr byte_t RELJMP_INST = 0xE9;
-#else
-    constexpr byte_t RELJMP_INST = 0xE9;
-#endif
+    namespace X86_JMP
+    {
+        constexpr byte_t REL_INST = 0xE9;
 
+        template <typename T>
+        auto OverrideRel32(
+          T fromPtr,
+          T to,
+          std::function<void(T, T)> beforeOverride = nullptr,
+          std::function<void(T, T)> afterOverride  = nullptr)
+        {
+            auto old_func = view_as<uintptr_t>(*view_as<int32_t*>(
+                              view_as<uintptr_t>(fromPtr) + 1))
+                            + (view_as<uintptr_t>(fromPtr) + 5);
+
+            if (beforeOverride)
+            {
+                beforeOverride(fromPtr, to);
+            }
+
+            *view_as<int32_t*>(fromPtr + 1) = view_as<int32_t>(to)
+                                              - (view_as<int32_t>(fromPtr)
+                                                 + 5);
+
+            if (afterOverride)
+            {
+                afterOverride(fromPtr, to);
+            }
+
+            return old_func;
+        }
+    };
+
+    namespace X86_CALL
+    {
+        constexpr byte_t REL_INST = 0xE8;
+
+        template <typename T>
+        auto OverrideRel32(
+          T fromPtr,
+          T to,
+          std::function<void(T, T)> beforeOverride = nullptr,
+          std::function<void(T, T)> afterOverride  = nullptr)
+        {
+            return X86_JMP::OverrideRel32(fromPtr,
+                                          to,
+                                          beforeOverride,
+                                          afterOverride);
+        }
+    };
+
+        /**
+         * TODO:
+         */
 #ifdef _WIN32
     template <calling_conventions_t calling_convention_T,
               typename ret_type_T,
@@ -42,6 +91,41 @@ namespace XLib
      */
     class DetourX86
     {
+        /**
+         * This is a manager in order to find for each detours
+         * the closest memory area possible we can use in order to jmp and
+         * callback the instructions we've overwritten.
+         */
+        class Fragment
+        {
+          public:
+            uintptr_t address;
+            size_t size;
+        };
+
+        using HandleFragment_t = std::shared_ptr<Fragment>;
+
+        class FragmentsArea
+        {
+          public:
+            std::shared_ptr<ProcessMemoryArea> process_memory_area;
+            std::vector<std::shared_ptr<Fragment>> _fragments;
+        };
+
+        class FragmentManager
+        {
+          public:
+            FragmentManager();
+
+            auto newFragment(bytes_t data, ptr_t originalFunc)
+              -> HandleFragment_t;
+
+            auto wipeFragment(HandleFragment_t HandleFragment);
+
+          private:
+            std::vector<std::shared_ptr<FragmentsArea>> _fragments_area;
+        };
+
       private:
         /* This case is only for windows 32 bits program */
 #ifdef _WIN32
@@ -63,15 +147,12 @@ namespace XLib
           generateCallBackFuncType())::type;
         using func_t = typename decltype(generateNewFuncType())::type;
 
-#else /* Otherwhise it should be always the same convention */
+#else /* Otherwise it should be always the same convention */
         using cbfunc_t = ret_type_T (*)(args_T...);
         using func_t   = cbfunc_t;
 #endif
       public:
-        DetourX86(cbfunc_t originalFunc, ptr_t newFunc)
-        : _original_func(originalFunc), _new_func(newFunc)
-        {
-        }
+        DetourX86(cbfunc_t originalFunc, ptr_t newFunc);
 
       private:
         /**
@@ -86,6 +167,7 @@ namespace XLib
          */
         func_t _new_func {};
         func_t _original_func {};
+        HandleFragment_t _handle_fragment {};
     };
 
 /**

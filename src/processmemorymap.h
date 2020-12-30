@@ -56,6 +56,8 @@ namespace XLib
                 {
                     auto next_area = _areas[next_area_index];
 
+                    area_index = next_area_index;
+
                     /**
                      * If begin ptr is the same as the previous end
                      * then affect the new end ptr and go on the next area
@@ -69,7 +71,6 @@ namespace XLib
                      */
                     else
                     {
-                        area_index = next_area_index;
                         break;
                     }
                 }
