@@ -261,21 +261,24 @@ auto XLib::Test::run() -> void
         std::cout << me.msg() << std::endl;
     }
 
-    auto test_bits = 0b0111000011110000111100001111000011110000111100001111000011110000ull;
+    unsigned long long test_bits = 0b0111000011110000111100001111000011110000111100001111000011110000ull;
 
     ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
 
-    constexpr int mask_test_bits[] = { 5,  6,  7,  8,  13, 14, 15, 16,
-                                       21, 22, 23, 24, 29, 30, 31, 32,
-                                       37, 38, 39, 40, 45, 46, 47, 48,
-                                       53, 54, 55, 56, 61, 62, 63 };
+    constexpr int mask_test_bits[] = { 4,  5,  6,  7,  12, 13, 14, 15,
+                                       20, 21, 22, 23, 28, 29, 30, 31,
+                                       36, 37, 38, 39, 44, 45, 46, 47,
+                                       52, 53, 54, 55, 60, 61, 62 };
 
     bool tested_test_bits = true;
 
-    for (auto i = 0; i < 31; i++)
+    for (size_t i = 0; i < sizeof(mask_test_bits) / sizeof(int); i++)
     {
         if (!ReadBit(&test_bits, mask_test_bits[i]))
         {
+            ConsoleOutput("wrong bit at pos: ")
+              << mask_test_bits[i] << std::endl;
+            ;
             tested_test_bits = false;
             break;
         }
@@ -290,11 +293,11 @@ auto XLib::Test::run() -> void
         ConsoleOutput("Didn't pass read bits test") << std::endl;
     }
 
-    WriteBit<64, true>(&test_bits);
+    WriteBit<63, true>(&test_bits);
 
     ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
 
-    if (ReadBit<64>(&test_bits))
+    if (ReadBit<63>(&test_bits))
     {
         ConsoleOutput("Passed write bits") << std::endl;
     }
@@ -388,7 +391,7 @@ auto XLib::Test::run() -> void
 
     ConsoleOutput(intBits) << std::endl;
 
-    std::getchar();
+    // std::getchar();
 }
 
 void XLib::Test::API::func1()
