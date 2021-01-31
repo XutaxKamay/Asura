@@ -10,6 +10,7 @@
 #include "memoryscanner.h"
 #include "networkreadbuffer.h"
 #include "networkwritebuffer.h"
+#include "patternscanning.h"
 #include "process.h"
 #include "readbuffer.h"
 #include "virtualtabletools.h"

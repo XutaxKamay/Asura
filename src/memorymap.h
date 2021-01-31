@@ -15,6 +15,12 @@ namespace XLib
     {
         friend ProcessMemoryMap;
 
+      public:
+        auto areas() -> std::vector<std::shared_ptr<MemoryArea_T>>&
+        {
+            return _areas;
+        }
+
       private:
         std::vector<std::shared_ptr<MemoryArea_T>> _areas {};
     };

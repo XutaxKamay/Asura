@@ -30,9 +30,22 @@ namespace XLib
                               view_as<uintptr_t>(fromPtr) + 1))
                             + (view_as<uintptr_t>(fromPtr) + 5);
 
+            mapf_t flags;
+            std::shared_ptr<ProcessMemoryArea> area;
+
             if (beforeOverride)
             {
                 beforeOverride(fromPtr, to);
+            }
+            else
+            {
+                auto mmap = Process::self().mmap();
+
+                area = mmap.search(fromPtr);
+
+                flags = area->protectionFlags().cachedValue();
+
+                area->protectionFlags() = MemoryArea::ProtectionFlags::RWX;
             }
 
             *view_as<int32_t*>(fromPtr + 1) = view_as<int32_t>(to)
@@ -42,6 +55,10 @@ namespace XLib
             if (afterOverride)
             {
                 afterOverride(fromPtr, to);
+            }
+            else
+            {
+                area->protectionFlags() = flags;
             }
 
             return old_func;
@@ -68,6 +85,7 @@ namespace XLib
 
         /**
          * TODO:
+         * here something i didn't finish yet but yea, ill use this upside instead'
          */
 #ifdef _WIN32
     template <calling_conventions_t calling_convention_T,

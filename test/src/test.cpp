@@ -147,44 +147,44 @@ auto XLib::Test::run() -> void
     VAPI_t* api = view_as<VAPI_t*>(&g_API);
     api->callVFunc<0, void>();
 
-    mapf_t flags;
+    //     mapf_t flags;
+    //
+    //     auto pre_hook = [&flags](ptr_t funcPtr, ptr_t)
+    //     {
+    //         try
+    //         {
+    //             auto area = Process::self().mmap().search(funcPtr);
+    //
+    //             flags = area->protectionFlags().cachedValue();
+    //
+    //             area->protectionFlags() =
+    //             MemoryArea::ProtectionFlags::RWX;
+    //         }
+    //         catch (MemoryException& me)
+    //         {
+    //             std::cout << std::endl;
+    //
+    //             std::cout << me.msg() << std::endl;
+    //         }
+    //     };
+    //
+    //     auto post_hook = [&flags](ptr_t funcPtr, ptr_t)
+    //     {
+    //         try
+    //         {
+    //             auto area = Process::self().mmap().search(funcPtr);
+    //
+    //             area->protectionFlags() = flags;
+    //         }
+    //         catch (MemoryException& me)
+    //         {
+    //             std::cout << std::endl;
+    //
+    //             std::cout << me.msg() << std::endl;
+    //         }
+    //     };
 
-    auto pre_hook = [&flags](ptr_t funcPtr, ptr_t)
-    {
-        try
-        {
-            auto area = Process::self().mmap().search(funcPtr);
-
-            flags = area->protectionFlags().cachedValue();
-
-            area->protectionFlags() = MemoryArea::ProtectionFlags::RWX;
-        }
-        catch (MemoryException& me)
-        {
-            std::cout << std::endl;
-
-            std::cout << me.msg() << std::endl;
-        }
-    };
-
-    auto post_hook = [&flags](ptr_t funcPtr, ptr_t)
-    {
-        try
-        {
-            auto area = Process::self().mmap().search(funcPtr);
-
-            area->protectionFlags() = flags;
-        }
-        catch (MemoryException& me)
-        {
-            std::cout << std::endl;
-
-            std::cout << me.msg() << std::endl;
-        }
-    };
-
-    /** TODO: finish MemoryUtils so we can use this */
-    api->hook<0>(vfunc_hook, pre_hook, post_hook);
+    api->hook<0>(vfunc_hook /* , pre_hook, post_hook */);
 
     api->callVFunc<0, void>();
 
@@ -390,6 +390,43 @@ auto XLib::Test::run() -> void
     }
 
     ConsoleOutput(intBits) << std::endl;
+
+    std::vector<byte_t> random_bytes;
+
+    for (size_t i = 0; i < 0xFFF; i++)
+    {
+        random_bytes.push_back(rand() % 255);
+    }
+
+    Pattern pattern({ random_bytes[5],
+                      random_bytes[6],
+                      random_bytes[7],
+                      Pattern::Byte::type_t::UNKNOWN,
+                      random_bytes[9] });
+#ifdef ENVIRONMENT64
+    PatternScanning::search(pattern,
+                            random_bytes,
+                            view_as<ptr_t>(0x1337ull));
+#else
+    PatternScanning::search(pattern, random_bytes, view_as<ptr_t>(0x1337));
+#endif
+
+    if (pattern.matches().size() != 0)
+    {
+        ConsoleOutput("Found match(es):") << std::endl;
+
+        for (auto&& match : pattern.matches())
+        {
+            std::cout << "   " << match << " at pos: "
+                      << view_as<ptr_t>(view_as<uintptr_t>(match)
+                                        - 0x1337)
+                      << std::endl;
+        }
+    }
+    else
+    {
+        ConsoleOutput("Failed to find match(es)") << std::endl;
+    }
 
     // std::getchar();
 }

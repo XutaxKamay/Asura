@@ -186,6 +186,8 @@ namespace XLib
                          pre_or_post_hook_func_t post = nullptr)
         {
             auto funcPtr = VFuncPtr<index_T, T2*>();
+            mapf_t flags;
+            std::shared_ptr<ProcessMemoryArea> area;
 
             if (funcPtr && *funcPtr && newFuncPtr)
             {
@@ -193,6 +195,17 @@ namespace XLib
                 {
                     pre(view_as<ptr_t>(funcPtr),
                         view_as<ptr_t>(newFuncPtr));
+                }
+                else
+                {
+                    auto mmap = Process::self().mmap();
+
+                    area = mmap.search(funcPtr);
+
+                    flags = area->protectionFlags().cachedValue();
+
+                    area->protectionFlags() = MemoryArea::
+                      ProtectionFlags::RWX;
                 }
 
                 /* __builtin_trap(); */
@@ -203,6 +216,10 @@ namespace XLib
                 {
                     post(view_as<ptr_t>(funcPtr),
                          view_as<ptr_t>(newFuncPtr));
+                }
+                else
+                {
+                    area->protectionFlags() = flags;
                 }
 
                 return true;
