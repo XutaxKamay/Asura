@@ -240,8 +240,6 @@ auto XLib::Test::run() -> void
                       0x80 });
 #endif
 
-        area->protectionFlags() = MemoryArea::ProtectionFlags::R;
-
         ConsoleOutput("write test: ")
           << *view_as<int*>(write_test) << std::endl;
 
@@ -250,6 +248,8 @@ auto XLib::Test::run() -> void
         task.run();
 
         task.wait();
+
+        area->protectionFlags() = MemoryArea::ProtectionFlags::R;
 
         ConsoleOutput("write test: ")
           << *view_as<int*>(write_test) << std::endl;
