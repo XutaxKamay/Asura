@@ -1,7 +1,7 @@
 #ifndef PATTERNSCANNING_H
 #define PATTERNSCANNING_H
 
-#include "pattern.h"
+#include "patternbyte.h"
 #include "process.h"
 
 namespace XLib
@@ -20,9 +20,9 @@ namespace XLib
     class PatternScanning
     {
       public:
-        static auto searchInPID(Pattern& pattern, pid_t pid) -> void;
+        static auto searchInPID(PatternByte& pattern, pid_t pid) -> void;
 
-        static auto search(Pattern& pattern,
+        static auto search(PatternByte& pattern,
                            bytes_t bytes,
                            ptr_t baseAddress) -> bool;
     };

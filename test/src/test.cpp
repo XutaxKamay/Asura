@@ -398,11 +398,11 @@ auto XLib::Test::run() -> void
         random_bytes.push_back(rand() % 255);
     }
 
-    Pattern pattern({ random_bytes[5],
-                      random_bytes[6],
-                      random_bytes[7],
-                      Pattern::Byte::type_t::UNKNOWN,
-                      random_bytes[9] });
+    PatternByte pattern({ random_bytes[5],
+                          random_bytes[6],
+                          random_bytes[7],
+                          PatternByte::Value::type_t::UNKNOWN,
+                          random_bytes[9] });
 #ifdef ENVIRONMENT64
     PatternScanning::search(pattern,
                             random_bytes,
