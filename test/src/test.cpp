@@ -205,9 +205,7 @@ auto XLib::Test::run() -> void
         ConsoleOutput("Allocated memory at ")
           << area->begin() << " for shellcode" << std::endl;
 
-        area->protectionFlags() |= MemoryArea::ProtectionFlags::RWX;
-
-        auto write_test = Process::self().mmap().allocArea(
+        auto write_test = mmap.allocArea(
 #ifdef ENVIRONMENT64
           0x13370000ull,
 #else
@@ -215,6 +213,8 @@ auto XLib::Test::run() -> void
 #endif
           MemoryUtils::GetPageSize(),
           MemoryArea::ProtectionFlags::RWX);
+
+        area->protectionFlags() = MemoryArea::ProtectionFlags::RWX;
 
 #ifdef ENVIRONMENT64
         area->write({ 0xC7, 0x04, 0x25, 0x00, 0x00, 0x37, 0x13,
@@ -240,7 +240,7 @@ auto XLib::Test::run() -> void
                       0x80 });
 #endif
 
-        area->protectionFlags() |= MemoryArea::ProtectionFlags::RX;
+        area->protectionFlags() = MemoryArea::ProtectionFlags::R;
 
         ConsoleOutput("write test: ")
           << *view_as<int*>(write_test) << std::endl;

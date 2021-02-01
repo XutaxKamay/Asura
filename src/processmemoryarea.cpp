@@ -20,13 +20,13 @@ auto ProcessMemoryArea::ModifiableProtectionFlags::change(mapf_t flags)
                                        _pma->begin(),
                                        _pma->size(),
                                        flags);
+
+        _flags = flags;
     }
     catch (MemoryException& me)
     {
         throw me;
     }
-
-    _flags = flags;
 
     return old_flags;
 }
