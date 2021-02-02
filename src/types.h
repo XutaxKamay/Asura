@@ -58,8 +58,7 @@ namespace XLib
     {
         return (T1)(var);
     }
-} // namespace XLib
 
-#define ConsoleOutput(format) std::cout << "[XLib] -> " << format
+} // namespace XLib
 
 #endif // TYPES_H

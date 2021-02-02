@@ -8,6 +8,8 @@
 
 using namespace XLib;
 
+#define ConsoleOutput(format) std::cout << "[XLib] -> " << format
+
 #ifndef WINDOWS
 auto vfunc_hook(ptr_t thisptr) -> void
 {
