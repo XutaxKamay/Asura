@@ -16,6 +16,7 @@ XLIB_RELEASE:=xlib.rel
 # CRYPTOPP
 CRYPTOPP_LIB:=cryptopp
 DLOPEN_LIB:=
+DBGHELP_LIB:=
 
 # Let's see if it's asked us to compile in 32 bits.
 ifneq (,$(findstring -m32, $(CXX)))
@@ -60,6 +61,7 @@ ifneq (,$(findstring mingw, $(CXX)))
 	XLIB_TEST_RELEASE:=$(XLIB_TEST_RELEASE).exe
 	XLIB_OBJ_DEBUG_OUT:=$(XLIB_OBJ_DEBUG_OUT)win
 	XLIB_OBJ_RELEASE_OUT:=$(XLIB_OBJ_RELEASE_OUT)win
+	DBGHELP_LIB:=-ldbghelp
 else
 	DLOPEN_LIB :=-ldl
 endif
@@ -120,13 +122,13 @@ $(XLIB_OBJ_RELEASE): %$(XLIB_OBJ_RELEASE_OUT): %.cpp
 # TEST
 
 $(XLIB_TEST_DEBUG): $(XLIB_TEST_OBJ_DEBUG) $(XLIB_OBJ_DEBUG)
-				$(CXX) $(CPPFLAGS_DEBUG) -o $@ $^ -l$(CRYPTOPP_LIB) $(DLOPEN_LIB)
+				$(CXX) $(CPPFLAGS_DEBUG) -o $@ $^ -l$(CRYPTOPP_LIB) $(DLOPEN_LIB) $(DBGHELP_LIB)
 
 $(XLIB_TEST_OBJ_DEBUG): %$(XLIB_OBJ_DEBUG_OUT): %.cpp
 				$(CXX) -c $(CPPFLAGS_DEBUG) $< -o $@
 
 $(XLIB_TEST_RELEASE): $(XLIB_TEST_OBJ_RELEASE) $(XLIB_OBJ_RELEASE)
-				$(CXX) $(CPPFLAGS_RELEASE) -o $@ $^ -l$(CRYPTOPP_LIB) $(DLOPEN_LIB)
+				$(CXX) $(CPPFLAGS_RELEASE) -o $@ $^ -l$(CRYPTOPP_LIB) $(DLOPEN_LIB) $(DBGHELP_LIB)
 
 $(XLIB_TEST_OBJ_RELEASE): %$(XLIB_OBJ_RELEASE_OUT): %.cpp
 				$(CXX) -c $(CPPFLAGS_RELEASE) $< -o $@

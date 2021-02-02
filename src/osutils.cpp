@@ -1,30 +1,44 @@
 #include "osutils.h"
 
+#include <cstring>
+#include <fstream>
+
 #ifndef WIN32
     #include <dlfcn.h>
     #include <fcntl.h>
-    #include <link.h>
+
     #include <sys/mman.h>
     #include <sys/stat.h>
     #include <sys/types.h>
+#else
+    #include <dbghelp.h>
 #endif
 
 using namespace XLib;
 
-#ifdef WIN32
-auto OSUtils::LoadOrFindExportedFunction(const std::string& modPath,
-                                         const std::string& funcName)
+#ifndef WIN32
+auto OSUtils::FindExportedFunctionRunTime(const std::string& modName,
+                                          const std::string& funcName)
+  -> ptr_t
+{
+    auto handle = dlopen(modName.c_str(), RTLD_NOLOAD);
+
+    auto ret = dlsym(handle, funcName.c_str());
+
+    if (handle)
+    {
+        dlclose(handle);
+    }
+
+    return ret;
+}
+#else
+auto OSUtils::FindExportedFunctionRunTime(const std::string& modName,
+                                          const std::string& funcName)
   -> ptr_t
 {
     return view_as<ptr_t>(
-      GetProcAddress(LoadLibraryA(modName.c_str()), funcName.c_str()));
-}
-#else
-auto OSUtils::LoadOrFindExportedFunction(const std::string& modName,
-                                         const std::string& funcName)
-  -> ptr_t
-{
-    return dlsym(dlopen(modName.c_str(), RTLD_LAZY), funcName.c_str());
+      GetProcAddress(GetModuleHandleA(modName.c_str()), funcName.c_str()));
 }
 #endif
 
@@ -35,18 +49,44 @@ static auto retrieveSymbolNames(struct dl_phdr_info* info,
 {
     auto arg = view_as<OSUtils::iterate_phdr_arg*>(param);
 
-    if ((std::string(info->dlpi_name).find(arg->mod_name)
-         == std::string::npos)
-        || arg->addr != nullptr)
+    arg->infos.push_back(*info);
+
+    return 0;
+}
+
+auto OSUtils::FindDebugSymbol(const std::string& modName,
+                              const std::string& funcName) -> ptr_t
+{
+    iterate_phdr_arg arg;
+
+    dl_iterate_phdr(retrieveSymbolNames, &arg);
+
+    dl_phdr_info* foundInfo = nullptr;
+
+    for (auto&& info : arg.infos)
     {
-        return 0;
+        if (std::string(info.dlpi_name).find(modName)
+            != std::string::npos)
+        {
+            foundInfo = view_as<dl_phdr_info*>(
+              alloca(sizeof(dl_phdr_info)));
+            memcpy(foundInfo, &info, sizeof(dl_phdr_info));
+            break;
+        }
     }
 
-    auto fd = open(info->dlpi_name, O_RDONLY);
+    if (foundInfo == nullptr)
+    {
+        throw OSUtilsException(std::string(CURRENT_CONTEXT)
+                               + "Couldn't find module in runtime.");
+    }
+
+    auto fd = open(foundInfo->dlpi_name, O_RDONLY);
 
     if (fd < 0)
     {
-        return 0;
+        throw OSUtilsException(std::string(CURRENT_CONTEXT)
+                               + "Couldn't open module in runtime.");
     }
 
     struct stat st;
@@ -54,7 +94,8 @@ static auto retrieveSymbolNames(struct dl_phdr_info* info,
     if (fstat(fd, &st) < 0)
     {
         close(fd);
-        return 0;
+        throw OSUtilsException(std::string(CURRENT_CONTEXT)
+                               + "Couldn't fstat module in runtime.");
     }
 
     auto file_header = view_as<ElfW(Ehdr*)>(
@@ -65,7 +106,8 @@ static auto retrieveSymbolNames(struct dl_phdr_info* info,
     if (file_header->e_shoff == 0 || file_header->e_shstrndx == SHN_UNDEF)
     {
         munmap(file_header, st.st_size);
-        return 0;
+        throw OSUtilsException(std::string(CURRENT_CONTEXT)
+                               + "No symbols.");
     }
 
     auto sections = view_as<ElfW(Shdr*)>(view_as<uintptr_t>(file_header)
@@ -85,11 +127,11 @@ static auto retrieveSymbolNames(struct dl_phdr_info* info,
         auto section_name = view_as<const char*>(section_names
                                                  + section->sh_name);
 
-        if (!strcmp(section_name, ".symtab"))
+        if (!std::strcmp(section_name, ".symtab"))
         {
             section_sym_tab = section;
         }
-        else if (!strcmp(section_name, ".strtab"))
+        else if (!std::strcmp(section_name, ".strtab"))
         {
             section_str_tab = section;
         }
@@ -98,7 +140,8 @@ static auto retrieveSymbolNames(struct dl_phdr_info* info,
     if (section_str_tab == nullptr && section_sym_tab == nullptr)
     {
         munmap(file_header, st.st_size);
-        return 0;
+        throw OSUtilsException(std::string(CURRENT_CONTEXT)
+                               + "No symbols.");
     }
 
     auto sym_tab = view_as<ElfW(Sym*)>(view_as<uintptr_t>(file_header)
@@ -122,32 +165,33 @@ static auto retrieveSymbolNames(struct dl_phdr_info* info,
 
         auto str_sym_name = std::string(
           view_as<const char*>(str_tab + sym->st_name));
-        auto addr = info->dlpi_addr + sym->st_value;
+        auto addr = foundInfo->dlpi_addr + sym->st_value;
 
-        if (str_sym_name.find(arg->sym_name) != std::string::npos)
+        if (str_sym_name.find(funcName) != std::string::npos)
         {
-            arg->addr = view_as<ptr_t>(addr);
-            break;
+            return view_as<ptr_t>(addr);
         }
     }
 
     munmap(file_header, st.st_size);
-    return 0;
-}
-
-auto OSUtils::FindDebugSymbol(const std::string& modName,
-                              const std::string& funcName) -> ptr_t
-{
-    iterate_phdr_arg arg(modName, funcName);
-
-    dl_iterate_phdr(retrieveSymbolNames, &arg);
-
-    return arg.addr;
+    throw OSUtilsException(std::string(CURRENT_CONTEXT)
+                           + "Cannot find function.");
+    return nullptr;
 }
 #else
-auto OSUtils::FindDebugSymbol(const std::string&, const std::string&)
-  -> ptr_t
+auto OSUtils::FindDebugSymbol(const std::string& funcName) -> ptr_t
 {
-    throw return nullptr;
+    SYMBOL_INFO sym_info;
+
+    sym_info.SizeOfStruct = sizeof(SYMBOL_INFO);
+    sym_info.MaxNameLen   = funcName.size();
+
+    if (SymFromName(GetCurrentProcess(), funcName.c_str(), &sym_info))
+    {
+        return view_as<ptr_t>(sym_info.Address);
+    }
+
+    throw OSUtilsException(std::string(CURRENT_CONTEXT)
+                           + "Couldn't find symbol in runtime.");
 }
 #endif

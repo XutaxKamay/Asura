@@ -4,12 +4,12 @@
 
 #ifndef WINDOWS
     #include <fstream>
+    #include <unistd.h>
 
     #include <sys/file.h>
     #include <sys/ioctl.h>
     #include <sys/mman.h>
     #include <sys/types.h>
-    #include <unistd.h>
 #else
     #include <windows.h>
 #endif
@@ -77,6 +77,9 @@ auto ProcessMemoryMap::refresh() -> void
 
         _areas.push_back(std::move(area));
     }
+
+    file_memory_map.close();
+
 #else
     auto process_handle = OpenProcess(PROCESS_QUERY_INFORMATION,
                                       false,
