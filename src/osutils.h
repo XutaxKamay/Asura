@@ -62,6 +62,17 @@ namespace XLib
         {
             std::vector<struct dl_phdr_info> infos;
         };
+
+        static auto retrieve_phdr_infos(struct dl_phdr_info* info,
+                                        size_t,
+                                        void* param) -> int
+        {
+            auto arg = view_as<iterate_phdr_arg*>(param);
+
+            arg->infos.push_back(*info);
+
+            return 0;
+        }
 #endif
 
 #ifndef WIN32
@@ -94,24 +105,13 @@ namespace XLib
 #endif
 
 #ifndef WIN32
-        static auto retrieveSymbolNames(struct dl_phdr_info* info,
-                                        size_t,
-                                        void* param) -> int
-        {
-            auto arg = view_as<iterate_phdr_arg*>(param);
-
-            arg->infos.push_back(*info);
-
-            return 0;
-        }
-
         template <typename T>
         auto FindDebugSymbol(const std::string& modName,
                              const std::string& funcName) -> ptr_t
         {
             iterate_phdr_arg arg;
 
-            dl_iterate_phdr(retrieveSymbolNames, &arg);
+            dl_iterate_phdr(retrieve_phdr_infos, &arg);
 
             dl_phdr_info* found_info = nullptr;
 
