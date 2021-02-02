@@ -61,27 +61,27 @@ auto OSUtils::FindDebugSymbol(const std::string& modName,
 
     dl_iterate_phdr(retrieveSymbolNames, &arg);
 
-    dl_phdr_info* foundInfo = nullptr;
+    dl_phdr_info* found_info = nullptr;
 
     for (auto&& info : arg.infos)
     {
         if (std::string(info.dlpi_name).find(modName)
             != std::string::npos)
         {
-            foundInfo = view_as<dl_phdr_info*>(
+            found_info = view_as<dl_phdr_info*>(
               alloca(sizeof(dl_phdr_info)));
-            memcpy(foundInfo, &info, sizeof(dl_phdr_info));
+            memcpy(found_info, &info, sizeof(dl_phdr_info));
             break;
         }
     }
 
-    if (foundInfo == nullptr)
+    if (found_info == nullptr)
     {
         throw OSUtilsException(std::string(CURRENT_CONTEXT)
                                + "Couldn't find module in runtime.");
     }
 
-    auto fd = open(foundInfo->dlpi_name, O_RDONLY);
+    auto fd = open(found_info->dlpi_name, O_RDONLY);
 
     if (fd < 0)
     {
@@ -165,7 +165,7 @@ auto OSUtils::FindDebugSymbol(const std::string& modName,
 
         auto str_sym_name = std::string(
           view_as<const char*>(str_tab + sym->st_name));
-        auto addr = foundInfo->dlpi_addr + sym->st_value;
+        auto addr = found_info->dlpi_addr + sym->st_value;
 
         if (str_sym_name.find(funcName) != std::string::npos)
         {
