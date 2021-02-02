@@ -16,4 +16,6 @@
 #include "virtualtabletools.h"
 #include "writebuffer.h"
 
+using namespace XLib;
+
 #endif // XLIB_H
