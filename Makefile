@@ -17,6 +17,7 @@ XLIB_RELEASE:=xlib.rel
 CRYPTOPP_LIB:=cryptopp
 DLOPEN_LIB:=
 DBGHELP_LIB:=
+DATARACES:=
 
 # Let's see if it's asked us to compile in 32 bits.
 ifneq (,$(findstring -m32, $(CXX)))
@@ -62,8 +63,10 @@ ifneq (,$(findstring mingw, $(CXX)))
 	XLIB_OBJ_DEBUG_OUT:=$(XLIB_OBJ_DEBUG_OUT)win
 	XLIB_OBJ_RELEASE_OUT:=$(XLIB_OBJ_RELEASE_OUT)win
 	DBGHELP_LIB:=-ldbghelp
+	DATARACES:=--allow-store-data-races
 else
 	DLOPEN_LIB :=-ldl
+	DATARACES:=--param=allow-store-data-races=1
 endif
 
 XLIB_OBJ_DEBUG=$(subst .cpp,$(XLIB_OBJ_DEBUG_OUT),$(wildcard src/*.cpp))
@@ -75,9 +78,9 @@ XLIB_TEST_OBJ_RELEASE=$(subst .cpp,$(XLIB_OBJ_RELEASE_OUT),$(wildcard test/src/*
 XLIB_DEBUG:=$(XLIB_DEBUG).a
 XLIB_RELEASE:=$(XLIB_RELEASE).a
 
-CPPFLAGS_DEBUG:= -static-libstdc++ -static-libgcc -std=c++2a -O0 -g -Wextra -W -Wall -Werror -Wl,--no-undefined -Isrc/ -Itest/src/ -I$(PREFIX)/include/ -L$(PREFIX)/lib/
+CPPFLAGS_DEBUG:= -fPIC -static-libstdc++ -static-libgcc -std=c++2a -O0 -g -Wextra -W -Wall -Werror -Wl,--no-undefined -Isrc/ -Itest/src/ -I$(PREFIX)/include/ -L$(PREFIX)/lib/
 
-CPPFLAGS_RELEASE:= -static-libstdc++ -static-libgcc -std=c++2a -Ofast -pipe --allow-store-data-races -frename-registers -fomit-frame-pointer -s -Wextra -W -Wall -Werror -Wl,--no-undefined -Isrc/ -Itest/src/ -I$(PREFIX)/include/ -L$(PREFIX)/lib/
+CPPFLAGS_RELEASE:= -fPIC -static-libstdc++ -static-libgcc -std=c++2a -Ofast -pipe $(DATARACES) -frename-registers -fomit-frame-pointer -s -Wextra -W -Wall -Werror -Wl,--no-undefined -Isrc/ -Itest/src/ -I$(PREFIX)/include/ -L$(PREFIX)/lib/
 
 all: xlib xlib_test
 
