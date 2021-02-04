@@ -7,6 +7,7 @@
 #include "detourx86.h"
 #include "encryptrsablocks.h"
 #include "hybridcrypto.h"
+#include "memberoffset.h"
 #include "memoryscanner.h"
 #include "networkreadbuffer.h"
 #include "networkwritebuffer.h"
