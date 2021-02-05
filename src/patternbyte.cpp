@@ -16,17 +16,6 @@ XLib::PatternByte::PatternByte(std::vector<Value> values,
         throw PatternScanningException(std::string(CURRENT_CONTEXT)
                                        + "Invalid pattern.");
     }
-
-    if (_area_name.empty())
-    {
-        PatternScanning::searchInProcess(*this, Process::self());
-    }
-    else
-    {
-        PatternScanning::searchInProcessWithAreaName(*this,
-                                                     Process::self(),
-                                                     _area_name);
-    }
 }
 
 auto XLib::PatternByte::values() -> std::vector<Value>&
@@ -50,4 +39,18 @@ bool XLib::PatternByte::isValid()
     }
 
     return true;
+}
+
+auto XLib::PatternByte::scan(XLib::Process process) -> void
+{
+    if (_area_name.empty())
+    {
+        PatternScanning::searchInProcess(*this, process);
+    }
+    else
+    {
+        PatternScanning::searchInProcessWithAreaName(*this,
+                                                     process,
+                                                     _area_name);
+    }
 }

@@ -442,6 +442,8 @@ auto XLib::Test::run() -> void
                               PatternByte::Value::type_t::UNKNOWN,
                               random_bytes[9] });
 
+        pattern.scan(Process::self());
+
         if (pattern.matches().size() != 0)
         {
             ConsoleOutput("Found match(es):") << std::endl;
