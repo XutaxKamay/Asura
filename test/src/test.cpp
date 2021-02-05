@@ -436,7 +436,6 @@ auto XLib::Test::run() -> void
 
     try
     {
-        std::getchar();
         PatternByte pattern({ random_bytes[5],
                               random_bytes[6],
                               random_bytes[7],

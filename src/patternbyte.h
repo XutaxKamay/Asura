@@ -23,6 +23,7 @@ namespace XLib
         };
 
         PatternByte(std::vector<Value> values,
+                    std::string _area_name     = "",
                     std::vector<ptr_t> matches = {});
 
       public:
@@ -33,6 +34,7 @@ namespace XLib
       private:
         std::vector<Value> _values;
         std::vector<ptr_t> _matches;
+        std::string _area_name;
     };
 
     using patterns_bytes_t = std::vector<PatternByte>;

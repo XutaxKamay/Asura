@@ -95,3 +95,30 @@ auto XLib::PatternScanning::searchInProcess(XLib::PatternByte& pattern,
         throw pse;
     }
 }
+
+auto XLib::PatternScanning::searchInProcessWithAreaName(
+  XLib::PatternByte& pattern,
+  Process process,
+  const std::string& areaName) -> void
+{
+    try
+    {
+        auto mmap = process.mmap();
+
+        for (auto&& area : mmap.areas())
+        {
+            if (area->isReadable() && area->name().find(areaName))
+            {
+                search(pattern, area->read(), area->begin<ptr_t>());
+            }
+        }
+    }
+    catch (MemoryException& me)
+    {
+        throw me;
+    }
+    catch (PatternScanningException& pse)
+    {
+        throw pse;
+    }
+}

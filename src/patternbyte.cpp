@@ -7,8 +7,9 @@ XLib::PatternByte::Value::Value(int value) : value(value)
 }
 
 XLib::PatternByte::PatternByte(std::vector<Value> values,
+                               std::string areaName,
                                std::vector<ptr_t> matches)
- : _values(values), _matches(matches)
+ : _values(values), _matches(matches), _area_name(areaName)
 {
     if (!isValid())
     {
@@ -16,7 +17,16 @@ XLib::PatternByte::PatternByte(std::vector<Value> values,
                                        + "Invalid pattern.");
     }
 
-    PatternScanning::searchInProcess(*this, Process::self());
+    if (_area_name.empty())
+    {
+        PatternScanning::searchInProcess(*this, Process::self());
+    }
+    else
+    {
+        PatternScanning::searchInProcessWithAreaName(*this,
+                                                     Process::self(),
+                                                     _area_name);
+    }
 }
 
 auto XLib::PatternByte::values() -> std::vector<Value>&

@@ -24,6 +24,11 @@ namespace XLib
         static auto searchInProcess(PatternByte& pattern, Process process)
           -> void;
 
+        static auto searchInProcessWithAreaName(
+          PatternByte& pattern,
+          Process process,
+          const std::string& areaName) -> void;
+
         static auto search(PatternByte& pattern,
                            bytes_t bytes,
                            ptr_t baseAddress) -> bool;
