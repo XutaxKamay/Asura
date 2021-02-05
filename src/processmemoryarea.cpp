@@ -92,7 +92,7 @@ auto ProcessMemoryArea::read() -> bytes_t
 {
     if (ProcessBase::self().id() == _process_base.id())
     {
-        return bytes_t(begin(), size());
+        return bytes_t(begin<data_t>(), end<data_t>());
     }
 
     return MemoryUtils::ReadProcessMemoryArea(_process_base.id(),
@@ -104,7 +104,8 @@ auto ProcessMemoryArea::read(size_t size, size_t shift) -> bytes_t
 {
     if (ProcessBase::self().id() == _process_base.id())
     {
-        return bytes_t(begin<size_t>() + shift, size);
+        return bytes_t(begin<data_t>() + shift,
+                       begin<data_t>() + shift + size);
     }
 
     return MemoryUtils::ReadProcessMemoryArea(_process_base.id(),
