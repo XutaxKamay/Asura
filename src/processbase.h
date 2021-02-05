@@ -12,6 +12,7 @@ namespace XLib
         friend Process;
         friend Task;
 
+      public:
         static auto self() -> ProcessBase;
 
       private:

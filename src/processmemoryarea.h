@@ -43,7 +43,7 @@ namespace XLib
         auto processBase() -> ProcessBase;
         auto read() -> bytes_t;
         auto read(size_t size, size_t shift = 0) -> bytes_t;
-        auto write(const bytes_t& bytes, size_t shift = 0) -> void;
+        auto write(bytes_t bytes, size_t shift = 0) -> void;
         auto isDeniedByOS() -> bool;
         auto isReadable() -> bool;
         auto isWritable() -> bool;

@@ -90,6 +90,11 @@ auto ProcessMemoryArea::processBase() -> ProcessBase
 
 auto ProcessMemoryArea::read() -> bytes_t
 {
+    if (ProcessBase::self().id() == _process_base.id())
+    {
+        return bytes_t(begin(), size());
+    }
+
     return MemoryUtils::ReadProcessMemoryArea(_process_base.id(),
                                               begin(),
                                               size());
@@ -97,13 +102,24 @@ auto ProcessMemoryArea::read() -> bytes_t
 
 auto ProcessMemoryArea::read(size_t size, size_t shift) -> bytes_t
 {
+    if (ProcessBase::self().id() == _process_base.id())
+    {
+        return bytes_t(begin<size_t>() + shift, size);
+    }
+
     return MemoryUtils::ReadProcessMemoryArea(_process_base.id(),
                                               begin<size_t>() + shift,
                                               size);
 }
 
-auto ProcessMemoryArea::write(const bytes_t& bytes, size_t shift) -> void
+auto ProcessMemoryArea::write(bytes_t bytes, size_t shift) -> void
 {
+    if (ProcessBase::self().id() == _process_base.id())
+    {
+        std::copy(bytes.begin(), bytes.end(), begin<data_t>() + shift);
+        return;
+    }
+
     MemoryUtils::WriteProcessMemoryArea(_process_base.id(),
                                         bytes,
                                         begin<size_t>() + shift);
