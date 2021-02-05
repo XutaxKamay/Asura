@@ -1,4 +1,5 @@
 #include "patternscanning.h"
+#include "patternbyte.h"
 
 XLib::PatternScanningException::PatternScanningException(
   const std::string& msg)
@@ -70,20 +71,18 @@ auto XLib::PatternScanning::search(XLib::PatternByte& pattern,
     return pattern.matches().size() != old_matches_size;
 }
 
-auto XLib::PatternScanning::searchInPID(XLib::PatternByte& pattern,
-                                        XLib::pid_t pid) -> void
+auto XLib::PatternScanning::searchInProcess(XLib::PatternByte& pattern,
+                                            Process process) -> void
 {
-    auto process = Process("Pattern scanning", pid);
-
     try
     {
         auto mmap = process.mmap();
 
         for (auto&& area : mmap.areas())
         {
-            if (!search(pattern, area->read(), area->begin<ptr_t>()))
+            if (area->isReadable())
             {
-                break;
+                search(pattern, area->read(), area->begin<ptr_t>());
             }
         }
     }

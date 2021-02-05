@@ -47,8 +47,9 @@ auto ProcessMemoryMap::refresh() -> void
     {
         uintptr_t start, end;
         byte_t prot[3];
+        std::string name = "unknown";
 
-        /* 0x0 0x1000 rwx */
+        /* 0x0 0x1000 rwxp %x %i:%i %i %s */
         std::sscanf(line.c_str(),
                     "%p-%p %c%c%c",
                     (ptr_t*)&start,
@@ -56,6 +57,20 @@ auto ProcessMemoryMap::refresh() -> void
                     &prot[0],
                     &prot[1],
                     &prot[2]);
+
+        if (line[line.size() - 1] != '0')
+        {
+            size_t count_char = 1;
+
+            while (line[line.size() - count_char] != ' ')
+            {
+                count_char++;
+            }
+
+            name = std::string(line.begin()
+                                 + (line.size() - count_char + 1),
+                               line.end());
+        }
 
         auto is_on = [](byte_t prot)
         {
@@ -74,6 +89,7 @@ auto ProcessMemoryMap::refresh() -> void
           | (is_on(prot[2]) ? MemoryArea::ProtectionFlags::EXECUTE : 0));
         area->setAddress(view_as<ptr_t>(start));
         area->setSize(end - start);
+        area->setName(name);
 
         _areas.push_back(std::move(area));
     }
@@ -94,6 +110,7 @@ auto ProcessMemoryMap::refresh() -> void
 
     MEMORY_BASIC_INFORMATION info;
     data_t bs;
+    char module_path[MAX_PATH];
 
     for (bs = nullptr;
          VirtualQueryEx(process_handle, bs, &info, sizeof(info))
@@ -104,7 +121,18 @@ auto ProcessMemoryMap::refresh() -> void
         area->setAddress(bs);
         area->setSize(info.RegionSize);
         area->initProtectionFlags(
-          ProcessMemoryArea::ProtectionFlags::toOwn(info.Protect));
+          ProcessMemoryArea::ProtectionFlags::ToOwn(info.Protect));
+
+        if (GetModuleFileNameA(view_as<HMODULE>(info.AllocationBase),
+                               module_path,
+                               sizeof(module_path)))
+        {
+            area->setName(module_path);
+        }
+        else
+        {
+            area->setName("unknown");
+        }
 
         _areas.push_back(std::move(area));
     }

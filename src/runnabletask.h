@@ -5,6 +5,15 @@
 #include "task.h"
 #include "taskexception.h"
 
+#ifdef WINDOWS
+    #include <tlhelp32.h>
+#else
+    #include <cstdlib>
+    #include <filesystem>
+    #include <signal.h>
+    #include <sys/wait.h>
+#endif
+
 namespace XLib
 {
     template <size_t stack_size_T>
@@ -13,6 +22,11 @@ namespace XLib
       public:
         RunnableTask(ProcessBase processBase, ptr_t routineAddress);
 
+      public:
+        auto kill() -> void;
+        auto wait() -> void;
+
+      public:
         auto run() -> void;
 
       private:
@@ -111,6 +125,55 @@ namespace XLib
         {
             throw TaskException(std::string(CURRENT_CONTEXT)
                                 + "Could not create thread");
+        }
+#endif
+    }
+
+    template <size_t stack_size_T>
+    auto RunnableTask<stack_size_T>::kill() -> void
+    {
+#ifdef WINDOWS
+        if (!_thread_handle)
+        {
+            throw TaskException(std::string(CURRENT_CONTEXT)
+                                + "Thread did not start yet");
+        }
+
+        if (!TerminateThread(_thread_handle, EXIT_CODE))
+        {
+            throw TaskException(std::string(CURRENT_CONTEXT)
+                                + "Could not terminate thread");
+        }
+
+        CloseHandle(_thread_handle);
+#else
+        auto ret = ::kill(_id, SIGKILL);
+
+        if (ret != 0)
+        {
+            throw TaskException(std::string(CURRENT_CONTEXT)
+                                + "Could not terminate thread");
+        }
+#endif
+    }
+
+    template <size_t stack_size_T>
+    auto RunnableTask<stack_size_T>::wait() -> void
+    {
+#ifdef WINDOWS
+        if (!_thread_handle)
+        {
+            throw TaskException(std::string(CURRENT_CONTEXT)
+                                + "Thread did not start yet");
+        }
+
+        WaitForSingleObject(_thread_handle, INFINITE);
+
+        CloseHandle(_thread_handle);
+#else
+        while (::kill(_id, 0) != -1)
+        {
+            usleep(100);
         }
 #endif
     }

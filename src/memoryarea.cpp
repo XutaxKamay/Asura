@@ -7,7 +7,7 @@
 
 using namespace XLib;
 
-auto MemoryArea::ProtectionFlags::toOwn(mapf_t flags) -> mapf_t
+auto MemoryArea::ProtectionFlags::ToOwn(mapf_t flags) -> mapf_t
 {
 #ifdef WINDOWS
     mapf_t own_flags;
@@ -71,7 +71,7 @@ auto MemoryArea::ProtectionFlags::toOwn(mapf_t flags) -> mapf_t
 #endif
 }
 
-auto MemoryArea::ProtectionFlags::toOS(mapf_t flags) -> mapf_t
+auto MemoryArea::ProtectionFlags::ToOS(mapf_t flags) -> mapf_t
 {
 #ifdef WINDOWS
     int os_flags;
@@ -141,7 +141,17 @@ auto MemoryArea::setSize(size_t size) -> void
     _size = size;
 }
 
+auto XLib::MemoryArea::setName(const std::string& name) -> void
+{
+    _name = name;
+}
+
 auto MemoryArea::operator==(MemoryArea& area) -> bool
 {
     return begin() == area.begin() && end() == area.end();
+}
+
+auto XLib::MemoryArea::name() -> const std::string&
+{
+    return _name;
 }

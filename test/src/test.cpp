@@ -196,6 +196,12 @@ auto XLib::Test::run() -> void
     ptr_t shellcode_address = nullptr;
     auto mmap               = Process::self().mmap();
 
+    for (auto&& area : mmap.areas())
+    {
+        std::cout << std::hex << area->begin() << " -> " << area->name()
+                  << std::endl;
+    }
+
     try
     {
         shellcode_address = mmap.allocArea(nullptr,
@@ -218,11 +224,12 @@ auto XLib::Test::run() -> void
 
         area->protectionFlags() = MemoryArea::ProtectionFlags::RWX;
 
-#ifdef ENVIRONMENT64
+#ifndef WINDOWS
+    #ifdef ENVIRONMENT64
         area->write({ 0xC7, 0x04, 0x25, 0x00, 0x00, 0x37, 0x13,
                       0x39, 0x05, 0x00, 0x00, 0x48, 0xC7, 0xC0,
                       0x3C, 0x00, 0x00, 0x00, 0x0F, 0x05 });
-#else
+    #else
         area->write({ 0xC7,
                       0x05,
                       0x00,
@@ -240,6 +247,34 @@ auto XLib::Test::run() -> void
                       0x00,
                       0xCD,
                       0x80 });
+    #endif
+#else
+    #ifdef ENVIRONMENT64
+        area->write({ 0xC7,
+                      0x04,
+                      0x25,
+                      0x00,
+                      0x00,
+                      0x37,
+                      0x13,
+                      0x39,
+                      0x05,
+                      0x00,
+                      0x00,
+                      0xC3 });
+    #else
+        area->write({ 0xC7,
+                      0x05,
+                      0x00,
+                      0x00,
+                      0x37,
+                      0x13,
+                      0x39,
+                      0x05,
+                      0x00,
+                      0x00,
+                      0xC3 });
+    #endif
 #endif
 
         ConsoleOutput("write test: ")
@@ -248,13 +283,12 @@ auto XLib::Test::run() -> void
         auto task = Process::self().createTask(shellcode_address);
 
         task.run();
-
         task.wait();
 
         area->protectionFlags() = MemoryArea::ProtectionFlags::R;
 
         ConsoleOutput("write test: ")
-          << *view_as<int*>(write_test) << std::endl;
+          << std::dec << *view_as<int*>(write_test) << std::endl;
     }
     catch (MemoryException& me)
     {
@@ -400,34 +434,35 @@ auto XLib::Test::run() -> void
         random_bytes.push_back(rand() % 255);
     }
 
-    PatternByte pattern({ random_bytes[5],
-                          random_bytes[6],
-                          random_bytes[7],
-                          PatternByte::Value::type_t::UNKNOWN,
-                          random_bytes[9] });
-#ifdef ENVIRONMENT64
-    PatternScanning::search(pattern,
-                            random_bytes,
-                            view_as<ptr_t>(0x1337ull));
-#else
-    PatternScanning::search(pattern, random_bytes, view_as<ptr_t>(0x1337));
-#endif
-
-    if (pattern.matches().size() != 0)
+    try
     {
-        ConsoleOutput("Found match(es):") << std::endl;
+        std::getchar();
+        PatternByte pattern({ random_bytes[5],
+                              random_bytes[6],
+                              random_bytes[7],
+                              PatternByte::Value::type_t::UNKNOWN,
+                              random_bytes[9] });
 
-        for (auto&& match : pattern.matches())
+        if (pattern.matches().size() != 0)
         {
-            std::cout << "   " << match << " at pos: "
-                      << view_as<ptr_t>(view_as<uintptr_t>(match)
-                                        - 0x1337)
-                      << std::endl;
+            ConsoleOutput("Found match(es):") << std::endl;
+
+            for (auto&& match : pattern.matches())
+            {
+                std::cout
+                  << "   " << match << " at pos: "
+                  << view_as<ptr_t>(view_as<uintptr_t>(match) - 0x1337)
+                  << std::endl;
+            }
+        }
+        else
+        {
+            ConsoleOutput("Failed to find match(es)") << std::endl;
         }
     }
-    else
+    catch (MemoryException& me)
     {
-        ConsoleOutput("Failed to find match(es)") << std::endl;
+        ConsoleOutput(me.msg()) << std::endl;
     }
 
     // std::getchar();

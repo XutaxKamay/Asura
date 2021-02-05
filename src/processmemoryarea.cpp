@@ -108,3 +108,20 @@ auto ProcessMemoryArea::write(const bytes_t& bytes, size_t shift) -> void
                                         bytes,
                                         begin<size_t>() + shift);
 }
+
+auto XLib::ProcessMemoryArea::isDeniedByOS() -> bool
+{
+    return _protection_flags.cachedValue() == 0 || name() == "[vvar]";
+}
+
+auto XLib::ProcessMemoryArea::isReadable() -> bool
+{
+    return (_protection_flags.cachedValue() & ProtectionFlags::R)
+           && !isDeniedByOS();
+}
+
+auto XLib::ProcessMemoryArea::isWritable() -> bool
+{
+    return (_protection_flags.cachedValue() & ProtectionFlags::W)
+           && !isDeniedByOS();
+}

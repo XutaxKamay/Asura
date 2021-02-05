@@ -12,6 +12,7 @@
 #include "networkwritebuffer.h"
 #include "offset.h"
 #include "osutils.h"
+#include "patternbyte.h"
 #include "patternscanning.h"
 #include "process.h"
 #include "readbuffer.h"

@@ -85,7 +85,8 @@ namespace XLib
 
         /**
          * TODO:
-         * here something i didn't finish yet but yea, ill use this upside instead'
+         * here something i didn't finish yet but yea, ill use this upside
+         * instead'
          */
 #ifdef _WIN32
     template <calling_conventions_t calling_convention_T,

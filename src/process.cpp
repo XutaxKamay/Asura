@@ -43,4 +43,3 @@ auto Process::mmap() -> ProcessMemoryMap
     _mmap.refresh();
     return _mmap;
 }
-

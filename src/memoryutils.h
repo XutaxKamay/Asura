@@ -79,7 +79,7 @@ namespace XLib
             auto ret = VirtualProtectEx(process_handle,
                                         aligned_address,
                                         aligned_size,
-                                        MemoryArea::ProtectionFlags::toOS(
+                                        MemoryArea::ProtectionFlags::ToOS(
                                           flags),
                                         &dwOldFlags);
 
@@ -95,7 +95,7 @@ namespace XLib
                                pid,
                                aligned_address,
                                aligned_size,
-                               MemoryArea::ProtectionFlags::toOS(flags));
+                               MemoryArea::ProtectionFlags::ToOS(flags));
 
             if (ret < 0)
             {
@@ -129,7 +129,7 @@ namespace XLib
               view_as<ptr_t>(address),
               size,
               MEM_COMMIT | MEM_RESERVE,
-              MemoryArea::ProtectionFlags::toOS(flags));
+              MemoryArea::ProtectionFlags::ToOS(flags));
 
             CloseHandle(process_handle);
 
@@ -139,7 +139,7 @@ namespace XLib
                                       pid,
                                       address,
                                       size,
-                                      MemoryArea::ProtectionFlags::toOS(
+                                      MemoryArea::ProtectionFlags::ToOS(
                                         flags),
                                       MAP_PRIVATE | MAP_ANONYMOUS,
                                       0,
@@ -205,7 +205,10 @@ namespace XLib
             if (ret != view_as<decltype(ret)>(size))
             {
                 throw MemoryException(std::string(CURRENT_CONTEXT)
-                                      + "process_vm_readv failed");
+                                      + "process_vm_readv failed with "
+                                      + std::to_string(address)
+                                      + " and size: "
+                                      + std::to_string(size));
             }
 #else
             auto process_handle = GetCurrentProcessId() == pid ?
@@ -229,7 +232,10 @@ namespace XLib
             if (!ret)
             {
                 throw MemoryException(std::string(CURRENT_CONTEXT)
-                                      + "ReadProcessMemory failed");
+                                      + "ReadProcessMemory failed with "
+                                      + std::to_string(address)
+                                      + " and size: "
+                                      + std::to_string(size));
             }
 
             CloseHandle(process_handle);

@@ -27,8 +27,8 @@ namespace XLib
         class ProtectionFlags
         {
           public:
-            static auto toOwn(mapf_t flags) -> mapf_t;
-            static auto toOS(mapf_t flags) -> mapf_t;
+            static auto ToOwn(mapf_t flags) -> mapf_t;
+            static auto ToOS(mapf_t flags) -> mapf_t;
 
             const inline static mapf_t NONE    = 0;
             const inline static mapf_t READ    = (1 << 0);
@@ -56,6 +56,7 @@ namespace XLib
          * @param size
          */
         auto setSize(size_t size) -> void;
+        auto setName(const std::string& name) -> void;
         auto operator==(MemoryArea& area) -> bool;
 
       public:
@@ -77,6 +78,8 @@ namespace XLib
             return view_as<T>(end<size_t>() - begin<size_t>());
         }
 
+        auto name() -> const std::string&;
+
       private:
         /**
          * @brief _address
@@ -88,6 +91,11 @@ namespace XLib
          * Size of the memory area
          */
         size_t _size {};
+        /**
+         * @brief _name
+         * Name of the memory area
+         */
+        std::string _name {};
     };
 }
 

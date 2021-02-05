@@ -1,11 +1,12 @@
 #ifndef PATTERNSCANNING_H
 #define PATTERNSCANNING_H
 
-#include "patternbyte.h"
 #include "process.h"
 
 namespace XLib
 {
+    class PatternByte;
+
     class PatternScanningException : std::exception
     {
       public:
@@ -20,7 +21,8 @@ namespace XLib
     class PatternScanning
     {
       public:
-        static auto searchInPID(PatternByte& pattern, pid_t pid) -> void;
+        static auto searchInProcess(PatternByte& pattern, Process process)
+          -> void;
 
         static auto search(PatternByte& pattern,
                            bytes_t bytes,
