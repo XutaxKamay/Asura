@@ -107,7 +107,8 @@ auto XLib::PatternScanning::searchInProcessWithAreaName(
 
         for (auto&& area : mmap.areas())
         {
-            if (area->isReadable() && area->name().find(areaName))
+            if (area->isReadable()
+                && (area->name().find(areaName) != std::string::npos))
             {
                 search(pattern, area->read(), area->begin<ptr_t>());
             }

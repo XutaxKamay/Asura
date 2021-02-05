@@ -440,7 +440,8 @@ auto XLib::Test::run() -> void
                               random_bytes[6],
                               random_bytes[7],
                               PatternByte::Value::type_t::UNKNOWN,
-                              random_bytes[9] });
+                              random_bytes[9] },
+                            "xlib");
 
         pattern.scan(Process::self());
 
