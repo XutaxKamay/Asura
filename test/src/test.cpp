@@ -440,8 +440,7 @@ auto XLib::Test::run() -> void
                               random_bytes[6],
                               random_bytes[7],
                               PatternByte::Value::type_t::UNKNOWN,
-                              random_bytes[9] },
-                            "xlib");
+                              random_bytes[9] });
 
         pattern.scan(Process::self());
 
@@ -466,6 +465,36 @@ auto XLib::Test::run() -> void
     {
         ConsoleOutput(me.msg()) << std::endl;
     }
+
+    class TestMember : Offset
+    {
+      public:
+        TestMember()
+        {
+            first = new Something();
+        }
+        ~TestMember()
+        {
+            delete first;
+        }
+
+        class Something
+        {
+          public:
+            int ok = 1337;
+        };
+
+        auto _first()
+        {
+            return *member_at<0x0, Something**>();
+        }
+
+        Something* first;
+    };
+
+    TestMember member;
+
+    std::cout << member._first()->ok << std::endl;
 
     // std::getchar();
 }
