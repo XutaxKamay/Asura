@@ -21,39 +21,6 @@
 
 namespace XLib
 {
-#ifndef WIN32
-    typedef struct _IMAGE_OPTIONAL_HEADER32
-    {
-    } IMAGE_OPTIONAL_HEADER32, *PIMAGE_OPTIONAL_HEADER32;
-
-    typedef struct _IMAGE_OPTIONAL_HEADER64
-    {
-    } IMAGE_OPTIONAL_HEADER64, *PIMAGE_OPTIONAL_HEADER64;
-
-    typedef struct _IMAGE_FILE_HEADER
-    {
-    } IMAGE_FILE_HEADER, *PIMAGE_FILE_HEADER;
-#else
-#endif
-
-    typedef struct _PARENTNTHEADERS
-    {
-        uint32_t Signature;
-        IMAGE_FILE_HEADER FileHeader;
-    } PARENTNTHEADERS, *PPARENTNTHEADERS;
-
-    typedef struct _NTHEADERS32
-    {
-        PARENTNTHEADERS Parent;
-        IMAGE_OPTIONAL_HEADER32 OptionalHeader;
-    } NTHEADERS32, *PNTHEADERS32;
-
-    typedef struct _NTHEADERS64
-    {
-        PARENTNTHEADERS Parent;
-        IMAGE_OPTIONAL_HEADER64 OptionalHeader;
-    } NTHEADERS64, *PNTHEADERS64;
-
     class OSUtils
     {
       public:
