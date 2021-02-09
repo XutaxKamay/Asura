@@ -62,7 +62,7 @@ ifneq (,$(findstring mingw, $(CXX)))
 	XLIB_TEST_RELEASE:=$(XLIB_TEST_RELEASE).exe
 	XLIB_OBJ_DEBUG_OUT:=$(XLIB_OBJ_DEBUG_OUT)win
 	XLIB_OBJ_RELEASE_OUT:=$(XLIB_OBJ_RELEASE_OUT)win
-	DBGHELP_LIB:=-ldbghelp
+	DBGHELP_LIB:=-ldbghelp -lpsapi 
 	DATARACES:=--allow-store-data-races
 else
 	DLOPEN_LIB :=-ldl

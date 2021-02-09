@@ -4,6 +4,7 @@
 #include "memorymap.h"
 #include "memoryutils.h"
 #include "processbase.h"
+#include "processexception.h"
 #include "processmemoryarea.h"
 #include "processmemorymap.h"
 #include "runnabletask.h"

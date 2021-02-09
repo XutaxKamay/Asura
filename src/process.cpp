@@ -17,9 +17,15 @@ auto XLib::Process::ProcessName(pid_t pid) -> std::string
 #ifndef WINDOWS
     result.reserve(PATH_MAX);
 
-    readlink(std::string("/proc/" + std::to_string(pid) + "/exe").c_str(),
-             result.data(),
-             result.size());
+    if (readlink(
+          std::string("/proc/" + std::to_string(pid) + "/exe").c_str(),
+          result.data(),
+          result.size())
+        < 0)
+    {
+        throw ProcessException(std::string(CURRENT_CONTEXT)
+                               + "Could not read symlink.");
+    }
 #else
     result.reserve(MAX_PATH);
 
@@ -28,10 +34,21 @@ auto XLib::Process::ProcessName(pid_t pid) -> std::string
                                       false,
                                       pid);
 
-    GetModuleFileNameExA(process_handle,
-                         nullptr,
-                         result.data(),
-                         result.size());
+    if (!process_handle)
+    {
+        throw ProcessException(std::string(CURRENT_CONTEXT)
+                               + "Could not get process handle.");
+    }
+
+    if (GetModuleFileNameExA(process_handle,
+                             nullptr,
+                             result.data(),
+                             result.size())
+        <= 0)
+    {
+        throw ProcessException(std::string(CURRENT_CONTEXT)
+                               + "Could not read process path.");
+    }
 
     CloseHandle(process_handle);
 #endif
