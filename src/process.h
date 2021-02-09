@@ -14,16 +14,17 @@ namespace XLib
     {
       public:
         static inline constexpr pid_t INVALID_PID = -1;
+
+      public:
         static auto self() -> Process;
+        static auto find(const std::string& name) -> Process;
+        static auto ProcessName(pid_t pid) -> std::string;
 
       public:
         Process();
-        Process(const std::string& fullName, pid_t pid);
+        Process(pid_t pid);
 
       public:
-        auto setFullName(const std::string& fullName) -> void;
-        auto fullName() -> std::string;
-
         auto tasks() -> tasks_t;
         auto mmap() -> ProcessMemoryMap;
 

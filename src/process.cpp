@@ -1,14 +1,50 @@
 #include "process.h"
 #include <unistd.h>
 
+#ifdef WINDOWS
+    #include <psapi.h>
+#else
+    #include <fcntl.h>
+    #include <linux/limits.h>
+#endif
+
 using namespace XLib;
+
+auto XLib::Process::ProcessName(pid_t pid) -> std::string
+{
+    std::string result("unknown");
+
+#ifndef WINDOWS
+    result.reserve(PATH_MAX);
+
+    readlink(std::string("/proc/" + std::to_string(pid) + "/exe").c_str(),
+             result.data(),
+             result.size());
+#else
+    result.reserve(MAX_PATH);
+
+    auto process_handle = OpenProcess(PROCESS_QUERY_INFORMATION
+                                        | PROCESS_VM_READ,
+                                      false,
+                                      pid);
+
+    GetModuleFileNameExA(process_handle,
+                         nullptr,
+                         result.data(),
+                         result.size());
+
+    CloseHandle(process_handle);
+#endif
+
+    return result;
+}
 
 auto Process::self() -> Process
 {
 #ifdef WINDOWS
-    return Process("current", GetCurrentProcessId());
+    return Process(GetCurrentProcessId());
 #else
-    return Process("current", getpid());
+    return Process(getpid());
 #endif
 }
 
@@ -18,19 +54,10 @@ Process::Process()
 {
 }
 
-Process::Process(const std::string& fullName, pid_t pid)
- : ProcessBase(pid), _full_name(fullName), _mmap(ProcessMemoryMap(*this))
+Process::Process(pid_t pid)
+ : ProcessBase(pid), _full_name(ProcessName(pid)),
+   _mmap(ProcessMemoryMap(*this))
 {
-}
-
-auto Process::setFullName(const std::string& fullName) -> void
-{
-    _full_name = fullName;
-}
-
-auto Process::fullName() -> std::string
-{
-    return _full_name;
 }
 
 auto Process::tasks() -> tasks_t
