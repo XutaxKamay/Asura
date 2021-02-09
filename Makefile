@@ -66,7 +66,7 @@ ifneq (,$(findstring mingw, $(CXX)))
 	DATARACES:=--allow-store-data-races
 else
 	DLOPEN_LIB :=-ldl
-	DATARACES:=--param=allow-store-data-races=1
+	DATARACES:=--allow-store-data-races
 endif
 
 XLIB_OBJ_DEBUG=$(subst .cpp,$(XLIB_OBJ_DEBUG_OUT),$(wildcard src/*.cpp))
