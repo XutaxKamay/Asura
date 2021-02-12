@@ -429,9 +429,16 @@ auto XLib::Test::run() -> void
 
     std::vector<byte_t> random_bytes;
 
-    for (size_t i = 0; i < 0xFFF; i++)
+    byte_t result;
+
+    for (size_t i = 0; i < 0x10000; i++)
     {
-        random_bytes.push_back(rand() % 255);
+        if ((i % (5 + rand() % 8)) == 0)
+        {
+            result = rand() % 256;
+        }
+
+        random_bytes.push_back(result);
     }
 
     try
@@ -495,6 +502,13 @@ auto XLib::Test::run() -> void
     TestMember member;
 
     std::cout << member._first()->ok << std::endl;
+
+    Komprex komprex(random_bytes.data(), random_bytes.size());
+
+    auto compressed = komprex.compress();
+
+    ConsoleOutput("size of compressed ")
+      << compressed.size() << std::endl;
 
     // std::getchar();
 }
