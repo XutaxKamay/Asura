@@ -1,15 +1,15 @@
 #ifndef KONPRESS_H
 #define KONPRESS_H
 
-#include <list>
 #include <exception>
+#include <list>
 
 #include "bits.h"
 #include "types.h"
 
 namespace XLib
 {
-    class Komprex
+    class XKomprexk
     {
       public:
         class Exception : std::exception
@@ -29,8 +29,10 @@ namespace XLib
             byte_t byte;
         };
 
-        Komprex(data_t data, size_t size);
+      public:
+        XKomprexk(data_t data, size_t size);
 
+      public:
         auto compress() -> bytes_t;
         auto decompress() -> bytes_t;
 
@@ -38,7 +40,7 @@ namespace XLib
         data_t _data;
         size_t _size;
         size_t _max_count_traversed_tree;
-        std::list<byte_t> _alphabet;
+        bytes_t _alphabet;
     };
 
 };
