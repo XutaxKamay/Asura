@@ -68,11 +68,8 @@ auto XLib::XKomprexk::decompress() -> XLib::bytes_t
 
         auto bits_to_read = view_as<size_t>(max_freq_bits + max_bits);
         auto bytes_left   = _size - read_size;
-        auto bits_left    = bytes_left * 8;
 
-        bits_left -= 8 - read_bits;
-
-        if (bits_to_read > bits_left)
+        if (bits_to_read > (8 - read_bits) && bytes_left <= 1)
         {
             break;
         }

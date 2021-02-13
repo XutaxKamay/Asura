@@ -433,12 +433,12 @@ auto XLib::Test::run() -> void
 
     for (size_t i = 0; i < 0x800; i++)
     {
-        /*
-        if ((i % (5 + rand() % 8)) == 0)
+
+        /*if ((i % (5 + rand() % 8)) == 0)
         {
             result = rand() % 256;
-        }*/
-
+        }
+*/
         result = rand() % 256;
         random_bytes.push_back(result);
     }
