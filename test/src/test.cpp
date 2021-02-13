@@ -6,6 +6,8 @@
     #include <windows.h>
 #endif
 
+#include <fstream>
+
 using namespace XLib;
 
 #define ConsoleOutput(format) std::cout << "[XLib] -> " << format
@@ -431,17 +433,36 @@ auto XLib::Test::run() -> void
 
     byte_t result;
 
-    for (size_t i = 0; i < 0x800; i++)
-    {
+    char alphabet[27] = { ' ' };
+    auto c            = 0;
 
-        /*if ((i % (5 + rand() % 8)) == 0)
+    for (size_t i = 1; i < sizeof(alphabet) / sizeof(alphabet[0]); i++)
+    {
+        alphabet[i] = 'a' + c;
+        c++;
+    }
+
+    for (size_t i = 0; i < 0x10000; i++)
+    {
+        if ((i % (8 + rand() % 8)) == 0)
         {
-            result = rand() % 256;
+            result = alphabet[rand()
+                              % (sizeof(alphabet) / sizeof(alphabet[0]))];
         }
-*/
-        result = rand() % 256;
+        // result = rand() % 256;
         random_bytes.push_back(result);
     }
+
+    random_bytes = { 't', 'h', 'i', 's', ' ', 'i', 's', ' ', 'a',
+                     'n', ' ', 'e', 'x', 'a', 'm', 'p', 'l', 'e',
+                     ' ', 'o', 'f', ' ', 'a', ' ', 'h', 'u', 'f',
+                     'f', 'm', 'a', 'n', ' ', 't', 'r', 'e', 'e' };
+
+    std::ofstream file("random_bytes.txt",
+                       std::ios::binary | std::ios::out);
+
+    file.write(view_as<char*>(random_bytes.data()), random_bytes.size());
+    file.close();
 
     try
     {
@@ -521,7 +542,10 @@ auto XLib::Test::run() -> void
     ConsoleOutput("size of decompressed ")
       << decompressed.size() << std::endl;
 
-      std::cout << memcmp(decompressed.data(), random_bytes.data(), decompressed.size()) << std::endl;
+    std::cout << memcmp(decompressed.data(),
+                        random_bytes.data(),
+                        decompressed.size())
+              << std::endl;
 
     // std::getchar();
 }

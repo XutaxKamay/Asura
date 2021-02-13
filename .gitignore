@@ -10,6 +10,7 @@ XLib.*
 *.sym*
 *.cmd*
 *.mod*
+random_bytes.txt
 winexts/tests/target
 winexts/tests/test_ioctl
 .cache
