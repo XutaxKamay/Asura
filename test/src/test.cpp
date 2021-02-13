@@ -431,7 +431,7 @@ auto XLib::Test::run() -> void
 
     byte_t result;
 
-    for (size_t i = 0; i < 0x100; i++)
+    for (size_t i = 0; i < 0x800; i++)
     {
         /*
         if ((i % (5 + rand() % 8)) == 0)
@@ -520,6 +520,8 @@ auto XLib::Test::run() -> void
 
     ConsoleOutput("size of decompressed ")
       << decompressed.size() << std::endl;
+
+      std::cout << memcmp(decompressed.data(), random_bytes.data(), decompressed.size()) << std::endl;
 
     // std::getchar();
 }

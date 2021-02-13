@@ -40,7 +40,7 @@ namespace XLib
         data_t _data;
         size_t _size;
         size_t _max_count_traversed_tree;
-        bytes_t _alphabet;
+        std::vector<byte_t> _alphabet;
     };
 
 };
