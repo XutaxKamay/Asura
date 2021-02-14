@@ -5,6 +5,7 @@
 
 #include "bufferexception.h"
 #include "types.h"
+#include <cmath>
 
 namespace XLib
 {
@@ -189,6 +190,12 @@ namespace XLib
 
         return bits;
     }
+
+    template <typename T>
+    auto BitsNeeded(T max_val)
+    {
+        return view_as<T>(std::log2(max_val)) + 1;
+    };
 
 };
 

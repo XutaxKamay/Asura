@@ -11,6 +11,30 @@ const std::string& XLib::XKomprexk::Exception::msg()
     return _msg;
 }
 
+XLib::XKomprexk::Node::Node()
+{
+    static int count_id = 0;
+
+    id = count_id++;
+}
+
+size_t XLib::XKomprexk::Node::countNodes()
+{
+    size_t result = 0;
+
+    if (left)
+    {
+        result += left->countNodes() + 1;
+    }
+
+    if (right)
+    {
+        result += right->countNodes() + 1;
+    }
+
+    return result;
+}
+
 auto XLib::XKomprexk::Node::height() -> size_t
 {
     size_t height_left = 0, height_right = 0;
@@ -31,30 +55,27 @@ auto XLib::XKomprexk::Node::height() -> size_t
 auto XLib::XKomprexk::Tree::insert(XLib::XKomprexk::Node* parent,
                                    XLib::byte_t value) -> void
 {
-    if (parent == nullptr)
-    {
-        return;
-    }
-
-    if (parent->left && !parent->right)
-    {
-        parent->right        = std::shared_ptr<Node>(new Node());
-        parent->right->value = value;
-    }
-    else if (!parent->left && !parent->right)
+    if (!parent->left)
     {
         parent->left        = std::shared_ptr<Node>(new Node());
         parent->left->value = value;
+        return;
+    }
+    else if (!parent->right)
+    {
+        parent->right        = std::shared_ptr<Node>(new Node());
+        parent->right->value = value;
+        return;
     }
     else
     {
-        if (parent->left->height() >= parent->right->height())
+        if (parent->left->countNodes() > parent->right->countNodes())
         {
-            insert(parent->left.get(), value);
+            insert(parent->right.get(), value);
         }
         else
         {
-            insert(parent->right.get(), value);
+            insert(parent->left.get(), value);
         }
     }
 }
@@ -63,38 +84,18 @@ auto XLib::XKomprexk::Tree::insert(XLib::byte_t value) -> void
 {
     std::shared_ptr<Node> found_node;
 
-    if (root->value == -1)
+    if (root->value == Node::value_t::INVALID)
     {
         root->value = value;
     }
     else
     {
-        if (root->left && !root->right)
-        {
-            root->right        = std::shared_ptr<Node>(new Node());
-            root->right->value = value;
-        }
-        else if (!root->left && !root->right)
-        {
-            root->left        = std::shared_ptr<Node>(new Node());
-            root->left->value = value;
-        }
-        else
-        {
-            if (root->left->height() >= root->right->height())
-            {
-                insert(root->left.get(), value);
-            }
-            else
-            {
-                insert(root->right.get(), value);
-            }
-        }
+        insert(root.get(), value);
     }
 }
 
-auto XLib::XKomprexk::Tree::find_path_info(
-  XLib::XKomprexk::path_info_t& path_info,
+auto XLib::XKomprexk::Tree::findPathInfo(
+  XLib::XKomprexk::PathInfo& pathInfo,
   XLib::XKomprexk::Node* parent,
   XLib::byte_t value) -> void
 {
@@ -105,32 +106,87 @@ auto XLib::XKomprexk::Tree::find_path_info(
 
     if (parent->value == value)
     {
-        path_info.found = true;
+        pathInfo.found = true;
         return;
     }
 
-    path_info.height += 1;
+    pathInfo.depth += 1;
 
-    auto old_path_info = path_info;
-    find_path_info(path_info, parent->left.get(), value);
+    auto old_path_info = pathInfo;
+    findPathInfo(pathInfo, parent->left.get(), value);
 
-    if (path_info.found)
+    if (pathInfo.found)
     {
         return;
     }
 
-    path_info = old_path_info;
+    pathInfo = old_path_info;
 
-    path_info.bit_path |= (1 << path_info.height);
-    find_path_info(path_info, parent->right.get(), value);
+    pathInfo.bit_path |= (1 << pathInfo.depth);
+    findPathInfo(pathInfo, parent->right.get(), value);
 }
 
-auto XLib::XKomprexk::Tree::find_path_info(XLib::byte_t value)
-  -> XLib::XKomprexk::path_info_t
+std::string XLib::XKomprexk::Tree::graphivzFormat(
+  XLib::XKomprexk::Node* parent)
 {
-    path_info_t path_info;
+    std::string result;
 
-    find_path_info(path_info, root.get(), value);
+    if (parent->left)
+    {
+        result += "\n";
+        result += std::to_string(parent->id) + " -- "
+                  + std::to_string(parent->left->id);
+        result += graphivzFormat(parent->left.get());
+    }
+
+    if (parent->right)
+    {
+        result += "\n";
+        result += std::to_string(parent->id) + " -- "
+                  + std::to_string(parent->right->id);
+
+        result += graphivzFormat(parent->right.get());
+    }
+
+    return result;
+}
+
+std::string XLib::XKomprexk::Tree::graphivzFormat()
+{
+    std::string result = "strict graph {";
+
+    auto left = root->left;
+
+    if (left)
+    {
+        result += "\n";
+        result += std::to_string(root->id) + " -- "
+                  + std::to_string(left->id);
+        result += graphivzFormat(left.get());
+    }
+
+    auto right = root->right;
+
+    if (right)
+    {
+        result += "\n";
+        result += std::to_string(root->id) + " -- "
+                  + std::to_string(right->id);
+
+        result += graphivzFormat(right.get());
+    }
+
+    result += "\n}";
+
+    return result;
+}
+
+auto XLib::XKomprexk::Tree::findPathInfo(XLib::byte_t value)
+  -> XLib::XKomprexk::PathInfo
+{
+    PathInfo path_info;
+
+    findPathInfo(path_info, root.get(), value);
 
     return path_info;
 }
@@ -138,6 +194,99 @@ auto XLib::XKomprexk::Tree::find_path_info(XLib::byte_t value)
 XLib::XKomprexk::XKomprexk(XLib::data_t data, size_t size)
  : _data(data), _size(size)
 {
+}
+
+auto XLib::XKomprexk::compress() -> XLib::bytes_t
+{
+    bytes_t result;
+
+    std::vector<Occurrence> occurrences;
+
+    _alphabet.clear();
+
+    size_t i = 0;
+
+    while (i < _size)
+    {
+        size_t start = i++;
+
+        Occurrence occurrence;
+        occurrence.value = _data[start];
+        occurrence.count = 1;
+
+        for (; i < _size; i++)
+        {
+            if (occurrence.count
+                == std::numeric_limits<decltype(Occurrence::count)>::max())
+            {
+                break;
+            }
+
+            if (_data[start] != _data[i])
+            {
+                break;
+            }
+
+            occurrence.count++;
+        }
+
+        occurrences.push_back(occurrence);
+    }
+
+    std::sort(occurrences.begin(),
+              occurrences.end(),
+              [](Occurrence& a, Occurrence& b)
+              {
+                  return (a.count > b.count);
+              });
+
+    for (auto&& occurrence : occurrences)
+    {
+        auto it = std::find_if(_alphabet.begin(),
+                               _alphabet.end(),
+                               [&occurrence](Letter& a)
+                               {
+                                   return (occurrence.value == a.value);
+                               });
+
+        if (it != _alphabet.end())
+        {
+            it->freq += occurrence.count;
+        }
+        else
+        {
+            _alphabet.push_back({ occurrence.value, occurrence.count });
+        }
+    }
+
+    std::sort(_alphabet.begin(),
+              _alphabet.end(),
+              [](Letter& a, Letter& b)
+              {
+                  return (a.freq > b.freq);
+              });
+
+    Tree tree;
+
+    for (auto&& letter : _alphabet)
+    {
+        tree.insert(letter.value);
+    }
+
+    auto max_alphabet_bits = BitsNeeded(_alphabet.size());
+    auto max_depth_bits    = BitsNeeded(tree.root->height());
+
+    std::cout << max_depth_bits << " " << max_alphabet_bits << std::endl;
+
+    std::cout << tree.graphivzFormat() << std::endl;
+
+    return result;
+}
+
+auto XLib::XKomprexk::decompress() -> XLib::bytes_t
+{
+    bytes_t result;
+    return result;
 }
 
 /*
@@ -153,7 +302,7 @@ auto XLib::XKomprexk::decompress() -> XLib::bytes_t
                                         + read_size);
     read_size += sizeof(uint16_t);
 
-    auto max_occurence_bits = *view_as<uint16_t*>(
+    auto max_occurrence_bits = *view_as<uint16_t*>(
       view_as<uintptr_t>(_data) + read_size);
     read_size += sizeof(uint16_t);
 
@@ -169,13 +318,13 @@ auto XLib::XKomprexk::decompress() -> XLib::bytes_t
 
     size_t read_bits = 0;
 
-    std::vector<occurence_t> occurences;
+    std::vector<Occurrence> occurrences;
 
     while (read_size < _size)
     {
-        occurence_t occurence;
-        occurence.value = 0;
-        occurence.count = 0;
+        Occurrence occurrence;
+        occurrence.value = 0;
+        occurrence.count = 0;
 
         auto checkByte = [&read_size, &read_bits]()
         {
@@ -188,7 +337,7 @@ auto XLib::XKomprexk::decompress() -> XLib::bytes_t
             }
         };
 
-        auto bits_to_read = view_as<size_t>(max_occurence_bits
+        auto bits_to_read = view_as<size_t>(max_occurrence_bits
                                             + max_bits);
         auto bytes_left   = _size - read_size;
 
@@ -197,11 +346,11 @@ auto XLib::XKomprexk::decompress() -> XLib::bytes_t
             break;
         }
 
-        for (byte_t i = 0; i < max_occurence_bits; i++)
+        for (byte_t i = 0; i < max_occurrence_bits; i++)
         {
             if (_data[read_size] & (1 << read_bits))
             {
-                occurence.count |= (1 << i);
+                occurrence.count |= (1 << i);
             }
 
             checkByte();
@@ -211,22 +360,22 @@ auto XLib::XKomprexk::decompress() -> XLib::bytes_t
         {
             if (_data[read_size] & (1 << read_bits))
             {
-                occurence.value |= (1 << i);
+                occurrence.value |= (1 << i);
             }
 
             checkByte();
         }
 
-        occurence.value = _alphabet[occurence.value];
+        occurrence.value = _alphabet[occurrence.value];
 
-        occurences.push_back(occurence);
+        occurrences.push_back(occurrence);
     }
 
-    for (auto&& occurence : occurences)
+    for (auto&& occurrence : occurrences)
     {
-        for (size_t i = 0; i < occurence.count; i++)
+        for (size_t i = 0; i < occurrence.count; i++)
         {
-            result.push_back(occurence.value);
+            result.push_back(occurrence.value);
         }
     }
 
@@ -237,7 +386,7 @@ auto XLib::XKomprexk::compress() -> XLib::bytes_t
 {
     bytes_t result;
 
-    std::vector<occurence_t> occurences;
+    std::vector<Occurrence> occurrences;
 
 _alphabet.clear();
 
@@ -249,14 +398,14 @@ while (i < _size)
 
     size_t start = i;
 
-    occurence_t occurence;
-    occurence.value = _data[start];
-    occurence.count = 1;
+    Occurrence occurrence;
+    occurrence.value = _data[start];
+    occurrence.count = 1;
 
     for (i++; i < _size; i++)
     {
-        if (occurence.count
-            == std::numeric_limits<decltype(occurence_t::count)>::max())
+        if (occurrence.count
+            == std::numeric_limits<decltype(Occurrence::count)>::max())
         {
             break;
         }
@@ -266,30 +415,30 @@ while (i < _size)
             break;
         }
 
-        occurence.count++;
+        occurrence.count++;
     }
 
-    occurences.push_back(occurence);
+    occurrences.push_back(occurrence);
 }
 
 std::sort(_alphabet.begin(), _alphabet.end());
 _alphabet.erase(std::unique(_alphabet.begin(), _alphabet.end()),
                 _alphabet.end());
 
-auto occurence_count = occurences[0].count;
+auto occurrence_count = occurrences[0].count;
 
-for (size_t i = 1; i < occurences.size(); i++)
+for (size_t i = 1; i < occurrences.size(); i++)
 {
-    if (occurence_count < occurences[i].count)
+    if (occurrence_count < occurrences[i].count)
     {
-        occurence_count = occurences[i].count;
+        occurrence_count = occurrences[i].count;
     }
 }
 
 auto alphabet_max_size = view_as<uint16_t>(_alphabet.size());
 
 auto max_bits = view_as<uint16_t>(std::log2(alphabet_max_size - 1)) + 1;
-auto max_occurence_bits = view_as<uint16_t>(std::log2(occurence_count))
+auto max_occurrence_bits = view_as<uint16_t>(std::log2(occurrence_count))
                           + 1;
 
 for (size_t i = 0; i < sizeof(uint16_t) * 3; i++)
@@ -302,7 +451,7 @@ size_t write_size                                                   = 0;
 max_bits; write_size += sizeof(uint16_t);
 
 *view_as<uint16_t*>(view_as<uintptr_t>(result.data()) + write_size) =
-max_occurence_bits; write_size += sizeof(uint16_t);
+max_occurrence_bits; write_size += sizeof(uint16_t);
 
 *view_as<uint16_t*>(view_as<uintptr_t>(result.data()) + write_size) =
 alphabet_max_size; write_size += sizeof(uint16_t);
@@ -322,7 +471,7 @@ for (auto&& letter : _alphabet)
 byte_t result_byte                 = 0;
 size_t written_bits_on_result_byte = 0;
 
-for (auto&& occurence : occurences)
+for (auto&& occurrence : occurrences)
 {
     auto checkByte =
       [&written_bits_on_result_byte, &result, &result_byte]()
@@ -337,9 +486,9 @@ for (auto&& occurence : occurences)
         }
     };
 
-    for (byte_t i = 0; i < max_occurence_bits; i++)
+    for (byte_t i = 0; i < max_occurrence_bits; i++)
     {
-        if (occurence.count & (1 << i))
+        if (occurrence.count & (1 << i))
         {
             result_byte |= (1 << written_bits_on_result_byte);
         }
@@ -347,7 +496,7 @@ for (auto&& occurence : occurences)
         checkByte();
     }
 
-    auto pos_alphabet = pos[occurence.value];
+    auto pos_alphabet = pos[occurrence.value];
 
     for (byte_t i = 0; i < max_bits; i++)
     {

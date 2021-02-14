@@ -453,10 +453,10 @@ auto XLib::Test::run() -> void
         random_bytes.push_back(result);
     }
 
-    random_bytes = { 't', 'h', 'i', 's', ' ', 'i', 's', ' ', 'a',
-                     'n', ' ', 'e', 'x', 'a', 'm', 'p', 'l', 'e',
-                     ' ', 'o', 'f', ' ', 'a', ' ', 'h', 'u', 'f',
-                     'f', 'm', 'a', 'n', ' ', 't', 'r', 'e', 'e' };
+    random_bytes = { 'W', 'i', 'k', 'i', 'p', 'e', 'd', 'i', 'a' };
+
+    //     random_bytes = { 'a', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
+    //                      'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o' };
 
     std::ofstream file("random_bytes.txt",
                        std::ios::binary | std::ios::out);

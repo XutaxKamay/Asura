@@ -26,17 +26,23 @@ namespace XLib
             std::string _msg {};
         };
 
-        struct occurence_t
+        struct Occurrence
         {
-            byte_t count = 0;
             byte_t value = 0;
+            byte_t count = 0;
         };
 
-        struct path_info_t
+        struct PathInfo
         {
-            bool found         = false;
-            size_t bit_path    = 0;
-            size_t height      = 0;
+            bool found      = false;
+            size_t bit_path = 0;
+            size_t depth    = 0;
+        };
+
+        struct Letter
+        {
+            byte_t value = 0;
+            size_t freq  = 0;
         };
 
         struct Node
@@ -46,23 +52,33 @@ namespace XLib
                 INVALID = -1
             };
 
+            Node();
+
             auto height() -> size_t;
+            auto countNodes() -> size_t;
 
             std::shared_ptr<Node> left;
             std::shared_ptr<Node> right;
             int value = INVALID;
+            int id;
         };
 
+        /**
+         * @brief Tree
+         * This tree tries to be a perfect binary tree.
+         */
         struct Tree
         {
             std::shared_ptr<Node> root = std::shared_ptr<Node>(new Node());
 
             auto insert(Node* parent, byte_t value) -> void;
             auto insert(byte_t value) -> void;
-            auto find_path_info(path_info_t& path_info,
-                                Node* parent,
-                                byte_t value) -> void;
-            auto find_path_info(byte_t value) -> path_info_t;
+            auto findPathInfo(PathInfo& pathInfo,
+                              Node* parent,
+                              byte_t value) -> void;
+            auto findPathInfo(byte_t value) -> PathInfo;
+            auto graphivzFormat(Node* parent) -> std::string;
+            auto graphivzFormat() -> std::string;
         };
 
       public:
@@ -76,7 +92,7 @@ namespace XLib
         data_t _data;
         size_t _size;
         size_t _max_count_traversed_tree;
-        std::vector<byte_t> _alphabet;
+        std::vector<Letter> _alphabet;
     };
 
 };
