@@ -252,21 +252,17 @@ bool XLib::XKC<alphabet_T>::BinaryTree::path_info(PathInfo& pathInfo,
 
     if (found_left)
     {
-        pathInfo.bit_path[depth] = 0;
         return true;
     }
-
-    pathInfo.bit_path[depth] = 1;
 
     /* reset depth */
     auto found_right = path_info(pathInfo, parent->right, value);
 
     if (found_right)
     {
+        pathInfo.bit_path[depth] = 1;
         return true;
     }
-
-    pathInfo.bit_path[depth] = 0;
 
     return found_right;
 }
