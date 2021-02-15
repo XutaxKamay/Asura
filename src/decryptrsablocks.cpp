@@ -1,6 +1,8 @@
 #include "decryptrsablocks.h"
 #include "readbuffer.h"
 
+using namespace CryptoPP;
+
 XLib::DecryptRSABlocks::DecryptRSABlocks(CryptoPP::Integer publicExponent,
                                          CryptoPP::Integer privateExponent,
                                          CryptoPP::Integer modulus)

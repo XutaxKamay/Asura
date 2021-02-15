@@ -9,6 +9,7 @@
 #include <fstream>
 
 using namespace XLib;
+using namespace CryptoPP;
 
 #define ConsoleOutput(format) std::cout << "[XLib] -> " << format
 
@@ -433,19 +434,9 @@ auto XLib::Test::run() -> void
 
     byte_t result;
 
-    char alphabet[27] = { ' ' };
-    auto c            = 0;
-
-    for (size_t i = 1; i < sizeof(alphabet) / sizeof(alphabet[0]); i++)
+    for (size_t i = 0; i < 0x1000; i++)
     {
-        alphabet[i] = 'a' + c;
-        c++;
-    }
-
-    for (size_t i = 0; i < 0x10000; i++)
-    {
-        result = alphabet[rand()
-                          % (sizeof(alphabet) / sizeof(alphabet[0]))];
+        result = (rand() % 2) ? 64 : (rand() % 7 + 63);
 
         // result = rand() % 256;
         random_bytes.push_back(result);
@@ -519,13 +510,20 @@ auto XLib::Test::run() -> void
 
     std::cout << member._first()->ok << std::endl;
 
-    ConsoleOutput("size of orginal ") << random_bytes.size() << std::endl;
+    ConsoleOutput("size of orginal: ")
+      << random_bytes.size() << std::endl;
 
     XKC xkc;
-    xkc.encode({ 't', 'h', 'i', 's', ' ', ' ', ' ', ' ', 'i', 's',
-                 ' ', 'a', 'n', ' ', 'e', 'a', 'm', 'p', 'l', 'e',
-                 ' ', 'o', 'f', ' ', 'a', ' ', 'h', 'u', 'f', 'f',
-                 'm', 'a', 'n', ' ', 't', 'r', 'e', 'e' });
+    auto encoded = xkc.encode(random_bytes);
+
+    ConsoleOutput("size of encoded: ") << encoded.size() << std::endl;
+
+    auto decoded = xkc.decode(encoded);
+
+    ConsoleOutput("size of decoded: ")
+      << decoded.size() << " memcmp: "
+      << std::memcmp(random_bytes.data(), decoded.data(), decoded.size())
+      << std::endl;
 
     // std::getchar();
 }

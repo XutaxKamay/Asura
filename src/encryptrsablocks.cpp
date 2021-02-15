@@ -1,6 +1,8 @@
 #include "encryptrsablocks.h"
 #include "writebuffer.h"
 
+using namespace CryptoPP;
+
 XLib::EncryptRSABlocks::EncryptRSABlocks(CryptoPP::Integer publicExponent,
                                          CryptoPP::Integer modulus)
 {

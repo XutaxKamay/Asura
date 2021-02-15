@@ -5,22 +5,20 @@
 
 namespace XLib
 {
-    using namespace CryptoPP;
-
     class DecryptRSABlocks
     {
       public:
-        DecryptRSABlocks(Integer publicExponent,
-                         Integer privateExponent,
-                         Integer modulus);
-        DecryptRSABlocks(RSA::PrivateKey privateKey);
+        DecryptRSABlocks(CryptoPP::Integer publicExponent,
+                         CryptoPP::Integer privateExponent,
+                         CryptoPP::Integer modulus);
+        DecryptRSABlocks(CryptoPP::RSA::PrivateKey privateKey);
 
       public:
         auto& privateKey();
         auto decrypt(bytes_t bytes) -> bytes_t;
 
       public:
-        RSA::PrivateKey _private_key {};
+        CryptoPP::RSA::PrivateKey _private_key {};
     };
 };
 

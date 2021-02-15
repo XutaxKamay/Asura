@@ -17,8 +17,6 @@
 
 namespace XLib
 {
-    using namespace CryptoPP;
-
     template <safesize_t rsa_key_size_T = 0x1000>
     /**
      * @brief The HybridCrypt class
@@ -33,18 +31,18 @@ namespace XLib
         /**
          * @brief AESKeySize
          */
-        static constexpr auto AESKeySize = AES::MAX_KEYLENGTH;
+        static constexpr auto AESKeySize = CryptoPP::AES::MAX_KEYLENGTH;
         /**
          * @brief AESIVSize
          */
-        static constexpr auto AESIVSize = AES::BLOCKSIZE;
+        static constexpr auto AESIVSize = CryptoPP::AES::BLOCKSIZE;
         /**
          * @brief The AESData_t struct
          */
         struct AESData_t
         {
-            byte iv[AESIVSize];
-            byte key[AESKeySize];
+            CryptoPP::byte iv[AESIVSize];
+            CryptoPP::byte key[AESKeySize];
         };
     };
 

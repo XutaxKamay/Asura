@@ -15,14 +15,13 @@
 
 namespace XLib
 {
-    using namespace CryptoPP;
-
     class RSABlocks
     {
       public:
         template <size_t rsa_key_size_T = 0x1000>
         static auto GenerateRSAPrivateKey()
         {
+            using namespace CryptoPP;
             RSA::PrivateKey privateKey;
 
             AutoSeededRandomPool rng;
