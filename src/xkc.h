@@ -297,6 +297,12 @@ void XLib::XKC<alphabet_T>::BinaryTree::find_value(
         {
             current_node = current_node->left;
         }
+
+        if (current_node == nullptr)
+        {
+            throw BufferException(std::string(CURRENT_CONTEXT)
+                                  + "The node doesn't exist!");
+        }
     }
 
     pathInfo.letter_value = current_node->value;
