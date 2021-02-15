@@ -192,9 +192,14 @@ namespace XLib
     }
 
     template <typename T>
-    auto BitsNeeded(T max_val)
+    auto BitsNeeded(T max_val) -> T
     {
-        return view_as<T>(std::log2(max_val)) + 1;
+        if (max_val > 0)
+        {
+            return view_as<T>(std::log2(max_val)) + 1;
+        }
+
+        return {};
     };
 
 };

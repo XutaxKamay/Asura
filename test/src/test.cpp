@@ -444,19 +444,12 @@ auto XLib::Test::run() -> void
 
     for (size_t i = 0; i < 0x10000; i++)
     {
-        if ((i % (8 + rand() % 8)) == 0)
-        {
-            result = alphabet[rand()
-                              % (sizeof(alphabet) / sizeof(alphabet[0]))];
-        }
+        result = alphabet[rand()
+                          % (sizeof(alphabet) / sizeof(alphabet[0]))];
+
         // result = rand() % 256;
         random_bytes.push_back(result);
     }
-
-    random_bytes = { 'W', 'i', 'k', 'i', 'p', 'e', 'd', 'i', 'a' };
-
-    //     random_bytes = { 'a', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
-    //                      'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o' };
 
     std::ofstream file("random_bytes.txt",
                        std::ios::binary | std::ios::out);
@@ -527,26 +520,6 @@ auto XLib::Test::run() -> void
     std::cout << member._first()->ok << std::endl;
 
     ConsoleOutput("size of orginal ") << random_bytes.size() << std::endl;
-
-    XKomprexk komprex(random_bytes.data(), random_bytes.size());
-
-    auto compressed = komprex.compress();
-
-    ConsoleOutput("size of compressed ")
-      << compressed.size() << std::endl;
-
-    auto dekomprex = XKomprexk(compressed.data(), compressed.size());
-
-    auto decompressed = dekomprex.decompress();
-
-    ConsoleOutput("size of decompressed ")
-      << decompressed.size() << std::endl;
-
-    std::cout << memcmp(decompressed.data(),
-                        random_bytes.data(),
-                        decompressed.size())
-              << std::endl;
-
     // std::getchar();
 }
 
