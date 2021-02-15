@@ -263,7 +263,6 @@ bool XLib::XKC<alphabet_T>::BinaryTree::path_info(PathInfo& pathInfo,
 
     if (found_right)
     {
-        pathInfo.bit_path[depth] = 1;
         return true;
     }
 
