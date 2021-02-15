@@ -18,6 +18,7 @@
 #include "readbuffer.h"
 #include "virtualtabletools.h"
 #include "writebuffer.h"
+#include "xkc.h"
 
 using namespace XLib;
 

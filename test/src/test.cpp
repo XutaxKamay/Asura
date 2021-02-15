@@ -520,6 +520,10 @@ auto XLib::Test::run() -> void
     std::cout << member._first()->ok << std::endl;
 
     ConsoleOutput("size of orginal ") << random_bytes.size() << std::endl;
+
+    XKC xkc;
+    xkc.encode({ 0x00, 0x01, 0x02 });
+
     // std::getchar();
 }
 
