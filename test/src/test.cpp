@@ -522,7 +522,10 @@ auto XLib::Test::run() -> void
     ConsoleOutput("size of orginal ") << random_bytes.size() << std::endl;
 
     XKC xkc;
-    xkc.encode({ 0x00, 0x01, 0x02 });
+    xkc.encode({ 't', 'h', 'i', 's', ' ', ' ', ' ', ' ', 'i', 's',
+                 ' ', 'a', 'n', ' ', 'e', 'a', 'm', 'p', 'l', 'e',
+                 ' ', 'o', 'f', ' ', 'a', ' ', 'h', 'u', 'f', 'f',
+                 'm', 'a', 'n', ' ', 't', 'r', 'e', 'e' });
 
     // std::getchar();
 }
