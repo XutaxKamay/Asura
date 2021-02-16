@@ -747,7 +747,7 @@ XLib::bytes_t XLib::XKC<alphabet_T>::decode(XLib::data_t data,
     {
         for (size_t count = 0; count < occurrence.count; count++)
         {
-            result.push_back(occurence.letter_value);
+            result.push_back(occurrence.letter_value);
         }
     }
 
