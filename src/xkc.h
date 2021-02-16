@@ -743,9 +743,12 @@ XLib::bytes_t XLib::XKC<alphabet_T>::decode(XLib::data_t data,
         occurrences.push_back({ path_info.letter_value, 1 });
     }
 
-    for (auto&& occurence : occurrences)
+    for (auto&& occurrence : occurrences)
     {
-        result.push_back(occurence.letter_value);
+        for (size_t count = 0; count < occurrence.count; count++)
+        {
+            result.push_back(occurence.letter_value);
+        }
     }
 
     return result;
