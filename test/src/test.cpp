@@ -432,6 +432,12 @@ auto XLib::Test::run() -> void
 
     std::vector<byte_t> random_bytes;
 
+    for (int i = 0; i < 63 * 10; i++)
+    {
+        random_bytes.push_back(i % 63 + 63);
+    }
+
+    /*
     byte_t result;
 
     for (size_t i = 0; i < 0x1000; i++)
@@ -441,6 +447,7 @@ auto XLib::Test::run() -> void
         // result = rand() % 256;
         random_bytes.push_back(result);
     }
+    */
 
     std::ofstream file("random_bytes.txt",
                        std::ios::binary | std::ios::out);

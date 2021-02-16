@@ -591,31 +591,6 @@ XLib::bytes_t XLib::XKC<alphabet_T>::encode(XLib::data_t data,
         result_byte |= (1 << written_bits_on_result_byte);
     };
 
-    auto method1 =
-      [&max_depth_bits, &check_bit, &write_bit](PathInfo& path_info)
-    {
-        for (uint32_t depth_bit = 0; depth_bit < max_depth_bits;
-             depth_bit++)
-        {
-            if (path_info.depth & (1 << depth_bit))
-            {
-                write_bit();
-            }
-
-            check_bit();
-        }
-
-        for (size_t depth = 0; depth < path_info.depth; depth++)
-        {
-            if (path_info.bit_path[depth])
-            {
-                write_bit();
-            }
-
-            check_bit();
-        }
-    };
-
     for (auto&& occurrence : occurrences)
     {
         PathInfo path_info;
@@ -623,7 +598,26 @@ XLib::bytes_t XLib::XKC<alphabet_T>::encode(XLib::data_t data,
 
         for (size_t count = 0; count < occurrence.count; count++)
         {
-            method1(path_info);
+            for (uint32_t depth_bit = 0; depth_bit < max_depth_bits;
+                 depth_bit++)
+            {
+                if (path_info.depth & (1 << depth_bit))
+                {
+                    write_bit();
+                }
+
+                check_bit();
+            }
+
+            for (size_t depth = 0; depth < path_info.depth; depth++)
+            {
+                if (path_info.bit_path[depth])
+                {
+                    write_bit();
+                }
+
+                check_bit();
+            }
         }
     }
 
