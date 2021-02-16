@@ -596,6 +596,9 @@ XLib::bytes_t XLib::XKC<alphabet_T>::encode(XLib::data_t data,
         PathInfo path_info;
         binary_tree.path_info(path_info, occurrence.letter_value);
 
+        /**
+         * TODO: find a better method to encode the depth
+         */
         for (size_t count = 0; count < occurrence.count; count++)
         {
             for (uint32_t depth_bit = 0; depth_bit < max_depth_bits;
