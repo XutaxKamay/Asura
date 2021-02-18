@@ -9,6 +9,9 @@
 #include <limits>
 #include <memory>
 
+/**
+ * This was done for fun, huffman is better
+ **/
 namespace XLib
 {
     template <typename alphabet_T = byte_t>
