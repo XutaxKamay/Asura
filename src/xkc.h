@@ -531,18 +531,18 @@ XLib::bytes_t XLib::XKC<alphabet_T>::encode(XLib::data_t data,
 
     auto max_depth_bits = view_as<uint32_t>(BitsNeeded(max_tree_depth));
 
-    //     auto max_count_occurs = std::max_element(
-    //       occurrences.begin(),
-    //       occurrences.end(),
-    //       [](Occurrence& a, Occurrence& b)
-    //       {
-    //           return (a.count > b.count);
-    //       });
+    auto max_count_occurs = std::max_element(
+      occurrences.begin(),
+      occurrences.end(),
+      [](Occurrence& a, Occurrence& b)
+      {
+          return (a.count < b.count);
+      });
 
-    //     auto max_count_occurs_bits =
-    //     BitsNeeded(max_count_occurs->count);
+    auto max_count_occurs_bits = view_as<byte_t>(
+      BitsNeeded(max_count_occurs->count));
 
-    //     result.push_back(max_count_occurs_bits);
+    result.push_back(max_count_occurs_bits);
 
     auto tmp                     = view_as<uint32_t>(alphabet.size());
     auto bytes_max_alphabet_size = view_as<byte_t*>(&tmp);
@@ -595,28 +595,36 @@ XLib::bytes_t XLib::XKC<alphabet_T>::encode(XLib::data_t data,
         /**
          * TODO: find a better method to encode the depth
          */
-        for (size_t count = 0; count < occurrence.count; count++)
+        for (size_t count_bit = 0; count_bit < max_count_occurs_bits;
+             count_bit++)
         {
-            for (uint32_t depth_bit = 0; depth_bit < max_depth_bits;
-                 depth_bit++)
+            if (occurrence.count & (1 << count_bit))
             {
-                if (path_info.depth & (1 << depth_bit))
-                {
-                    write_bit();
-                }
-
-                check_bit();
+                write_bit();
             }
 
-            for (size_t depth = 0; depth < path_info.depth; depth++)
-            {
-                if (path_info.bit_path[depth])
-                {
-                    write_bit();
-                }
+            check_bit();
+        }
 
-                check_bit();
+        for (uint32_t depth_bit = 0; depth_bit < max_depth_bits;
+             depth_bit++)
+        {
+            if (path_info.depth & (1 << depth_bit))
+            {
+                write_bit();
             }
+
+            check_bit();
+        }
+
+        for (size_t depth = 0; depth < path_info.depth; depth++)
+        {
+            if (path_info.bit_path[depth])
+            {
+                write_bit();
+            }
+
+            check_bit();
         }
     }
 
@@ -656,6 +664,9 @@ XLib::bytes_t XLib::XKC<alphabet_T>::decode(XLib::data_t data,
         throw BufferException(std::string(CURRENT_CONTEXT)
                               + "there's too much bits to decode.");
     }
+
+    auto max_count_occurs_bits = data[read_bytes];
+    read_bytes += sizeof(byte_t);
 
     auto alphabet_size = *view_as<uint32_t*>(&data[read_bytes]);
     read_bytes += sizeof(uint32_t);
@@ -720,6 +731,13 @@ XLib::bytes_t XLib::XKC<alphabet_T>::decode(XLib::data_t data,
         };
 
         PathInfoResult path_info;
+        byte_t count = 0;
+
+        for (size_t count_bit = 0; count_bit < max_count_occurs_bits;
+             count_bit++)
+        {
+            count |= read_bit() << count_bit;
+        }
 
         for (uint32_t depth_bit = 0; depth_bit < max_depth_bits;
              depth_bit++)
@@ -734,7 +752,7 @@ XLib::bytes_t XLib::XKC<alphabet_T>::decode(XLib::data_t data,
 
         binary_tree.find_value(path_info);
 
-        occurrences.push_back({ path_info.letter_value, 1 });
+        occurrences.push_back({ path_info.letter_value, count });
     }
 
     for (auto&& occurrence : occurrences)
