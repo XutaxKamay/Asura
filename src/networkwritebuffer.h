@@ -29,8 +29,7 @@ namespace XLib
         {
             if (!spaceLeft())
             {
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                      + "No space left");
+                throw XLIB_EXCEPTION("No space left");
             }
 
             WriteBit<value>(this->data(), _written_bits++);
@@ -105,8 +104,7 @@ namespace XLib
     {
         if (!spaceLeft())
         {
-            throw Exception(std::string(CURRENT_CONTEXT)
-                                  + "No space left");
+            throw XLIB_EXCEPTION("No space left");
         }
 
         WriteBit(this->data(), _written_bits++, value);

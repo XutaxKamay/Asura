@@ -65,13 +65,11 @@ namespace XLib
     {
         if (pos >= std::numeric_limits<safesize_t>::max())
         {
-            throw Exception(std::string(CURRENT_CONTEXT)
-                                  + "Can't read bit higher");
+            throw XLIB_EXCEPTION("Can't read bit higher");
         }
         else if (pos < 0)
         {
-            throw Exception(std::string(CURRENT_CONTEXT)
-                                  + "Can't read bit lower");
+            throw XLIB_EXCEPTION("Can't read bit lower");
         }
 
         auto read_byte_pos = pos / 8;
@@ -89,13 +87,11 @@ namespace XLib
     {
         if (pos >= std::numeric_limits<safesize_t>::max())
         {
-            throw Exception(std::string(CURRENT_CONTEXT)
-                                  + "Can't write bit higher");
+            throw XLIB_EXCEPTION("Can't write bit higher");
         }
         else if (pos < 0)
         {
-            throw Exception(std::string(CURRENT_CONTEXT)
-                                  + "Can't write bit lower");
+            throw XLIB_EXCEPTION("Can't write bit lower");
         }
 
         auto read_byte_pos = pos / 8;
@@ -120,13 +116,11 @@ namespace XLib
     {
         if (pos >= std::numeric_limits<safesize_t>::max())
         {
-            throw Exception(std::string(CURRENT_CONTEXT)
-                                  + "Can't write bit higher");
+            throw XLIB_EXCEPTION("Can't write bit higher");
         }
         else if (pos < 0)
         {
-            throw Exception(std::string(CURRENT_CONTEXT)
-                                  + "Can't write bit lower");
+            throw XLIB_EXCEPTION("Can't write bit lower");
         }
 
         auto read_byte_pos = pos / 8;

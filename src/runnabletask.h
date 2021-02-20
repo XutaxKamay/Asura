@@ -2,8 +2,8 @@
 #define RUNNABLETASK_H
 
 #include "buffer.h"
-#include "task.h"
 #include "exception.h"
+#include "task.h"
 
 #ifdef WINDOWS
     #include <tlhelp32.h>
@@ -59,10 +59,9 @@ namespace XLib
 
         if (!process_handle)
         {
-            throw Exception(std::string(CURRENT_CONTEXT)
-                                + "Could not get permissions to create a "
-                                  "new "
-                                  "thread");
+            throw XLIB_EXCEPTION("Could not get permissions to create a "
+                                 "new "
+                                 "thread");
         }
 
         _thread_handle = CreateRemoteThread(
@@ -77,8 +76,7 @@ namespace XLib
         if (_thread_handle == nullptr)
         {
             _id = INVALID_ID;
-            throw Exception(std::string(CURRENT_CONTEXT)
-                                + "Could not create thread");
+            throw XLIB_EXCEPTION("Could not create thread");
         }
 
         CloseHandle(process_handle);
@@ -107,9 +105,8 @@ namespace XLib
 
         if (base_stack == nullptr)
         {
-            throw Exception(std::string(CURRENT_CONTEXT)
-                                + "Could not allocate stack for the "
-                                  "thread");
+            throw XLIB_EXCEPTION("Could not allocate stack for the "
+                                 "thread");
         }
 
         _id = syscall(__NR_rclone,
@@ -123,8 +120,7 @@ namespace XLib
 
         if (_id == INVALID_ID)
         {
-            throw Exception(std::string(CURRENT_CONTEXT)
-                                + "Could not create thread");
+            throw XLIB_EXCEPTION("Could not create thread");
         }
 #endif
     }
@@ -135,14 +131,12 @@ namespace XLib
 #ifdef WINDOWS
         if (!_thread_handle)
         {
-            throw Exception(std::string(CURRENT_CONTEXT)
-                                + "Thread did not start yet");
+            throw XLIB_EXCEPTION("Thread did not start yet");
         }
 
         if (!TerminateThread(_thread_handle, EXIT_CODE))
         {
-            throw Exception(std::string(CURRENT_CONTEXT)
-                                + "Could not terminate thread");
+            throw XLIB_EXCEPTION("Could not terminate thread");
         }
 
         CloseHandle(_thread_handle);
@@ -151,8 +145,7 @@ namespace XLib
 
         if (ret != 0)
         {
-            throw Exception(std::string(CURRENT_CONTEXT)
-                                + "Could not terminate thread");
+            throw XLIB_EXCEPTION("Could not terminate thread");
         }
 #endif
     }
@@ -163,8 +156,7 @@ namespace XLib
 #ifdef WINDOWS
         if (!_thread_handle)
         {
-            throw Exception(std::string(CURRENT_CONTEXT)
-                                + "Thread did not start yet");
+            throw XLIB_EXCEPTION("Thread did not start yet");
         }
 
         WaitForSingleObject(_thread_handle, INFINITE);

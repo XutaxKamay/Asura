@@ -25,9 +25,8 @@ auto Task::list(ProcessBase processBase) -> tasks_t
       0);
 
     if (thread_handle_snapshot == INVALID_HANDLE_VALUE)
-        throw Exception(std::string(CURRENT_CONTEXT)
-                            + "Could not get snapshot handle for "
-                              "getting the thread list");
+        throw XLIB_EXCEPTION("Could not get snapshot handle for "
+                             "getting the thread list");
 
     te32.dwSize = sizeof(THREADENTRY32);
 
@@ -113,15 +112,13 @@ auto Task::kill() -> void
 
     if (!thread_handle)
     {
-        throw Exception(std::string(CURRENT_CONTEXT)
-                            + "Don't have permissions to terminate "
-                              "thread");
+        throw XLIB_EXCEPTION("Don't have permissions to terminate "
+                             "thread");
     }
 
     if (!TerminateThread(thread_handle, EXIT_CODE))
     {
-        throw Exception(std::string(CURRENT_CONTEXT)
-                            + "Could not terminate thread");
+        throw XLIB_EXCEPTION("Could not terminate thread");
     }
 
     CloseHandle(thread_handle);
@@ -130,8 +127,7 @@ auto Task::kill() -> void
 
     if (ret != 0)
     {
-        throw Exception(std::string(CURRENT_CONTEXT)
-                            + "Could not terminate thread");
+        throw XLIB_EXCEPTION("Could not terminate thread");
     }
 #endif
 }
@@ -143,9 +139,8 @@ auto Task::wait() -> void
 
     if (!thread_handle)
     {
-        throw Exception(std::string(CURRENT_CONTEXT)
-                            + "Don't have permissions to wait "
-                              "for thread termination");
+        throw XLIB_EXCEPTION("Don't have permissions to wait "
+                             "for thread termination");
     }
 
     WaitForSingleObject(thread_handle, INFINITE);

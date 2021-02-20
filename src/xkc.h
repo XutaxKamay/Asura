@@ -283,9 +283,8 @@ void XLib::XKC<alphabet_T>::BinaryTree::find_value(
 {
     if (root->height() < pathInfo.depth)
     {
-        throw Exception(std::string(CURRENT_CONTEXT)
-                              + "Can't go deeper than the height of the "
-                                "tree.");
+        throw XLIB_EXCEPTION("Can't go deeper than the height of the "
+                             "tree.");
     }
 
     shared_node current_node = root;
@@ -303,8 +302,7 @@ void XLib::XKC<alphabet_T>::BinaryTree::find_value(
 
         if (current_node == nullptr)
         {
-            throw Exception(std::string(CURRENT_CONTEXT)
-                                  + "The node doesn't exist!");
+            throw XLIB_EXCEPTION("The node doesn't exist!");
         }
     }
 
@@ -661,8 +659,7 @@ XLib::bytes_t XLib::XKC<alphabet_T>::decode(XLib::data_t data,
 
     if (written_bits >= size * 8)
     {
-        throw Exception(std::string(CURRENT_CONTEXT)
-                              + "there's too much bits to decode.");
+        throw XLIB_EXCEPTION("there's too much bits to decode.");
     }
 
     auto max_count_occurs_bits = data[read_bytes];
@@ -721,9 +718,8 @@ XLib::bytes_t XLib::XKC<alphabet_T>::decode(XLib::data_t data,
 
                 if (read_bytes >= size)
                 {
-                    throw Exception(std::string(CURRENT_CONTEXT)
-                                          + "Too much bytes decoded.. "
-                                            "Something is wrong.");
+                    throw XLIB_EXCEPTION("Too much bytes decoded.. "
+                                         "Something is wrong.");
                 }
             }
 

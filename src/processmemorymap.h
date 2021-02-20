@@ -192,8 +192,7 @@ namespace XLib
 
             if (!area)
             {
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                      + "Could not find area");
+                throw XLIB_EXCEPTION("Could not find area");
             }
 
             area->protectionFlags() |= MemoryArea::ProtectionFlags::W;

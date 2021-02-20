@@ -32,8 +32,7 @@ auto XLib::PatternScanning::search(XLib::PatternByte& pattern,
 
                 if (start_index >= bytes.size())
                 {
-                    throw Exception(std::string(CURRENT_CONTEXT)
-                                    + "Out of bounds pattern.");
+                    throw XLIB_EXCEPTION("Out of bounds pattern.");
                 }
                 else if (pattern_byte.value
                          == PatternByte::Value::type_t::UNKNOWN)

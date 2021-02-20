@@ -38,9 +38,9 @@ auto ProcessMemoryMap::refresh() -> void
 
     if (!file_memory_map.is_open())
     {
-        throw Exception(
-          std::string(CURRENT_CONTEXT) + "Couldn't open /proc/"
-          + std::to_string(_process_base.id()) + "/maps");
+        throw Exception(std::string(CURRENT_CONTEXT)
+                        + "Couldn't open /proc/"
+                        + std::to_string(_process_base.id()) + "/maps");
     }
 
     while (std::getline(file_memory_map, line))
@@ -103,9 +103,8 @@ auto ProcessMemoryMap::refresh() -> void
 
     if (process_handle == nullptr)
     {
-        throw Exception(std::string(CURRENT_CONTEXT)
-                              + "Couldn't open process from pid: "
-                              + std::to_string(_process_base.id()));
+        throw XLIB_EXCEPTION("Couldn't open process from pid: "
+                             + std::to_string(_process_base.id()));
     }
 
     MEMORY_BASIC_INFORMATION info;

@@ -1,10 +1,10 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
+#include "exception.h"
 #include "memorymap.h"
 #include "memoryutils.h"
 #include "processbase.h"
-#include "exception.h"
 #include "processmemoryarea.h"
 #include "processmemorymap.h"
 #include "runnabletask.h"

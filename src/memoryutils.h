@@ -2,8 +2,8 @@
 #define MEMORYUTILS_H
 
 #include "custom_linux_syscalls.h"
-#include "memoryarea.h"
 #include "exception.h"
+#include "memoryarea.h"
 #include "types.h"
 
 #ifndef WINDOWS
@@ -71,8 +71,7 @@ namespace XLib
 
             if (process_handle == nullptr)
             {
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                      + "Couldn't open process");
+                throw XLIB_EXCEPTION("Couldn't open process");
             }
 
             DWORD dwOldFlags;
@@ -85,8 +84,7 @@ namespace XLib
 
             if (!ret)
             {
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                      + "VirtualProtectEx failed");
+                throw XLIB_EXCEPTION("VirtualProtectEx failed");
             }
 
             CloseHandle(process_handle);
@@ -99,8 +97,7 @@ namespace XLib
 
             if (ret < 0)
             {
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                      + "System call rmprotect failed");
+                throw XLIB_EXCEPTION("System call rmprotect failed");
             }
 #endif
         }
@@ -120,8 +117,7 @@ namespace XLib
 
             if (process_handle == nullptr)
             {
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                      + "Couldn't open process");
+                throw XLIB_EXCEPTION("Couldn't open process");
             }
 
             auto area_start = VirtualAllocEx(
@@ -160,8 +156,7 @@ namespace XLib
 
             if (process_handle == nullptr)
             {
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                      + "Couldn't open process");
+                throw XLIB_EXCEPTION("Couldn't open process");
             }
 
             auto ret = VirtualFreeEx(process_handle,
@@ -171,8 +166,7 @@ namespace XLib
 
             if (!ret)
             {
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                      + "VirtualFreeEx failed");
+                throw XLIB_EXCEPTION("VirtualFreeEx failed");
             }
 
             CloseHandle(process_handle);
@@ -181,8 +175,7 @@ namespace XLib
 
             if (ret < 0)
             {
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                      + "System call rmunmap failed");
+                throw XLIB_EXCEPTION(+"System call rmunmap failed");
             }
 #endif
         }
@@ -204,11 +197,10 @@ namespace XLib
 
             if (ret != view_as<decltype(ret)>(size))
             {
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                      + "process_vm_readv failed with "
-                                      + std::to_string(address)
-                                      + " and size: "
-                                      + std::to_string(size));
+                throw XLIB_EXCEPTION("process_vm_readv failed with "
+                                     + std::to_string(address)
+                                     + " and size: "
+                                     + std::to_string(size));
             }
 #else
             auto process_handle = GetCurrentProcessId() == pid ?
@@ -219,8 +211,7 @@ namespace XLib
 
             if (process_handle == nullptr)
             {
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                      + "Couldn't open process");
+                throw XLIB_EXCEPTION("Couldn't open process");
             }
 
             auto ret = ReadProcessMemory(process_handle,
@@ -231,11 +222,10 @@ namespace XLib
 
             if (!ret)
             {
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                      + "ReadProcessMemory failed with "
-                                      + std::to_string(address)
-                                      + " and size: "
-                                      + std::to_string(size));
+                throw XLIB_EXCEPTION("ReadProcessMemory failed with "
+                                     + std::to_string(address)
+                                     + " and size: "
+                                     + std::to_string(size));
             }
 
             CloseHandle(process_handle);
@@ -259,8 +249,7 @@ namespace XLib
 
             if (ret != view_as<decltype(ret)>(bytes.size()))
             {
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                      + "process_vm_writev failed");
+                throw XLIB_EXCEPTION("process_vm_writev failed");
             }
 
 #else
@@ -272,8 +261,7 @@ namespace XLib
 
             if (process_handle == nullptr)
             {
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                      + "Couldn't open process");
+                throw XLIB_EXCEPTION("Couldn't open process");
             }
 
             auto ret = WriteProcessMemory(process_handle,
@@ -284,8 +272,7 @@ namespace XLib
 
             if (!ret)
             {
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                      + "WriteProcessMemory failed");
+                throw XLIB_EXCEPTION("WriteProcessMemory failed");
             }
 
             CloseHandle(process_handle);

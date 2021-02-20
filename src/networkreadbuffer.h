@@ -39,8 +39,7 @@ namespace XLib
         {
             if (!spaceLeft())
             {
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                      + "No space left");
+                throw XLIB_EXCEPTION("No space left");
             }
 
             _read_bits++;
@@ -151,8 +150,7 @@ namespace XLib
     {
         if (!spaceLeft())
         {
-            throw Exception(std::string(CURRENT_CONTEXT)
-                                  + "No space left");
+            throw XLIB_EXCEPTION("No space left");
         }
 
         _read_bits++;

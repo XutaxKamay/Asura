@@ -96,18 +96,16 @@ namespace XLib
 
             if (found_info == nullptr)
             {
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                + "Couldn't find module in "
-                                  "runtime.");
+                throw XLIB_EXCEPTION("Couldn't find module in "
+                                     "runtime.");
             }
 
             auto fd = open(found_info->dlpi_name, O_RDONLY);
 
             if (fd < 0)
             {
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                + "Couldn't open module in "
-                                  "runtime.");
+                throw XLIB_EXCEPTION("Couldn't open module in "
+                                     "runtime.");
             }
 
             struct stat st;
@@ -115,9 +113,8 @@ namespace XLib
             if (fstat(fd, &st) < 0)
             {
                 close(fd);
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                + "Couldn't fstat module in "
-                                  "runtime.");
+                throw XLIB_EXCEPTION("Couldn't fstat module in "
+                                     "runtime.");
             }
 
             auto file_header = view_as<ElfW(Ehdr*)>(
@@ -129,8 +126,7 @@ namespace XLib
                 || file_header->e_shstrndx == SHN_UNDEF)
             {
                 munmap(file_header, st.st_size);
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                + "No symbols.");
+                throw XLIB_EXCEPTION("No symbols.");
             }
 
             auto sections = view_as<ElfW(Shdr*)>(
@@ -165,8 +161,7 @@ namespace XLib
             if (section_str_tab == nullptr && section_sym_tab == nullptr)
             {
                 munmap(file_header, st.st_size);
-                throw Exception(std::string(CURRENT_CONTEXT)
-                                + "No symbols.");
+                throw XLIB_EXCEPTION("No symbols.");
             }
 
             auto sym_tab = view_as<ElfW(Sym*)>(
@@ -200,8 +195,7 @@ namespace XLib
             }
 
             munmap(file_header, st.st_size);
-            throw Exception(std::string(CURRENT_CONTEXT)
-                            + "Cannot find function.");
+            throw XLIB_EXCEPTION("Cannot find function.");
         }
 #else
         template <typename T>
@@ -219,8 +213,7 @@ namespace XLib
                 return view_as<T>(sym_info.Address);
             }
 
-            throw Exception(std::string(CURRENT_CONTEXT)
-                            + "Couldn't find symbol in runtime.");
+            throw XLIB_EXCEPTION("Couldn't find symbol in runtime.");
         }
 #endif
     };
