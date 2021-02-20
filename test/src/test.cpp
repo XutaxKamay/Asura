@@ -432,9 +432,21 @@ auto XLib::Test::run() -> void
 
     std::vector<byte_t> random_bytes;
 
-    for (int i = 0; i < 256 * 10; i++)
+    for (int i = 0; i < 0x10000; i++)
     {
-        random_bytes.push_back(rand() % 32 + 63);
+        static int add = 0;
+
+        if (i % 5 == 0)
+        {
+            add++;
+
+            if (add > 32)
+            {
+                add = 0;
+            }
+        }
+
+        random_bytes.push_back(add + 63);
     }
 
     /*
@@ -455,13 +467,31 @@ auto XLib::Test::run() -> void
     file.write(view_as<char*>(random_bytes.data()), random_bytes.size());
     file.close();
 
+    ConsoleOutput("size of orginal: ")
+      << random_bytes.size() << std::endl;
+
+    auto encoded = XKC<byte_t>::encode(random_bytes);
+
+    ConsoleOutput("size of encoded: ") << encoded.size() << std::endl;
+
+    auto decoded = XKC<byte_t>::decode(encoded);
+
+    ConsoleOutput("size of decoded: ")
+      << decoded.size() << " memcmp: "
+      << std::memcmp(random_bytes.data(), decoded.data(), decoded.size())
+      << std::endl;
+
     try
     {
-        PatternByte pattern({ random_bytes[5],
-                              random_bytes[6],
-                              random_bytes[7],
-                              PatternByte::Value::type_t::UNKNOWN,
-                              random_bytes[9] });
+        std::vector<PatternByte::Value> pattern_bytes;
+        for (auto &&value:random_bytes)
+        {
+            pattern_bytes.push_back(value);
+        }
+
+        pattern_bytes[5] = PatternByte::Value::UNKNOWN;
+
+        PatternByte pattern(pattern_bytes);
 
         pattern.scan(Process::self());
 
@@ -516,20 +546,6 @@ auto XLib::Test::run() -> void
     TestMember member;
 
     std::cout << member._first()->ok << std::endl;
-
-    ConsoleOutput("size of orginal: ")
-      << random_bytes.size() << std::endl;
-
-    auto encoded = XKC<byte_t>::encode(random_bytes);
-
-    ConsoleOutput("size of encoded: ") << encoded.size() << std::endl;
-
-    auto decoded = XKC<byte_t>::decode(encoded);
-
-    ConsoleOutput("size of decoded: ")
-      << decoded.size() << " memcmp: "
-      << std::memcmp(random_bytes.data(), decoded.data(), decoded.size())
-      << std::endl;
 
     // std::getchar();
 }
