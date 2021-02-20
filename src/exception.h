@@ -4,6 +4,8 @@
 #include <exception>
 #include <iostream>
 
+#include "types.h"
+
 namespace XLib
 {
     class Exception : std::exception
