@@ -128,7 +128,11 @@ auto ProcessMemoryArea::write(bytes_t bytes, size_t shift) -> void
 
 auto XLib::ProcessMemoryArea::isDeniedByOS() -> bool
 {
-    return _protection_flags.cachedValue() == 0 || name() == "[vvar]";
+    return _protection_flags.cachedValue() == 0
+#ifndef WIN32
+           || name() == "[vvar]"
+#endif
+      ;
 }
 
 auto XLib::ProcessMemoryArea::isReadable() -> bool
