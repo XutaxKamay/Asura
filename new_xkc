@@ -1,0 +1,53 @@
+strict graph {
+"a - 10" -- "b - 00" [label=00]
+"a - 10" -- "c - 01" [label=01]
+"f - 11/1" -- "d - 1100" [label=00]
+"f - 11/1" -- "e - 1101" [label=01]
+"a - 10" -- "f - 11/1" [label=11]
+}
+
+// aaabbccdef
+
+// 1 1 1 00 01 01 1101 1100 111
+//   3    2  2  2  4    4    3
+
+/*
+
+if (!read_bit)
+{
+    if (read_bit)
+    {
+        character = c
+    }
+    else
+    {
+        character = b
+    }
+}
+else
+{
+    if (read_bit)
+    {
+       if (read_bit)
+       {
+           character = f
+       }
+       else
+       {
+           if (read_bit)
+           {
+               character = d
+           }
+           else
+           {
+               character = e
+           }
+       }
+    }
+    else
+    {
+        character = a
+    }
+}
+
+*/

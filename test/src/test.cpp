@@ -432,9 +432,9 @@ auto XLib::Test::run() -> void
 
     std::vector<byte_t> random_bytes;
 
-    for (int i = 0; i < 63 * 10; i++)
+    for (int i = 0; i < 256 * 10; i++)
     {
-        random_bytes.push_back(i % 63 + 63);
+        random_bytes.push_back(rand() % 32 + 63);
     }
 
     /*
@@ -520,12 +520,11 @@ auto XLib::Test::run() -> void
     ConsoleOutput("size of orginal: ")
       << random_bytes.size() << std::endl;
 
-    XKC xkc;
-    auto encoded = xkc.encode(random_bytes);
+    auto encoded = XKC<byte_t>::encode(random_bytes);
 
     ConsoleOutput("size of encoded: ") << encoded.size() << std::endl;
 
-    auto decoded = xkc.decode(encoded);
+    auto decoded = XKC<byte_t>::decode(encoded);
 
     ConsoleOutput("size of decoded: ")
       << decoded.size() << " memcmp: "

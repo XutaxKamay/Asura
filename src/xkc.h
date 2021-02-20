@@ -544,13 +544,6 @@ XLib::bytes_t XLib::XKC<alphabet_T>::encode(XLib::data_t data,
 
     //     result.push_back(max_count_occurs_bits);
 
-    auto bytes_max_depth_bits = view_as<byte_t*>(&max_depth_bits);
-
-    for (size_t i = 0; i < sizeof(uint32_t); i++)
-    {
-        result.push_back(bytes_max_depth_bits[i]);
-    }
-
     auto tmp                     = view_as<uint32_t>(alphabet.size());
     auto bytes_max_alphabet_size = view_as<byte_t*>(&tmp);
 
@@ -664,9 +657,6 @@ XLib::bytes_t XLib::XKC<alphabet_T>::decode(XLib::data_t data,
                               + "there's too much bits to decode.");
     }
 
-    auto max_depth_bits = *view_as<uint32_t*>(&data[read_bytes]);
-    read_bytes += sizeof(uint32_t);
-
     auto alphabet_size = *view_as<uint32_t*>(&data[read_bytes]);
     read_bytes += sizeof(uint32_t);
 
@@ -688,6 +678,10 @@ XLib::bytes_t XLib::XKC<alphabet_T>::decode(XLib::data_t data,
     {
         binary_tree.insert(letter.value);
     }
+
+    auto max_tree_depth = binary_tree.root->height();
+
+    auto max_depth_bits = view_as<uint32_t>(BitsNeeded(max_tree_depth));
 
     size_t read_bits_on_result_byte = 0;
     size_t bits_read                = 0;
