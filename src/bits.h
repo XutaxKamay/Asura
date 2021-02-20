@@ -2,10 +2,10 @@
 #define BITS_H
 
 #include <bitset>
-
-#include "bufferexception.h"
-#include "types.h"
 #include <cmath>
+
+#include "exception.h"
+#include "types.h"
 
 namespace XLib
 {
@@ -65,12 +65,12 @@ namespace XLib
     {
         if (pos >= std::numeric_limits<safesize_t>::max())
         {
-            throw BufferException(std::string(CURRENT_CONTEXT)
+            throw Exception(std::string(CURRENT_CONTEXT)
                                   + "Can't read bit higher");
         }
         else if (pos < 0)
         {
-            throw BufferException(std::string(CURRENT_CONTEXT)
+            throw Exception(std::string(CURRENT_CONTEXT)
                                   + "Can't read bit lower");
         }
 
@@ -89,12 +89,12 @@ namespace XLib
     {
         if (pos >= std::numeric_limits<safesize_t>::max())
         {
-            throw BufferException(std::string(CURRENT_CONTEXT)
+            throw Exception(std::string(CURRENT_CONTEXT)
                                   + "Can't write bit higher");
         }
         else if (pos < 0)
         {
-            throw BufferException(std::string(CURRENT_CONTEXT)
+            throw Exception(std::string(CURRENT_CONTEXT)
                                   + "Can't write bit lower");
         }
 
@@ -120,12 +120,12 @@ namespace XLib
     {
         if (pos >= std::numeric_limits<safesize_t>::max())
         {
-            throw BufferException(std::string(CURRENT_CONTEXT)
+            throw Exception(std::string(CURRENT_CONTEXT)
                                   + "Can't write bit higher");
         }
         else if (pos < 0)
         {
-            throw BufferException(std::string(CURRENT_CONTEXT)
+            throw Exception(std::string(CURRENT_CONTEXT)
                                   + "Can't write bit lower");
         }
 

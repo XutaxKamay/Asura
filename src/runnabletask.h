@@ -3,7 +3,7 @@
 
 #include "buffer.h"
 #include "task.h"
-#include "taskexception.h"
+#include "exception.h"
 
 #ifdef WINDOWS
     #include <tlhelp32.h>
@@ -59,7 +59,7 @@ namespace XLib
 
         if (!process_handle)
         {
-            throw TaskException(std::string(CURRENT_CONTEXT)
+            throw Exception(std::string(CURRENT_CONTEXT)
                                 + "Could not get permissions to create a "
                                   "new "
                                   "thread");
@@ -77,7 +77,7 @@ namespace XLib
         if (_thread_handle == nullptr)
         {
             _id = INVALID_ID;
-            throw TaskException(std::string(CURRENT_CONTEXT)
+            throw Exception(std::string(CURRENT_CONTEXT)
                                 + "Could not create thread");
         }
 
@@ -107,7 +107,7 @@ namespace XLib
 
         if (base_stack == nullptr)
         {
-            throw TaskException(std::string(CURRENT_CONTEXT)
+            throw Exception(std::string(CURRENT_CONTEXT)
                                 + "Could not allocate stack for the "
                                   "thread");
         }
@@ -123,7 +123,7 @@ namespace XLib
 
         if (_id == INVALID_ID)
         {
-            throw TaskException(std::string(CURRENT_CONTEXT)
+            throw Exception(std::string(CURRENT_CONTEXT)
                                 + "Could not create thread");
         }
 #endif
@@ -135,13 +135,13 @@ namespace XLib
 #ifdef WINDOWS
         if (!_thread_handle)
         {
-            throw TaskException(std::string(CURRENT_CONTEXT)
+            throw Exception(std::string(CURRENT_CONTEXT)
                                 + "Thread did not start yet");
         }
 
         if (!TerminateThread(_thread_handle, EXIT_CODE))
         {
-            throw TaskException(std::string(CURRENT_CONTEXT)
+            throw Exception(std::string(CURRENT_CONTEXT)
                                 + "Could not terminate thread");
         }
 
@@ -151,7 +151,7 @@ namespace XLib
 
         if (ret != 0)
         {
-            throw TaskException(std::string(CURRENT_CONTEXT)
+            throw Exception(std::string(CURRENT_CONTEXT)
                                 + "Could not terminate thread");
         }
 #endif
@@ -163,7 +163,7 @@ namespace XLib
 #ifdef WINDOWS
         if (!_thread_handle)
         {
-            throw TaskException(std::string(CURRENT_CONTEXT)
+            throw Exception(std::string(CURRENT_CONTEXT)
                                 + "Thread did not start yet");
         }
 

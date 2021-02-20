@@ -1,7 +1,8 @@
 #ifndef RSABLOCKS_H
 #define RSABLOCKS_H
 
-#include "rsablocksexceptions.h"
+#include "exception.h"
+#include "types.h"
 
 #include <cryptopp/aes.h>
 #include <cryptopp/modes.h>

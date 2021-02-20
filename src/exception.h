@@ -1,14 +1,15 @@
-#ifndef OSUTILSEXCEPTION_H
-#define OSUTILSEXCEPTION_H
+#ifndef EXCEPTION_H
+#define EXCEPTION_H
 
 #include <iostream>
+#include <exception>
 
 namespace XLib
 {
-    class OSUtilsException : std::exception
+    class Exception : std::exception
     {
       public:
-        OSUtilsException(const std::string& msg);
+          Exception(const std::string& msg);
 
         auto msg() -> const std::string&;
 

@@ -23,9 +23,9 @@ auto ProcessMemoryArea::ModifiableProtectionFlags::change(mapf_t flags)
 
         _flags = flags;
     }
-    catch (MemoryException& me)
+    catch (Exception& e)
     {
-        throw me;
+        throw e;
     }
 
     return old_flags;

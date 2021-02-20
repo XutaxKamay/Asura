@@ -192,7 +192,7 @@ namespace XLib
 
             if (!area)
             {
-                throw MemoryException(std::string(CURRENT_CONTEXT)
+                throw Exception(std::string(CURRENT_CONTEXT)
                                       + "Could not find area");
             }
 

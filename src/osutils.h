@@ -4,8 +4,8 @@
 #include <cstring>
 #include <fstream>
 
+#include "exception.h"
 #include "memoryutils.h"
-#include "osutilsexception.h"
 
 #ifndef WIN32
     #include <dlfcn.h>
@@ -96,18 +96,18 @@ namespace XLib
 
             if (found_info == nullptr)
             {
-                throw OSUtilsException(std::string(CURRENT_CONTEXT)
-                                       + "Couldn't find module in "
-                                         "runtime.");
+                throw Exception(std::string(CURRENT_CONTEXT)
+                                + "Couldn't find module in "
+                                  "runtime.");
             }
 
             auto fd = open(found_info->dlpi_name, O_RDONLY);
 
             if (fd < 0)
             {
-                throw OSUtilsException(std::string(CURRENT_CONTEXT)
-                                       + "Couldn't open module in "
-                                         "runtime.");
+                throw Exception(std::string(CURRENT_CONTEXT)
+                                + "Couldn't open module in "
+                                  "runtime.");
             }
 
             struct stat st;
@@ -115,9 +115,9 @@ namespace XLib
             if (fstat(fd, &st) < 0)
             {
                 close(fd);
-                throw OSUtilsException(std::string(CURRENT_CONTEXT)
-                                       + "Couldn't fstat module in "
-                                         "runtime.");
+                throw Exception(std::string(CURRENT_CONTEXT)
+                                + "Couldn't fstat module in "
+                                  "runtime.");
             }
 
             auto file_header = view_as<ElfW(Ehdr*)>(
@@ -129,8 +129,8 @@ namespace XLib
                 || file_header->e_shstrndx == SHN_UNDEF)
             {
                 munmap(file_header, st.st_size);
-                throw OSUtilsException(std::string(CURRENT_CONTEXT)
-                                       + "No symbols.");
+                throw Exception(std::string(CURRENT_CONTEXT)
+                                + "No symbols.");
             }
 
             auto sections = view_as<ElfW(Shdr*)>(
@@ -165,8 +165,8 @@ namespace XLib
             if (section_str_tab == nullptr && section_sym_tab == nullptr)
             {
                 munmap(file_header, st.st_size);
-                throw OSUtilsException(std::string(CURRENT_CONTEXT)
-                                       + "No symbols.");
+                throw Exception(std::string(CURRENT_CONTEXT)
+                                + "No symbols.");
             }
 
             auto sym_tab = view_as<ElfW(Sym*)>(
@@ -200,8 +200,8 @@ namespace XLib
             }
 
             munmap(file_header, st.st_size);
-            throw OSUtilsException(std::string(CURRENT_CONTEXT)
-                                   + "Cannot find function.");
+            throw Exception(std::string(CURRENT_CONTEXT)
+                            + "Cannot find function.");
         }
 #else
         template <typename T>
@@ -219,8 +219,8 @@ namespace XLib
                 return view_as<T>(sym_info.Address);
             }
 
-            throw OSUtilsException(std::string(CURRENT_CONTEXT)
-                                   + "Couldn't find symbol in runtime.");
+            throw Exception(std::string(CURRENT_CONTEXT)
+                            + "Couldn't find symbol in runtime.");
         }
 #endif
     };

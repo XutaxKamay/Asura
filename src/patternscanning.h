@@ -7,17 +7,6 @@ namespace XLib
 {
     class PatternByte;
 
-    class PatternScanningException : std::exception
-    {
-      public:
-        PatternScanningException(const std::string& msg);
-
-        auto msg() -> const std::string&;
-
-      private:
-        std::string _msg {};
-    };
-
     class PatternScanning
     {
       public:

@@ -1,17 +1,6 @@
 #include "patternscanning.h"
 #include "patternbyte.h"
 
-XLib::PatternScanningException::PatternScanningException(
-  const std::string& msg)
- : _msg(msg)
-{
-}
-
-auto XLib::PatternScanningException::msg() -> const std::string&
-{
-    return _msg;
-}
-
 auto XLib::PatternScanning::search(XLib::PatternByte& pattern,
                                    XLib::bytes_t bytes,
                                    ptr_t baseAddress) -> bool
@@ -43,9 +32,8 @@ auto XLib::PatternScanning::search(XLib::PatternByte& pattern,
 
                 if (start_index >= bytes.size())
                 {
-                    throw PatternScanningException(
-                      std::string(CURRENT_CONTEXT)
-                      + "Out of bounds pattern.");
+                    throw Exception(std::string(CURRENT_CONTEXT)
+                                    + "Out of bounds pattern.");
                 }
                 else if (pattern_byte.value
                          == PatternByte::Value::type_t::UNKNOWN)
@@ -74,25 +62,14 @@ auto XLib::PatternScanning::search(XLib::PatternByte& pattern,
 auto XLib::PatternScanning::searchInProcess(XLib::PatternByte& pattern,
                                             Process process) -> void
 {
-    try
-    {
-        auto mmap = process.mmap();
+    auto mmap = process.mmap();
 
-        for (auto&& area : mmap.areas())
+    for (auto&& area : mmap.areas())
+    {
+        if (area->isReadable())
         {
-            if (area->isReadable())
-            {
-                search(pattern, area->read(), area->begin<ptr_t>());
-            }
+            search(pattern, area->read(), area->begin<ptr_t>());
         }
-    }
-    catch (MemoryException& me)
-    {
-        throw me;
-    }
-    catch (PatternScanningException& pse)
-    {
-        throw pse;
     }
 }
 
@@ -101,25 +78,14 @@ auto XLib::PatternScanning::searchInProcessWithAreaName(
   Process process,
   const std::string& areaName) -> void
 {
-    try
-    {
-        auto mmap = process.mmap();
+    auto mmap = process.mmap();
 
-        for (auto&& area : mmap.areas())
+    for (auto&& area : mmap.areas())
+    {
+        if (area->isReadable()
+            && (area->name().find(areaName) != std::string::npos))
         {
-            if (area->isReadable()
-                && (area->name().find(areaName) != std::string::npos))
-            {
-                search(pattern, area->read(), area->begin<ptr_t>());
-            }
+            search(pattern, area->read(), area->begin<ptr_t>());
         }
-    }
-    catch (MemoryException& me)
-    {
-        throw me;
-    }
-    catch (PatternScanningException& pse)
-    {
-        throw pse;
     }
 }

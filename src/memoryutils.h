@@ -3,7 +3,7 @@
 
 #include "custom_linux_syscalls.h"
 #include "memoryarea.h"
-#include "memoryexception.h"
+#include "exception.h"
 #include "types.h"
 
 #ifndef WINDOWS
@@ -71,7 +71,7 @@ namespace XLib
 
             if (process_handle == nullptr)
             {
-                throw MemoryException(std::string(CURRENT_CONTEXT)
+                throw Exception(std::string(CURRENT_CONTEXT)
                                       + "Couldn't open process");
             }
 
@@ -85,7 +85,7 @@ namespace XLib
 
             if (!ret)
             {
-                throw MemoryException(std::string(CURRENT_CONTEXT)
+                throw Exception(std::string(CURRENT_CONTEXT)
                                       + "VirtualProtectEx failed");
             }
 
@@ -99,7 +99,7 @@ namespace XLib
 
             if (ret < 0)
             {
-                throw MemoryException(std::string(CURRENT_CONTEXT)
+                throw Exception(std::string(CURRENT_CONTEXT)
                                       + "System call rmprotect failed");
             }
 #endif
@@ -120,7 +120,7 @@ namespace XLib
 
             if (process_handle == nullptr)
             {
-                throw MemoryException(std::string(CURRENT_CONTEXT)
+                throw Exception(std::string(CURRENT_CONTEXT)
                                       + "Couldn't open process");
             }
 
@@ -160,7 +160,7 @@ namespace XLib
 
             if (process_handle == nullptr)
             {
-                throw MemoryException(std::string(CURRENT_CONTEXT)
+                throw Exception(std::string(CURRENT_CONTEXT)
                                       + "Couldn't open process");
             }
 
@@ -171,7 +171,7 @@ namespace XLib
 
             if (!ret)
             {
-                throw MemoryException(std::string(CURRENT_CONTEXT)
+                throw Exception(std::string(CURRENT_CONTEXT)
                                       + "VirtualFreeEx failed");
             }
 
@@ -181,7 +181,7 @@ namespace XLib
 
             if (ret < 0)
             {
-                throw MemoryException(std::string(CURRENT_CONTEXT)
+                throw Exception(std::string(CURRENT_CONTEXT)
                                       + "System call rmunmap failed");
             }
 #endif
@@ -204,7 +204,7 @@ namespace XLib
 
             if (ret != view_as<decltype(ret)>(size))
             {
-                throw MemoryException(std::string(CURRENT_CONTEXT)
+                throw Exception(std::string(CURRENT_CONTEXT)
                                       + "process_vm_readv failed with "
                                       + std::to_string(address)
                                       + " and size: "
@@ -219,7 +219,7 @@ namespace XLib
 
             if (process_handle == nullptr)
             {
-                throw MemoryException(std::string(CURRENT_CONTEXT)
+                throw Exception(std::string(CURRENT_CONTEXT)
                                       + "Couldn't open process");
             }
 
@@ -231,7 +231,7 @@ namespace XLib
 
             if (!ret)
             {
-                throw MemoryException(std::string(CURRENT_CONTEXT)
+                throw Exception(std::string(CURRENT_CONTEXT)
                                       + "ReadProcessMemory failed with "
                                       + std::to_string(address)
                                       + " and size: "
@@ -259,7 +259,7 @@ namespace XLib
 
             if (ret != view_as<decltype(ret)>(bytes.size()))
             {
-                throw MemoryException(std::string(CURRENT_CONTEXT)
+                throw Exception(std::string(CURRENT_CONTEXT)
                                       + "process_vm_writev failed");
             }
 
@@ -272,7 +272,7 @@ namespace XLib
 
             if (process_handle == nullptr)
             {
-                throw MemoryException(std::string(CURRENT_CONTEXT)
+                throw Exception(std::string(CURRENT_CONTEXT)
                                       + "Couldn't open process");
             }
 
@@ -284,7 +284,7 @@ namespace XLib
 
             if (!ret)
             {
-                throw MemoryException(std::string(CURRENT_CONTEXT)
+                throw Exception(std::string(CURRENT_CONTEXT)
                                       + "WriteProcessMemory failed");
             }
 

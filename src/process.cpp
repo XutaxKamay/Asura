@@ -23,7 +23,7 @@ auto XLib::Process::ProcessName(pid_t pid) -> std::string
           result.size())
         < 0)
     {
-        throw ProcessException(std::string(CURRENT_CONTEXT)
+        throw Exception(std::string(CURRENT_CONTEXT)
                                + "Could not read symlink.");
     }
 #else
@@ -36,7 +36,7 @@ auto XLib::Process::ProcessName(pid_t pid) -> std::string
 
     if (!process_handle)
     {
-        throw ProcessException(std::string(CURRENT_CONTEXT)
+        throw Exception(std::string(CURRENT_CONTEXT)
                                + "Could not get process handle.");
     }
 
@@ -46,7 +46,7 @@ auto XLib::Process::ProcessName(pid_t pid) -> std::string
                              result.size())
         <= 0)
     {
-        throw ProcessException(std::string(CURRENT_CONTEXT)
+        throw Exception(std::string(CURRENT_CONTEXT)
                                + "Could not read process path.");
     }
 

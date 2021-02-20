@@ -1,5 +1,5 @@
 #include "memoryarea.h"
-#include "memoryexception.h"
+#include "exception.h"
 
 #ifdef WINDOWS
     #include "windows.h"

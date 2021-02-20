@@ -165,7 +165,7 @@ auto XLib::Test::run() -> void
     //             area->protectionFlags() =
     //             MemoryArea::ProtectionFlags::RWX;
     //         }
-    //         catch (MemoryException& me)
+    //         catch (Exception& me)
     //         {
     //             std::cout << std::endl;
     //
@@ -181,7 +181,7 @@ auto XLib::Test::run() -> void
     //
     //             area->protectionFlags() = flags;
     //         }
-    //         catch (MemoryException& me)
+    //         catch (Exception& me)
     //         {
     //             std::cout << std::endl;
     //
@@ -293,11 +293,11 @@ auto XLib::Test::run() -> void
         ConsoleOutput("write test: ")
           << std::dec << *view_as<int*>(write_test) << std::endl;
     }
-    catch (MemoryException& me)
+    catch (Exception& e)
     {
         std::cout << std::endl;
 
-        std::cout << me.msg() << std::endl;
+        std::cout << e.msg() << std::endl;
     }
 
     unsigned long long test_bits = 0b0111000011110000111100001111000011110000111100001111000011110000ull;
@@ -354,9 +354,9 @@ auto XLib::Test::run() -> void
     {
         net_write_buf.write<type_64us>(0xFFFFFFFFFFFFFFFF);
     }
-    catch (BufferException& be)
+    catch (Exception& e)
     {
-        ConsoleOutput(be.msg()) << std::endl;
+        ConsoleOutput(e.msg()) << std::endl;
     }
 
     ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
@@ -367,9 +367,9 @@ auto XLib::Test::run() -> void
     {
         net_write_buf.write<type_32us>(0);
     }
-    catch (BufferException& be)
+    catch (Exception& e)
     {
-        ConsoleOutput(be.msg()) << std::endl;
+        ConsoleOutput(e.msg()) << std::endl;
     }
 
     ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
@@ -380,9 +380,9 @@ auto XLib::Test::run() -> void
     {
         net_write_buf.write<type_64us>(0xFFFFFFFFFFFFFFFF);
     }
-    catch (BufferException& be)
+    catch (Exception& e)
     {
-        ConsoleOutput(be.msg()) << std::endl;
+        ConsoleOutput(e.msg()) << std::endl;
     }
 
     net_write_buf.pos(32);
@@ -391,9 +391,9 @@ auto XLib::Test::run() -> void
     {
         net_write_buf.write<type_32us>(0);
     }
-    catch (BufferException& be)
+    catch (Exception& e)
     {
-        ConsoleOutput(be.msg()) << std::endl;
+        ConsoleOutput(e.msg()) << std::endl;
     }
 
     ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
@@ -484,7 +484,7 @@ auto XLib::Test::run() -> void
     try
     {
         std::vector<PatternByte::Value> pattern_bytes;
-        for (auto &&value:random_bytes)
+        for (auto&& value : random_bytes)
         {
             pattern_bytes.push_back(value);
         }
@@ -512,9 +512,9 @@ auto XLib::Test::run() -> void
             ConsoleOutput("Failed to find match(es)") << std::endl;
         }
     }
-    catch (MemoryException& me)
+    catch (Exception& e)
     {
-        ConsoleOutput(me.msg()) << std::endl;
+        ConsoleOutput(e.msg()) << std::endl;
     }
 
     class TestMember : Offset

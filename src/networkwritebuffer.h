@@ -2,8 +2,7 @@
 #define NETWORKWRITEBUFFER_H
 
 #include "buffer.h"
-#include "bufferexception.h"
-#include <vector>
+#include "exception.h"
 
 namespace XLib
 {
@@ -30,7 +29,7 @@ namespace XLib
         {
             if (!spaceLeft())
             {
-                throw BufferException(std::string(CURRENT_CONTEXT)
+                throw Exception(std::string(CURRENT_CONTEXT)
                                       + "No space left");
             }
 
@@ -106,7 +105,7 @@ namespace XLib
     {
         if (!spaceLeft())
         {
-            throw BufferException(std::string(CURRENT_CONTEXT)
+            throw Exception(std::string(CURRENT_CONTEXT)
                                   + "No space left");
         }
 

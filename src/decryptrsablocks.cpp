@@ -22,7 +22,7 @@ auto XLib::DecryptRSABlocks::decrypt(XLib::bytes_t bytes) -> bytes_t
 
     if (bytes.size() % min_size != 0)
     {
-        throw RSABlocksException(std::string(CURRENT_CONTEXT)
+        throw Exception(std::string(CURRENT_CONTEXT)
                                  + "The size of the buffer must be a "
                                    "multiple of the key size\n");
     }
