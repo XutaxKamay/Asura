@@ -81,7 +81,7 @@ namespace XLib
 
                 auto height() -> size_t;
                 auto depth() -> size_t;
-                auto count_nodes() -> size_t;
+                auto count_subnodes() -> size_t;
 
                 shared_node root   = nullptr;
                 shared_node parent = nullptr;
@@ -122,19 +122,19 @@ namespace XLib
 };
 
 template <typename alphabet_T>
-size_t XLib::XKC<alphabet_T>::BinaryTree::Node::count_nodes()
+size_t XLib::XKC<alphabet_T>::BinaryTree::Node::count_subnodes()
 {
     size_t result = 0;
 
     if (left)
     {
-        result += left->count_nodes();
+        result += left->count_subnodes();
         result++;
     }
 
     if (right)
     {
-        result += right->count_nodes();
+        result += right->count_subnodes();
         result++;
     }
 
@@ -203,7 +203,8 @@ void XLib::XKC<alphabet_T>::BinaryTree::insert(shared_node parent,
           new Node({ parent->root, parent, value }));
         return;
     }
-    else if (parent->left->count_nodes() <= parent->right->count_nodes())
+    else if (parent->left->count_subnodes()
+             <= parent->right->count_subnodes())
     {
         insert(parent->left, value);
     }
