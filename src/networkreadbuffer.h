@@ -34,7 +34,7 @@ namespace XLib
             return _read_bits < this->maxSize() * 8;
         }
 
-        template <safesize_t pos_T>
+        template <safesize_t pos_T = 0>
         constexpr auto readOneBit()
         {
             if (!spaceLeft())
@@ -46,7 +46,7 @@ namespace XLib
             return ReadBit<pos_T>(this->data());
         }
 
-        auto readOneBit(safesize_t pos);
+        auto readOneBit(safesize_t pos = 0);
 
         template <safesize_t nb_of_bits_T>
         auto readBits()

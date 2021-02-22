@@ -4,11 +4,12 @@
 namespace XLib
 {
 #ifndef _WIN32
-    constexpr auto __NR_rmmap          = 441;
-    constexpr auto __NR_rmprotect      = 442;
-    constexpr auto __NR_pkey_rmprotect = 443;
-    constexpr auto __NR_rmunmap        = 444;
-    constexpr auto __NR_rclone         = 445;
+    constexpr auto __NR_custom_start   = 442;
+    constexpr auto __NR_rmmap          = __NR_custom_start;
+    constexpr auto __NR_rmprotect      = __NR_custom_start + 1;
+    constexpr auto __NR_pkey_rmprotect = __NR_custom_start + 2;
+    constexpr auto __NR_rmunmap        = __NR_custom_start + 3;
+    constexpr auto __NR_rclone         = __NR_custom_start + 4;
 #endif
 };
 
