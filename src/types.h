@@ -39,7 +39,7 @@ namespace XLib
     using byte_t     = unsigned char;
     using data_t     = byte_t*;
     using bytes_t    = std::vector<byte_t>;
-    using safesize_t = int32_t;
+    using safesize_t = uint32_t; /* 4 gb max */
     /* linux pid_t */
     using pid_t = uint32_t;
 #define __pid_t_defined

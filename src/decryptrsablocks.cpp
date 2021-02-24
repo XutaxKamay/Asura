@@ -46,7 +46,6 @@ auto XLib::DecryptRSABlocks::decrypt(XLib::bytes_t bytes) -> bytes_t
     }
 
     auto original_size = ReadBuffer(bytes.data(),
-                                    false,
                                     bytes.size() - min_size,
                                     bytes.size())
                            .readVar<type_64s>();

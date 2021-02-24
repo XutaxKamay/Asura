@@ -38,7 +38,7 @@ auto XLib::Test::run() -> void
 
     ConsoleOutput(str) << std::endl;
 
-    WriteBuffer<4096> writeBuffer;
+    WriteBuffer writeBuffer;
 
     auto strSize = view_as<safesize_t>(str.size());
 

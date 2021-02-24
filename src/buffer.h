@@ -7,7 +7,9 @@
 
 namespace XLib
 {
+#ifdef DEBUG
     inline std::vector<ptr_t> tracking_memory_allocs;
+#endif
 
     /**
      * @brief UDPSize
@@ -25,7 +27,9 @@ namespace XLib
     {
         auto ptr = view_as<T>(::operator new(view_as<size_t>(size)));
 
+#ifdef DEBUG
         tracking_memory_allocs.push_back(view_as<ptr_t>(ptr));
+#endif
 
         return ptr;
     }
@@ -37,6 +41,7 @@ namespace XLib
      */
     constexpr inline auto free(T& pBuf)
     {
+#ifdef DEBUG
         auto it = std::find(tracking_memory_allocs.begin(),
                             tracking_memory_allocs.end(),
                             view_as<ptr_t>(pBuf));
@@ -52,6 +57,9 @@ namespace XLib
         {
             return false;
         }
+#else
+        ::operator delete(view_as<ptr_t>(pBuf));
+#endif
     }
     /**
      * @brief The typesize_t enum
@@ -121,27 +129,10 @@ namespace XLib
     template <typesize_t typesize_T>
     using g_v_t = get_variable_t<typesize_T>;
 
-    template <safesize_t max_size_T = 0>
-    /**
-     * @brief The Buffer class
-     * Just a simple class for allocating bytes and buffer purposes.
-     * usage: Buffer<1100> buffer;
-     */
     class Buffer
     {
       public:
-        /**
-         * @brief Buffer
-         */
-        Buffer();
-        /**
-         * @brief Buffer
-         * @param data
-         * @param allocated
-         * @param maxSize
-         */
-        Buffer(data_t data, bool allocated, safesize_t maxSize = 0);
-
+        Buffer(data_t data = nullptr, safesize_t maxSize = 0);
         ~Buffer();
 
       public:
@@ -155,7 +146,7 @@ namespace XLib
          * @brief data
          * @return
          */
-        auto data() const;
+        auto data() -> data_t;
         /**
          * @brief setData
          * @param data
@@ -165,7 +156,7 @@ namespace XLib
          * @brief maxSize
          * @return
          */
-        auto maxSize() const;
+        auto maxSize() -> safesize_t;
         /**
          * @brief setMaxSize
          * @param maxSize
@@ -175,7 +166,7 @@ namespace XLib
          * @brief toBytes
          * @return bytes_t
          */
-        auto toBytes();
+        auto toBytes() -> bytes_t;
 
       public:
         template <typename cast_T = ptr_t>
@@ -184,16 +175,14 @@ namespace XLib
          * @param size
          * Gets a pointer from data + size.
          */
-        constexpr inline auto shift(safesize_t size)
+        constexpr inline auto shift(safesize_t size = 0)
         {
-            if (size == 0)
+            if (!_data && size >= _max_size)
             {
-                return view_as<cast_T>(_data);
+                throw XLIB_EXCEPTION("Out of bounds.");
             }
-            else
-            {
-                return view_as<cast_T>(view_as<uintptr_t>(_data) + size);
-            }
+
+            return view_as<cast_T>(view_as<uintptr_t>(_data) + size);
         }
 
       protected:
@@ -210,70 +199,6 @@ namespace XLib
          */
         bool _allocated {};
     };
-
-    template <safesize_t max_size_T>
-    Buffer<max_size_T>::Buffer()
-     : _max_size(max_size_T), _allocated(max_size_T != 0)
-    {
-        // Allocate with the maximum size for performance.
-        if (max_size_T != 0)
-            _data = alloc<decltype(_data)>(max_size_T);
-    }
-
-    template <safesize_t max_size_T>
-    Buffer<max_size_T>::Buffer(data_t data,
-                               bool allocated,
-                               safesize_t maxSize)
-     : _data(data), _max_size(maxSize), _allocated(allocated)
-    {
-    }
-
-    template <safesize_t max_size_T>
-    Buffer<max_size_T>::~Buffer()
-    {
-        // Free data.
-        if (_allocated)
-            free(_data);
-    }
-
-    template <safesize_t max_size_T>
-    auto& Buffer<max_size_T>::operator[](safesize_t size)
-    {
-        return *shift<data_t>(size);
-    }
-
-    template <safesize_t max_size_T>
-    inline auto Buffer<max_size_T>::data() const
-    {
-        return _data;
-    }
-
-    template <safesize_t max_size_T>
-    inline auto Buffer<max_size_T>::setData(const data_t& data)
-    {
-        _data = data;
-    }
-
-    template <safesize_t max_size_T>
-    inline auto Buffer<max_size_T>::maxSize() const
-    {
-        return _max_size;
-    }
-
-    template <safesize_t max_size_T>
-    inline auto Buffer<max_size_T>::setMaxSize(const safesize_t& maxSize)
-    {
-        _max_size = maxSize;
-    }
-
-    template <safesize_t max_size_T>
-    inline auto Buffer<max_size_T>::toBytes()
-    {
-        bytes_t bs(max_size_T);
-        std::copy(this->_data, this->_data + max_size_T, bs.begin());
-
-        return bs;
-    }
 
 } // namespace XLib
 

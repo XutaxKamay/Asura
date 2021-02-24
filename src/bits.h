@@ -12,15 +12,6 @@ namespace XLib
     template <safesize_t pos, typename T = data_t>
     constexpr auto read_bit(T data)
     {
-        if constexpr (pos >= std::numeric_limits<safesize_t>::max())
-        {
-            static_assert("Can't read bit higher");
-        }
-        else if constexpr (pos < 0)
-        {
-            static_assert("Can't read bit lower");
-        }
-
         constexpr auto read_byte_pos = pos / 8;
 
         constexpr auto wanted_bit_value = (1 << (pos % 8));
@@ -34,15 +25,6 @@ namespace XLib
     template <safesize_t pos, bool val, typename T = data_t>
     constexpr auto write_bit(T data)
     {
-        if constexpr (pos >= std::numeric_limits<safesize_t>::max())
-        {
-            static_assert("Can't write bit higher");
-        }
-        else if constexpr (pos < 0)
-        {
-            static_assert("Can't write bit lower");
-        }
-
         constexpr auto read_byte_pos = pos / 8;
 
         constexpr auto wanted_bit_value = (1 << (pos % 8));
@@ -63,15 +45,6 @@ namespace XLib
     template <typename T = data_t>
     constexpr auto read_bit(T data, safesize_t pos)
     {
-        if (pos >= std::numeric_limits<safesize_t>::max())
-        {
-            throw XLIB_EXCEPTION("Can't read bit higher");
-        }
-        else if (pos < 0)
-        {
-            throw XLIB_EXCEPTION("Can't read bit lower");
-        }
-
         auto read_byte_pos = pos / 8;
 
         auto wanted_bit_value = (1 << (pos % 8));
@@ -85,15 +58,6 @@ namespace XLib
     template <bool val, typename T = data_t>
     constexpr auto write_bit(T data, safesize_t pos)
     {
-        if (pos >= std::numeric_limits<safesize_t>::max())
-        {
-            throw XLIB_EXCEPTION("Can't write bit higher");
-        }
-        else if (pos < 0)
-        {
-            throw XLIB_EXCEPTION("Can't write bit lower");
-        }
-
         auto read_byte_pos = pos / 8;
 
         auto wanted_bit_value = (1 << (pos % 8));
@@ -114,15 +78,6 @@ namespace XLib
     template <typename T = data_t>
     constexpr auto write_bit(T data, safesize_t pos, bool val)
     {
-        if (pos >= std::numeric_limits<safesize_t>::max())
-        {
-            throw XLIB_EXCEPTION("Can't write bit higher");
-        }
-        else if (pos < 0)
-        {
-            throw XLIB_EXCEPTION("Can't write bit lower");
-        }
-
         auto read_byte_pos = pos / 8;
 
         auto wanted_bit_value = (1 << (pos % 8));

@@ -25,7 +25,7 @@ auto XLib::EncryptRSABlocks::encrypt(XLib::bytes_t bytes) -> bytes_t
      */
     bytes.resize(bytes.size() + remainder + min_size);
 
-    WriteBuffer(bytes.data(), false, bytes.size() - min_size, bytes.size())
+    WriteBuffer(bytes.data(), bytes.size() - min_size, bytes.size())
       .addVar<type_64s>(original_size);
 
     auto block_count_max = bytes.size() / min_size;

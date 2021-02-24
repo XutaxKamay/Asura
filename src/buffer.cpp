@@ -34,3 +34,66 @@ std::string XLib::get_variable_type_str(typesize_t typeSize)
             return "unknown";
     }
 }
+
+Buffer::Buffer(data_t data, safesize_t maxSize)
+ : _data(nullptr), _max_size(maxSize), _allocated(false)
+{
+    if (data)
+    {
+        _data = data;
+    }
+    else if (_max_size)
+    {
+        _data      = new byte_t[_max_size];
+        _allocated = true;
+    }
+    else
+    {
+        /* vector maybe */
+    }
+}
+
+Buffer::~Buffer()
+{
+    // Free data.
+    if (_allocated)
+        free(_data);
+}
+
+auto& Buffer::operator[](safesize_t size)
+{
+    if (!_data && size >= _max_size)
+    {
+        throw XLIB_EXCEPTION("Out of bounds.");
+    }
+
+    return *shift<data_t>(size);
+}
+
+auto Buffer::data() -> data_t
+{
+    return _data;
+}
+
+auto Buffer::setData(const data_t& data)
+{
+    _data = data;
+}
+
+auto Buffer::maxSize() -> safesize_t
+{
+    return _max_size;
+}
+
+auto Buffer::setMaxSize(const safesize_t& maxSize)
+{
+    _max_size = maxSize;
+}
+
+auto Buffer::toBytes() -> bytes_t
+{
+    bytes_t bs(_max_size);
+    std::copy(this->_data, this->_data + _max_size, bs.begin());
+
+    return bs;
+}

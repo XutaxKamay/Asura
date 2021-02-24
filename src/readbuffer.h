@@ -6,20 +6,12 @@
 
 namespace XLib
 {
-    template <safesize_t max_size_T = 0>
-    /**
-     * @brief The ReadBuffer class
-     * This class permits to read a buffer easily.
-     * Example:
-     * ReadBuffer<1024> readBuffer;
-     * auto b = readBuffer.readVar<type_8>();
-     */
-    class ReadBuffer : public Buffer<max_size_T>
+    class ReadBuffer : public Buffer
     {
       public:
-        explicit ReadBuffer(data_t data,
-                            safesize_t readSize = 0,
-                            safesize_t maxSize  = 0);
+        ReadBuffer(data_t data,
+                   safesize_t readSize = 0,
+                   safesize_t maxSize  = 0);
 
         ~ReadBuffer() = default;
 
@@ -89,7 +81,7 @@ namespace XLib
          * @brief shift
          * @param size
          */
-        constexpr inline auto shift(safesize_t size = 0)
+        constexpr inline auto shift(safesize_t size = 0) -> cast_T
         {
             if (size == 0)
             {
@@ -115,7 +107,7 @@ namespace XLib
         /**
          * @brief readSize
          */
-        auto readSize() const;
+        auto readSize() -> safesize_t;
         /**
          * @brief setReadSize
          * @param readSize
@@ -128,39 +120,6 @@ namespace XLib
          */
         safesize_t _read_size {};
     };
-
-    template <safesize_t max_size_T>
-    ReadBuffer<max_size_T>::ReadBuffer(data_t data,
-                                       safesize_t readSize,
-                                       safesize_t maxSize)
-     : Buffer<max_size_T>(data, true, maxSize), _read_size(readSize)
-    {
-    }
-
-    template <safesize_t max_size_T>
-    inline auto ReadBuffer<max_size_T>::reset() -> void
-    {
-        _read_size = 0;
-    }
-
-    template <safesize_t max_size_T>
-    inline auto ReadBuffer<max_size_T>::advance(safesize_t size) -> void
-    {
-        _read_size += size;
-    }
-
-    template <safesize_t max_size_T>
-    inline auto ReadBuffer<max_size_T>::readSize() const
-    {
-        return _read_size;
-    }
-
-    template <safesize_t max_size_T>
-    inline auto ReadBuffer<max_size_T>::setReadSize(
-      const safesize_t& readSize)
-    {
-        _read_size = readSize;
-    }
 
 } // namespace XLib
 
