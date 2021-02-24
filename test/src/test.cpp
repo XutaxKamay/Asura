@@ -345,15 +345,11 @@ auto XLib::Test::run() -> void
         ConsoleOutput("Didn't pass write bits test") << std::endl;
     }
 
-    /* TODO:
-    auto net_write_buf = NetworkWriteBuffer(view_as<data_t>(&test_bits),
-                                            true,
-                                            0,
-                                            sizeof(test_bits));
+    auto net_write_buf = NetworkWriteBuffer(view_as<data_t>(&test_bits));
 
     try
     {
-        net_write_buf.write<type_64us>(0xFFFFFFFFFFFFFFFF);
+        net_write_buf.writeVar<type_64us>(0xFFFFFFFFFFFFFFFF);
     }
     catch (Exception& e)
     {
@@ -362,11 +358,11 @@ auto XLib::Test::run() -> void
 
     ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
 
-    net_write_buf.pos(0);
+    net_write_buf.pos();
 
     try
     {
-        net_write_buf.write<type_32us>(0);
+        net_write_buf.writeVar<type_32us>(0);
     }
     catch (Exception& e)
     {
@@ -375,11 +371,11 @@ auto XLib::Test::run() -> void
 
     ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
 
-    net_write_buf.pos(0);
+    net_write_buf.pos();
 
     try
     {
-        net_write_buf.write<type_64us>(0xFFFFFFFFFFFFFFFF);
+        net_write_buf.writeVar<type_64us>(0xFFFFFFFFFFFFFFFF);
     }
     catch (Exception& e)
     {
@@ -390,7 +386,7 @@ auto XLib::Test::run() -> void
 
     try
     {
-        net_write_buf.write<type_32us>(0);
+        net_write_buf.writeVar<type_32us>(0);
     }
     catch (Exception& e)
     {
@@ -399,25 +395,23 @@ auto XLib::Test::run() -> void
 
     ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
 
-    net_write_buf.pos(0);
-    net_write_buf.write<type_32us>(1337);
-    net_write_buf.write<type_32us>(1338);
+    net_write_buf.pos();
+    net_write_buf.writeVar<type_32us>(1337);
+    net_write_buf.writeVar<type_32us>(1338);
 
     ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
 
-    auto net_read_buf = NetworkReadBuffer(view_as<data_t>(&test_bits),
-                                          0,
-                                          sizeof(test_bits));
+    auto net_read_buf = NetworkReadBuffer(view_as<data_t>(&test_bits));
 
-    auto var1337   = net_read_buf.read<type_32us>();
-    auto var1337_2 = net_read_buf.read<type_32us>();
-    net_read_buf.pos(0);
-    auto var1337_64 = net_read_buf.read<type_64us>();
+    auto var1337 = net_read_buf.readVar<type_32us>();
+    auto var1338 = net_read_buf.readVar<type_32us>();
+    net_read_buf.pos();
+    auto var1337_64 = net_read_buf.readVar<type_64us>();
 
     std::cout << std::dec;
 
     ConsoleOutput(var1337)
-      << " " << var1337_2 << " " << var1337_64 << std::endl;
+      << " " << var1338 << " " << var1337_64 << std::endl;
 
     auto intBits = bits_to_int<int>({ false, true, true, true });
 
@@ -431,7 +425,6 @@ auto XLib::Test::run() -> void
     }
 
     ConsoleOutput(intBits) << std::endl;
-    */
 
     std::vector<byte_t> random_bytes;
 
