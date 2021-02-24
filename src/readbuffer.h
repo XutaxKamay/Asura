@@ -17,19 +17,7 @@ namespace XLib
     class ReadBuffer : public Buffer<max_size_T>
     {
       public:
-        /**
-         * @brief ReadBuffer
-         */
-        ReadBuffer();
-        /**
-         * @brief ReadBuffer
-         * @param data
-         * @param allocated
-         * @param readSize
-         * @param maxSize
-         */
         explicit ReadBuffer(data_t data,
-                            bool allocated      = false,
                             safesize_t readSize = 0,
                             safesize_t maxSize  = 0);
 
@@ -143,16 +131,10 @@ namespace XLib
     };
 
     template <safesize_t max_size_T>
-    ReadBuffer<max_size_T>::ReadBuffer() : Buffer<max_size_T>()
-    {
-    }
-
-    template <safesize_t max_size_T>
     ReadBuffer<max_size_T>::ReadBuffer(data_t data,
-                                       bool allocated,
                                        safesize_t readSize,
                                        safesize_t maxSize)
-     : Buffer<max_size_T>(data, allocated, maxSize), _read_size(readSize)
+     : Buffer<max_size_T>(data, true, maxSize), _read_size(readSize)
     {
     }
 
