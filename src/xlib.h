@@ -7,6 +7,8 @@
 #include "detourx86.h"
 #include "encryptrsablocks.h"
 #include "hybridcrypto.h"
+#include "networkreadbuffer.h"
+#include "networkwritebuffer.h"
 #include "offset.h"
 #include "osutils.h"
 #include "patternbyte.h"
