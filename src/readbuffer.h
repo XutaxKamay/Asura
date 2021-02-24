@@ -2,7 +2,7 @@
 #define READBUFFER_H
 
 #include "buffer.h"
-#include <assert.h>
+#include "exception.h"
 
 namespace XLib
 {
@@ -40,11 +40,10 @@ namespace XLib
                 /*
                  * Blame programmer for not writing the buffer correctly.
                  */
-                assert(std::string("Expected type: "
-                                   + get_variable_type_str(typesize_T)
-                                   + "when type is instead "
-                                   + get_variable_type_str(type))
-                         .c_str());
+                throw XLIB_EXCEPTION(std::string(
+                  "Expected type: " + get_variable_type_str(typesize_T)
+                  + "when type is instead "
+                  + get_variable_type_str(type)));
             }
 
             using var_t = get_variable_t<typesize_T>;
