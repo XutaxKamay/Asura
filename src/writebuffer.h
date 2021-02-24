@@ -82,7 +82,7 @@ namespace XLib
             }
         }
 
-        template <typename cast_t = ptr_t>
+        template <typename cast_T = ptr_t>
         /**
          * @brief shift
          * @param size
@@ -91,11 +91,11 @@ namespace XLib
         {
             if (size == 0)
             {
-                return view_as<cast_t>(this->data());
+                return view_as<cast_T>(this->data());
             }
             else
             {
-                return view_as<cast_t>(view_as<uintptr_t>(this->data())
+                return view_as<cast_T>(view_as<uintptr_t>(this->data())
                                        + view_as<uintptr_t>(size));
             }
         }

@@ -1,6 +1,8 @@
 #include "encryptrsablocks.h"
 #include "writebuffer.h"
 
+#include <random>
+
 using namespace CryptoPP;
 
 XLib::EncryptRSABlocks::EncryptRSABlocks(CryptoPP::Integer publicExponent,
@@ -25,8 +27,18 @@ auto XLib::EncryptRSABlocks::encrypt(XLib::bytes_t bytes) -> bytes_t
      */
     bytes.resize(bytes.size() + remainder + min_size);
 
-    WriteBuffer(bytes.data(), bytes.size() - min_size, bytes.size())
-      .addVar<type_64s>(original_size);
+    WriteBuffer writeBuffer(bytes.data(),
+                            bytes.size() - min_size,
+                            bytes.size());
+
+    writeBuffer.addVar<type_64s>(original_size);
+
+    AutoSeededRandomPool rng;
+    /* randomize last bytes */
+    for (size_t i = writeBuffer.writeSize(); i < bytes.size(); i++)
+    {
+        bytes[i] = byte_t(Integer(rng, 0, 255).ConvertToLong());
+    }
 
     auto block_count_max = bytes.size() / min_size;
 
