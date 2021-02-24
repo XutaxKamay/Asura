@@ -44,7 +44,7 @@ Buffer::Buffer(data_t data, safesize_t maxSize)
     }
     else if (_max_size)
     {
-        _data      = new byte_t[_max_size];
+        _data      = alloc<data_t>(_max_size);
         _allocated = true;
     }
     else
