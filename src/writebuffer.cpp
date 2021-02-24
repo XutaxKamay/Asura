@@ -3,8 +3,8 @@
 using namespace XLib;
 
 WriteBuffer::WriteBuffer(data_t data,
-                         safesize_t writeSize,
-                         safesize_t maxSize)
+                         safesize_t maxSize,
+                         safesize_t writeSize)
  : Buffer(data, maxSize), _written_size(writeSize)
 {
 }

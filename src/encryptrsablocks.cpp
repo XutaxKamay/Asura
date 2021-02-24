@@ -28,8 +28,8 @@ auto XLib::EncryptRSABlocks::encrypt(XLib::bytes_t bytes) -> bytes_t
     bytes.resize(bytes.size() + remainder + min_size);
 
     WriteBuffer writeBuffer(bytes.data(),
-                            bytes.size() - min_size,
-                            bytes.size());
+                            bytes.size(),
+                            bytes.size() - min_size);
 
     writeBuffer.addVar<type_64s>(original_size);
 

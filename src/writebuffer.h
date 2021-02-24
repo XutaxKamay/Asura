@@ -15,8 +15,8 @@ namespace XLib
         constexpr static auto DEFAULT_MAX_SIZE = 0x100000;
 
         WriteBuffer(data_t data          = nullptr,
-                    safesize_t writeSize = 0,
-                    safesize_t maxSize   = DEFAULT_MAX_SIZE);
+                    safesize_t maxSize   = DEFAULT_MAX_SIZE,
+                    safesize_t writeSize = 0);
 
         ~WriteBuffer() = default;
 

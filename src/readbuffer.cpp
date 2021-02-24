@@ -3,8 +3,8 @@
 using namespace XLib;
 
 ReadBuffer::ReadBuffer(data_t data,
-                       safesize_t readSize,
-                       safesize_t maxSize)
+                       safesize_t maxSize,
+                       safesize_t readSize)
  : Buffer(data, maxSize), _read_size(readSize)
 {
 }

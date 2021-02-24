@@ -10,8 +10,8 @@ namespace XLib
     {
       public:
         ReadBuffer(data_t data,
-                   safesize_t readSize = 0,
-                   safesize_t maxSize  = 0);
+                   safesize_t maxSize  = 0,
+                   safesize_t readSize = 0);
 
         ~ReadBuffer() = default;
 

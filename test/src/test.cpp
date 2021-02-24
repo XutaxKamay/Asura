@@ -102,7 +102,7 @@ auto XLib::Test::run() -> void
 
     std::cout << std::endl;
 
-    ReadBuffer readBuffer(dec.data());
+    ReadBuffer readBuffer(dec.data(), dec.size());
 
     if (std::memcmp(readBuffer.data(),
                     writeBuffer.data(),
@@ -345,7 +345,8 @@ auto XLib::Test::run() -> void
         ConsoleOutput("Didn't pass write bits test") << std::endl;
     }
 
-    auto net_write_buf = NetworkWriteBuffer(view_as<data_t>(&test_bits));
+    auto net_write_buf = NetworkWriteBuffer(view_as<data_t>(&test_bits),
+                                            sizeof(test_bits));
 
     try
     {
@@ -401,7 +402,8 @@ auto XLib::Test::run() -> void
 
     ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
 
-    auto net_read_buf = NetworkReadBuffer(view_as<data_t>(&test_bits));
+    auto net_read_buf = NetworkReadBuffer(view_as<data_t>(&test_bits),
+                                          sizeof(test_bits));
 
     auto var1337 = net_read_buf.readVar<type_32us>();
     auto var1338 = net_read_buf.readVar<type_32us>();
