@@ -20,7 +20,7 @@ namespace XLib
         constexpr byte_t REL_INST = 0xE9;
 
         template <typename T>
-        auto OverrideRel32(
+        auto override_rel32(
           T fromPtr,
           T to,
           std::function<void(T, T)> beforeOverride = nullptr,
@@ -70,16 +70,16 @@ namespace XLib
         constexpr byte_t REL_INST = 0xE8;
 
         template <typename T>
-        auto OverrideRel32(
+        auto override_rel32(
           T fromPtr,
           T to,
           std::function<void(T, T)> beforeOverride = nullptr,
           std::function<void(T, T)> afterOverride  = nullptr)
         {
-            return X86_JMP::OverrideRel32(fromPtr,
-                                          to,
-                                          beforeOverride,
-                                          afterOverride);
+            return X86_JMP::override_rel32(fromPtr,
+                                           to,
+                                           beforeOverride,
+                                           afterOverride);
         }
     };
 

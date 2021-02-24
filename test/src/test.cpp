@@ -313,7 +313,7 @@ auto XLib::Test::run() -> void
 
     for (size_t i = 0; i < sizeof(mask_test_bits) / sizeof(int); i++)
     {
-        if (!ReadBit(&test_bits, mask_test_bits[i]))
+        if (!read_bit(&test_bits, mask_test_bits[i]))
         {
             ConsoleOutput("wrong bit at pos: ")
               << mask_test_bits[i] << std::endl;
@@ -332,11 +332,11 @@ auto XLib::Test::run() -> void
         ConsoleOutput("Didn't pass read bits test") << std::endl;
     }
 
-    WriteBit<63, true>(&test_bits);
+    write_bit<63, true>(&test_bits);
 
     ConsoleOutput(std::bitset<64>(test_bits)) << std::endl;
 
-    if (ReadBit<63>(&test_bits))
+    if (read_bit<63>(&test_bits))
     {
         ConsoleOutput("Passed write bits") << std::endl;
     }
@@ -419,11 +419,13 @@ auto XLib::Test::run() -> void
     ConsoleOutput(var1337)
       << " " << var1337_2 << " " << var1337_64 << std::endl;
 
-    auto intBits = BitsToInt<int>({ false, true, true, true });
+    auto intBits = bits_to_int<int>({ false, true, true, true });
 
     if (var1337_64 == test_bits && intBits == 14
-        && IntToBits(intBits)[0] == false && IntToBits(intBits)[1] == true
-        && IntToBits(intBits)[2] == true && IntToBits(intBits)[3] == true)
+        && int_to_bits(intBits)[0] == false
+        && int_to_bits(intBits)[1] == true
+        && int_to_bits(intBits)[2] == true
+        && int_to_bits(intBits)[3] == true)
     {
         ConsoleOutput("Passed bits read test") << std::endl;
     }

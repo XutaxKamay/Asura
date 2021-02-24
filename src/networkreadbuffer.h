@@ -43,7 +43,7 @@ namespace XLib
             }
 
             _read_bits++;
-            return ReadBit<pos_T>(this->data());
+            return read_bit<pos_T>(this->data());
         }
 
         auto readOneBit(safesize_t pos = 0);
@@ -155,7 +155,7 @@ namespace XLib
 
         _read_bits++;
 
-        return ReadBit(this->data(), pos);
+        return read_bit(this->data(), pos);
     }
 
     template <safesize_t max_size_T>

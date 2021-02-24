@@ -316,7 +316,7 @@ std::string XLib::XKC<alphabet_T>::BinaryTree::dot_format(
 {
     std::string result;
 
-    auto max_depth_bits = BitsNeeded(parent->root->height());
+    auto max_depth_bits = bits_needed(parent->root->height());
 
     if (parent->left)
     {
@@ -528,7 +528,7 @@ XLib::bytes_t XLib::XKC<alphabet_T>::encode(XLib::data_t data,
 
     auto max_tree_depth = binary_tree.root->height();
 
-    auto max_depth_bits = view_as<uint32_t>(BitsNeeded(max_tree_depth));
+    auto max_depth_bits = view_as<uint32_t>(bits_needed(max_tree_depth));
 
     auto max_count_occurs = std::max_element(
       occurrences.begin(),
@@ -539,7 +539,7 @@ XLib::bytes_t XLib::XKC<alphabet_T>::encode(XLib::data_t data,
       });
 
     auto max_count_occurs_bits = view_as<byte_t>(
-      BitsNeeded(max_count_occurs->count));
+      bits_needed(max_count_occurs->count));
 
     result.push_back(max_count_occurs_bits);
 
@@ -690,7 +690,7 @@ XLib::bytes_t XLib::XKC<alphabet_T>::decode(XLib::data_t data,
 
     auto max_tree_depth = binary_tree.root->height();
 
-    auto max_depth_bits = view_as<uint32_t>(BitsNeeded(max_tree_depth));
+    auto max_depth_bits = view_as<uint32_t>(bits_needed(max_tree_depth));
 
     size_t read_bits_on_result_byte = 0;
     size_t bits_read                = 0;

@@ -32,7 +32,7 @@ namespace XLib
                 throw XLIB_EXCEPTION("No space left");
             }
 
-            WriteBit<value>(this->data(), _written_bits++);
+            write_bit<value>(this->data(), _written_bits++);
         }
 
         auto writeOneBit(bool value);
@@ -62,7 +62,7 @@ namespace XLib
 
                 for (safesize_t i = 0; i < bits_to_write; i++)
                 {
-                    writeOneBit(ReadBit(var, i));
+                    writeOneBit(read_bit(var, i));
                 }
             }
             else
@@ -71,7 +71,7 @@ namespace XLib
 
                 for (safesize_t i = 0; i < bits_to_write; i++)
                 {
-                    writeOneBit(ReadBit(&var, i));
+                    writeOneBit(read_bit(&var, i));
                 }
             }
         }
@@ -107,7 +107,7 @@ namespace XLib
             throw XLIB_EXCEPTION("No space left");
         }
 
-        WriteBit(this->data(), _written_bits++, value);
+        write_bit(this->data(), _written_bits++, value);
     }
 
     template <safesize_t max_size_T>

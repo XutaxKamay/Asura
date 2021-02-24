@@ -30,9 +30,9 @@ namespace XLib
             std::vector<struct dl_phdr_info> infos;
         };
 
-        static auto retrieve_phdr_infos(struct dl_phdr_info* info,
-                                        size_t,
-                                        void* param) -> int
+        static auto retrievePHDRInfos(struct dl_phdr_info* info,
+                                      size_t,
+                                      void* param) -> int
         {
             auto arg = view_as<iterate_phdr_arg*>(param);
 
@@ -78,7 +78,7 @@ namespace XLib
         {
             iterate_phdr_arg arg;
 
-            dl_iterate_phdr(retrieve_phdr_infos, &arg);
+            dl_iterate_phdr(retrievePHDRInfos, &arg);
 
             dl_phdr_info* found_info = nullptr;
 

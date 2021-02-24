@@ -10,7 +10,7 @@
 namespace XLib
 {
     template <safesize_t pos, typename T = data_t>
-    constexpr auto ReadBit(T data)
+    constexpr auto read_bit(T data)
     {
         if constexpr (pos >= std::numeric_limits<safesize_t>::max())
         {
@@ -32,7 +32,7 @@ namespace XLib
     }
 
     template <safesize_t pos, bool val, typename T = data_t>
-    constexpr auto WriteBit(T data)
+    constexpr auto write_bit(T data)
     {
         if constexpr (pos >= std::numeric_limits<safesize_t>::max())
         {
@@ -61,7 +61,7 @@ namespace XLib
     }
 
     template <typename T = data_t>
-    constexpr auto ReadBit(T data, safesize_t pos)
+    constexpr auto read_bit(T data, safesize_t pos)
     {
         if (pos >= std::numeric_limits<safesize_t>::max())
         {
@@ -83,7 +83,7 @@ namespace XLib
     }
 
     template <bool val, typename T = data_t>
-    constexpr auto WriteBit(T data, safesize_t pos)
+    constexpr auto write_bit(T data, safesize_t pos)
     {
         if (pos >= std::numeric_limits<safesize_t>::max())
         {
@@ -112,7 +112,7 @@ namespace XLib
     }
 
     template <typename T = data_t>
-    constexpr auto WriteBit(T data, safesize_t pos, bool val)
+    constexpr auto write_bit(T data, safesize_t pos, bool val)
     {
         if (pos >= std::numeric_limits<safesize_t>::max())
         {
@@ -141,7 +141,7 @@ namespace XLib
     }
 
     template <typename T>
-    auto BitsToInt(std::vector<bool> bits)
+    auto bits_to_int(std::vector<bool> bits)
     {
         T var {};
 
@@ -157,13 +157,13 @@ namespace XLib
     }
 
     template <typename T>
-    auto BitsToInt(data_t data, safesize_t nbBits = 1)
+    auto bits_to_int(data_t data, safesize_t nbBits = 1)
     {
         T var {};
 
         for (size_t i = 0; i < nbBits; i++)
         {
-            if (ReadBit(data, i))
+            if (read_bit(data, i))
             {
                 var += view_as<T>(1) << view_as<T>(i);
             }
@@ -173,20 +173,20 @@ namespace XLib
     }
 
     template <typename T>
-    auto IntToBits(T val)
+    auto int_to_bits(T val)
     {
         std::vector<bool> bits;
 
         for (size_t i = 0; i < sizeof(T) * 8; i++)
         {
-            bits.push_back(ReadBit(&val, i));
+            bits.push_back(read_bit(&val, i));
         }
 
         return bits;
     }
 
     template <typename T>
-    auto BitsNeeded(T max_val) -> T
+    auto bits_needed(T max_val) -> T
     {
         if (max_val > 0)
         {
