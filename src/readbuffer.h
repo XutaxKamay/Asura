@@ -23,6 +23,11 @@ namespace XLib
          */
         constexpr inline auto readVar(safesize_t* pSize = nullptr)
         {
+            if (_read_size >= maxSize())
+            {
+                throw XLIB_EXCEPTION("Filled buffer");
+            }
+
             auto type = *this->shift<typesize_t*>(_read_size);
             advance(sizeof(typesize_t));
 
