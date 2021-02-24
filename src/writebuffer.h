@@ -102,9 +102,9 @@ namespace XLib
 
       private:
         /**
-         * @brief m_write_size
+         * @brief m_written_size
          */
-        safesize_t _write_size {};
+        safesize_t _written_size {};
     };
 
 } // namespace XLib

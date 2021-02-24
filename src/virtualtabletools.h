@@ -13,6 +13,7 @@ namespace XLib
     template <typename T = ptr_t>
     constexpr auto vtable(T classPtr)
     {
+        /* vtable is stored inside the first member of the class */
         return *view_as<ptr_t**>(classPtr);
     }
 
