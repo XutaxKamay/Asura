@@ -50,13 +50,11 @@ namespace XLib
                 auto begin_ptr  = first_area->begin();
                 auto end_ptr    = first_area->end();
 
-                for (auto next_area_index = area_index + 1;
-                     next_area_index < _areas.size();
-                     next_area_index++)
+                for (area_index = area_index + 1;
+                     area_index < _areas.size();
+                     area_index++)
                 {
-                    auto next_area = _areas[next_area_index];
-
-                    area_index = next_area_index;
+                    auto next_area = _areas[area_index];
 
                     /**
                      * If begin ptr is the same as the previous end

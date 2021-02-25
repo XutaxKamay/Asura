@@ -10,6 +10,11 @@
 
 using namespace XLib;
 
+XLib::Process XLib::Process::find(const std::string& name)
+{
+
+}
+
 auto XLib::Process::ProcessName(pid_t pid) -> std::string
 {
     std::string result("unknown");
