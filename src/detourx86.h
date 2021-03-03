@@ -96,7 +96,7 @@ namespace XLib
     template <typename ret_type_T, typename... args_T>
 #endif
     /**
-     * @brief Detour
+     * @brief TraditionalDetourX86
      * This class permits to hook any functions inside the current
      * process. Detour is a method to hook functions. It works generally
      * by placing a JMP instruction on the start of the function. This
@@ -108,7 +108,7 @@ namespace XLib
      * relative most of the time, it will automatically patch them by
      * checking if it's pointing to the valid address and memory or not.
      */
-    class DetourX86
+    class TraditionalDetourX86
     {
         /**
          * This is a manager in order to find for each detours
@@ -171,7 +171,7 @@ namespace XLib
         using func_t   = cbfunc_t;
 #endif
       public:
-        DetourX86(cbfunc_t originalFunc, ptr_t newFunc);
+        TraditionalDetourX86(cbfunc_t originalFunc, ptr_t newFunc);
 
       private:
         /**
@@ -201,9 +201,10 @@ namespace XLib
     template <calling_conventions_t calling_convention_T,
               typename ret_type_T,
               typename... args_T>
-    constexpr auto DetourX86<calling_convention_T,
-                             ret_type_T,
-                             args_T...>::generateCallBackFuncType()
+    constexpr auto TraditionalDetourX86<
+      calling_convention_T,
+      ret_type_T,
+      args_T...>::generateCallBackFuncType()
     {
         if constexpr (calling_convention_T == cc_fastcall)
         {
@@ -223,9 +224,9 @@ namespace XLib
     template <calling_conventions_t calling_convention_T,
               typename ret_type_T,
               typename... args_T>
-    constexpr auto DetourX86<calling_convention_T,
-                             ret_type_T,
-                             args_T...>::generateNewFuncType()
+    constexpr auto TraditionalDetourX86<calling_convention_T,
+                                        ret_type_T,
+                                        args_T...>::generateNewFuncType()
     {
         if constexpr (calling_convention_T == cc_fastcall)
         {

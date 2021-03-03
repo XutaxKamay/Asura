@@ -25,6 +25,11 @@ auto __fastcall vfunc_hook(ptr_t thisptr, ptr_t /* edx */) -> void
 }
 #endif
 
+auto rogue() -> void
+{
+    std::cout << "Hehe" << std::endl;
+}
+
 auto XLib::Test::run() -> void
 {
     ConsoleOutput("Starting test") << std::endl;
@@ -544,6 +549,8 @@ auto XLib::Test::run() -> void
     TestMember member;
 
     std::cout << member._first()->ok << std::endl;
+
+    rogue();
 
     // std::getchar();
 }

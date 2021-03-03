@@ -59,8 +59,7 @@ namespace XLib
                                       size_t size,
                                       mapf_t flags) -> void
         {
-            auto aligned_address = view_as<ptr_t>(
-              align(address, GetPageSize()));
+            auto aligned_address = align<ptr_t>(address, GetPageSize());
             auto aligned_size = align_to_page_size(size, GetPageSize());
 #ifdef WINDOWS
             auto process_handle = GetCurrentProcessId() == pid ?
