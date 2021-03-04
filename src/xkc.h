@@ -70,7 +70,6 @@ namespace XLib
         struct BinaryTree
         {
             struct Node;
-            using shared_node = std::shared_ptr<Node>;
 
             struct Node
             {
@@ -83,30 +82,30 @@ namespace XLib
                 auto depth() -> size_t;
                 auto count_subnodes() -> size_t;
 
-                shared_node root   = nullptr;
-                shared_node parent = nullptr;
-                value_t value      = INVALID;
-                shared_node left   = nullptr;
-                shared_node right  = nullptr;
+                std::shared_ptr<Node> root   = nullptr;
+                std::shared_ptr<Node> parent = nullptr;
+                value_t value                = INVALID;
+                std::shared_ptr<Node> left   = nullptr;
+                std::shared_ptr<Node> right  = nullptr;
             };
 
             BinaryTree();
 
-            void insert(shared_node parent, alphabet_T value);
+            void insert(std::shared_ptr<Node> parent, alphabet_T value);
             void insert(alphabet_T value);
 
             bool path_info(PathInfo& pathInfo,
-                           shared_node parent,
+                           std::shared_ptr<Node> parent,
                            alphabet_T value);
 
             bool path_info(PathInfo& pathInfo, alphabet_T value);
 
             void find_value(PathInfoResult& pathInfo);
 
-            std::string dot_format(shared_node parent);
+            std::string dot_format(std::shared_ptr<Node> parent);
             std::string dot_format();
 
-            shared_node root;
+            std::shared_ptr<Node> root;
         };
 
         using alphabet_t    = std::vector<Letter>;
@@ -177,7 +176,8 @@ size_t XLib::XKC<alphabet_T>::BinaryTree::Node::height()
 }
 
 template <typename alphabet_T>
-XLib::XKC<alphabet_T>::BinaryTree::BinaryTree() : root(new Node())
+XLib::XKC<alphabet_T>::BinaryTree::BinaryTree()
+ : root(std::make_shared<Node>())
 {
     root->root = root;
 }
@@ -188,19 +188,20 @@ XLib::XKC<alphabet_T>::BinaryTree::BinaryTree() : root(new Node())
  * in the tree
  */
 template <typename alphabet_T>
-void XLib::XKC<alphabet_T>::BinaryTree::insert(shared_node parent,
-                                               alphabet_T value)
+void XLib::XKC<alphabet_T>::BinaryTree::insert(
+  std::shared_ptr<Node> parent,
+  alphabet_T value)
 {
     if (!parent->left)
     {
-        parent->left = shared_node(
-          new Node({ parent->root, parent, value }));
+        parent->left = std::make_shared<Node>(
+          { parent->root, parent, value });
         return;
     }
     else if (!parent->right)
     {
-        parent->right = shared_node(
-          new Node({ parent->root, parent, value }));
+        parent->right = std::make_shared<Node>(
+          { parent->root, parent, value });
         return;
     }
     else if (parent->left->count_subnodes()
@@ -234,9 +235,10 @@ XLib::bytes_t XLib::XKC<alphabet_T>::encode(XLib::bytes_t bytes)
 }
 
 template <typename alphabet_T>
-bool XLib::XKC<alphabet_T>::BinaryTree::path_info(PathInfo& pathInfo,
-                                                  shared_node parent,
-                                                  alphabet_T value)
+bool XLib::XKC<alphabet_T>::BinaryTree::path_info(
+  PathInfo& pathInfo,
+  std::shared_ptr<Node> parent,
+  alphabet_T value)
 {
     if (parent == nullptr)
     {
@@ -288,7 +290,7 @@ void XLib::XKC<alphabet_T>::BinaryTree::find_value(
                              "tree.");
     }
 
-    shared_node current_node = root;
+    std::shared_ptr<Node> current_node = root;
 
     for (size_t depth = 0; depth < pathInfo.depth; depth++)
     {
@@ -312,7 +314,7 @@ void XLib::XKC<alphabet_T>::BinaryTree::find_value(
 
 template <typename alphabet_T>
 std::string XLib::XKC<alphabet_T>::BinaryTree::dot_format(
-  shared_node parent)
+  std::shared_ptr<Node> parent)
 {
     std::string result;
 
