@@ -12,7 +12,53 @@ using namespace XLib;
 
 XLib::Process XLib::Process::find(const std::string& name)
 {
+#ifdef WINDOWS
+    Process process;
 
+    auto tool_handle = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+
+    if (!tool_handle)
+    {
+        return process;
+    }
+
+    PROCESSENTRY32 process_entry32;
+
+    if (Process32First(tool_handle, &process_entry32))
+    {
+        auto match_process = [&name, &process_entry32, &process]()
+        {
+            if (name.find(process_entry32.szExeFile))
+            {
+                process = Process(process_entry32.th32ProcessID);
+                return true;
+            }
+
+            return false;
+        };
+
+        if (!match_process())
+        {
+            while (Process32Next(tool_handle, &process_entry32))
+            {
+                if (match_process())
+                {
+                    break;
+                }
+            }
+        }
+    }
+
+    CloseHandle(tool_handle);
+#else
+#endif
+
+    if (process.id() == INVALID_PID)
+    {
+        XLIB_EXCEPTION("Couldn't find process: " + name);
+    }
+
+    return process;
 }
 
 auto XLib::Process::ProcessName(pid_t pid) -> std::string
