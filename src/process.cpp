@@ -28,7 +28,7 @@ XLib::Process XLib::Process::find(const std::string& name)
     {
         auto match_process = [&name, &process_entry32, &process]()
         {
-            if (name.find(process_entry32.szExeFile))
+            if (name.find(process_entry32.szExeFile) != std::string::npos)
             {
                 process = Process(process_entry32.th32ProcessID);
                 return true;
