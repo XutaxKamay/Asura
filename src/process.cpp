@@ -1,4 +1,5 @@
 #include "process.h"
+#include <filesystem>
 #include <unistd.h>
 
 #ifdef WINDOWS
@@ -12,9 +13,9 @@ using namespace XLib;
 
 XLib::Process XLib::Process::find(const std::string& name)
 {
-#ifdef WINDOWS
     Process process;
 
+#ifdef WINDOWS
     auto tool_handle = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
     if (!tool_handle)
@@ -52,6 +53,19 @@ XLib::Process XLib::Process::find(const std::string& name)
 
     CloseHandle(tool_handle);
 #else
+    for (auto&& entry : std::filesystem::directory_iterator("/proc"))
+    {
+        if (entry.is_directory())
+        {
+            auto pid = view_as<pid_t>(std::stoi(entry.path().filename()));
+
+            if (name.find(ProcessName(pid)) != std::string::npos)
+            {
+                process = Process(pid);
+                break;
+            }
+        }
+    }
 #endif
 
     if (process.id() == INVALID_PID)
