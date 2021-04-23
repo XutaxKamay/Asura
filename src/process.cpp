@@ -23,6 +23,7 @@ XLib::Process XLib::Process::find(const std::string& name)
     }
 
     PROCESSENTRY32 process_entry32;
+    process_entry32.dwSize = sizeof(process_entry32);
 
     if (Process32First(tool_handle, &process_entry32))
     {
