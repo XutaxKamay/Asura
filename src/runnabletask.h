@@ -68,7 +68,7 @@ namespace XLib
           process_handle,
           0,
           stack_size_T,
-          (LPTHREAD_START_ROUTINE)_routine_address,
+          view_as<LPTHREAD_START_ROUTINE>(_routine_address),
           0,
           0,
           view_as<PDWORD>(&_id));
@@ -81,18 +81,6 @@ namespace XLib
 
         CloseHandle(process_handle);
 #else
-        /**
-         * CLONE_PARENT would be optional.
-         * This is the minimalist:
-         * (CLONE_VM | CLONE_SIGHAND | CLONE_THREAD)
-         *
-         * ( CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SYSVSEM
-         * CLONE_SIGHAND | CLONE_THREAD
-         * CLONE_SETTLS | CLONE_PARENT_SETTID
-         * CLONE_CHILD_CLEARTID
-         * 0)
-         *
-         */
         auto base_stack = view_as<ptr_t>(
           syscall(__NR_rmmap,
                   _process_base.id(),
