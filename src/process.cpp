@@ -20,7 +20,7 @@ XLib::Process XLib::Process::find(const std::string& name)
 
     if (!tool_handle)
     {
-        return process;
+        goto end;
     }
 
     PROCESSENTRY32 process_entry32;
@@ -28,30 +28,19 @@ XLib::Process XLib::Process::find(const std::string& name)
 
     if (Process32First(tool_handle, &process_entry32))
     {
-        auto match_process = [&name, &process_entry32, &process]()
+        do
         {
             if (name.find(process_entry32.szExeFile) != std::string::npos)
             {
                 process = Process(process_entry32.th32ProcessID);
-                return true;
-            }
-
-            return false;
-        };
-
-        if (!match_process())
-        {
-            while (Process32Next(tool_handle, &process_entry32))
-            {
-                if (match_process())
-                {
-                    break;
-                }
+                break;
             }
         }
+        while (Process32Next(tool_handle, &process_entry32));
     }
 
     CloseHandle(tool_handle);
+
 #else
     for (auto&& entry : std::filesystem::directory_iterator("/proc"))
     {
@@ -68,6 +57,7 @@ XLib::Process XLib::Process::find(const std::string& name)
     }
 #endif
 
+end:
     if (process.id() == INVALID_PID)
     {
         XLIB_EXCEPTION("Couldn't find process: " + name);

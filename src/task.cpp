@@ -30,22 +30,19 @@ auto Task::list(ProcessBase processBase) -> tasks_t
 
     te32.dwSize = sizeof(THREADENTRY32);
 
-    if (!Thread32First(thread_handle_snapshot, &te32))
+    if (Thread32First(thread_handle_snapshot, &te32))
     {
-        CloseHandle(thread_handle_snapshot);
-        return tasks;
-    }
-
-    do
-    {
-        if (te32.th32OwnerProcessID == processBase.id())
+        do
         {
-            Task task(processBase, te32.th32ThreadID);
+            if (te32.th32OwnerProcessID == processBase.id())
+            {
+                Task task(processBase, te32.th32ThreadID);
 
-            tasks.push_back(task);
+                tasks.push_back(task);
+            }
         }
+        while (Thread32Next(thread_handle_snapshot, &te32));
     }
-    while (Thread32Next(thread_handle_snapshot, &te32));
 
     CloseHandle(thread_handle_snapshot);
 
