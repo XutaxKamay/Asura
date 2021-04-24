@@ -18,6 +18,7 @@
     #include <sys/uio.h>
     #include <unistd.h>
 #else
+    #include <tlhelp32.h>
     #include <windows.h>
 #endif
 
@@ -203,22 +204,12 @@ namespace XLib
                                      + std::to_string(size));
             }
 #else
-            auto process_handle = GetCurrentProcessId() == pid ?
-                                    GetCurrentProcess() :
-                                    OpenProcess(PROCESS_VM_OPERATION,
-                                                false,
-                                                pid);
 
-            if (process_handle == nullptr)
-            {
-                throw XLIB_EXCEPTION("Couldn't open process");
-            }
-
-            auto ret = ReadProcessMemory(process_handle,
-                                         view_as<ptr_t>(address),
-                                         result.data(),
-                                         result.size(),
-                                         nullptr);
+            auto ret = Toolhelp32ReadProcessMemory(pid,
+                                                   view_as<ptr_t>(address),
+                                                   result.data(),
+                                                   result.size(),
+                                                   nullptr);
 
             if (!ret)
             {
@@ -227,8 +218,6 @@ namespace XLib
                                      + " and size: "
                                      + std::to_string(size));
             }
-
-            CloseHandle(process_handle);
 #endif
 
             return result;
@@ -255,7 +244,8 @@ namespace XLib
 #else
             auto process_handle = GetCurrentProcessId() == pid ?
                                     GetCurrentProcess() :
-                                    OpenProcess(PROCESS_VM_OPERATION,
+                                    OpenProcess(PROCESS_VM_OPERATION
+                                                  | PROCESS_VM_WRITE,
                                                 false,
                                                 pid);
 
