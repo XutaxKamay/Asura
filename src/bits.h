@@ -2,6 +2,7 @@
 #define BITS_H
 
 #include <bitset>
+#include <climits>
 #include <cmath>
 
 #include "exception.h"
@@ -12,9 +13,9 @@ namespace XLib
     template <safesize_t pos, typename T = data_t>
     constexpr auto read_bit(T data)
     {
-        constexpr auto read_byte_pos = pos / 8;
+        constexpr auto read_byte_pos = pos / CHAR_BIT;
 
-        constexpr auto wanted_bit_value = (1 << (pos % 8));
+        constexpr auto wanted_bit_value = (1 << (pos % CHAR_BIT));
 
         auto byte_value = *view_as<byte_t*>(view_as<uintptr_t>(data)
                                             + read_byte_pos);
@@ -25,9 +26,9 @@ namespace XLib
     template <safesize_t pos, bool val, typename T = data_t>
     constexpr auto write_bit(T data)
     {
-        constexpr auto read_byte_pos = pos / 8;
+        constexpr auto read_byte_pos = pos / CHAR_BIT;
 
-        constexpr auto wanted_bit_value = (1 << (pos % 8));
+        constexpr auto wanted_bit_value = (1 << (pos % CHAR_BIT));
 
         auto byte_value = view_as<byte_t*>(view_as<uintptr_t>(data)
                                            + read_byte_pos);
@@ -45,9 +46,9 @@ namespace XLib
     template <typename T = data_t>
     constexpr auto read_bit(T data, safesize_t pos)
     {
-        auto read_byte_pos = pos / 8;
+        auto read_byte_pos = pos / CHAR_BIT;
 
-        auto wanted_bit_value = (1 << (pos % 8));
+        auto wanted_bit_value = (1 << (pos % CHAR_BIT));
 
         auto byte_value = *view_as<byte_t*>(view_as<uintptr_t>(data)
                                             + read_byte_pos);
@@ -58,9 +59,9 @@ namespace XLib
     template <bool val, typename T = data_t>
     constexpr auto write_bit(T data, safesize_t pos)
     {
-        auto read_byte_pos = pos / 8;
+        auto read_byte_pos = pos / CHAR_BIT;
 
-        auto wanted_bit_value = (1 << (pos % 8));
+        auto wanted_bit_value = (1 << (pos % CHAR_BIT));
 
         auto byte_value = view_as<byte_t*>(view_as<uintptr_t>(data)
                                            + read_byte_pos);
@@ -78,9 +79,9 @@ namespace XLib
     template <typename T = data_t>
     constexpr auto write_bit(T data, safesize_t pos, bool val)
     {
-        auto read_byte_pos = pos / 8;
+        auto read_byte_pos = pos / CHAR_BIT;
 
-        auto wanted_bit_value = (1 << (pos % 8));
+        auto wanted_bit_value = (1 << (pos % CHAR_BIT));
 
         auto byte_value = view_as<byte_t*>(view_as<uintptr_t>(data)
                                            + read_byte_pos);
