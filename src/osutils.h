@@ -196,6 +196,7 @@ namespace XLib
 
             munmap(file_header, st.st_size);
             throw XLIB_EXCEPTION("Cannot find function.");
+            return nullptr;
         }
 #else
         template <typename T>
