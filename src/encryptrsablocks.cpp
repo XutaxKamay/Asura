@@ -37,7 +37,7 @@ auto XLib::EncryptRSABlocks::encrypt(XLib::bytes_t bytes) -> bytes_t
     /* randomize last bytes */
     for (size_t i = writeBuffer.writeSize(); i < bytes.size(); i++)
     {
-        bytes[i] = byte_t(Integer(rng, 0, 255).ConvertToLong());
+        bytes[i] = view_as<byte_t>((Integer(rng, 0, 255).ConvertToLong()));
     }
 
     auto block_count_max = bytes.size() / min_size;

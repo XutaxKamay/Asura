@@ -195,13 +195,13 @@ void XLib::XKC<alphabet_T>::BinaryTree::insert(
     if (!parent->left)
     {
         parent->left = std::make_shared<Node>(
-          { parent->root, parent, value });
+          Node { parent->root, parent, value });
         return;
     }
     else if (!parent->right)
     {
         parent->right = std::make_shared<Node>(
-          { parent->root, parent, value });
+          Node { parent->root, parent, value });
         return;
     }
     else if (parent->left->count_subnodes()

@@ -57,7 +57,9 @@ XLib::Process XLib::Process::find(const std::string& name)
     }
 #endif
 
+#ifdef WINDOWS
 end:
+#endif
     if (process.id() == INVALID_PID)
     {
         XLIB_EXCEPTION("Couldn't find process: " + name);
