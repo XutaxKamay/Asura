@@ -78,9 +78,9 @@ XLIB_TEST_OBJ_RELEASE=$(subst .cpp,$(XLIB_OBJ_RELEASE_OUT),$(wildcard test/src/*
 XLIB_DEBUG:=$(XLIB_DEBUG).a
 XLIB_RELEASE:=$(XLIB_RELEASE).a
 
-CPPFLAGS_DEBUG:= -fPIC -static-libstdc++ -static-libgcc -std=c++2a -O0 -g -Wextra -W -Wall -Werror -Wl,--no-undefined -Isrc/ -Itest/src/ -I$(PREFIX)/include/ -L$(PREFIX)/lib/
+CPPFLAGS_DEBUG:= -Wno-deprecated-enum-enum-conversion -fPIC -static-libstdc++ -static-libgcc -std=c++2a -O0 -g -Wextra -W -Wall -Werror -Wl,--no-undefined -Isrc/ -Itest/src/ -I$(PREFIX)/include/ -L$(PREFIX)/lib/
 
-CPPFLAGS_RELEASE:= -fPIC -static-libstdc++ -static-libgcc -std=c++2a -Ofast -pipe $(DATARACES) -frename-registers -fomit-frame-pointer -s -Wextra -W -Wall -Werror -Wl,--no-undefined -Isrc/ -Itest/src/ -I$(PREFIX)/include/ -L$(PREFIX)/lib/
+CPPFLAGS_RELEASE:= -Wno-deprecated-enum-enum-conversion -fPIC -static-libstdc++ -static-libgcc -std=c++2a -Ofast -pipe $(DATARACES) -frename-registers -fomit-frame-pointer -s -Wextra -W -Wall -Werror -Wl,--no-undefined -Isrc/ -Itest/src/ -I$(PREFIX)/include/ -L$(PREFIX)/lib/
 
 all: xlib xlib_test
 
