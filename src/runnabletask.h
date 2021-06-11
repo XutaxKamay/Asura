@@ -59,7 +59,7 @@ namespace XLib
 
         if (!process_handle)
         {
-            throw XLIB_EXCEPTION("Could not get permissions to create a "
+            XLIB_EXCEPTION("Could not get permissions to create a "
                                  "new "
                                  "thread");
         }
@@ -76,7 +76,7 @@ namespace XLib
         if (_thread_handle == nullptr)
         {
             _id = INVALID_ID;
-            throw XLIB_EXCEPTION("Could not create thread");
+            XLIB_EXCEPTION("Could not create thread");
         }
 
         CloseHandle(process_handle);
@@ -93,7 +93,7 @@ namespace XLib
 
         if (base_stack == nullptr)
         {
-            throw XLIB_EXCEPTION("Could not allocate stack for the "
+            XLIB_EXCEPTION("Could not allocate stack for the "
                                  "thread");
         }
 
@@ -108,7 +108,7 @@ namespace XLib
 
         if (_id == INVALID_ID)
         {
-            throw XLIB_EXCEPTION("Could not create thread");
+            XLIB_EXCEPTION("Could not create thread");
         }
 #endif
     }
@@ -119,12 +119,12 @@ namespace XLib
 #ifdef WINDOWS
         if (!_thread_handle)
         {
-            throw XLIB_EXCEPTION("Thread did not start yet");
+            XLIB_EXCEPTION("Thread did not start yet");
         }
 
         if (!TerminateThread(_thread_handle, EXIT_CODE))
         {
-            throw XLIB_EXCEPTION("Could not terminate thread");
+            XLIB_EXCEPTION("Could not terminate thread");
         }
 
         CloseHandle(_thread_handle);
@@ -133,7 +133,7 @@ namespace XLib
 
         if (ret != 0)
         {
-            throw XLIB_EXCEPTION("Could not terminate thread");
+            XLIB_EXCEPTION("Could not terminate thread");
         }
 #endif
     }
@@ -144,7 +144,7 @@ namespace XLib
 #ifdef WINDOWS
         if (!_thread_handle)
         {
-            throw XLIB_EXCEPTION("Thread did not start yet");
+            XLIB_EXCEPTION("Thread did not start yet");
         }
 
         WaitForSingleObject(_thread_handle, INFINITE);

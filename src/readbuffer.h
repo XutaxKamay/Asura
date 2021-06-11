@@ -25,7 +25,7 @@ namespace XLib
         {
             if (_read_size >= maxSize())
             {
-                throw XLIB_EXCEPTION("Filled buffer");
+                XLIB_EXCEPTION("Filled buffer");
             }
 
             auto type = *this->shift<typesize_t*>(_read_size);
@@ -37,7 +37,7 @@ namespace XLib
                 /*
                  * Blame programmer for not writing the buffer correctly.
                  */
-                throw XLIB_EXCEPTION(std::string(
+                XLIB_EXCEPTION(std::string(
                   "Expected type: " + get_variable_type_str(typesize_T)
                   + "when type is instead "
                   + get_variable_type_str(type)));

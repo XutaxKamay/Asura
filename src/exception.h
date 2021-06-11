@@ -20,7 +20,7 @@ namespace XLib
     };
 
 #define XLIB_EXCEPTION(msg)                                              \
-    XLib::Exception(std::string(CURRENT_CONTEXT) + msg)
+    throw XLib::Exception(std::string(CURRENT_CONTEXT) + msg)
 };
 
 #endif

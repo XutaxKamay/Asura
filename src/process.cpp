@@ -81,7 +81,7 @@ auto XLib::Process::ProcessName(pid_t pid) -> std::string
           result.size())
         < 0)
     {
-        throw XLIB_EXCEPTION("Could not read symlink.");
+        XLIB_EXCEPTION("Could not read symlink.");
     }
 #else
     result.reserve(MAX_PATH);
@@ -93,7 +93,7 @@ auto XLib::Process::ProcessName(pid_t pid) -> std::string
 
     if (!process_handle)
     {
-        throw XLIB_EXCEPTION("Could not get process handle.");
+        XLIB_EXCEPTION("Could not get process handle.");
     }
 
     if (GetModuleFileNameExA(process_handle,
@@ -102,7 +102,7 @@ auto XLib::Process::ProcessName(pid_t pid) -> std::string
                              result.size())
         <= 0)
     {
-        throw XLIB_EXCEPTION("Could not read process path.");
+        XLIB_EXCEPTION("Could not read process path.");
     }
 
     CloseHandle(process_handle);

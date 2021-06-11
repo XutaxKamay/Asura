@@ -13,7 +13,7 @@ XLib::PatternByte::PatternByte(std::vector<Value> values,
 {
     if (!isValid())
     {
-        throw XLIB_EXCEPTION("Invalid pattern.");
+        XLIB_EXCEPTION("Invalid pattern.");
     }
 }
 

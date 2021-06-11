@@ -38,7 +38,7 @@ auto ProcessMemoryMap::refresh() -> void
 
     if (!file_memory_map.is_open())
     {
-        throw XLIB_EXCEPTION("Couldn't open /proc/"
+        XLIB_EXCEPTION("Couldn't open /proc/"
                              + std::to_string(_process_base.id())
                              + "/maps");
     }
@@ -103,7 +103,7 @@ auto ProcessMemoryMap::refresh() -> void
 
     if (process_handle == nullptr)
     {
-        throw XLIB_EXCEPTION("Couldn't open process from pid: "
+        XLIB_EXCEPTION("Couldn't open process from pid: "
                              + std::to_string(_process_base.id()));
     }
 

@@ -96,7 +96,7 @@ namespace XLib
 
             if (found_info == nullptr)
             {
-                throw XLIB_EXCEPTION("Couldn't find module in "
+                XLIB_EXCEPTION("Couldn't find module in "
                                      "runtime.");
             }
 
@@ -104,7 +104,7 @@ namespace XLib
 
             if (fd < 0)
             {
-                throw XLIB_EXCEPTION("Couldn't open module in "
+                XLIB_EXCEPTION("Couldn't open module in "
                                      "runtime.");
             }
 
@@ -113,7 +113,7 @@ namespace XLib
             if (fstat(fd, &st) < 0)
             {
                 close(fd);
-                throw XLIB_EXCEPTION("Couldn't fstat module in "
+                XLIB_EXCEPTION("Couldn't fstat module in "
                                      "runtime.");
             }
 
@@ -126,7 +126,7 @@ namespace XLib
                 || file_header->e_shstrndx == SHN_UNDEF)
             {
                 munmap(file_header, st.st_size);
-                throw XLIB_EXCEPTION("No symbols.");
+                XLIB_EXCEPTION("No symbols.");
             }
 
             auto sections = view_as<ElfW(Shdr*)>(
@@ -161,7 +161,7 @@ namespace XLib
             if (section_str_tab == nullptr && section_sym_tab == nullptr)
             {
                 munmap(file_header, st.st_size);
-                throw XLIB_EXCEPTION("No symbols.");
+                XLIB_EXCEPTION("No symbols.");
             }
 
             auto sym_tab = view_as<ElfW(Sym*)>(
@@ -195,7 +195,7 @@ namespace XLib
             }
 
             munmap(file_header, st.st_size);
-            throw XLIB_EXCEPTION("Cannot find function.");
+            XLIB_EXCEPTION("Cannot find function.");
             return nullptr;
         }
 #else
@@ -214,7 +214,7 @@ namespace XLib
                 return view_as<T>(sym_info.Address);
             }
 
-            throw XLIB_EXCEPTION("Couldn't find symbol in runtime.");
+            XLIB_EXCEPTION("Couldn't find symbol in runtime.");
         }
 #endif
     };

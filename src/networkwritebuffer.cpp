@@ -11,7 +11,7 @@ void XLib::NetworkWriteBuffer::writeBit(bool value)
 {
     if (_written_bits / 8 >= maxSize())
     {
-        throw XLIB_EXCEPTION("Filled buffer");
+        XLIB_EXCEPTION("Filled buffer");
     }
 
     write_bit(data(), _written_bits++, value);

@@ -190,7 +190,7 @@ namespace XLib
 
             if (!area)
             {
-                throw XLIB_EXCEPTION("Could not find area");
+                XLIB_EXCEPTION("Could not find area");
             }
 
             area->protectionFlags() |= MemoryArea::ProtectionFlags::W;
