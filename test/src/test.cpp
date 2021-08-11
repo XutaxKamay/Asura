@@ -473,11 +473,11 @@ auto XLib::Test::run() -> void
     ConsoleOutput("size of orginal: ")
       << random_bytes.size() << std::endl;
 
-    auto encoded = XKC<byte_t>::encode(random_bytes);
+    auto encoded = XKC<uint16_t>::encode(random_bytes);
 
     ConsoleOutput("size of encoded: ") << encoded.size() << std::endl;
 
-    auto decoded = XKC<byte_t>::decode(encoded);
+    auto decoded = XKC<uint16_t>::decode(encoded);
 
     ConsoleOutput("size of decoded: ")
       << decoded.size() << " memcmp: "
