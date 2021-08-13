@@ -342,7 +342,8 @@ std::string XLib::XKC<alphabet_T>::BinaryTree::dot_format(
 
         result += depth;
 
-        for (size_t depth = 0; depth < parent->depth(); depth++)
+        for (size_t depth_bit = 0; depth_bit < parent->depth();
+             depth_bit++)
         {
             result += "x";
         }
@@ -367,7 +368,8 @@ std::string XLib::XKC<alphabet_T>::BinaryTree::dot_format(
 
         result += depth;
 
-        for (size_t depth = 0; depth < parent->left->depth(); depth++)
+        for (size_t depth_bit = 0; depth_bit < parent->left->depth();
+             depth_bit++)
         {
             result += "x";
         }
@@ -398,7 +400,8 @@ std::string XLib::XKC<alphabet_T>::BinaryTree::dot_format(
 
         result += depth;
 
-        for (size_t depth = 0; depth < parent->depth(); depth++)
+        for (size_t depth_bit = 0; depth_bit < parent->depth();
+             depth_bit++)
         {
             result += "x";
         }
@@ -423,7 +426,8 @@ std::string XLib::XKC<alphabet_T>::BinaryTree::dot_format(
 
         result += depth;
 
-        for (size_t depth = 0; depth < parent->right->depth(); depth++)
+        for (size_t depth_bit = 0; depth_bit < parent->right->depth();
+             depth_bit++)
         {
             result += "x";
         }
