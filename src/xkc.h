@@ -287,7 +287,7 @@ void XLib::XKC<alphabet_T>::BinaryTree::find_value(
     if (root->height() < pathInfo.depth)
     {
         XLIB_EXCEPTION("Can't go deeper than the height of the "
-                             "tree.");
+                       "tree.");
     }
 
     std::shared_ptr<Node> current_node = root;
@@ -722,7 +722,7 @@ XLib::bytes_t XLib::XKC<alphabet_T>::decode(XLib::data_t data,
                 if (read_bytes >= size)
                 {
                     XLIB_EXCEPTION("Too much bytes decoded.. "
-                                         "Something is wrong.");
+                                   "Something is wrong.");
                 }
             }
 

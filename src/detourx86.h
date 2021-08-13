@@ -162,8 +162,7 @@ namespace XLib
         constexpr auto generateNewFuncType();
 
       public:
-        using cbfunc_t = typename decltype(
-          generateCallBackFuncType())::type;
+        using cbfunc_t = typename decltype(generateCallBackFuncType())::type;
         using func_t = typename decltype(generateNewFuncType())::type;
 
 #else /* Otherwise it should be always the same convention */

@@ -199,9 +199,8 @@ namespace XLib
             if (ret != view_as<decltype(ret)>(size))
             {
                 XLIB_EXCEPTION("process_vm_readv failed with "
-                                     + std::to_string(address)
-                                     + " and size: "
-                                     + std::to_string(size));
+                               + std::to_string(address)
+                               + " and size: " + std::to_string(size));
             }
 #else
 
@@ -214,9 +213,8 @@ namespace XLib
             if (!ret)
             {
                 XLIB_EXCEPTION("ReadProcessMemory failed with "
-                                     + std::to_string(address)
-                                     + " and size: "
-                                     + std::to_string(size));
+                               + std::to_string(address)
+                               + " and size: " + std::to_string(size));
             }
 #endif
 

@@ -97,7 +97,7 @@ namespace XLib
             if (found_info == nullptr)
             {
                 XLIB_EXCEPTION("Couldn't find module in "
-                                     "runtime.");
+                               "runtime.");
             }
 
             auto fd = open(found_info->dlpi_name, O_RDONLY);
@@ -105,7 +105,7 @@ namespace XLib
             if (fd < 0)
             {
                 XLIB_EXCEPTION("Couldn't open module in "
-                                     "runtime.");
+                               "runtime.");
             }
 
             struct stat st;
@@ -114,7 +114,7 @@ namespace XLib
             {
                 close(fd);
                 XLIB_EXCEPTION("Couldn't fstat module in "
-                                     "runtime.");
+                               "runtime.");
             }
 
             auto file_header = view_as<ElfW(Ehdr*)>(

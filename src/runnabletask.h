@@ -60,8 +60,8 @@ namespace XLib
         if (!process_handle)
         {
             XLIB_EXCEPTION("Could not get permissions to create a "
-                                 "new "
-                                 "thread");
+                           "new "
+                           "thread");
         }
 
         _thread_handle = CreateRemoteThread(
@@ -94,7 +94,7 @@ namespace XLib
         if (base_stack == nullptr)
         {
             XLIB_EXCEPTION("Could not allocate stack for the "
-                                 "thread");
+                           "thread");
         }
 
         _id = syscall(__NR_rclone,

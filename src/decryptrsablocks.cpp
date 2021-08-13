@@ -23,7 +23,7 @@ auto XLib::DecryptRSABlocks::decrypt(XLib::bytes_t bytes) -> bytes_t
     if (bytes.size() % min_size != 0)
     {
         XLIB_EXCEPTION("The size of the buffer must be a "
-                             "multiple of the key size\n");
+                       "multiple of the key size\n");
     }
 
     auto block_count_max = bytes.size() / min_size;
