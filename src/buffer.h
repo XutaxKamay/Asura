@@ -132,6 +132,7 @@ namespace XLib
     class Buffer
     {
       public:
+        Buffer(size_t maxSize);
         Buffer(data_t data = nullptr, safesize_t maxSize = 0);
         ~Buffer();
 

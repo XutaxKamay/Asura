@@ -35,6 +35,12 @@ std::string XLib::get_variable_type_str(typesize_t typeSize)
     }
 }
 
+Buffer::Buffer(safesize_t maxSize)
+ : _data(nullptr), _max_size(maxSize), _allocated(true)
+{
+    _data = alloc<data_t>(_max_size);
+}
+
 Buffer::Buffer(data_t data, safesize_t maxSize)
  : _data(nullptr), _max_size(maxSize), _allocated(false)
 {
