@@ -6,6 +6,7 @@
 #include "types.h"
 
 #include <algorithm>
+#include <concepts>
 #include <limits>
 #include <memory>
 
@@ -14,45 +15,29 @@
  **/
 namespace XLib
 {
-    template <typename alphabet_T = byte_t>
+    template <typename T = byte_t>
+    concept XKCAlphabetType = std::is_same<T, byte_t>::value || std::
+      is_same<T, uint16_t>::value || std::is_same<T, uint32_t>::value;
+
+    template <XKCAlphabetType T>
     class XKC
     {
       public:
-        static auto constexpr decide_alphabet_type()
-        {
-            if constexpr (sizeof(alphabet_T) == 1)
-            {
-                return type_wrapper<int16_t>;
-            }
-            else if constexpr (sizeof(alphabet_T) == 2)
-            {
-                return type_wrapper<int32_t>;
-            }
-            else if constexpr (sizeof(alphabet_T) == 4)
-            {
-                return type_wrapper<int64_t>;
-            }
-            else
-            {
-                static_assert("Not supported");
-            }
-        }
+        /* 64 bits because of -1 */
+        using value_t = int64_t;
 
-        using value_t = typename decltype(decide_alphabet_type())::type;
-
-        using bit_path_t = std::bitset<
-          std::numeric_limits<alphabet_T>::max() + 1>;
+        using bit_path_t = std::bitset<std::numeric_limits<T>::max() + 1>;
 
         struct Occurrence
         {
-            alphabet_T letter_value;
+            T letter_value;
             /* let's limit the occurences to 256 times */
             byte_t count = 0;
         };
 
         struct Letter
         {
-            alphabet_T value;
+            T value;
             size_t freq = 0;
         };
 
@@ -64,7 +49,7 @@ namespace XLib
 
         struct PathInfoResult : PathInfo
         {
-            alphabet_T letter_value;
+            T letter_value;
         };
 
         struct BinaryTree
@@ -91,14 +76,14 @@ namespace XLib
 
             BinaryTree();
 
-            void insert(std::shared_ptr<Node> parent, alphabet_T value);
-            void insert(alphabet_T value);
+            void insert(std::shared_ptr<Node> parent, T value);
+            void insert(T value);
 
             bool path_info(PathInfo& pathInfo,
                            std::shared_ptr<Node> parent,
-                           alphabet_T value);
+                           T value);
 
-            bool path_info(PathInfo& pathInfo, alphabet_T value);
+            bool path_info(PathInfo& pathInfo, T value);
 
             void find_value(PathInfoResult& pathInfo);
 
@@ -120,8 +105,8 @@ namespace XLib
     };
 };
 
-template <typename alphabet_T>
-size_t XLib::XKC<alphabet_T>::BinaryTree::Node::count_subnodes()
+template <XLib::XKCAlphabetType T>
+size_t XLib::XKC<T>::BinaryTree::Node::count_subnodes()
 {
     size_t result = 0;
 
@@ -140,8 +125,8 @@ size_t XLib::XKC<alphabet_T>::BinaryTree::Node::count_subnodes()
     return result;
 }
 
-template <typename alphabet_T>
-size_t XLib::XKC<alphabet_T>::BinaryTree::Node::depth()
+template <XLib::XKCAlphabetType T>
+size_t XLib::XKC<T>::BinaryTree::Node::depth()
 {
     size_t result = 0;
     auto node     = parent;
@@ -155,8 +140,8 @@ size_t XLib::XKC<alphabet_T>::BinaryTree::Node::depth()
     return result;
 }
 
-template <typename alphabet_T>
-size_t XLib::XKC<alphabet_T>::BinaryTree::Node::height()
+template <XLib::XKCAlphabetType T>
+size_t XLib::XKC<T>::BinaryTree::Node::height()
 {
     size_t height_left = 0, height_right = 0;
 
@@ -175,9 +160,8 @@ size_t XLib::XKC<alphabet_T>::BinaryTree::Node::height()
     return std::max(height_left, height_right);
 }
 
-template <typename alphabet_T>
-XLib::XKC<alphabet_T>::BinaryTree::BinaryTree()
- : root(std::make_shared<Node>())
+template <XLib::XKCAlphabetType T>
+XLib::XKC<T>::BinaryTree::BinaryTree() : root(std::make_shared<Node>())
 {
     root->root = root;
 }
@@ -187,10 +171,9 @@ XLib::XKC<alphabet_T>::BinaryTree::BinaryTree()
  * so the insertion of the most frequebnt value is the highest
  * in the tree
  */
-template <typename alphabet_T>
-void XLib::XKC<alphabet_T>::BinaryTree::insert(
-  std::shared_ptr<Node> parent,
-  alphabet_T value)
+template <XLib::XKCAlphabetType T>
+void XLib::XKC<T>::BinaryTree::insert(std::shared_ptr<Node> parent,
+                                      T value)
 {
     if (!parent->left)
     {
@@ -215,8 +198,8 @@ void XLib::XKC<alphabet_T>::BinaryTree::insert(
     }
 }
 
-template <typename alphabet_T>
-void XLib::XKC<alphabet_T>::BinaryTree::insert(alphabet_T value)
+template <XLib::XKCAlphabetType T>
+void XLib::XKC<T>::BinaryTree::insert(T value)
 {
     if (root->value == Node::Value::INVALID)
     {
@@ -228,17 +211,16 @@ void XLib::XKC<alphabet_T>::BinaryTree::insert(alphabet_T value)
     }
 }
 
-template <typename alphabet_T>
-XLib::bytes_t XLib::XKC<alphabet_T>::encode(XLib::bytes_t bytes)
+template <XLib::XKCAlphabetType T>
+XLib::bytes_t XLib::XKC<T>::encode(XLib::bytes_t bytes)
 {
     return encode(bytes.data(), bytes.size());
 }
 
-template <typename alphabet_T>
-bool XLib::XKC<alphabet_T>::BinaryTree::path_info(
-  PathInfo& pathInfo,
-  std::shared_ptr<Node> parent,
-  alphabet_T value)
+template <XLib::XKCAlphabetType T>
+bool XLib::XKC<T>::BinaryTree::path_info(PathInfo& pathInfo,
+                                         std::shared_ptr<Node> parent,
+                                         T value)
 {
     if (parent == nullptr)
     {
@@ -273,16 +255,14 @@ bool XLib::XKC<alphabet_T>::BinaryTree::path_info(
     return found_right;
 }
 
-template <typename alphabet_T>
-bool XLib::XKC<alphabet_T>::BinaryTree::path_info(PathInfo& pathInfo,
-                                                  alphabet_T value)
+template <XLib::XKCAlphabetType T>
+bool XLib::XKC<T>::BinaryTree::path_info(PathInfo& pathInfo, T value)
 {
     return path_info(pathInfo, root, value);
 }
 
-template <typename alphabet_T>
-void XLib::XKC<alphabet_T>::BinaryTree::find_value(
-  PathInfoResult& pathInfo)
+template <XLib::XKCAlphabetType T>
+void XLib::XKC<T>::BinaryTree::find_value(PathInfoResult& pathInfo)
 {
     if (root->height() < pathInfo.depth)
     {
@@ -312,8 +292,8 @@ void XLib::XKC<alphabet_T>::BinaryTree::find_value(
     pathInfo.letter_value = current_node->value;
 }
 
-template <typename alphabet_T>
-std::string XLib::XKC<alphabet_T>::BinaryTree::dot_format(
+template <XLib::XKCAlphabetType T>
+std::string XLib::XKC<T>::BinaryTree::dot_format(
   std::shared_ptr<Node> parent)
 {
     std::string result;
@@ -440,8 +420,8 @@ std::string XLib::XKC<alphabet_T>::BinaryTree::dot_format(
     return result;
 }
 
-template <typename alphabet_T>
-std::string XLib::XKC<alphabet_T>::BinaryTree::dot_format()
+template <XLib::XKCAlphabetType T>
+std::string XLib::XKC<T>::BinaryTree::dot_format()
 {
     std::string result = "strict graph {";
 
@@ -452,18 +432,17 @@ std::string XLib::XKC<alphabet_T>::BinaryTree::dot_format()
     return result;
 }
 
-template <typename alphabet_T>
-XLib::bytes_t XLib::XKC<alphabet_T>::encode(XLib::data_t data,
-                                            size_t size)
+template <XLib::XKCAlphabetType T>
+XLib::bytes_t XLib::XKC<T>::encode(XLib::data_t data, size_t size)
 {
     bytes_t result;
     alphabet_t alphabet;
     occurrences_t occurrences;
 
-    auto values        = view_as<alphabet_T*>(data);
+    auto values        = view_as<T*>(data);
     size_t value_index = 0;
 
-    auto max_values = size / sizeof(alphabet_T);
+    auto max_values = size / sizeof(T);
 
     /**
      * Store contiguous values
@@ -559,9 +538,9 @@ XLib::bytes_t XLib::XKC<alphabet_T>::encode(XLib::data_t data,
 
     for (auto&& letter : alphabet)
     {
-        auto letter_value = view_as<alphabet_T*>(&letter.value);
+        auto letter_value = view_as<T*>(&letter.value);
 
-        for (size_t i = 0; i < sizeof(alphabet_T); i++)
+        for (size_t i = 0; i < sizeof(T); i++)
         {
             result.push_back(letter_value[i]);
         }
@@ -647,15 +626,14 @@ XLib::bytes_t XLib::XKC<alphabet_T>::encode(XLib::data_t data,
     return result;
 }
 
-template <typename alphabet_T>
-XLib::bytes_t XLib::XKC<alphabet_T>::decode(XLib::bytes_t bytes)
+template <XLib::XKCAlphabetType T>
+XLib::bytes_t XLib::XKC<T>::decode(XLib::bytes_t bytes)
 {
     return decode(bytes.data(), bytes.size());
 }
 
-template <typename alphabet_T>
-XLib::bytes_t XLib::XKC<alphabet_T>::decode(XLib::data_t data,
-                                            size_t size)
+template <XLib::XKCAlphabetType T>
+XLib::bytes_t XLib::XKC<T>::decode(XLib::data_t data, size_t size)
 {
     bytes_t result;
 
@@ -680,8 +658,8 @@ XLib::bytes_t XLib::XKC<alphabet_T>::decode(XLib::data_t data,
     for (size_t alphabet_index = 0; alphabet_index < alphabet_size;
          alphabet_index++)
     {
-        auto letter_value = *view_as<alphabet_T*>(&data[read_bytes]);
-        read_bytes += sizeof(alphabet_T);
+        auto letter_value = *view_as<T*>(&data[read_bytes]);
+        read_bytes += sizeof(T);
 
         alphabet.push_back({ letter_value });
     }
@@ -770,3 +748,4 @@ XLib::bytes_t XLib::XKC<alphabet_T>::decode(XLib::data_t data,
 }
 
 #endif
+
