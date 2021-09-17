@@ -154,8 +154,10 @@ auto XLib::Test::run() -> void
 
     using VAPI_t = VirtualTable<Test::API>;
 
-    VAPI_t* api = view_as<VAPI_t*>(&g_API);
-    api->callVFunc<0, void>();
+    VAPI_t* api   = view_as<VAPI_t*>(&g_API);
+    auto vptr_api = *view_as<ptr_t**>(api);
+
+    api->callVFunc<0, void>(vptr_api);
 
     //     mapf_t flags;
     //
@@ -194,12 +196,9 @@ auto XLib::Test::run() -> void
     //         }
     //     };
 
-    api->hook<0>(vfunc_hook /* , pre_hook, post_hook */);
+    hook_vfunc<0>(vptr_api, vfunc_hook /* , pre_hook, post_hook */);
 
-    api->callVFunc<0, void>();
-
-    ConsoleOutput("Number of virtual funcs: ")
-      << api->countVFuncs() << std::endl;
+    api->callVFunc<0, void>(vptr_api);
 
     ptr_t shellcode_address = nullptr;
     auto mmap               = Process::self().mmap();

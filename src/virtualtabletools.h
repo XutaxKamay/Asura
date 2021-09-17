@@ -7,268 +7,167 @@
 
 namespace XLib
 {
-    using vfunc_t  = ptr_t;
-    using vfuncs_t = std::vector<vfunc_t>;
+    /**
+     * A class can have multiple vtables,
+     * so it is not always the first member of a class.
+     */
 
-    template <typename T = ptr_t>
-    constexpr auto vtable(T classPtr)
-    {
-        /* vtable is stored inside the first member of the class */
-        return *view_as<ptr_t**>(classPtr);
-    }
+    using vfunc_t                  = ptr_t;
+    using vfuncs_t                 = std::vector<vfunc_t>;
+    using pre_or_post_hook_vfunc_t = std::function<void(ptr_t funcPtr,
+                                                        ptr_t newFuncPtr)>;
 
     template <safesize_t index_T, typename T = ptr_t>
-    constexpr inline auto view_vfunc_as(ptr_t classPtr)
+    constexpr inline auto view_vfunc_as(ptr_t* vptr)
     {
-        return view_as<T>(vtable(classPtr)[index_T]);
+        return view_as<T>(vptr[index_T]);
     }
 
     template <typename T = ptr_t>
-    constexpr inline auto view_vfunc_dyn_index_as(ptr_t classPtr,
+    constexpr inline auto view_vfunc_dyn_index_as(ptr_t* vptr,
                                                   safesize_t index)
     {
-        return view_as<T>(vtable(classPtr)[index]);
-    }
-
-    template <safesize_t index_T, typename T = ptr_t>
-    constexpr inline auto vfunc_ptr(ptr_t classPtr)
-    {
-        return view_as<T>(&vtable(classPtr)[index_T]);
-    }
-
-    template <typename T = ptr_t>
-    constexpr inline auto vfunc_ptr_dyn_index(ptr_t classPtr,
-                                              safesize_t index)
-    {
-        return view_as<T>(&vtable(classPtr)[index]);
+        return view_as<T>(vptr[index]);
     }
 
     template <safesize_t index_T,
               typename ret_type_T = void,
               typename... args_T>
-    constexpr inline auto vfunc(ptr_t classPtr)
+    constexpr inline auto vfunc(ptr_t* vptr)
     {
 #ifdef WINDOWS
         return view_vfunc_as<index_T,
                              ret_type_T(__thiscall*)(ptr_t, args_T...)>(
-          classPtr);
+          vptr);
 #else
         return view_vfunc_as<index_T, ret_type_T (*)(ptr_t, args_T...)>(
-          classPtr);
+          vptr);
 #endif
     }
 
     template <typename ret_type_T = void, typename... args_T>
-    constexpr inline auto vfunc_dyn_index(ptr_t classPtr,
-                                          safesize_t index)
+    constexpr inline auto vfunc_dyn_index(ptr_t vptr, safesize_t index)
     {
 #ifdef WINDOWS
         return view_vfunc_dyn_index_as<ret_type_T(
-          __thiscall*)(ptr_t, args_T...)>(classPtr, index);
+          __thiscall*)(ptr_t, args_T...)>(vptr, index);
 #else
         return view_vfunc_dyn_index_as<ret_type_T (*)(ptr_t, args_T...)>(
-          classPtr,
+          vptr,
           index);
 #endif
+    }
+
+    /**
+     * Used for hooking
+     */
+    template <safesize_t index_T, typename T = ptr_t>
+    constexpr inline auto vfunc_ptr(ptr_t* vptr)
+    {
+        return view_as<T>(&vptr[index_T]);
+    }
+
+    template <typename T = ptr_t>
+    constexpr inline auto vfunc_ptr_dyn_index(ptr_t* vptr,
+                                              safesize_t index)
+    {
+        return view_as<T>(&vptr[index]);
     }
 
     template <safesize_t index_T,
               typename ret_type_T = void,
               typename... args_T>
-    constexpr inline auto call_vfunc(ptr_t classPtr, args_T... args)
+    constexpr inline auto call_vfunc(ptr_t classPtr,
+                                     ptr_t* vptr,
+                                     args_T... args)
     {
-        return vfunc<index_T, ret_type_T, args_T...>(classPtr)(classPtr,
-                                                               args...);
+        return vfunc<index_T, ret_type_T, args_T...>(vptr)(classPtr,
+                                                           args...);
     }
 
     template <typename ret_type_T = void, typename... args_T>
     constexpr inline auto call_vfunc_dyn_index(ptr_t classPtr,
+                                               ptr_t* vptr,
                                                safesize_t index,
                                                args_T... args)
     {
-        return vfunc_dyn_index<ret_type_T, args_T...>(classPtr,
+        return vfunc_dyn_index<ret_type_T, args_T...>(vptr,
                                                       index)(classPtr,
                                                              args...);
     }
 
     template <class T>
-    constexpr inline auto construct_vtable_from_vfuncs(
-      const vfuncs_t& vfuncs,
-      safesize_t classSize = 0)
-    {
-        using class_ptr_t = std::unique_ptr<T*>;
-
-        auto classPtr = class_ptr_t(classSize == 0 ? new T :
-                                                     alloc(classSize));
-
-        auto vfuncsInsideVTable = view_as<ptr_t*>(
-          alloc(vfuncs.size() * sizeof(vfunc_t)));
-
-        /**
-         * Setup hidden _vptr member
-         */
-        *view_as<ptr_t*>(classPtr) = vfuncsInsideVTable;
-
-        for (auto&& vfunc : vfuncs)
-        {
-            *vfuncsInsideVTable = vfunc;
-
-            vfuncsInsideVTable++;
-        }
-
-        return classPtr;
-    }
-
-    template <class T>
     class VirtualTable : public T
     {
-        using pre_or_post_hook_func_t = std::function<
-          void(ptr_t funcPtr, ptr_t newFuncPtr)>;
-
       public:
         template <safesize_t index_T,
                   typename ret_type_T = void,
                   typename... args_T>
-        constexpr inline auto callVFunc(args_T... args)
+        constexpr inline auto callVFunc(ptr_t* vptr, args_T... args)
         {
             return call_vfunc<index_T, ret_type_T, args_T...>(this,
+                                                              vptr,
                                                               args...);
         }
 
         template <typename ret_type_T = void, typename... args_T>
-        constexpr inline auto callVFunc(safesize_t index, args_T... args)
+        constexpr inline auto callVfuncDynIndex(ptr_t* vptr,
+                                                safesize_t index,
+                                                args_T... args)
         {
-            return call_vfunc_dyn_index<ret_type_T, args_T...>(this,
-                                                               index,
-                                                               args...);
+            return call_vfunc_dyn_index<ret_type_T, args_T...>(
+              vptr,
+              index)(this, vptr, index, args...);
         }
-
-        template <safesize_t index_T,
-                  typename ret_type_T = void,
-                  typename... args_T>
-        constexpr inline auto VFunc()
-        {
-            return vfunc<index_T, ret_type_T, args_T...>(this);
-        }
-
-        template <typename ret_type_T = void, typename... args_T>
-        constexpr inline auto VFuncDynIndex(safesize_t index)
-        {
-            return vfunc_dyn_index<ret_type_T, args_T...>(this, index);
-        }
-
-        template <safesize_t index_T, typename T2 = ptr_t>
-        constexpr inline auto ViewVFuncAs()
-        {
-            return view_vfunc_as<index_T, T2>(this);
-        }
-
-        template <typename T2 = ptr_t>
-        constexpr inline auto ViewVFuncDynIndexAs(safesize_t index)
-        {
-            return view_vfunc_dyn_index_as<T2>(this, index);
-        }
-
-        template <safesize_t index_T, typename T2 = ptr_t>
-        constexpr inline auto VFuncPtr()
-        {
-            return vfunc_ptr<index_T, T2>(this);
-        }
-
-        template <typename T2 = ptr_t>
-        constexpr inline auto VFuncPtrDynIndex(safesize_t index)
-        {
-            return vfunc_ptr_dyn_index<T2>(this, index);
-        }
-
-        template <safesize_t index_T, typename T2 = ptr_t>
-        inline auto hook(T2 newFuncPtr,
-                         pre_or_post_hook_func_t pre  = nullptr,
-                         pre_or_post_hook_func_t post = nullptr)
-        {
-            auto funcPtr = VFuncPtr<index_T, T2*>();
-            mapf_t flags;
-            std::shared_ptr<ProcessMemoryArea> area;
-
-            if (funcPtr && *funcPtr && newFuncPtr)
-            {
-                if (pre)
-                {
-                    pre(view_as<ptr_t>(funcPtr),
-                        view_as<ptr_t>(newFuncPtr));
-                }
-                else
-                {
-                    auto mmap = Process::self().mmap();
-
-                    area = mmap.search(funcPtr);
-
-                    flags = area->protectionFlags().cachedValue();
-
-                    area->protectionFlags() = MemoryArea::
-                      ProtectionFlags::RWX;
-                }
-
-                /* __builtin_trap(); */
-
-                *funcPtr = newFuncPtr;
-
-                if (post)
-                {
-                    post(view_as<ptr_t>(funcPtr),
-                         view_as<ptr_t>(newFuncPtr));
-                }
-                else
-                {
-                    area->protectionFlags() = flags;
-                }
-
-                return true;
-            }
-
-            return false;
-        }
-
-        template <typename T2 = ptr_t>
-        constexpr inline auto _vptr()
-        {
-            return XLib::vtable<T2>(this);
-        }
-
-        auto listVFuncs() -> vfuncs_t;
-        auto countVFuncs() -> safesize_t;
     };
 
-    template <class T>
-    auto VirtualTable<T>::countVFuncs() -> safesize_t
+    template <safesize_t index_T, typename T2 = ptr_t>
+    inline auto hook_vfunc(ptr_t* vptr,
+                           T2 newFuncPtr,
+                           pre_or_post_hook_vfunc_t pre  = nullptr,
+                           pre_or_post_hook_vfunc_t post = nullptr)
     {
-        auto vtable = _vptr();
+        auto funcPtr = vfunc_ptr<index_T, T2*>(vptr);
 
-        safesize_t count = 0;
+        mapf_t flags;
+        std::shared_ptr<ProcessMemoryArea> area;
 
-        while (vtable[count])
+        if (funcPtr && *funcPtr && newFuncPtr)
         {
-            count++;
+            if (pre)
+            {
+                pre(view_as<ptr_t>(funcPtr), view_as<ptr_t>(newFuncPtr));
+            }
+            else
+            {
+                auto mmap = Process::self().mmap();
+
+                area = mmap.search(funcPtr);
+
+                flags = area->protectionFlags().cachedValue();
+
+                area->protectionFlags() = MemoryArea::ProtectionFlags::RWX;
+            }
+
+            /* __builtin_trap(); */
+
+            *funcPtr = newFuncPtr;
+
+            if (post)
+            {
+                post(view_as<ptr_t>(funcPtr), view_as<ptr_t>(newFuncPtr));
+            }
+            else
+            {
+                area->protectionFlags() = flags;
+            }
+
+            return true;
         }
 
-        return count;
+        return false;
     }
 
-    template <class T>
-    auto VirtualTable<T>::listVFuncs() -> vfuncs_t
-    {
-        vfuncs_t vfuncs;
-
-        auto vtable = _vptr();
-
-        do
-        {
-            vfuncs.push_back(view_as<vfunc_t>(*vtable));
-        }
-        while (++vtable);
-
-        return vfuncs;
-    }
 } // namespace XLib
 
 #endif // VIRTUALTABLETOOLS_H
