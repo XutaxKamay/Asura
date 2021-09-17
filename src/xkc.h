@@ -748,4 +748,3 @@ XLib::bytes_t XLib::XKC<T>::decode(XLib::data_t data, size_t size)
 }
 
 #endif
-
