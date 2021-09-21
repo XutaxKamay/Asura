@@ -54,8 +54,6 @@ namespace XLib
 
         struct BinaryTree
         {
-            struct Node;
-
             struct Node
             {
                 enum Value : value_t
@@ -642,7 +640,7 @@ XLib::bytes_t XLib::XKC<T>::decode(XLib::data_t data, size_t size)
     auto written_bits = *view_as<uint32_t*>(view_as<uintptr_t>(data)
                                             + size - sizeof(uint32_t));
 
-    if (written_bits >= size * CHAR_BIT)
+    if (written_bits / CHAR_BIT >= size)
     {
         XLIB_EXCEPTION("there's too much bits to decode.");
     }
