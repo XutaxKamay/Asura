@@ -24,7 +24,8 @@ namespace XLib
             }
             else
             {
-                for (size_t i = 0; i < sizeof(g_v_t<typesize>) * CHAR_BIT; i++)
+                for (size_t i = 0; i < sizeof(g_v_t<typesize>) * CHAR_BIT;
+                     i++)
                 {
                     writeBit(var
                                  & (view_as<g_v_t<typesize>>(1)

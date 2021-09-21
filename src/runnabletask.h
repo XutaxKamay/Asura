@@ -61,7 +61,7 @@ namespace XLib
         {
             XLIB_EXCEPTION("Could not get permissions to create a "
                            "new "
-                           "thread");
+                           "task");
         }
 
         _thread_handle = CreateRemoteThread(
@@ -76,7 +76,7 @@ namespace XLib
         if (_thread_handle == nullptr)
         {
             _id = INVALID_ID;
-            XLIB_EXCEPTION("Could not create thread");
+            XLIB_EXCEPTION("Could not create task");
         }
 
         CloseHandle(process_handle);
@@ -94,7 +94,7 @@ namespace XLib
         if (base_stack == nullptr)
         {
             XLIB_EXCEPTION("Could not allocate stack for the "
-                           "thread");
+                           "task");
         }
 
         _id = syscall(__NR_rclone,
@@ -108,7 +108,7 @@ namespace XLib
 
         if (_id == INVALID_ID)
         {
-            XLIB_EXCEPTION("Could not create thread");
+            XLIB_EXCEPTION("Could not create task");
         }
 #endif
     }
@@ -124,7 +124,7 @@ namespace XLib
 
         if (!TerminateThread(_thread_handle, EXIT_CODE))
         {
-            XLIB_EXCEPTION("Could not terminate thread");
+            XLIB_EXCEPTION("Could not terminate task");
         }
 
         CloseHandle(_thread_handle);
@@ -133,7 +133,7 @@ namespace XLib
 
         if (ret != 0)
         {
-            XLIB_EXCEPTION("Could not terminate thread");
+            XLIB_EXCEPTION("Could not terminate task");
         }
 #endif
     }

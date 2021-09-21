@@ -26,7 +26,7 @@ auto Task::list(ProcessBase processBase) -> tasks_t
 
     if (thread_handle_snapshot == INVALID_HANDLE_VALUE)
         XLIB_EXCEPTION("Could not get snapshot handle for "
-                       "getting the thread list");
+                       "getting the task list");
 
     te32.dwSize = sizeof(THREADENTRY32);
 
@@ -47,14 +47,14 @@ auto Task::list(ProcessBase processBase) -> tasks_t
     CloseHandle(thread_handle_snapshot);
 
 #else
-    std::filesystem::path filepath_threads(
+    std::filesystem::path filepath_tasks(
       "/proc/" + std::to_string(processBase.id()) + "/task/");
 
-    for (auto&& threads : filepath_threads)
+    for (auto&& task_id_path : filepath_tasks)
     {
-        auto thread_id = threads.generic_string();
+        auto task_id = task_id_path.generic_string();
 
-        Task task(processBase, std::stoi(thread_id));
+        Task task(processBase, std::stoi(task_id));
 
         tasks.push_back(task);
     }
@@ -110,12 +110,12 @@ auto Task::kill() -> void
     if (!thread_handle)
     {
         XLIB_EXCEPTION("Don't have permissions to terminate "
-                       "thread");
+                       "task");
     }
 
     if (!TerminateThread(thread_handle, EXIT_CODE))
     {
-        XLIB_EXCEPTION("Could not terminate thread");
+        XLIB_EXCEPTION("Could not terminate task");
     }
 
     CloseHandle(thread_handle);
@@ -124,7 +124,7 @@ auto Task::kill() -> void
 
     if (ret != 0)
     {
-        XLIB_EXCEPTION("Could not terminate thread");
+        XLIB_EXCEPTION("Could not terminate task");
     }
 #endif
 }
@@ -137,7 +137,7 @@ auto Task::wait() -> void
     if (!thread_handle)
     {
         XLIB_EXCEPTION("Don't have permissions to wait "
-                       "for thread termination");
+                       "for task termination");
     }
 
     WaitForSingleObject(thread_handle, INFINITE);

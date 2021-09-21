@@ -26,7 +26,8 @@ namespace XLib
             {
                 g_v_t<typesize> var {};
 
-                for (size_t i = 0; i < sizeof(g_v_t<typesize>) * CHAR_BIT; i++)
+                for (size_t i = 0; i < sizeof(g_v_t<typesize>) * CHAR_BIT;
+                     i++)
                 {
                     if (readBit())
                     {
