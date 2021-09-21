@@ -642,7 +642,7 @@ XLib::bytes_t XLib::XKC<T>::decode(XLib::data_t data, size_t size)
     auto written_bits = *view_as<uint32_t*>(view_as<uintptr_t>(data)
                                             + size - sizeof(uint32_t));
 
-    if (written_bits >= size * 8)
+    if (written_bits >= size * CHAR_BIT)
     {
         XLIB_EXCEPTION("there's too much bits to decode.");
     }

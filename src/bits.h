@@ -133,7 +133,7 @@ namespace XLib
     {
         std::vector<bool> bits;
 
-        for (size_t i = 0; i < sizeof(T) * 8; i++)
+        for (size_t i = 0; i < sizeof(T) * CHAR_BIT; i++)
         {
             bits.push_back(read_bit(&val, i));
         }
