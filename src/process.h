@@ -4,6 +4,7 @@
 #include "exception.h"
 #include "memorymap.h"
 #include "memoryutils.h"
+#include "patternbyte.h"
 #include "processbase.h"
 #include "processmemoryarea.h"
 #include "processmemorymap.h"
@@ -28,6 +29,7 @@ namespace XLib
       public:
         auto tasks() -> tasks_t;
         auto mmap() -> ProcessMemoryMap;
+        auto search(PatternByte& patternByte) -> void;
 
       public:
         template <size_t stack_size_T = 0x10000>

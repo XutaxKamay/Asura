@@ -1,4 +1,6 @@
 #include "process.h"
+#include "patternscanning.h"
+
 #include <filesystem>
 #include <unistd.h>
 
@@ -141,4 +143,9 @@ auto Process::mmap() -> ProcessMemoryMap
 {
     _mmap.refresh();
     return _mmap;
+}
+
+auto XLib::Process::search(XLib::PatternByte& patternByte) -> void
+{
+    PatternScanning::searchInProcess(patternByte, *this);
 }
