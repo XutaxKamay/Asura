@@ -9,6 +9,7 @@
     #include <tlhelp32.h>
 #else
     #include <cstdlib>
+    #include <ctime>
     #include <filesystem>
     #include <signal.h>
     #include <sys/wait.h>
@@ -153,7 +154,8 @@ namespace XLib
 #else
         while (::kill(_id, 0) != -1)
         {
-            usleep(100);
+            timespec delay { 0, 100 * 1000 };
+            nanosleep(&delay, &delay);
         }
 #endif
     }
