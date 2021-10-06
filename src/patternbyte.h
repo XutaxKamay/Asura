@@ -5,6 +5,8 @@
 
 namespace XLib
 {
+    class Process;
+
     class PatternByte
     {
       public:
@@ -31,6 +33,7 @@ namespace XLib
         auto matches() -> std::vector<ptr_t>&;
         auto isValid() -> bool;
         auto scan(Process process) -> void;
+        auto areaName() -> std::string;
 
       private:
         std::vector<Value> _values;

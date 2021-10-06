@@ -145,7 +145,7 @@ auto Process::mmap() -> ProcessMemoryMap
     return _mmap;
 }
 
-auto XLib::Process::search(XLib::PatternByte& patternByte) -> void
+auto XLib::Process::search(XLib::PatternByte patternByte) -> void
 {
     PatternScanning::searchInProcess(patternByte, *this);
 }

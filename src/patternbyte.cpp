@@ -1,6 +1,5 @@
-#include "patternbyte.h"
-
 #include "patternscanning.h"
+#include "process.h"
 
 XLib::PatternByte::Value::Value(int value) : value(value)
 {
@@ -40,16 +39,12 @@ bool XLib::PatternByte::isValid()
     return true;
 }
 
-auto XLib::PatternByte::scan(XLib::Process process) -> void
+auto XLib::PatternByte::scan(Process process) -> void
 {
-    if (_area_name.empty())
-    {
-        PatternScanning::searchInProcess(*this, process);
-    }
-    else
-    {
-        PatternScanning::searchInProcessWithAreaName(*this,
-                                                     process,
-                                                     _area_name);
-    }
+    PatternScanning::searchInProcess(*this, process);
+}
+
+auto XLib::PatternByte::areaName() -> std::string
+{
+    return _area_name;
 }

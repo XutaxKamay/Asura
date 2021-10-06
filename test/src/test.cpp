@@ -472,16 +472,20 @@ auto XLib::Test::run() -> void
     ConsoleOutput("size of orginal: ")
       << random_bytes.size() << std::endl;
 
-    auto encoded = XKC<byte_t>::encode(random_bytes);
+    {
+        auto encoded = XKC<byte_t>::encode(random_bytes);
 
-    ConsoleOutput("size of encoded: ") << encoded.size() << std::endl;
+        ConsoleOutput("size of encoded: ") << encoded.size() << std::endl;
 
-    auto decoded = XKC<byte_t>::decode(encoded);
+        auto decoded = XKC<byte_t>::decode(encoded);
 
-    ConsoleOutput("size of decoded: ")
-      << decoded.size() << " memcmp: "
-      << std::memcmp(random_bytes.data(), decoded.data(), decoded.size())
-      << std::endl;
+        ConsoleOutput("size of decoded: ")
+          << decoded.size() << " memcmp: "
+          << std::memcmp(random_bytes.data(),
+                         decoded.data(),
+                         decoded.size())
+          << std::endl;
+    }
 
     try
     {
@@ -550,6 +554,16 @@ auto XLib::Test::run() -> void
     std::cout << member._first()->ok << std::endl;
 
     rogue();
+
+    {
+        static const std::string my_name = "xutaxkamay";
+        auto encoded                     = XKC<byte_t>::encode(
+          std::vector<byte_t>(my_name.begin(), my_name.end()));
+        encoded.push_back('\0');
+
+        ConsoleOutput(std::string(encoded.begin(), encoded.end()))
+          << std::endl;
+    }
 
     // std::getchar();
 }
