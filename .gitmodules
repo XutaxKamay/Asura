@@ -1,3 +1,6 @@
 [submodule "cryptopp"]
 	path = vendor/cryptopp
 	url = https://github.com/weidai11/cryptopp.git
+[submodule "vendor/cryptopp"]
+	path = vendor/cryptopp
+	url = https://github.com/weidai11/cryptopp.git
