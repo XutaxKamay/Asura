@@ -115,7 +115,7 @@ namespace XLib
         else if constexpr (type == type_double)
             return type_wrapper<double>;
         else
-            static_assert("Not implemented");
+            static_assert(type > type_array, "Not implemented");
     }
     /**
      * @brief get_variable_type_str

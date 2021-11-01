@@ -20,7 +20,7 @@ namespace XLib
         {
             if constexpr (typesize == type_array)
             {
-                static_assert("Can't read as type_array");
+                static_assert(typesize != type_array, "Can't read as type_array");
             }
             else
             {
