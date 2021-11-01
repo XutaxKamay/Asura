@@ -20,7 +20,7 @@ auto XLib::EncryptRSABlocks::encrypt(XLib::bytes_t bytes) -> bytes_t
 {
     auto min_size      = _public_key.GetModulus().MinEncodedSize();
     auto remainder     = min_size - (bytes.size() % min_size);
-    auto original_size = view_as<g_v_t<type_64s>>(bytes.size());
+    auto original_size = view_as<g_v_t<type_64us>>(bytes.size());
 
     /**
      * Write header
@@ -31,7 +31,7 @@ auto XLib::EncryptRSABlocks::encrypt(XLib::bytes_t bytes) -> bytes_t
                             bytes.size(),
                             bytes.size() - min_size);
 
-    writeBuffer.addVar<type_64s>(original_size);
+    writeBuffer.addVar<type_64us>(original_size);
 
     AutoSeededRandomPool rng;
     /* randomize last bytes */
