@@ -60,7 +60,7 @@ xklib_testrel: $(XKLIB_TEST_RELEASE)
 
 cryptopplib:
 	@echo 'Compiling cryptopp'
-	$(MAKE) -C vendor/cryptopp 
+	$(MAKE) -C vendor/cryptopp static 
 
 .PHONY: all clean
 
