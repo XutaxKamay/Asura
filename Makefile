@@ -1,5 +1,3 @@
-current_dir:=$(shell pwd)
-
 ## INCLUDES
 INCLUDES:=-Isrc/ -Itest/src/ -I./ 
 
@@ -17,7 +15,7 @@ XLIB_OBJ_RELEASE_OUT:=.or
 XLIB_DEBUG:=xlib.dbg
 XLIB_RELEASE:=xlib.rel
 
-CRYPTOPP_LIB:=$(current_dir)/vendor/cryptopp/libcryptopp.a
+CRYPTOPP_LIB:=vendor/cryptopp/libcryptopp.a
 DLOPEN_LIB:=
 DBGHELP_LIB:=
 PTHREAD_LIB:=
@@ -62,7 +60,7 @@ xlib_testrel: $(XLIB_TEST_RELEASE)
 
 cryptopplib:
 	@echo 'Compiling cryptopp'
-	$(MAKE) -C $(current_dir)/vendor/cryptopp 
+	$(MAKE) -C vendor/cryptopp 
 
 .PHONY: all clean
 
@@ -100,4 +98,4 @@ clean:
 	${RM} $(XLIB_TEST_RELEASE)
 	${RM} $(XLIB_TEST_OBJ_DEBUG)
 	${RM} $(XLIB_TEST_OBJ_RELEASE)
-	$(MAKE) -C $(current_dir)/vendor/cryptopp clean
+	$(MAKE) -C vendor/cryptopp clean
