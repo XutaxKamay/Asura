@@ -35,11 +35,10 @@
 
 namespace XLib
 {
-    using ptr_t      = void*;
-    using byte_t     = unsigned char;
-    using data_t     = byte_t*;
-    using bytes_t    = std::vector<byte_t>;
-    using safesize_t = size_t;
+    using ptr_t   = void*;
+    using byte_t  = unsigned char;
+    using data_t  = byte_t*;
+    using bytes_t = std::vector<byte_t>;
 #ifndef WINDOWS
     /* linux pid_t */
     using pid_t = int32_t;

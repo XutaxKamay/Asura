@@ -10,7 +10,7 @@
 
 namespace XLib
 {
-    template <safesize_t pos, typename T = data_t>
+    template <size_t pos, typename T = data_t>
     constexpr auto read_bit(T data)
     {
         constexpr auto read_byte_pos = pos / CHAR_BIT;
@@ -23,7 +23,7 @@ namespace XLib
         return view_as<bool>(byte_value & wanted_bit_value);
     }
 
-    template <safesize_t pos, bool val, typename T = data_t>
+    template <size_t pos, bool val, typename T = data_t>
     constexpr auto write_bit(T data)
     {
         constexpr auto read_byte_pos = pos / CHAR_BIT;
@@ -44,7 +44,7 @@ namespace XLib
     }
 
     template <typename T = data_t>
-    constexpr auto read_bit(T data, safesize_t pos)
+    constexpr auto read_bit(T data, size_t pos)
     {
         auto read_byte_pos = pos / CHAR_BIT;
 
@@ -57,7 +57,7 @@ namespace XLib
     }
 
     template <bool val, typename T = data_t>
-    constexpr auto write_bit(T data, safesize_t pos)
+    constexpr auto write_bit(T data, size_t pos)
     {
         auto read_byte_pos = pos / CHAR_BIT;
 
@@ -77,7 +77,7 @@ namespace XLib
     }
 
     template <typename T = data_t>
-    constexpr auto write_bit(T data, safesize_t pos, bool val)
+    constexpr auto write_bit(T data, size_t pos, bool val)
     {
         auto read_byte_pos = pos / CHAR_BIT;
 
@@ -113,11 +113,11 @@ namespace XLib
     }
 
     template <typename T>
-    auto bits_to_int(data_t data, safesize_t nbBits = 1)
+    auto bits_to_int(data_t data, size_t nbBits = 1)
     {
         T var {};
 
-        for (safesize_t i = 0; i < nbBits; i++)
+        for (size_t i = 0; i < nbBits; i++)
         {
             if (read_bit(data, i))
             {

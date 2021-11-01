@@ -1,8 +1,8 @@
 #include "networkreadbuffer.h"
 
 XLib::NetworkReadBuffer::NetworkReadBuffer(XLib::data_t data,
-                                           XLib::safesize_t maxSize,
-                                           XLib::safesize_t readBits)
+                                           size_t maxSize,
+                                           size_t readBits)
  : Buffer(data, maxSize), _read_bits(readBits)
 {
 }
@@ -17,7 +17,7 @@ auto XLib::NetworkReadBuffer::readBit() -> bool
     return read_bit(data(), _read_bits++);
 }
 
-void XLib::NetworkReadBuffer::pos(XLib::safesize_t toBit)
+void XLib::NetworkReadBuffer::pos(size_t toBit)
 {
     _read_bits = toBit;
 }

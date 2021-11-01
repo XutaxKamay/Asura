@@ -8,19 +8,20 @@ namespace XLib
     class NetworkWriteBuffer : public Buffer
     {
       public:
-        NetworkWriteBuffer(data_t data            = nullptr,
-                           safesize_t maxSize     = 0,
-                           safesize_t writtenBits = 0);
+        NetworkWriteBuffer(data_t data        = nullptr,
+                           size_t maxSize     = 0,
+                           size_t writtenBits = 0);
 
         void writeBit(bool value);
-        void pos(safesize_t toBit = 0);
+        void pos(size_t toBit = 0);
 
         template <typesize_t typesize = type_array>
         auto writeVar(g_v_t<typesize> var)
         {
             if constexpr (typesize == type_array)
             {
-                static_assert(typesize != type_array, "Can't write as type_array");
+                static_assert(typesize != type_array,
+                              "Can't write as type_array");
             }
             else
             {
@@ -37,7 +38,7 @@ namespace XLib
         }
 
       private:
-        safesize_t _written_bits {};
+        size_t _written_bits {};
     };
 };
 

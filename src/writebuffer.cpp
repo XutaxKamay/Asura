@@ -2,16 +2,14 @@
 
 using namespace XLib;
 
-WriteBuffer::WriteBuffer(data_t data,
-                         safesize_t maxSize,
-                         safesize_t writeSize)
+WriteBuffer::WriteBuffer(data_t data, size_t maxSize, size_t writeSize)
  : Buffer(data, maxSize), _written_size(writeSize)
 {
 }
 
 auto WriteBuffer::addType(typesize_t typeSize) -> void
 {
-    addData(&typeSize, view_as<safesize_t>(sizeof(typeSize)));
+    addData(&typeSize, view_as<size_t>(sizeof(typeSize)));
 }
 
 auto WriteBuffer::reset() -> void
@@ -19,7 +17,7 @@ auto WriteBuffer::reset() -> void
     _written_size = 0;
 }
 
-auto WriteBuffer::addData(ptr_t data, safesize_t size) -> void
+auto WriteBuffer::addData(ptr_t data, size_t size) -> void
 {
     if (_written_size >= maxSize())
     {
@@ -34,17 +32,17 @@ auto WriteBuffer::addData(ptr_t data, safesize_t size) -> void
     advance(size);
 }
 
-auto WriteBuffer::advance(safesize_t size) -> void
+auto WriteBuffer::advance(size_t size) -> void
 {
     _written_size += size;
 }
 
-auto WriteBuffer::writeSize() -> safesize_t
+auto WriteBuffer::writeSize() -> size_t
 {
     return _written_size;
 }
 
-auto WriteBuffer::setWriteSize(XLib::safesize_t writeSize) -> void
+auto WriteBuffer::setWriteSize(size_t writeSize) -> void
 {
     _written_size = writeSize;
 }

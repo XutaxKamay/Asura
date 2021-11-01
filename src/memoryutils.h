@@ -40,7 +40,7 @@ namespace XLib
     {
       public:
         template <typename T = uintptr_t>
-        static constexpr inline auto align(T value, safesize_t size)
+        static constexpr inline auto align(T value, size_t size)
         {
             auto original_value = view_as<uintptr_t>(value);
             original_value -= original_value % size;
@@ -48,9 +48,8 @@ namespace XLib
         }
 
         template <typename T = uintptr_t>
-        static constexpr inline auto align_to_page_size(
-          T sizeToAlign,
-          safesize_t pageSize)
+        static constexpr inline auto align_to_page_size(T sizeToAlign,
+                                                        size_t pageSize)
         {
             return view_as<T>(
               ((view_as<size_t>(sizeToAlign) + (pageSize - 1)) / pageSize)

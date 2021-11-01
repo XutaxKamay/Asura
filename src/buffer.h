@@ -23,7 +23,7 @@ namespace XLib
      * @brief alloc
      * @param size
      */
-    constexpr inline auto alloc(safesize_t size)
+    constexpr inline auto alloc(size_t size)
     {
         auto ptr = view_as<T>(::operator new(view_as<size_t>(size)));
 
@@ -91,7 +91,7 @@ namespace XLib
     constexpr inline auto _gvt()
     {
         if constexpr (type == type_safesize)
-            return type_wrapper<safesize_t>;
+            return type_wrapper<size_t>;
         else if constexpr (type == type_8us)
             return type_wrapper<byte_t>;
         else if constexpr (type == type_16us)
@@ -132,8 +132,8 @@ namespace XLib
     class Buffer
     {
       public:
-        explicit Buffer(safesize_t maxSize);
-        explicit Buffer(data_t data = nullptr, safesize_t maxSize = 0);
+        explicit Buffer(size_t maxSize);
+        explicit Buffer(data_t data = nullptr, size_t maxSize = 0);
         ~Buffer();
 
       public:
@@ -142,7 +142,7 @@ namespace XLib
          * @param size
          * @return
          */
-        auto operator[](safesize_t size) -> auto&;
+        auto operator[](size_t size) -> auto&;
         /**
          * @brief data
          * @return
@@ -157,12 +157,12 @@ namespace XLib
          * @brief maxSize
          * @return
          */
-        auto maxSize() -> safesize_t;
+        auto maxSize() -> size_t;
         /**
          * @brief setMaxSize
          * @param maxSize
          */
-        auto setMaxSize(XLib::safesize_t maxSize);
+        auto setMaxSize(size_t maxSize);
         /**
          * @brief toBytes
          * @return bytes_t
@@ -176,7 +176,7 @@ namespace XLib
          * @param size
          * Gets a pointer from data + size.
          */
-        constexpr inline auto shift(safesize_t size = 0)
+        constexpr inline auto shift(size_t size = 0)
         {
             if (!_data && size >= _max_size)
             {
@@ -194,7 +194,7 @@ namespace XLib
         /**
          * @brief _max_size
          */
-        safesize_t _max_size {};
+        size_t _max_size {};
         /**
          * @brief _allocated
          */

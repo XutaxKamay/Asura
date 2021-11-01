@@ -8,19 +8,20 @@ namespace XLib
     class NetworkReadBuffer : public Buffer
     {
       public:
-        NetworkReadBuffer(data_t data         = nullptr,
-                          safesize_t maxSize  = 0,
-                          safesize_t readBits = 0);
+        NetworkReadBuffer(data_t data     = nullptr,
+                          size_t maxSize  = 0,
+                          size_t readBits = 0);
 
         bool readBit();
-        void pos(safesize_t toBit = 0);
+        void pos(size_t toBit = 0);
 
         template <typesize_t typesize = type_array>
         auto readVar()
         {
             if constexpr (typesize == type_array)
             {
-                static_assert(typesize != type_array, "Can't read as type_array");
+                static_assert(typesize != type_array,
+                              "Can't read as type_array");
             }
             else
             {
@@ -41,7 +42,7 @@ namespace XLib
         }
 
       private:
-        safesize_t _read_bits {};
+        size_t _read_bits {};
     };
 };
 

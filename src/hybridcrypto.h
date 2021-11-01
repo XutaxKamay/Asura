@@ -18,7 +18,7 @@
 
 namespace XLib
 {
-    template <safesize_t rsa_key_size_T = 0x1000>
+    template <size_t rsa_key_size_T = 0x1000>
     /**
      * @brief The HybridCrypt class
      * This class permits to have a AES and RSA combined powered with

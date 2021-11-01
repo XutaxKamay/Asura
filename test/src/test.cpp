@@ -45,7 +45,7 @@ auto XLib::Test::run() -> void
 
     WriteBuffer writeBuffer;
 
-    auto strSize = view_as<safesize_t>(str.size());
+    auto strSize = view_as<size_t>(str.size());
 
     writeBuffer.addVar<type_array>(view_as<get_variable_t<type_array>>(
                                      str.data()),

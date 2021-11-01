@@ -18,7 +18,7 @@ namespace XLib
     using pre_or_post_hook_vfunc_t = std::function<void(ptr_t funcPtr,
                                                         ptr_t newFuncPtr)>;
 
-    template <safesize_t index_T, typename T = ptr_t>
+    template <size_t index_T, typename T = ptr_t>
     constexpr inline auto view_vfunc_as(ptr_t* vptr)
     {
         return view_as<T>(vptr[index_T]);
@@ -26,14 +26,12 @@ namespace XLib
 
     template <typename T = ptr_t>
     constexpr inline auto view_vfunc_dyn_index_as(ptr_t* vptr,
-                                                  safesize_t index)
+                                                  size_t index)
     {
         return view_as<T>(vptr[index]);
     }
 
-    template <safesize_t index_T,
-              typename ret_type_T = void,
-              typename... args_T>
+    template <size_t index_T, typename ret_type_T = void, typename... args_T>
     constexpr inline auto vfunc(ptr_t* vptr)
     {
 #ifdef WINDOWS
@@ -47,7 +45,7 @@ namespace XLib
     }
 
     template <typename ret_type_T = void, typename... args_T>
-    constexpr inline auto vfunc_dyn_index(ptr_t vptr, safesize_t index)
+    constexpr inline auto vfunc_dyn_index(ptr_t vptr, size_t index)
     {
 #ifdef WINDOWS
         return view_vfunc_dyn_index_as<ret_type_T(
@@ -62,22 +60,19 @@ namespace XLib
     /**
      * Used for hooking
      */
-    template <safesize_t index_T, typename T = ptr_t>
+    template <size_t index_T, typename T = ptr_t>
     constexpr inline auto vfunc_ptr(ptr_t* vptr)
     {
         return view_as<T>(&vptr[index_T]);
     }
 
     template <typename T = ptr_t>
-    constexpr inline auto vfunc_ptr_dyn_index(ptr_t* vptr,
-                                              safesize_t index)
+    constexpr inline auto vfunc_ptr_dyn_index(ptr_t* vptr, size_t index)
     {
         return view_as<T>(&vptr[index]);
     }
 
-    template <safesize_t index_T,
-              typename ret_type_T = void,
-              typename... args_T>
+    template <size_t index_T, typename ret_type_T = void, typename... args_T>
     constexpr inline auto call_vfunc(ptr_t classPtr,
                                      ptr_t* vptr,
                                      args_T... args)
@@ -89,7 +84,7 @@ namespace XLib
     template <typename ret_type_T = void, typename... args_T>
     constexpr inline auto call_vfunc_dyn_index(ptr_t classPtr,
                                                ptr_t* vptr,
-                                               safesize_t index,
+                                               size_t index,
                                                args_T... args)
     {
         return vfunc_dyn_index<ret_type_T, args_T...>(vptr,
@@ -101,7 +96,7 @@ namespace XLib
     class VirtualTable : public T
     {
       public:
-        template <safesize_t index_T,
+        template <size_t index_T,
                   typename ret_type_T = void,
                   typename... args_T>
         constexpr inline auto callVFunc(ptr_t* vptr, args_T... args)
@@ -113,7 +108,7 @@ namespace XLib
 
         template <typename ret_type_T = void, typename... args_T>
         constexpr inline auto callVfuncDynIndex(ptr_t* vptr,
-                                                safesize_t index,
+                                                size_t index,
                                                 args_T... args)
         {
             return call_vfunc_dyn_index<ret_type_T, args_T...>(
@@ -122,7 +117,7 @@ namespace XLib
         }
     };
 
-    template <safesize_t index_T, typename T2 = ptr_t>
+    template <size_t index_T, typename T2 = ptr_t>
     inline auto hook_vfunc(ptr_t* vptr,
                            T2 newFuncPtr,
                            pre_or_post_hook_vfunc_t pre  = nullptr,

@@ -10,8 +10,8 @@ namespace XLib
     {
       public:
         explicit ReadBuffer(data_t data,
-                            safesize_t maxSize  = 0,
-                            safesize_t readSize = 0);
+                            size_t maxSize  = 0,
+                            size_t readSize = 0);
 
         ~ReadBuffer() = default;
 
@@ -21,7 +21,7 @@ namespace XLib
          * @brief readVar
          * @param pSize
          */
-        constexpr inline auto readVar(safesize_t* pSize = nullptr)
+        constexpr inline auto readVar(size_t* pSize = nullptr)
         {
             if (_read_size >= maxSize())
             {
@@ -51,8 +51,8 @@ namespace XLib
             if constexpr (typesize_T == type_array)
             {
                 /* If it's an array we read first its size */
-                auto dataSize = *this->shift<safesize_t*>(_read_size);
-                advance(sizeof(safesize_t));
+                auto dataSize = *this->shift<size_t*>(_read_size);
+                advance(sizeof(size_t));
 
                 /* Then we give the pointer of where is located data */
                 data = this->shift<var_t>(_read_size);
@@ -86,7 +86,7 @@ namespace XLib
          * @brief shift
          * @param size
          */
-        constexpr inline auto shift(safesize_t size = 0) -> cast_T
+        constexpr inline auto shift(size_t size = 0) -> cast_T
         {
             if (size == 0)
             {
@@ -108,22 +108,22 @@ namespace XLib
          * @brief advance
          * @param size
          */
-        auto advance(safesize_t size) -> void;
+        auto advance(size_t size) -> void;
         /**
          * @brief readSize
          */
-        auto readSize() -> safesize_t;
+        auto readSize() -> size_t;
         /**
          * @brief setReadSize
          * @param readSize
          */
-        auto setReadSize(XLib::safesize_t readSize);
+        auto setReadSize(size_t readSize);
 
       private:
         /**
          * @brief _read_size
          */
-        safesize_t _read_size {};
+        size_t _read_size {};
     };
 
 } // namespace XLib
