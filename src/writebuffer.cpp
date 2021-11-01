@@ -50,7 +50,7 @@ auto WriteBuffer::setWriteSize(size_t writeSize) -> void
 auto WriteBuffer::toBytes() -> bytes_t
 {
     bytes_t bs(_written_size);
-    std::copy(this->_data, this->_data + _written_size, bs.begin());
+    std::copy(this->data(), this->data() + _written_size, bs.begin());
 
     return bs;
 }

@@ -186,7 +186,7 @@ namespace XLib
             return view_as<cast_T>(view_as<uintptr_t>(_data) + size);
         }
 
-      protected:
+      private:
         /**
          * @brief _data
          */
