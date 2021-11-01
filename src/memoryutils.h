@@ -1,6 +1,9 @@
 #ifndef MEMORYUTILS_H
 #define MEMORYUTILS_H
 
+#include <mutex>
+#include <thread>
+
 #include "custom_linux_syscalls.h"
 #include "exception.h"
 #include "memoryarea.h"
@@ -271,6 +274,7 @@ namespace XLib
 
       private:
         static size_t _page_size;
+        static std::once_flag _memory_page_once_flag;
     };
 
 } // namespace XLib
