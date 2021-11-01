@@ -8,8 +8,8 @@ namespace XLib
     class EncryptRSABlocks
     {
       public:
-        EncryptRSABlocks(const CryptoPP::Integer &publicExponent,
-                         const CryptoPP::Integer &modulus);
+        EncryptRSABlocks(const CryptoPP::Integer& publicExponent,
+                         const CryptoPP::Integer& modulus);
         explicit EncryptRSABlocks(CryptoPP::RSA::PublicKey publicKey);
 
       public:

@@ -4,15 +4,15 @@
 #include <array>
 #include <sstream>
 
-#include "../../XLib/cryptopp//aes.h"
-#include "../../XLib/cryptopp//modes.h"
-#include "../../XLib/cryptopp//osrng.h"
-#include "../../XLib/cryptopp//randpool.h"
-#include "../../XLib/cryptopp//rdrand.h"
-#include "../../XLib/cryptopp//rng.h"
-#include "../../XLib/cryptopp//rsa.h"
-#include "../../XLib/cryptopp//sha.h"
-#include "../../XLib/cryptopp//zlib.h"
+#include <vendor/cryptopp/aes.h>
+#include <vendor/cryptopp/modes.h>
+#include <vendor/cryptopp/osrng.h>
+#include <vendor/cryptopp/randpool.h>
+#include <vendor/cryptopp/rdrand.h>
+#include <vendor/cryptopp/rng.h>
+#include <vendor/cryptopp/rsa.h>
+#include <vendor/cryptopp/sha.h>
+#include <vendor/cryptopp/zlib.h>
 
 #include "types.h"
 

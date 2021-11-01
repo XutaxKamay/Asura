@@ -1,7 +1,7 @@
 current_dir:=$(shell pwd)
 
 ## INCLUDES
-INCLUDES:=-Isrc/ -Itest/src/
+INCLUDES:=-Isrc/ -Itest/src/ -I./ 
 
 ## ERRORS
 ERRORS:= -Wextra -W -Wall -Werror -Wl,--no-undefined
