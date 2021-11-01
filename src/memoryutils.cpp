@@ -14,8 +14,6 @@ static auto _GetPageSize()
 
     return sys_info.dwPageSize;
 }
-
-size_t MemoryUtils::_page_size = GetPageSize();
 #else
 static auto _GetPageSize()
 {
