@@ -4,15 +4,15 @@
 #include "exception.h"
 #include "types.h"
 
-#include <cryptopp/aes.h>
-#include <cryptopp/modes.h>
-#include <cryptopp/osrng.h>
-#include <cryptopp/randpool.h>
-#include <cryptopp/rdrand.h>
-#include <cryptopp/rng.h>
-#include <cryptopp/rsa.h>
-#include <cryptopp/sha.h>
-#include <cryptopp/zlib.h>
+#include "../../XLib/cryptopp/aes.h"
+#include "../../XLib/cryptopp//modes.h"
+#include "../../XLib/cryptopp//osrng.h"
+#include "../../XLib/cryptopp//randpool.h"
+#include "../../XLib/cryptopp//rdrand.h"
+#include "../../XLib/cryptopp//rng.h"
+#include "../../XLib/cryptopp//rsa.h"
+#include "../../XLib/cryptopp//sha.h"
+#include "../../XLib/cryptopp//zlib.h"
 
 namespace XLib
 {
