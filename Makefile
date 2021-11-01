@@ -1,3 +1,11 @@
+current_dir:=$(shell pwd)
+
+## INCLUDES
+INCLUDES:=-Isrc/ -Itest/src/ -Icryptopp/
+
+## ERRORS
+ERRORS:= -Wextra -W -Wall -Werror -Wl,--no-undefined
+
 ## XLIB_TEST
 XLIB_TEST_DEBUG:=xlib_test.dbg
 XLIB_TEST_RELEASE:=xlib_test.rel
@@ -9,7 +17,7 @@ XLIB_OBJ_RELEASE_OUT:=.or
 XLIB_DEBUG:=xlib.dbg
 XLIB_RELEASE:=xlib.rel
 
-CRYPTOPP_LIB:=-lcryptopp
+CRYPTOPP_LIB:=$(current_dir)/cryptopp/libcryptopp.a
 DLOPEN_LIB:=
 DBGHELP_LIB:=
 PTHREAD_LIB:=
@@ -69,45 +77,50 @@ XLIB_TEST_OBJ_RELEASE=$(subst .cpp,$(XLIB_OBJ_RELEASE_OUT),$(wildcard test/src/*
 XLIB_DEBUG:=$(XLIB_DEBUG).a
 XLIB_RELEASE:=$(XLIB_RELEASE).a
 
-CPPFLAGS_DEBUG:=-fPIC -std=c++2a -O0 -g -Wextra -W -Wall -Werror -Wl,--no-undefined -Isrc/ -Itest/src/ 
+## FLAGS
+CPPFLAGS_DEBUG:=-fPIC -std=c++2a -O0 -g $(ERRORS) $(INCLUDES)
+CPPFLAGS_RELEASE:=-fPIC -std=c++2a -O3 -pipe $(DATARACES) -frename-registers -fomit-frame-pointer -s $(ERRORS) $(INCLUDES)
 
-CPPFLAGS_RELEASE:=-fPIC -std=c++2a -Ofast -pipe $(DATARACES) -frename-registers -fomit-frame-pointer -s -Wextra -W -Wall -Werror -Wl,--no-undefined -Isrc/ -Itest/src/ 
-
+## RULES
 all: xlib xlib_test
 
 xlib: xlibdbg xlibrel
+
 xlib_test: xlib_testdbg xlib_testrel
 
 xlibdbg: $(XLIB_DEBUG)
 xlibrel: $(XLIB_RELEASE)
 
 xlib_testdbg: $(XLIB_TEST_DEBUG)
-xlib_testrel: $(XLIB_TEST_RELEASE)
+xlib_testrel: $(XLIB_TEST_RELEASE) 
+
+cryptopplib:
+	@echo 'Compiling cryptopp'
+	$(MAKE) -C $(current_dir)/cryptopp 
 
 .PHONY: all clean
 
-$(XLIB_DEBUG): $(XLIB_OBJ_DEBUG)
-	ar rcs $@ $^
+$(XLIB_DEBUG): cryptopplib $(XLIB_OBJ_DEBUG)
+	ar rcs $@ $(XLIB_OBJ_DEBUG)
 
 $(XLIB_OBJ_DEBUG): %$(XLIB_OBJ_DEBUG_OUT): %.cpp
 	$(CXX) -c $(CPPFLAGS_DEBUG) $< -o $@
 
-$(XLIB_RELEASE): $(XLIB_OBJ_RELEASE)
-	ar rcs -o $@ $^
+$(XLIB_RELEASE): cryptopplib $(XLIB_OBJ_RELEASE)
+	ar rcs -o $@ $(XLIB_OBJ_RELEASE)
 
 $(XLIB_OBJ_RELEASE): %$(XLIB_OBJ_RELEASE_OUT): %.cpp
 	$(CXX) -c $(CPPFLAGS_RELEASE) $< -o $@
 
 ## TEST
-
-$(XLIB_TEST_DEBUG): $(XLIB_TEST_OBJ_DEBUG) $(XLIB_OBJ_DEBUG)
-	$(CXX) $(CPPFLAGS_DEBUG) -o $@ $^ $(CRYPTOPP_LIB) $(DLOPEN_LIB) $(DBGHELP_LIB) $(PTHREAD_LIB)
+$(XLIB_TEST_DEBUG): cryptopplib $(XLIB_TEST_OBJ_DEBUG) $(XLIB_OBJ_DEBUG)
+	$(CXX) $(CPPFLAGS_DEBUG) -o $@ $(XLIB_TEST_OBJ_DEBUG) $(XLIB_OBJ_DEBUG) $(CRYPTOPP_LIB) $(DLOPEN_LIB) $(DBGHELP_LIB) $(PTHREAD_LIB)
 
 $(XLIB_TEST_OBJ_DEBUG): %$(XLIB_OBJ_DEBUG_OUT): %.cpp
 	$(CXX) -c $(CPPFLAGS_DEBUG) $< -o $@
 
-$(XLIB_TEST_RELEASE): $(XLIB_TEST_OBJ_RELEASE) $(XLIB_OBJ_RELEASE)
-	$(CXX) $(CPPFLAGS_RELEASE) -o $@ $^ $(CRYPTOPP_LIB) $(DLOPEN_LIB) $(DBGHELP_LIB) $(PTHREAD_LIB)
+$(XLIB_TEST_RELEASE): cryptopplib $(XLIB_TEST_OBJ_RELEASE) $(XLIB_OBJ_RELEASE)
+	$(CXX) $(CPPFLAGS_RELEASE) -o $@ $(XLIB_TEST_OBJ_RELEASE) $(XLIB_OBJ_RELEASE) $(CRYPTOPP_LIB) $(DLOPEN_LIB) $(DBGHELP_LIB) $(PTHREAD_LIB)
 
 $(XLIB_TEST_OBJ_RELEASE): %$(XLIB_OBJ_RELEASE_OUT): %.cpp
 	$(CXX) -c $(CPPFLAGS_RELEASE) $< -o $@
@@ -121,3 +134,4 @@ clean:
 	${RM} $(XLIB_TEST_RELEASE)
 	${RM} $(XLIB_TEST_OBJ_DEBUG)
 	${RM} $(XLIB_TEST_OBJ_RELEASE)
+	$(MAKE) -C $(current_dir)/cryptopp clean
