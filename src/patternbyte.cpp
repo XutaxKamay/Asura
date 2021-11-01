@@ -42,7 +42,7 @@ auto XLib::PatternByte::isValid() -> bool
     return true;
 }
 
-auto XLib::PatternByte::scan(const Process& process) -> void
+auto XLib::PatternByte::scan(Process& process) -> void
 {
     PatternScanning::searchInProcess(*this, process);
 }

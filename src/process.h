@@ -29,7 +29,7 @@ namespace XLib
       public:
         auto tasks() -> tasks_t;
         auto mmap() -> ProcessMemoryMap;
-        auto search(const PatternByte& patternByte) -> void;
+        auto search(PatternByte& patternByte) -> void;
 
       public:
         template <size_t stack_size_T = 0x10000>

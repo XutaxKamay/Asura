@@ -10,15 +10,15 @@ namespace XLib
     class PatternScanning
     {
       public:
-        static auto searchInProcess(PatternByte pattern, Process process)
-          -> void;
+        static auto searchInProcess(PatternByte& pattern,
+                                    Process& process) -> void;
 
         static auto searchInProcessWithAreaName(
-          const PatternByte& pattern,
-          Process process,
+          PatternByte& pattern,
+          Process& process,
           const std::string& areaName) -> void;
 
-        static auto search(PatternByte pattern,
+        static auto search(PatternByte& pattern,
                            bytes_t bytes,
                            ptr_t baseAddress) -> bool;
     };

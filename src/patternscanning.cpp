@@ -1,7 +1,7 @@
 #include "patternscanning.h"
 #include "patternbyte.h"
 
-auto XLib::PatternScanning::search(XLib::PatternByte pattern,
+auto XLib::PatternScanning::search(XLib::PatternByte& pattern,
                                    XLib::bytes_t bytes,
                                    ptr_t baseAddress) -> bool
 {
@@ -58,8 +58,8 @@ auto XLib::PatternScanning::search(XLib::PatternByte pattern,
     return pattern.matches().size() != old_matches_size;
 }
 
-auto XLib::PatternScanning::searchInProcess(XLib::PatternByte pattern,
-                                            Process process) -> void
+auto XLib::PatternScanning::searchInProcess(XLib::PatternByte& pattern,
+                                            Process& process) -> void
 {
     auto mmap     = process.mmap();
     auto areaName = pattern.areaName();
@@ -81,8 +81,8 @@ auto XLib::PatternScanning::searchInProcess(XLib::PatternByte pattern,
 }
 
 auto XLib::PatternScanning::searchInProcessWithAreaName(
-  const XLib::PatternByte& pattern,
-  Process process,
+  XLib::PatternByte& pattern,
+  Process& process,
   const std::string& areaName) -> void
 {
     auto mmap = process.mmap();

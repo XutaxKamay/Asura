@@ -491,18 +491,19 @@ auto XLib::Test::run() -> void
     try
     {
         std::vector<PatternByte::Value> pattern_bytes;
-        pattern_bytes.reserve(random_bytes.size());
 
         for (auto&& value : random_bytes)
         {
-            pattern_bytes.emplace_back(value);
+            pattern_bytes.push_back(value);
         }
 
         pattern_bytes[5] = PatternByte::Value::UNKNOWN;
 
         PatternByte pattern(pattern_bytes);
 
-        pattern.scan(Process::self());
+        auto process = Process::self();
+
+        pattern.scan(process);
 
         if (pattern.matches().size() != 0)
         {
