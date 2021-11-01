@@ -7,9 +7,9 @@ XLib::NetworkReadBuffer::NetworkReadBuffer(XLib::data_t data,
 {
 }
 
-bool XLib::NetworkReadBuffer::readBit()
+auto XLib::NetworkReadBuffer::readBit() -> bool
 {
-    if (_read_bits / 8 >= maxSize())
+    if (_read_bits / CHAR_BIT >= maxSize())
     {
         XLIB_EXCEPTION("Filled buffer");
     }

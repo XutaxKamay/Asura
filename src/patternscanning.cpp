@@ -81,7 +81,7 @@ auto XLib::PatternScanning::searchInProcess(XLib::PatternByte pattern,
 }
 
 auto XLib::PatternScanning::searchInProcessWithAreaName(
-  XLib::PatternByte pattern,
+  const XLib::PatternByte& pattern,
   Process process,
   const std::string& areaName) -> void
 {

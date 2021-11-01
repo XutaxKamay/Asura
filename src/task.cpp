@@ -5,9 +5,9 @@
     #include <tlhelp32.h>
     #include <windows.h>
 #else
+    #include <csignal>
     #include <cstdlib>
     #include <filesystem>
-    #include <signal.h>
     #include <sys/wait.h>
 #endif
 

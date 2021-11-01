@@ -14,7 +14,7 @@ namespace XLib
           -> void;
 
         static auto searchInProcessWithAreaName(
-          PatternByte pattern,
+          const PatternByte& pattern,
           Process process,
           const std::string& areaName) -> void;
 

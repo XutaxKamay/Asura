@@ -1,6 +1,8 @@
 #include "exception.h"
 
-XLib::Exception::Exception(const std::string& msg) : _msg(msg)
+#include <utility>
+
+XLib::Exception::Exception(std::string msg) : _msg(std::move(msg))
 {
 }
 

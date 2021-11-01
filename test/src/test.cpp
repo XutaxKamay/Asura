@@ -315,13 +315,13 @@ auto XLib::Test::run() -> void
 
     bool tested_test_bits = true;
 
-    for (size_t i = 0; i < sizeof(mask_test_bits) / sizeof(int); i++)
+    for (int mask_test_bit : mask_test_bits)
     {
-        if (!read_bit(&test_bits, mask_test_bits[i]))
+        if (!read_bit(&test_bits, mask_test_bit))
         {
             ConsoleOutput("wrong bit at pos: ")
-              << mask_test_bits[i] << std::endl;
-            ;
+              << mask_test_bit << std::endl;
+
             tested_test_bits = false;
             break;
         }
@@ -466,7 +466,8 @@ auto XLib::Test::run() -> void
     std::ofstream file("random_bytes.txt",
                        std::ios::binary | std::ios::out);
 
-    file.write(view_as<char*>(random_bytes.data()), random_bytes.size());
+    file.write(view_as<char*>(random_bytes.data()),
+               view_as<std::streamsize>(random_bytes.size()));
     file.close();
 
     ConsoleOutput("size of orginal: ")
@@ -490,9 +491,11 @@ auto XLib::Test::run() -> void
     try
     {
         std::vector<PatternByte::Value> pattern_bytes;
+        pattern_bytes.reserve(random_bytes.size());
+
         for (auto&& value : random_bytes)
         {
-            pattern_bytes.push_back(value);
+            pattern_bytes.emplace_back(value);
         }
 
         pattern_bytes[5] = PatternByte::Value::UNKNOWN;
@@ -573,7 +576,7 @@ void XLib::Test::API::func1()
     std::cout << "func1" << std::endl;
 }
 
-std::vector<int> XLib::Test::API::func2(const char* str, ...)
+auto XLib::Test::API::func2(const char* str, ...) -> std::vector<int>
 {
     va_list parameterInfos;
     va_start(parameterInfos, str);

@@ -12,7 +12,7 @@ namespace XLib
     class RunnableTask;
 
     using tasks_t = std::list<Task>;
-    using tid_t   = uint32_t;
+    using tid_t   = int32_t;
 
     class Task
     {
@@ -30,7 +30,7 @@ namespace XLib
         Task(ProcessBase processBase, tid_t id);
 
       private:
-        Task(ProcessBase processBase);
+        explicit Task(ProcessBase processBase);
 
       public:
         auto wait() -> void;

@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "patternscanning.h"
 #include "process.h"
 
@@ -8,7 +10,8 @@ XLib::PatternByte::Value::Value(int value) : value(value)
 XLib::PatternByte::PatternByte(std::vector<Value> values,
                                std::string areaName,
                                std::vector<ptr_t> matches)
- : _values(values), _matches(matches), _area_name(areaName)
+ : _values(std::move(values)), _matches(std::move(matches)),
+   _area_name(std::move(areaName))
 {
     if (!isValid())
     {
@@ -26,7 +29,7 @@ auto XLib::PatternByte::matches() -> std::vector<ptr_t>&
     return _matches;
 }
 
-bool XLib::PatternByte::isValid()
+auto XLib::PatternByte::isValid() -> bool
 {
     for (auto&& byte : _values)
     {
@@ -39,7 +42,7 @@ bool XLib::PatternByte::isValid()
     return true;
 }
 
-auto XLib::PatternByte::scan(Process process) -> void
+auto XLib::PatternByte::scan(const Process& process) -> void
 {
     PatternScanning::searchInProcess(*this, process);
 }

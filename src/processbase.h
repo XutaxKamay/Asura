@@ -16,7 +16,7 @@ namespace XLib
         static auto self() -> ProcessBase;
 
       private:
-        ProcessBase(pid_t);
+        explicit ProcessBase(pid_t);
 
       public:
         auto setPID(pid_t pid);

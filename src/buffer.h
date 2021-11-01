@@ -122,7 +122,7 @@ namespace XLib
      * @param typeSize
      * @return Returns the string of the variable type.
      */
-    std::string get_variable_type_str(typesize_t typeSize);
+    auto get_variable_type_str(typesize_t typeSize) -> std::string;
 
     template <typesize_t typesize_T>
     using get_variable_t = typename decltype(_gvt<typesize_T>())::type;
@@ -132,8 +132,8 @@ namespace XLib
     class Buffer
     {
       public:
-        Buffer(safesize_t maxSize);
-        Buffer(data_t data = nullptr, safesize_t maxSize = 0);
+        explicit Buffer(safesize_t maxSize);
+        explicit Buffer(data_t data = nullptr, safesize_t maxSize = 0);
         ~Buffer();
 
       public:
@@ -142,7 +142,7 @@ namespace XLib
          * @param size
          * @return
          */
-        auto& operator[](safesize_t size);
+        auto operator[](safesize_t size) -> auto&;
         /**
          * @brief data
          * @return
@@ -152,7 +152,7 @@ namespace XLib
          * @brief setData
          * @param data
          */
-        auto setData(const data_t& data);
+        auto setData(XLib::data_t data);
         /**
          * @brief maxSize
          * @return
@@ -162,7 +162,7 @@ namespace XLib
          * @brief setMaxSize
          * @param maxSize
          */
-        auto setMaxSize(const safesize_t& maxSize);
+        auto setMaxSize(XLib::safesize_t maxSize);
         /**
          * @brief toBytes
          * @return bytes_t

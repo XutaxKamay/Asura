@@ -1,6 +1,7 @@
 #ifndef HYBRIDCRYPT_H
 #define HYBRIDCRYPT_H
 
+#include <array>
 #include <sstream>
 
 #include <cryptopp/aes.h>
@@ -41,8 +42,8 @@ namespace XLib
          */
         struct AESData_t
         {
-            CryptoPP::byte iv[AESIVSize];
-            CryptoPP::byte key[AESKeySize];
+            std::array<CryptoPP::byte, AESKeySize> key;
+            std::array<CryptoPP::byte, AESIVSize> iv;
         };
     };
 

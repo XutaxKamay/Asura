@@ -1,7 +1,7 @@
 #ifndef TEST_H
 #define TEST_H
 
-#include <stdarg.h>
+#include <cstdarg>
 #include <xlib.h>
 
 namespace XLib

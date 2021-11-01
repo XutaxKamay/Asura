@@ -1,18 +1,21 @@
 #include "decryptrsablocks.h"
+
 #include "readbuffer.h"
+#include <utility>
 
 using namespace CryptoPP;
 
-XLib::DecryptRSABlocks::DecryptRSABlocks(CryptoPP::Integer publicExponent,
-                                         CryptoPP::Integer privateExponent,
-                                         CryptoPP::Integer modulus)
+XLib::DecryptRSABlocks::DecryptRSABlocks(
+  const CryptoPP::Integer& publicExponent,
+  const CryptoPP::Integer& privateExponent,
+  const CryptoPP::Integer& modulus)
 
 {
     _private_key.Initialize(modulus, publicExponent, privateExponent);
 }
 
 XLib::DecryptRSABlocks::DecryptRSABlocks(RSA::PrivateKey privateKey)
- : _private_key(privateKey)
+ : _private_key(std::move(privateKey))
 {
 }
 
@@ -48,14 +51,14 @@ auto XLib::DecryptRSABlocks::decrypt(XLib::bytes_t bytes) -> bytes_t
     auto original_size = ReadBuffer(bytes.data(),
                                     bytes.size(),
                                     bytes.size() - min_size)
-                           .readVar<type_64s>();
+                           .readVar<type_64us>();
 
     bytes.resize(original_size);
 
     return bytes;
 }
 
-auto& XLib::DecryptRSABlocks::privateKey()
+auto XLib::DecryptRSABlocks::privateKey() -> auto&
 {
     return _private_key;
 }

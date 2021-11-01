@@ -45,14 +45,15 @@ auto ProcessMemoryMap::refresh() -> void
     while (std::getline(file_memory_map, line))
     {
         uintptr_t start, end;
-        byte_t prot[3];
+        std::array<byte_t, 3> prot {};
         std::string name = "unknown";
 
-        /* 0x0 0x1000 rwxp %x %i:%i %i %s */
+        /* abcd-1000abcd rwxp %x %i:%i %i %s */
+        /* TODO: refactor to modern c++ */
         std::sscanf(line.c_str(),
                     "%p-%p %c%c%c",
-                    (ptr_t*)&start,
-                    (ptr_t*)&end,
+                    view_as<ptr_t*>(&start),
+                    view_as<ptr_t*>(&end),
                     &prot[0],
                     &prot[1],
                     &prot[2]);
@@ -66,9 +67,8 @@ auto ProcessMemoryMap::refresh() -> void
                 count_char++;
             }
 
-            name = std::string(line.begin()
-                                 + (line.size() - count_char + 1),
-                               line.end());
+            name = line.substr(line.size() - count_char + 1u,
+                               line.size());
         }
 
         auto is_on = [](byte_t prot)

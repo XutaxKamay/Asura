@@ -27,7 +27,8 @@ auto WriteBuffer::addData(ptr_t data, safesize_t size) -> void
     }
 
     std::copy(view_as<data_t>(data),
-              view_as<data_t>(data) + view_as<size_t>(size),
+              view_as<data_t>(view_as<uintptr_t>(data)
+                              + view_as<size_t>(size)),
               view_as<data_t>(shift(_written_size)));
 
     advance(size);
@@ -43,7 +44,7 @@ auto WriteBuffer::writeSize() -> safesize_t
     return _written_size;
 }
 
-auto WriteBuffer::setWriteSize(const safesize_t& writeSize) -> void
+auto WriteBuffer::setWriteSize(XLib::safesize_t writeSize) -> void
 {
     _written_size = writeSize;
 }

@@ -24,7 +24,7 @@ auto ReadBuffer::readSize() -> safesize_t
     return _read_size;
 }
 
-auto ReadBuffer::setReadSize(const safesize_t& readSize)
+auto ReadBuffer::setReadSize(XLib::safesize_t readSize)
 {
     _read_size = readSize;
 }

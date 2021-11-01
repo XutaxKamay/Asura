@@ -1,9 +1,10 @@
 #ifndef VIRTUALTABLETOOLS_H
 #define VIRTUALTABLETOOLS_H
 
-#include "buffer.h"
-#include "types.h"
 #include <functional>
+
+#include "buffer.h"
+#include "process.h"
 
 namespace XLib
 {

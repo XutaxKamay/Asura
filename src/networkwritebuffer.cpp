@@ -9,7 +9,7 @@ XLib::NetworkWriteBuffer::NetworkWriteBuffer(XLib::data_t data,
 
 void XLib::NetworkWriteBuffer::writeBit(bool value)
 {
-    if (_written_bits / 8 >= maxSize())
+    if (_written_bits / CHAR_BIT >= maxSize())
     {
         XLIB_EXCEPTION("Filled buffer");
     }

@@ -9,9 +9,9 @@ namespace XLib
     class ReadBuffer : public Buffer
     {
       public:
-        ReadBuffer(data_t data,
-                   safesize_t maxSize  = 0,
-                   safesize_t readSize = 0);
+        explicit ReadBuffer(data_t data,
+                            safesize_t maxSize  = 0,
+                            safesize_t readSize = 0);
 
         ~ReadBuffer() = default;
 
@@ -117,7 +117,7 @@ namespace XLib
          * @brief setReadSize
          * @param readSize
          */
-        auto setReadSize(const safesize_t& readSize);
+        auto setReadSize(XLib::safesize_t readSize);
 
       private:
         /**

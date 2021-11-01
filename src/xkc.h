@@ -77,16 +77,16 @@ namespace XLib
             void insert(std::shared_ptr<Node> parent, T value);
             void insert(T value);
 
-            bool path_info(PathInfo& pathInfo,
+            auto path_info(PathInfo& pathInfo,
                            std::shared_ptr<Node> parent,
-                           T value);
+                           T value) -> bool;
 
-            bool path_info(PathInfo& pathInfo, T value);
+            auto path_info(PathInfo& pathInfo, T value) -> bool;
 
             void find_value(PathInfoResult& pathInfo);
 
-            std::string dot_format(std::shared_ptr<Node> parent);
-            std::string dot_format();
+            auto dot_format(std::shared_ptr<Node> parent) -> std::string;
+            auto dot_format() -> std::string;
 
             std::shared_ptr<Node> root;
         };
@@ -95,16 +95,16 @@ namespace XLib
         using occurrences_t = std::vector<Occurrence>;
 
       public:
-        static bytes_t encode(data_t data, size_t size);
-        static bytes_t encode(bytes_t bytes);
+        static auto encode(data_t data, size_t size) -> bytes_t;
+        static auto encode(bytes_t bytes) -> bytes_t;
 
-        static bytes_t decode(data_t data, size_t size);
-        static bytes_t decode(bytes_t bytes);
+        static auto decode(data_t data, size_t size) -> bytes_t;
+        static auto decode(bytes_t bytes) -> bytes_t;
     };
 };
 
 template <XLib::XKCAlphabetType T>
-size_t XLib::XKC<T>::BinaryTree::Node::count_subnodes()
+auto XLib::XKC<T>::BinaryTree::Node::count_subnodes() -> size_t
 {
     size_t result = 0;
 
@@ -124,7 +124,7 @@ size_t XLib::XKC<T>::BinaryTree::Node::count_subnodes()
 }
 
 template <XLib::XKCAlphabetType T>
-size_t XLib::XKC<T>::BinaryTree::Node::depth()
+auto XLib::XKC<T>::BinaryTree::Node::depth() -> size_t
 {
     size_t result = 0;
     auto node     = parent;
@@ -139,7 +139,7 @@ size_t XLib::XKC<T>::BinaryTree::Node::depth()
 }
 
 template <XLib::XKCAlphabetType T>
-size_t XLib::XKC<T>::BinaryTree::Node::height()
+auto XLib::XKC<T>::BinaryTree::Node::height() -> size_t
 {
     size_t height_left = 0, height_right = 0;
 
@@ -210,15 +210,15 @@ void XLib::XKC<T>::BinaryTree::insert(T value)
 }
 
 template <XLib::XKCAlphabetType T>
-XLib::bytes_t XLib::XKC<T>::encode(XLib::bytes_t bytes)
+auto XLib::XKC<T>::encode(XLib::bytes_t bytes) -> XLib::bytes_t
 {
     return encode(bytes.data(), bytes.size());
 }
 
 template <XLib::XKCAlphabetType T>
-bool XLib::XKC<T>::BinaryTree::path_info(PathInfo& pathInfo,
+auto XLib::XKC<T>::BinaryTree::path_info(PathInfo& pathInfo,
                                          std::shared_ptr<Node> parent,
-                                         T value)
+                                         T value) -> bool
 {
     if (parent == nullptr)
     {
@@ -254,7 +254,8 @@ bool XLib::XKC<T>::BinaryTree::path_info(PathInfo& pathInfo,
 }
 
 template <XLib::XKCAlphabetType T>
-bool XLib::XKC<T>::BinaryTree::path_info(PathInfo& pathInfo, T value)
+auto XLib::XKC<T>::BinaryTree::path_info(PathInfo& pathInfo, T value)
+  -> bool
 {
     return path_info(pathInfo, root, value);
 }
@@ -291,8 +292,8 @@ void XLib::XKC<T>::BinaryTree::find_value(PathInfoResult& pathInfo)
 }
 
 template <XLib::XKCAlphabetType T>
-std::string XLib::XKC<T>::BinaryTree::dot_format(
-  std::shared_ptr<Node> parent)
+auto XLib::XKC<T>::BinaryTree::dot_format(std::shared_ptr<Node> parent)
+  -> std::string
 {
     std::string result;
 
@@ -308,7 +309,7 @@ std::string XLib::XKC<T>::BinaryTree::dot_format(
         for (size_t depth_bit = 0; depth_bit < max_depth_bits;
              depth_bit++)
         {
-            if (parent->depth() & (1 << depth_bit))
+            if (parent->depth() & (1u << depth_bit))
             {
                 depth = "1" + depth;
             }
@@ -334,7 +335,7 @@ std::string XLib::XKC<T>::BinaryTree::dot_format(
         for (size_t depth_bit = 0; depth_bit < max_depth_bits;
              depth_bit++)
         {
-            if (parent->left->depth() & (1 << depth_bit))
+            if (parent->left->depth() & (1u << depth_bit))
             {
                 depth = "1" + depth;
             }
@@ -419,7 +420,7 @@ std::string XLib::XKC<T>::BinaryTree::dot_format(
 }
 
 template <XLib::XKCAlphabetType T>
-std::string XLib::XKC<T>::BinaryTree::dot_format()
+auto XLib::XKC<T>::BinaryTree::dot_format() -> std::string
 {
     std::string result = "strict graph {";
 
@@ -431,7 +432,7 @@ std::string XLib::XKC<T>::BinaryTree::dot_format()
 }
 
 template <XLib::XKCAlphabetType T>
-XLib::bytes_t XLib::XKC<T>::encode(XLib::data_t data, size_t size)
+auto XLib::XKC<T>::encode(XLib::data_t data, size_t size) -> XLib::bytes_t
 {
     bytes_t result;
     alphabet_t alphabet;
@@ -566,7 +567,7 @@ XLib::bytes_t XLib::XKC<T>::encode(XLib::data_t data, size_t size)
 
     auto write_bit = [&result_byte, &written_bits_on_result_byte]()
     {
-        result_byte |= (1 << written_bits_on_result_byte);
+        result_byte |= (1u << written_bits_on_result_byte);
     };
 
     for (auto&& occurrence : occurrences)
@@ -580,7 +581,7 @@ XLib::bytes_t XLib::XKC<T>::encode(XLib::data_t data, size_t size)
         for (size_t count_bit = 0; count_bit < max_count_occurs_bits;
              count_bit++)
         {
-            if (occurrence.count & (1 << count_bit))
+            if (occurrence.count & (1u << count_bit))
             {
                 write_bit();
             }
@@ -591,7 +592,7 @@ XLib::bytes_t XLib::XKC<T>::encode(XLib::data_t data, size_t size)
         for (uint32_t depth_bit = 0; depth_bit < max_depth_bits;
              depth_bit++)
         {
-            if (path_info.depth & (1 << depth_bit))
+            if (path_info.depth & (1u << depth_bit))
             {
                 write_bit();
             }
@@ -615,9 +616,10 @@ XLib::bytes_t XLib::XKC<T>::encode(XLib::data_t data, size_t size)
         result.push_back(result_byte);
     }
 
+    auto bytes_written_bits = view_as<byte_t*>(&written_bits);
+
     for (size_t i = 0; i < sizeof(uint32_t); i++)
     {
-        auto bytes_written_bits = view_as<byte_t*>(&written_bits);
         result.push_back(bytes_written_bits[i]);
     }
 
@@ -625,13 +627,13 @@ XLib::bytes_t XLib::XKC<T>::encode(XLib::data_t data, size_t size)
 }
 
 template <XLib::XKCAlphabetType T>
-XLib::bytes_t XLib::XKC<T>::decode(XLib::bytes_t bytes)
+auto XLib::XKC<T>::decode(XLib::bytes_t bytes) -> XLib::bytes_t
 {
     return decode(bytes.data(), bytes.size());
 }
 
 template <XLib::XKCAlphabetType T>
-XLib::bytes_t XLib::XKC<T>::decode(XLib::data_t data, size_t size)
+auto XLib::XKC<T>::decode(XLib::data_t data, size_t size) -> XLib::bytes_t
 {
     bytes_t result;
 
@@ -687,8 +689,8 @@ XLib::bytes_t XLib::XKC<T>::decode(XLib::data_t data, size_t size)
                          &size]()
         {
             auto value = (data[read_bytes]
-                          & (1 << read_bits_on_result_byte)) ?
-                           1 :
+                          & (1u << read_bits_on_result_byte)) ?
+                           1u :
                            0;
 
             read_bits_on_result_byte++;

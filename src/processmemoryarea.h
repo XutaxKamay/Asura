@@ -15,14 +15,14 @@ namespace XLib
             friend class ProcessMemoryArea;
 
           public:
-            ModifiableProtectionFlags(ProcessMemoryArea* _pma);
+            explicit ModifiableProtectionFlags(ProcessMemoryArea* _pma);
 
             auto change(mapf_t flags) -> mapf_t;
 
             auto operator|(mapf_t flags) -> mapf_t;
             auto operator&(mapf_t flags) -> mapf_t;
 
-            auto operator=(mapf_t flags) -> void;
+            auto operator=(mapf_t flags) -> ModifiableProtectionFlags&;
             auto operator|=(mapf_t flags) -> void;
             auto operator&=(mapf_t flags) -> void;
 
@@ -36,7 +36,7 @@ namespace XLib
         };
 
       public:
-        ProcessMemoryArea(ProcessBase process);
+        explicit ProcessMemoryArea(ProcessBase process);
 
         auto protectionFlags() -> ModifiableProtectionFlags&;
         auto initProtectionFlags(mapf_t flags) -> void;

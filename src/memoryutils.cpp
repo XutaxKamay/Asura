@@ -1,14 +1,10 @@
 #include "memoryutils.h"
+#include <mutex>
+#include <thread>
 
 using namespace XLib;
 
-/**
- * +440    common  rmmap                   sys_rmmap
- * +441    common  rmprotect               sys_rmprotect
- * +442    common  pkey_rmprotect          sys_pkey_rmprotect
- * +443    common  rmunmap                sys_rmunmap
- * +444    common  rclone                  sys_rclone
- */
+size_t MemoryUtils::_page_size;
 
 #ifdef WINDOWS
 static auto _GetPageSize()
@@ -20,12 +16,22 @@ static auto _GetPageSize()
     return sys_info.dwPageSize;
 }
 
-size_t MemoryUtils::_page_size = _GetPageSize();
+size_t MemoryUtils::_page_size = GetPageSize();
 #else
-size_t MemoryUtils::_page_size = sysconf(_SC_PAGESIZE);
+static auto _GetPageSize()
+{
+    return view_as<size_t>(sysconf(_SC_PAGESIZE));
+}
 #endif
 
 auto MemoryUtils::GetPageSize() -> size_t
 {
+    static std::once_flag flag;
+    std::call_once(flag,
+                   []()
+                   {
+                       _page_size = _GetPageSize();
+                   });
+
     return _page_size;
 }

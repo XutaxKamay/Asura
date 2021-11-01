@@ -32,7 +32,7 @@ namespace XLib
         auto values() -> std::vector<Value>&;
         auto matches() -> std::vector<ptr_t>&;
         auto isValid() -> bool;
-        auto scan(Process process) -> void;
+        auto scan(const Process& process) -> void;
         auto areaName() -> std::string;
 
       private:

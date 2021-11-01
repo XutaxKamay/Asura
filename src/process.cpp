@@ -13,7 +13,7 @@
 
 using namespace XLib;
 
-XLib::Process XLib::Process::find(const std::string& name)
+auto XLib::Process::find(const std::string& name) -> XLib::Process
 {
     Process process;
 
@@ -145,7 +145,7 @@ auto Process::mmap() -> ProcessMemoryMap
     return _mmap;
 }
 
-auto XLib::Process::search(XLib::PatternByte patternByte) -> void
+auto XLib::Process::search(const XLib::PatternByte& patternByte) -> void
 {
     PatternScanning::searchInProcess(patternByte, *this);
 }

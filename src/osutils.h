@@ -77,38 +77,30 @@ namespace XLib
                              const std::string& funcName) -> ptr_t
         {
             iterate_phdr_arg arg;
+            dl_phdr_info found_info {};
+            struct stat st
+            {
+            };
 
             dl_iterate_phdr(retrievePHDRInfos, &arg);
-
-            dl_phdr_info* found_info = nullptr;
 
             for (auto&& info : arg.infos)
             {
                 if (std::string(info.dlpi_name).find(modName)
                     != std::string::npos)
                 {
-                    found_info = view_as<dl_phdr_info*>(
-                      alloca(sizeof(dl_phdr_info)));
-                    memcpy(found_info, &info, sizeof(dl_phdr_info));
+                    found_info = info;
                     break;
                 }
             }
 
-            if (found_info == nullptr)
-            {
-                XLIB_EXCEPTION("Couldn't find module in "
-                               "runtime.");
-            }
-
-            auto fd = open(found_info->dlpi_name, O_RDONLY);
+            auto fd = open(found_info.dlpi_name, O_RDONLY);
 
             if (fd < 0)
             {
                 XLIB_EXCEPTION("Couldn't open module in "
                                "runtime.");
             }
-
-            struct stat st;
 
             if (fstat(fd, &st) < 0)
             {
@@ -118,14 +110,19 @@ namespace XLib
             }
 
             auto file_header = view_as<ElfW(Ehdr*)>(
-              mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0));
+              mmap(nullptr,
+                   view_as<size_t>(st.st_size),
+                   PROT_READ,
+                   MAP_PRIVATE,
+                   fd,
+                   0));
 
             close(fd);
 
             if (file_header->e_shoff == 0
                 || file_header->e_shstrndx == SHN_UNDEF)
             {
-                munmap(file_header, st.st_size);
+                munmap(file_header, view_as<size_t>(st.st_size));
                 XLIB_EXCEPTION("No symbols.");
             }
 
@@ -160,7 +157,7 @@ namespace XLib
 
             if (section_str_tab == nullptr && section_sym_tab == nullptr)
             {
-                munmap(file_header, st.st_size);
+                munmap(file_header, view_as<size_t>(st.st_size));
                 XLIB_EXCEPTION("No symbols.");
             }
 
@@ -186,7 +183,7 @@ namespace XLib
 
                 auto str_sym_name = std::string(
                   view_as<const char*>(str_tab + sym->st_name));
-                auto addr = found_info->dlpi_addr + sym->st_value;
+                auto addr = found_info.dlpi_addr + sym->st_value;
 
                 if (str_sym_name.find(funcName) != std::string::npos)
                 {
@@ -194,7 +191,7 @@ namespace XLib
                 }
             }
 
-            munmap(file_header, st.st_size);
+            munmap(file_header, view_as<size_t>(st.st_size));
             XLIB_EXCEPTION("Cannot find function.");
             return nullptr;
         }

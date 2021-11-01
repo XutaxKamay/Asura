@@ -12,7 +12,7 @@ namespace XLib
     class ProcessMemoryMap : public MemoryMap<ProcessMemoryArea>
     {
       public:
-        ProcessMemoryMap(ProcessBase process);
+        explicit ProcessMemoryMap(ProcessBase process);
 
       public:
         auto refresh() -> void;

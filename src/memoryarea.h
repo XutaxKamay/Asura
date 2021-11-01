@@ -14,7 +14,7 @@ namespace XLib
 #ifdef WINDOWS
     using mapf_t = DWORD;
 #else
-    using mapf_t = int;
+    using mapf_t = uint32_t;
 #endif
 
     /**
@@ -30,10 +30,10 @@ namespace XLib
             static auto ToOwn(mapf_t flags) -> mapf_t;
             static auto ToOS(mapf_t flags) -> mapf_t;
 
-            const inline static mapf_t NONE    = 0;
-            const inline static mapf_t READ    = (1 << 0);
-            const inline static mapf_t WRITE   = (1 << 1);
-            const inline static mapf_t EXECUTE = (1 << 2);
+            const inline static mapf_t NONE    = 0u;
+            const inline static mapf_t READ    = (1u << 0u);
+            const inline static mapf_t WRITE   = (1u << 1u);
+            const inline static mapf_t EXECUTE = (1u << 2u);
             const inline static mapf_t RWX     = READ | WRITE | EXECUTE;
             const inline static mapf_t RX      = READ | EXECUTE;
             const inline static mapf_t WX      = WRITE | EXECUTE;

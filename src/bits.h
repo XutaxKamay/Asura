@@ -15,7 +15,7 @@ namespace XLib
     {
         constexpr auto read_byte_pos = pos / CHAR_BIT;
 
-        constexpr auto wanted_bit_value = (1 << (pos % CHAR_BIT));
+        constexpr auto wanted_bit_value = (1u << (pos % CHAR_BIT));
 
         auto byte_value = *view_as<byte_t*>(view_as<uintptr_t>(data)
                                             + read_byte_pos);
@@ -28,7 +28,7 @@ namespace XLib
     {
         constexpr auto read_byte_pos = pos / CHAR_BIT;
 
-        constexpr auto wanted_bit_value = (1 << (pos % CHAR_BIT));
+        constexpr auto wanted_bit_value = (1u << (pos % CHAR_BIT));
 
         auto byte_value = view_as<byte_t*>(view_as<uintptr_t>(data)
                                            + read_byte_pos);
@@ -48,7 +48,7 @@ namespace XLib
     {
         auto read_byte_pos = pos / CHAR_BIT;
 
-        auto wanted_bit_value = (1 << (pos % CHAR_BIT));
+        auto wanted_bit_value = (1u << (pos % CHAR_BIT));
 
         auto byte_value = *view_as<byte_t*>(view_as<uintptr_t>(data)
                                             + read_byte_pos);
@@ -61,7 +61,7 @@ namespace XLib
     {
         auto read_byte_pos = pos / CHAR_BIT;
 
-        auto wanted_bit_value = (1 << (pos % CHAR_BIT));
+        auto wanted_bit_value = (1u << (pos % CHAR_BIT));
 
         auto byte_value = view_as<byte_t*>(view_as<uintptr_t>(data)
                                            + read_byte_pos);
@@ -81,7 +81,7 @@ namespace XLib
     {
         auto read_byte_pos = pos / CHAR_BIT;
 
-        auto wanted_bit_value = (1 << (pos % CHAR_BIT));
+        auto wanted_bit_value = (1u << (pos % CHAR_BIT));
 
         auto byte_value = view_as<byte_t*>(view_as<uintptr_t>(data)
                                            + read_byte_pos);
@@ -117,7 +117,7 @@ namespace XLib
     {
         T var {};
 
-        for (size_t i = 0; i < nbBits; i++)
+        for (safesize_t i = 0; i < nbBits; i++)
         {
             if (read_bit(data, i))
             {

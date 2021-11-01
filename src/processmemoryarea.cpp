@@ -23,7 +23,7 @@ auto ProcessMemoryArea::ModifiableProtectionFlags::change(mapf_t flags)
 
         _flags = flags;
     }
-    catch (Exception& e)
+    catch (...)
     {
         throw;
     }
@@ -50,9 +50,11 @@ auto ProcessMemoryArea::ModifiableProtectionFlags::operator&(mapf_t flags)
 }
 
 auto ProcessMemoryArea::ModifiableProtectionFlags::operator=(mapf_t flags)
-  -> void
+  -> ModifiableProtectionFlags&
 {
     change(flags);
+
+    return *this;
 }
 
 auto ProcessMemoryArea::ModifiableProtectionFlags::operator|=(mapf_t flags)

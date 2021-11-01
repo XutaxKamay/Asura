@@ -8,16 +8,16 @@ namespace XLib
     class DecryptRSABlocks
     {
       public:
-        DecryptRSABlocks(CryptoPP::Integer publicExponent,
-                         CryptoPP::Integer privateExponent,
-                         CryptoPP::Integer modulus);
-        DecryptRSABlocks(CryptoPP::RSA::PrivateKey privateKey);
+        DecryptRSABlocks(const CryptoPP::Integer& publicExponent,
+                         const CryptoPP::Integer& privateExponent,
+                         const CryptoPP::Integer& modulus);
+        explicit DecryptRSABlocks(CryptoPP::RSA::PrivateKey privateKey);
 
       public:
-        auto& privateKey();
+        auto privateKey() -> auto&;
         auto decrypt(bytes_t bytes) -> bytes_t;
 
-      public:
+      private:
         CryptoPP::RSA::PrivateKey _private_key {};
     };
 };

@@ -11,7 +11,7 @@ namespace XLib
     class Exception : std::exception
     {
       public:
-        Exception(const std::string& msg);
+        explicit Exception(std::string msg);
 
         auto msg() -> const std::string&;
 
@@ -20,7 +20,7 @@ namespace XLib
     };
 
 #define XLIB_EXCEPTION(msg)                                              \
-    throw XLib::Exception(std::string(CURRENT_CONTEXT) + msg)
+    throw XLib::Exception(std::string(CURRENT_CONTEXT) + (msg))
 };
 
 #endif

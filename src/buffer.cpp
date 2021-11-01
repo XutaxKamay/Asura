@@ -2,7 +2,7 @@
 
 using namespace XLib;
 
-std::string XLib::get_variable_type_str(typesize_t typeSize)
+auto XLib::get_variable_type_str(typesize_t typeSize) -> std::string
 {
     switch (typeSize)
     {
@@ -30,19 +30,17 @@ std::string XLib::get_variable_type_str(typesize_t typeSize)
             return "float";
         case (type_double):
             return "double";
-        default:
-            return "unknown";
     }
+
+    return "unknown";
 }
 
-Buffer::Buffer(safesize_t maxSize)
- : _data(nullptr), _max_size(maxSize), _allocated(true)
+Buffer::Buffer(safesize_t maxSize) : _max_size(maxSize), _allocated(true)
 {
     _data = alloc<data_t>(_max_size);
 }
 
-Buffer::Buffer(data_t data, safesize_t maxSize)
- : _data(nullptr), _max_size(maxSize), _allocated(false)
+Buffer::Buffer(data_t data, safesize_t maxSize) : _max_size(maxSize)
 {
     if (data)
     {
@@ -66,7 +64,7 @@ Buffer::~Buffer()
         free(_data);
 }
 
-auto& Buffer::operator[](safesize_t size)
+auto Buffer::operator[](safesize_t size) -> auto&
 {
     if (!_data && size >= _max_size)
     {
@@ -81,7 +79,7 @@ auto Buffer::data() -> data_t
     return _data;
 }
 
-auto Buffer::setData(const data_t& data)
+auto Buffer::setData(XLib::data_t data)
 {
     _data = data;
 }
@@ -91,7 +89,7 @@ auto Buffer::maxSize() -> safesize_t
     return _max_size;
 }
 
-auto Buffer::setMaxSize(const safesize_t& maxSize)
+auto Buffer::setMaxSize(XLib::safesize_t maxSize)
 {
     _max_size = maxSize;
 }
