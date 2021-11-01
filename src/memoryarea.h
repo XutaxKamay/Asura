@@ -6,7 +6,7 @@
     #include "windows.h"
 #endif
 
-namespace XLib
+namespace XKLib
 {
     /**
      * memory area protection flags

@@ -29,7 +29,7 @@
 
 #endif
 
-namespace XLib
+namespace XKLib
 {
     /**
      * @brief MemoryUtils
@@ -276,6 +276,6 @@ namespace XLib
         static std::once_flag _get_page_size_once_flag;
     };
 
-} // namespace XLib
+} // namespace XKLib
 
 #endif // MEMORYUTILS_H

@@ -3,7 +3,7 @@
 
 #include "readbuffer.h"
 
-namespace XLib
+namespace XKLib
 {
     class NetworkReadBuffer : public Buffer
     {

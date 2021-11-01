@@ -11,9 +11,9 @@
     #include <linux/limits.h>
 #endif
 
-using namespace XLib;
+using namespace XKLib;
 
-auto XLib::Process::find(const std::string& name) -> XLib::Process
+auto XKLib::Process::find(const std::string& name) -> XKLib::Process
 {
     Process process;
 
@@ -70,7 +70,7 @@ end:
     return process;
 }
 
-auto XLib::Process::ProcessName(pid_t pid) -> std::string
+auto XKLib::Process::ProcessName(pid_t pid) -> std::string
 {
     std::string result("unknown");
 
@@ -145,7 +145,7 @@ auto Process::mmap() -> ProcessMemoryMap
     return _mmap;
 }
 
-auto XLib::Process::search(XLib::PatternByte& patternByte) -> void
+auto XKLib::Process::search(XKLib::PatternByte& patternByte) -> void
 {
     PatternScanning::searchInProcess(patternByte, *this);
 }

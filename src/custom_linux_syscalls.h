@@ -1,7 +1,7 @@
 #ifndef CUSTOM_LINUX_SYSCALLS
 #define CUSTOM_LINUX_SYSCALLS
 
-namespace XLib
+namespace XKLib
 {
 #ifndef _WIN32
     constexpr auto __NR_custom_start   = 449;

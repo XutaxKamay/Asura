@@ -3,13 +3,13 @@
 #include "patternscanning.h"
 #include "process.h"
 
-XLib::PatternByte::Value::Value(int value) : value(value)
+XKLib::PatternByte::Value::Value(int value) : value(value)
 {
 }
 
-XLib::PatternByte::PatternByte(std::vector<Value> values,
-                               std::string areaName,
-                               std::vector<ptr_t> matches)
+XKLib::PatternByte::PatternByte(std::vector<Value> values,
+                                std::string areaName,
+                                std::vector<ptr_t> matches)
  : _values(std::move(values)), _matches(std::move(matches)),
    _area_name(std::move(areaName))
 {
@@ -19,17 +19,17 @@ XLib::PatternByte::PatternByte(std::vector<Value> values,
     }
 }
 
-auto XLib::PatternByte::values() -> std::vector<Value>&
+auto XKLib::PatternByte::values() -> std::vector<Value>&
 {
     return _values;
 }
 
-auto XLib::PatternByte::matches() -> std::vector<ptr_t>&
+auto XKLib::PatternByte::matches() -> std::vector<ptr_t>&
 {
     return _matches;
 }
 
-auto XLib::PatternByte::isValid() -> bool
+auto XKLib::PatternByte::isValid() -> bool
 {
     for (auto&& byte : _values)
     {
@@ -42,12 +42,12 @@ auto XLib::PatternByte::isValid() -> bool
     return true;
 }
 
-auto XLib::PatternByte::scan(Process& process) -> void
+auto XKLib::PatternByte::scan(Process& process) -> void
 {
     PatternScanning::searchInProcess(*this, process);
 }
 
-auto XLib::PatternByte::areaName() -> std::string
+auto XKLib::PatternByte::areaName() -> std::string
 {
     return _area_name;
 }

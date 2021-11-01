@@ -5,7 +5,7 @@
     #include "windows.h"
 #endif
 
-using namespace XLib;
+using namespace XKLib;
 
 auto MemoryArea::ProtectionFlags::ToOwn(mapf_t flags) -> mapf_t
 {
@@ -141,7 +141,7 @@ auto MemoryArea::setSize(size_t size) -> void
     _size = size;
 }
 
-auto XLib::MemoryArea::setName(const std::string& name) -> void
+auto XKLib::MemoryArea::setName(const std::string& name) -> void
 {
     _name = name;
 }
@@ -151,7 +151,7 @@ auto MemoryArea::operator==(MemoryArea& area) -> bool
     return begin() == area.begin() && end() == area.end();
 }
 
-auto XLib::MemoryArea::name() -> const std::string&
+auto XKLib::MemoryArea::name() -> const std::string&
 {
     return _name;
 }

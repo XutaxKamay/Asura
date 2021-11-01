@@ -1,7 +1,7 @@
 #include "processmemoryarea.h"
 #include "processbase.h"
 
-using namespace XLib;
+using namespace XKLib;
 
 ProcessMemoryArea::ModifiableProtectionFlags::ModifiableProtectionFlags(
   ProcessMemoryArea* pma)
@@ -128,7 +128,7 @@ auto ProcessMemoryArea::write(bytes_t bytes, size_t shift) -> void
                                         begin<size_t>() + shift);
 }
 
-auto XLib::ProcessMemoryArea::isDeniedByOS() -> bool
+auto XKLib::ProcessMemoryArea::isDeniedByOS() -> bool
 {
     return _protection_flags.cachedValue() == 0
 #ifndef WIN32
@@ -137,13 +137,13 @@ auto XLib::ProcessMemoryArea::isDeniedByOS() -> bool
       ;
 }
 
-auto XLib::ProcessMemoryArea::isReadable() -> bool
+auto XKLib::ProcessMemoryArea::isReadable() -> bool
 {
     return (_protection_flags.cachedValue() & ProtectionFlags::R)
            && !isDeniedByOS();
 }
 
-auto XLib::ProcessMemoryArea::isWritable() -> bool
+auto XKLib::ProcessMemoryArea::isWritable() -> bool
 {
     return (_protection_flags.cachedValue() & ProtectionFlags::W)
            && !isDeniedByOS();

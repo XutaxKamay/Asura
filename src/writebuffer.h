@@ -3,7 +3,7 @@
 
 #include "buffer.h"
 
-namespace XLib
+namespace XKLib
 {
     /**
      * @brief The WriteBuffer class
@@ -107,6 +107,6 @@ namespace XLib
         size_t _written_size {};
     };
 
-} // namespace XLib
+} // namespace XKLib
 
 #endif // WRITEBUFFER_H

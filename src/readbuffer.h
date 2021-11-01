@@ -4,7 +4,7 @@
 #include "buffer.h"
 #include "exception.h"
 
-namespace XLib
+namespace XKLib
 {
     class ReadBuffer : public Buffer
     {
@@ -126,6 +126,6 @@ namespace XLib
         size_t _read_size {};
     };
 
-} // namespace XLib
+} // namespace XKLib
 
 #endif

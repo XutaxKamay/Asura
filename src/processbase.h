@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-namespace XLib
+namespace XKLib
 {
     class Process;
     class Task;

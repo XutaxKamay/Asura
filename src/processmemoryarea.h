@@ -5,7 +5,7 @@
 #include "memoryutils.h"
 #include "processbase.h"
 
-namespace XLib
+namespace XKLib
 {
     class ProcessMemoryArea : public MemoryArea
     {

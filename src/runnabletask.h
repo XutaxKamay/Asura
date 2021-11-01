@@ -15,7 +15,7 @@
     #include <sys/wait.h>
 #endif
 
-namespace XLib
+namespace XKLib
 {
     template <size_t stack_size_T>
     class RunnableTask : public Task

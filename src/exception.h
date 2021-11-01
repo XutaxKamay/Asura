@@ -6,7 +6,7 @@
 
 #include "types.h"
 
-namespace XLib
+namespace XKLib
 {
     class Exception : std::exception
     {
@@ -20,7 +20,7 @@ namespace XLib
     };
 
 #define XLIB_EXCEPTION(msg)                                              \
-    throw XLib::Exception(std::string(CURRENT_CONTEXT) + (msg))
+    throw XKLib::Exception(std::string(CURRENT_CONTEXT) + (msg))
 };
 
 #endif

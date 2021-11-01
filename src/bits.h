@@ -8,7 +8,7 @@
 #include "exception.h"
 #include "types.h"
 
-namespace XLib
+namespace XKLib
 {
     template <size_t pos, typename T = data_t>
     constexpr auto read_bit(T data)

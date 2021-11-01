@@ -3,7 +3,7 @@
 
 #include "writebuffer.h"
 
-namespace XLib
+namespace XKLib
 {
     class NetworkWriteBuffer : public Buffer
     {

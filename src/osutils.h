@@ -19,7 +19,7 @@
     #include <dbghelp.h>
 #endif
 
-namespace XLib
+namespace XKLib
 {
     class OSUtils
     {

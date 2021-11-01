@@ -1,3 +1,3 @@
 #include "types.h"
 
-using namespace XLib;
+using namespace XKLib;

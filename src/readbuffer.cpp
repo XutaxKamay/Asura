@@ -1,6 +1,6 @@
 #include "readbuffer.h"
 
-using namespace XLib;
+using namespace XKLib;
 
 ReadBuffer::ReadBuffer(data_t data, size_t maxSize, size_t readSize)
  : Buffer(data, maxSize), _read_size(readSize)

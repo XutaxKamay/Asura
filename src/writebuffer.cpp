@@ -1,6 +1,6 @@
 #include "writebuffer.h"
 
-using namespace XLib;
+using namespace XKLib;
 
 WriteBuffer::WriteBuffer(data_t data, size_t maxSize, size_t writeSize)
  : Buffer(data, maxSize), _written_size(writeSize)

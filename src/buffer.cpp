@@ -1,8 +1,8 @@
 #include "buffer.h"
 
-using namespace XLib;
+using namespace XKLib;
 
-auto XLib::get_variable_type_str(typesize_t typeSize) -> std::string
+auto XKLib::get_variable_type_str(typesize_t typeSize) -> std::string
 {
     switch (typeSize)
     {
@@ -79,7 +79,7 @@ auto Buffer::data() -> data_t
     return _data;
 }
 
-auto Buffer::setData(XLib::data_t data)
+auto Buffer::setData(XKLib::data_t data)
 {
     _data = data;
 }

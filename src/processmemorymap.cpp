@@ -14,7 +14,7 @@
     #include <windows.h>
 #endif
 
-using namespace XLib;
+using namespace XKLib;
 
 ProcessMemoryMap::ProcessMemoryMap(ProcessBase process)
  : _process_base(process)

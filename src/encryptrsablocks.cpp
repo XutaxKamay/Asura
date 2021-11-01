@@ -6,19 +6,19 @@
 
 using namespace CryptoPP;
 
-XLib::EncryptRSABlocks::EncryptRSABlocks(
+XKLib::EncryptRSABlocks::EncryptRSABlocks(
   const CryptoPP::Integer& publicExponent,
   const CryptoPP::Integer& modulus)
 {
     _public_key.Initialize(modulus, publicExponent);
 }
 
-XLib::EncryptRSABlocks::EncryptRSABlocks(RSA::PublicKey publicKey)
+XKLib::EncryptRSABlocks::EncryptRSABlocks(RSA::PublicKey publicKey)
  : _public_key(std::move(publicKey))
 {
 }
 
-auto XLib::EncryptRSABlocks::encrypt(XLib::bytes_t bytes) -> bytes_t
+auto XKLib::EncryptRSABlocks::encrypt(XKLib::bytes_t bytes) -> bytes_t
 {
     auto min_size      = _public_key.GetModulus().MinEncodedSize();
     auto remainder     = min_size - (bytes.size() % min_size);
@@ -61,7 +61,7 @@ auto XLib::EncryptRSABlocks::encrypt(XLib::bytes_t bytes) -> bytes_t
     return bytes;
 }
 
-auto XLib::EncryptRSABlocks::publicKey() -> auto&
+auto XKLib::EncryptRSABlocks::publicKey() -> auto&
 {
     return _public_key;
 }

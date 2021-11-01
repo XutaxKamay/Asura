@@ -16,7 +16,7 @@
 
 #include "types.h"
 
-namespace XLib
+namespace XKLib
 {
     template <size_t rsa_key_size_T = 0x1000>
     /**
@@ -47,6 +47,6 @@ namespace XLib
         };
     };
 
-} // namespace XLib
+} // namespace XKLib
 
 #endif // HYBRIDCRYPT_H

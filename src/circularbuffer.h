@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-namespace XLib
+namespace XKLib
 {
     template <typename T, size_t max_history_T>
     /**
@@ -138,6 +138,6 @@ namespace XLib
             return (_filled_history - 1) - wantedSlot;
         }
     }
-} // namespace XLib
+} // namespace XKLib
 
 #endif // CIRCULARBUFFER_H

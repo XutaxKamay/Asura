@@ -3,7 +3,7 @@
 
 #include "process.h"
 
-namespace XLib
+namespace XKLib
 {
     class Process;
 

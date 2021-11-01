@@ -2,9 +2,9 @@
 #define TEST_H
 
 #include <cstdarg>
-#include <xlib.h>
+#include <xklib.h>
 
-namespace XLib
+namespace XKLib
 {
     class Test
     {

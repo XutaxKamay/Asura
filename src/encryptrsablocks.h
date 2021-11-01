@@ -3,7 +3,7 @@
 
 #include "rsablocks.h"
 
-namespace XLib
+namespace XKLib
 {
     class EncryptRSABlocks
     {

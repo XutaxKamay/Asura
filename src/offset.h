@@ -3,7 +3,7 @@
 
 #include "memoryutils.h"
 
-namespace XLib
+namespace XKLib
 {
     class Offset
     {

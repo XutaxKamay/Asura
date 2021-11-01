@@ -10,7 +10,7 @@
 #include "processmemorymap.h"
 #include "runnabletask.h"
 
-namespace XLib
+namespace XKLib
 {
     class Process : public ProcessBase
     {

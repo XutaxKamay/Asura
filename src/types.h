@@ -31,9 +31,9 @@
 #define MAKE_STRING(x)  _MAKE_STRING(x)
 
 #define CURRENT_CONTEXT                                                  \
-    "[XLib][" __FILE__ ":" MAKE_STRING(__LINE__) "] -> "
+    "[XKLib][" __FILE__ ":" MAKE_STRING(__LINE__) "] -> "
 
-namespace XLib
+namespace XKLib
 {
     using ptr_t   = void*;
     using byte_t  = unsigned char;
@@ -63,6 +63,6 @@ namespace XLib
         return (T1)(var);
     }
 
-} // namespace XLib
+} // namespace XKLib
 
 #endif // TYPES_H

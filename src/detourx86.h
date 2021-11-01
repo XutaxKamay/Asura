@@ -13,7 +13,7 @@ enum calling_conventions_t
 };
 #endif
 
-namespace XLib
+namespace XKLib
 {
     namespace X86_JMP
     {
@@ -243,6 +243,6 @@ namespace XLib
         }
     }
 #endif
-} // namespace XLib
+} // namespace XKLib
 
 #endif // DETOUR_H

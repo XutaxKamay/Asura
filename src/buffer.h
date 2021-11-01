@@ -5,7 +5,7 @@
 #include "types.h"
 #include <algorithm>
 
-namespace XLib
+namespace XKLib
 {
 #ifdef DEBUG
     inline std::vector<ptr_t> tracking_memory_allocs;
@@ -152,7 +152,7 @@ namespace XLib
          * @brief setData
          * @param data
          */
-        auto setData(XLib::data_t data);
+        auto setData(XKLib::data_t data);
         /**
          * @brief maxSize
          * @return
@@ -201,6 +201,6 @@ namespace XLib
         bool _allocated {};
     };
 
-} // namespace XLib
+} // namespace XKLib
 
 #endif // BUFFER_H

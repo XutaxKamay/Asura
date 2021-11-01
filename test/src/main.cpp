@@ -2,6 +2,6 @@
 
 auto main() -> int
 {
-    XLib::Test::run();
+    XKLib::Test::run();
     return 0;
 }

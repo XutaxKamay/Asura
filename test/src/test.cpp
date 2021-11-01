@@ -8,10 +8,10 @@
 
 #include <fstream>
 
-using namespace XLib;
+using namespace XKLib;
 using namespace CryptoPP;
 
-#define ConsoleOutput(format) std::cout << "[XLib] -> " << format
+#define ConsoleOutput(format) std::cout << "[XKLib] -> " << format
 
 #ifndef WINDOWS
 auto vfunc_hook(ptr_t thisptr) -> void
@@ -30,7 +30,7 @@ auto rogue() -> void
     std::cout << "Hehe" << std::endl;
 }
 
-auto XLib::Test::run() -> void
+auto XKLib::Test::run() -> void
 {
     ConsoleOutput("Starting test") << std::endl;
 
@@ -572,12 +572,12 @@ auto XLib::Test::run() -> void
     // std::getchar();
 }
 
-void XLib::Test::API::func1()
+void XKLib::Test::API::func1()
 {
     std::cout << "func1" << std::endl;
 }
 
-auto XLib::Test::API::func2(const char* str, ...) -> std::vector<int>
+auto XKLib::Test::API::func2(const char* str, ...) -> std::vector<int>
 {
     va_list parameterInfos;
     va_start(parameterInfos, str);

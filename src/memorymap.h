@@ -6,7 +6,7 @@
 
 #include <memory>
 
-namespace XLib
+namespace XKLib
 {
     class ProcessMemoryMap;
 
@@ -25,6 +25,6 @@ namespace XLib
         std::vector<std::shared_ptr<MemoryArea_T>> _areas {};
     };
 
-} // namespace XLib
+} // namespace XKLib
 
 #endif // MEMORYMAP_H

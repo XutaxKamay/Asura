@@ -5,7 +5,7 @@
 
 using namespace CryptoPP;
 
-XLib::DecryptRSABlocks::DecryptRSABlocks(
+XKLib::DecryptRSABlocks::DecryptRSABlocks(
   const CryptoPP::Integer& publicExponent,
   const CryptoPP::Integer& privateExponent,
   const CryptoPP::Integer& modulus)
@@ -14,12 +14,12 @@ XLib::DecryptRSABlocks::DecryptRSABlocks(
     _private_key.Initialize(modulus, publicExponent, privateExponent);
 }
 
-XLib::DecryptRSABlocks::DecryptRSABlocks(RSA::PrivateKey privateKey)
+XKLib::DecryptRSABlocks::DecryptRSABlocks(RSA::PrivateKey privateKey)
  : _private_key(std::move(privateKey))
 {
 }
 
-auto XLib::DecryptRSABlocks::decrypt(XLib::bytes_t bytes) -> bytes_t
+auto XKLib::DecryptRSABlocks::decrypt(XKLib::bytes_t bytes) -> bytes_t
 {
     auto min_size = _private_key.GetModulus().MinEncodedSize();
 
@@ -58,7 +58,7 @@ auto XLib::DecryptRSABlocks::decrypt(XLib::bytes_t bytes) -> bytes_t
     return bytes;
 }
 
-auto XLib::DecryptRSABlocks::privateKey() -> auto&
+auto XKLib::DecryptRSABlocks::privateKey() -> auto&
 {
     return _private_key;
 }

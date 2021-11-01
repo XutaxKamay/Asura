@@ -5,7 +5,7 @@
 #include "processbase.h"
 #include <list>
 
-namespace XLib
+namespace XKLib
 {
     class Task;
     template <size_t stack_size_T>

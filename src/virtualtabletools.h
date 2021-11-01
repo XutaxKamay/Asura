@@ -6,7 +6,7 @@
 #include "buffer.h"
 #include "process.h"
 
-namespace XLib
+namespace XKLib
 {
     /**
      * A class can have multiple vtables,
@@ -164,6 +164,6 @@ namespace XLib
         return false;
     }
 
-} // namespace XLib
+} // namespace XKLib
 
 #endif // VIRTUALTABLETOOLS_H

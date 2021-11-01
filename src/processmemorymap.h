@@ -6,7 +6,7 @@
 #include "processbase.h"
 #include "processmemoryarea.h"
 
-namespace XLib
+namespace XKLib
 {
     class ProcessMemoryArea;
     class ProcessMemoryMap : public MemoryMap<ProcessMemoryArea>

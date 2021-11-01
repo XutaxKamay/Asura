@@ -1,6 +1,6 @@
 #include "memoryutils.h"
 
-using namespace XLib;
+using namespace XKLib;
 
 size_t MemoryUtils::_page_size;
 std::once_flag MemoryUtils::_get_page_size_once_flag;

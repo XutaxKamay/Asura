@@ -1,7 +1,7 @@
 #include "processbase.h"
 #include <unistd.h>
 
-using namespace XLib;
+using namespace XKLib;
 
 auto ProcessBase::self() -> ProcessBase
 {

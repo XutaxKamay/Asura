@@ -14,7 +14,7 @@
 #include <vendor/cryptopp/sha.h>
 #include <vendor/cryptopp/zlib.h>
 
-namespace XLib
+namespace XKLib
 {
     class RSABlocks
     {
