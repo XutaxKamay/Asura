@@ -65,7 +65,7 @@ ifneq (,$(findstring mingw, $(CXX)))
 	DBGHELP_LIB:=-ldbghelp -lpsapi 
 	DATARACES:=--allow-store-data-races
 else
-	DLOPEN_LIB :=-ldl
+	DLOPEN_LIB :=-ldl -lpthread
 	DATARACES:=--allow-store-data-races
 endif
 
@@ -125,13 +125,13 @@ $(XLIB_OBJ_RELEASE): %$(XLIB_OBJ_RELEASE_OUT): %.cpp
 # TEST
 
 $(XLIB_TEST_DEBUG): $(XLIB_TEST_OBJ_DEBUG) $(XLIB_OBJ_DEBUG)
-				$(CXX) $(CPPFLAGS_DEBUG) -o $@ $^ -l$(CRYPTOPP_LIB) $(DLOPEN_LIB) $(DBGHELP_LIB) -lpthread
+				$(CXX) $(CPPFLAGS_DEBUG) -o $@ $^ -l$(CRYPTOPP_LIB) $(DLOPEN_LIB) $(DBGHELP_LIB)
 
 $(XLIB_TEST_OBJ_DEBUG): %$(XLIB_OBJ_DEBUG_OUT): %.cpp
 				$(CXX) -c $(CPPFLAGS_DEBUG) $< -o $@
 
 $(XLIB_TEST_RELEASE): $(XLIB_TEST_OBJ_RELEASE) $(XLIB_OBJ_RELEASE)
-				$(CXX) $(CPPFLAGS_RELEASE) -o $@ $^ -l$(CRYPTOPP_LIB) $(DLOPEN_LIB) $(DBGHELP_LIB) -lpthread
+				$(CXX) $(CPPFLAGS_RELEASE) -o $@ $^ -l$(CRYPTOPP_LIB) $(DLOPEN_LIB) $(DBGHELP_LIB)
 
 $(XLIB_TEST_OBJ_RELEASE): %$(XLIB_OBJ_RELEASE_OUT): %.cpp
 				$(CXX) -c $(CPPFLAGS_RELEASE) $< -o $@

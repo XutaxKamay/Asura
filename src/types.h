@@ -40,8 +40,13 @@ namespace XLib
     using data_t     = byte_t*;
     using bytes_t    = std::vector<byte_t>;
     using safesize_t = size_t;
+#ifndef WINDOWS
     /* linux pid_t */
     using pid_t = int32_t;
+#else
+    /* windows uses dword urgh */
+    using pid_t = int64_t;
+#endif
 #define __pid_t_defined
 
     template <typename T>
