@@ -12,7 +12,7 @@ namespace XLib
     class RunnableTask;
 
     using tasks_t = std::list<Task>;
-    using tid_t   = int32_t;
+    using tid_t   = int64_t;
 
     class Task
     {

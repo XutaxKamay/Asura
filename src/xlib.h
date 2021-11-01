@@ -19,6 +19,4 @@
 #include "writebuffer.h"
 #include "xkc.h"
 
-using namespace XLib;
-
 #endif // XLIB_H

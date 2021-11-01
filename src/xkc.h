@@ -288,7 +288,7 @@ void XLib::XKC<T>::BinaryTree::find_value(PathInfoResult& pathInfo)
         }
     }
 
-    pathInfo.letter_value = current_node->value;
+    pathInfo.letter_value = view_as<T>(current_node->value);
 }
 
 template <XLib::XKCAlphabetType T>
@@ -367,7 +367,7 @@ auto XLib::XKC<T>::BinaryTree::dot_format(std::shared_ptr<Node> parent)
         for (size_t depth_bit = 0; depth_bit < max_depth_bits;
              depth_bit++)
         {
-            if (parent->depth() & (1 << depth_bit))
+            if (parent->depth() & (1u << depth_bit))
             {
                 depth = "1" + depth;
             }
@@ -393,7 +393,7 @@ auto XLib::XKC<T>::BinaryTree::dot_format(std::shared_ptr<Node> parent)
         for (size_t depth_bit = 0; depth_bit < max_depth_bits;
              depth_bit++)
         {
-            if (parent->right->depth() & (1 << depth_bit))
+            if (parent->right->depth() & (1u << depth_bit))
             {
                 depth = "1" + depth;
             }

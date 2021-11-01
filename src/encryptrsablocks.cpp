@@ -2,17 +2,19 @@
 #include "writebuffer.h"
 
 #include <random>
+#include <utility>
 
 using namespace CryptoPP;
 
-XLib::EncryptRSABlocks::EncryptRSABlocks(CryptoPP::Integer publicExponent,
-                                         CryptoPP::Integer modulus)
+XLib::EncryptRSABlocks::EncryptRSABlocks(
+  const CryptoPP::Integer& publicExponent,
+  const CryptoPP::Integer& modulus)
 {
     _public_key.Initialize(modulus, publicExponent);
 }
 
 XLib::EncryptRSABlocks::EncryptRSABlocks(RSA::PublicKey publicKey)
- : _public_key(publicKey)
+ : _public_key(std::move(publicKey))
 {
 }
 
@@ -59,7 +61,7 @@ auto XLib::EncryptRSABlocks::encrypt(XLib::bytes_t bytes) -> bytes_t
     return bytes;
 }
 
-auto& XLib::EncryptRSABlocks::publicKey()
+auto XLib::EncryptRSABlocks::publicKey() -> auto&
 {
     return _public_key;
 }
