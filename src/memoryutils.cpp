@@ -3,7 +3,7 @@
 using namespace XLib;
 
 size_t MemoryUtils::_page_size;
-std::once_flag MemoryUtils::_memory_page_once_flag;
+std::once_flag MemoryUtils::_get_page_size_once_flag;
 
 #ifdef WINDOWS
 static auto _GetPageSize()
@@ -23,7 +23,7 @@ static auto _GetPageSize()
 
 auto MemoryUtils::GetPageSize() -> size_t
 {
-    std::call_once(_memory_page_once_flag,
+    std::call_once(_get_page_size_once_flag,
                    []()
                    {
                        _page_size = _GetPageSize();

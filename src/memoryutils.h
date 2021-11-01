@@ -274,7 +274,7 @@ namespace XLib
 
       private:
         static size_t _page_size;
-        static std::once_flag _memory_page_once_flag;
+        static std::once_flag _get_page_size_once_flag;
     };
 
 } // namespace XLib
