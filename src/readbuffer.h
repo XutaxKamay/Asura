@@ -59,7 +59,7 @@ namespace XKLib
                 advance(dataSize);
 
                 /*
-                 * If it the parameter isn't null we give the array size
+                 * If the parameter isn't null we give the array size
                  */
                 if (pSize != nullptr)
                 {
@@ -71,7 +71,7 @@ namespace XKLib
                 data = *this->shift<var_t*>(_read_size);
                 advance(sizeof(var_t));
 
-                /* If it the parameter isn't null we give the type size */
+                /* If the parameter isn't null we give the type size */
                 if (pSize != nullptr)
                 {
                     *pSize = sizeof(var_t);

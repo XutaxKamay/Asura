@@ -1,5 +1,6 @@
 #include "processmemorymap.h"
 #include "process.h"
+#include <regex>
 #include <utility>
 
 #ifndef WINDOWS
@@ -44,34 +45,87 @@ auto ProcessMemoryMap::refresh() -> void
 
     while (std::getline(file_memory_map, line))
     {
-        uintptr_t start, end;
-        std::array<byte_t, 3> prot {};
+        uintptr_t start {}, end {};
+        std::string prot = "????";
         std::string name = "unknown";
 
         /* abcd-1000abcd rwxp %x %i:%i %i %s */
-        /* TODO: refactor to modern c++ */
-        std::sscanf(line.c_str(),
-                    "%p-%p %c%c%c",
-                    view_as<ptr_t*>(&start),
-                    view_as<ptr_t*>(&end),
-                    &prot[0],
-                    &prot[1],
-                    &prot[2]);
+        /* 7ff1b37fb000-7ff1b3da9000 r--p 00000000 fe:00 1841992 [ ]+
+         * /usr/lib/locale/locale-archive */
 
-        if (line[line.size() - 1] != '0')
+        /**
+         * This is maybe faster, so I'm just commenting it out, though it
+         * assumes that /proc/pid/maps is always correct.. Indeed it
+         * should be. I don't know why it shouldn't!
+         * Better to be safe than sorry.
+         */
+
+//        std::sscanf(line.c_str(),
+//                    "%p-%p %c%c%c",
+//                    view_as<ptr_t*>(&start),
+//                    view_as<ptr_t*>(&end),
+//                    &prot[0],
+//                    &prot[1],
+//                    &prot[2]);
+
+        constexpr auto REGEX_HEX_NUMBER = "[0-9a-f]+";
+        constexpr auto REGEX_PROT       = "[r-][w-][x-]p";
+        constexpr auto REGEX_NAME = "[0-9a-f]+-[0-9a-f]+ [r-][w-][x-]p "
+                                    "[0-9a-f]+ "
+                                    "[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f] "
+                                    "[0-9]+[ ]+";
+
+        std::smatch match;
+        std::regex regex_hex_number(REGEX_HEX_NUMBER);
+
+        if (std::regex_search(line, match, regex_hex_number))
         {
-            size_t count_char = 1;
+            std::stringstream(match[0].str()) >> std::hex >> start;
 
-            while (line[line.size() - count_char] != ' ')
+            auto suffix = match.suffix().str();
+
+            if (std::regex_search(suffix, match, regex_hex_number))
             {
-                count_char++;
-            }
+                std::stringstream(match[0].str()) >> std::hex >> end;
 
-            name = line.substr(line.size() - count_char + 1u,
-                               line.size());
+                suffix = match.suffix().str();
+
+                std::regex regex_prot(REGEX_PROT);
+
+                if (std::regex_search(suffix, match, regex_prot))
+                {
+                    prot = match[0].str();
+                }
+                else
+                {
+                    XLIB_EXCEPTION("Could not find memory protections");
+                }
+            }
+            else
+            {
+                XLIB_EXCEPTION("Could not find end address");
+            }
+        }
+        else
+        {
+            XLIB_EXCEPTION("Could not find start address");
         }
 
-        auto is_on = [](byte_t prot)
+        if (prot.size() != 4)
+        {
+            XLIB_EXCEPTION("Memory protection should have matched 4 "
+                           "characters");
+        }
+
+        std::regex regex_name(REGEX_NAME);
+
+        /* Sometimes there's no name */
+        if (std::regex_search(line, match, regex_name))
+        {
+            name = line.substr(match[0].str().size(), line.size());
+        }
+
+        auto is_on = [](char prot)
         {
             if (prot == '-')
             {
