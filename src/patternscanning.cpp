@@ -7,30 +7,27 @@ auto XKLib::PatternScanning::search(XKLib::PatternByte& pattern,
 {
     auto& pattern_values  = pattern.values();
     auto old_matches_size = pattern.matches().size();
+    auto buffer_size      = bytes.size();
 
-    for (size_t index = 0; index < bytes.size(); index++)
+    for (size_t index = 0; index < buffer_size; index++)
     {
         /* Then scan the rest */
         auto start_index = index;
 
         for (auto&& pattern_byte : pattern_values)
         {
-            if (start_index >= bytes.size())
-            {
-                XKLIB_EXCEPTION("Out of bounds pattern.");
-            }
-            else if (pattern_byte.value
-                     == PatternByte::Value::type_t::UNKNOWN)
-            {
-                start_index++;
-                continue;
-            }
-            else if (pattern_byte.value != bytes[start_index])
+            if (pattern_byte.value != PatternByte::Value::type_t::UNKNOWN
+                && pattern_byte.value != bytes[start_index])
             {
                 goto skip;
             }
 
             start_index++;
+
+            if (start_index >= buffer_size)
+            {
+                XKLIB_EXCEPTION("Out of bounds pattern.");
+            }
         }
 
         pattern.matches().push_back(
