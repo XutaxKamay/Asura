@@ -64,7 +64,7 @@ end:
 #endif
     if (process.id() == INVALID_PID)
     {
-        XLIB_EXCEPTION("Couldn't find process: " + name);
+        XKLIB_EXCEPTION("Couldn't find process: " + name);
     }
 
     return process;
@@ -83,7 +83,7 @@ auto XKLib::Process::ProcessName(pid_t pid) -> std::string
           result.size())
         < 0)
     {
-        XLIB_EXCEPTION("Could not read symlink.");
+        XKLIB_EXCEPTION("Could not read symlink.");
     }
 #else
     result.reserve(MAX_PATH);

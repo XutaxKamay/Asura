@@ -190,7 +190,7 @@ namespace XKLib
 
             if (!area)
             {
-                XLIB_EXCEPTION("Could not find area");
+                XKLIB_EXCEPTION("Could not find area");
             }
 
             area->protectionFlags() |= MemoryArea::ProtectionFlags::W;

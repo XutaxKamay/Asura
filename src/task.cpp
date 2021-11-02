@@ -124,7 +124,7 @@ auto Task::kill() -> void
 
     if (ret != 0)
     {
-        XLIB_EXCEPTION("Could not terminate task");
+        XKLIB_EXCEPTION("Could not terminate task");
     }
 #endif
 }

@@ -11,7 +11,7 @@ auto XKLib::NetworkReadBuffer::readBit() -> bool
 {
     if (_read_bits / CHAR_BIT >= maxSize())
     {
-        XLIB_EXCEPTION("Filled buffer");
+        XKLIB_EXCEPTION("Filled buffer");
     }
 
     return read_bit(data(), _read_bits++);

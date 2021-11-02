@@ -94,8 +94,8 @@ namespace XKLib
 
         if (base_stack == nullptr)
         {
-            XLIB_EXCEPTION("Could not allocate stack for the "
-                           "task");
+            XKLIB_EXCEPTION("Could not allocate stack for the "
+                            "task");
         }
 
         _id = syscall(__NR_rclone,
@@ -109,7 +109,7 @@ namespace XKLib
 
         if (_id == INVALID_ID)
         {
-            XLIB_EXCEPTION("Could not create task");
+            XKLIB_EXCEPTION("Could not create task");
         }
 #endif
     }
@@ -134,7 +134,7 @@ namespace XKLib
 
         if (ret != 0)
         {
-            XLIB_EXCEPTION("Could not terminate task");
+            XKLIB_EXCEPTION("Could not terminate task");
         }
 #endif
     }

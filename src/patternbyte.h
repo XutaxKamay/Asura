@@ -7,6 +7,13 @@ namespace XKLib
 {
     class Process;
 
+    /**
+     * @brief The PatternByte class
+     * Invalid forms:
+     * UNKNOWN, byte, byte, byte, ...
+     * byte, byte, byte, ..., UNKNOWN
+     * Pattern should not start/finish by UNKNOWN
+     */
     class PatternByte
     {
       public:

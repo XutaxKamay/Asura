@@ -11,7 +11,7 @@ void XKLib::NetworkWriteBuffer::writeBit(bool value)
 {
     if (_written_bits / CHAR_BIT >= maxSize())
     {
-        XLIB_EXCEPTION("Filled buffer");
+        XKLIB_EXCEPTION("Filled buffer");
     }
 
     write_bit(data(), _written_bits++, value);

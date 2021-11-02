@@ -25,7 +25,7 @@ namespace XKLib
         {
             if (_read_size >= maxSize())
             {
-                XLIB_EXCEPTION("Filled buffer");
+                XKLIB_EXCEPTION("Filled buffer");
             }
 
             auto type = *this->shift<typesize_t*>(_read_size);
@@ -37,7 +37,7 @@ namespace XKLib
                 /*
                  * Blame programmer for not writing the buffer correctly.
                  */
-                XLIB_EXCEPTION(std::string(
+                XKLIB_EXCEPTION(std::string(
                   "Expected type: " + get_variable_type_str(typesize_T)
                   + "when type is instead "
                   + get_variable_type_str(type)));

@@ -68,7 +68,7 @@ auto Buffer::operator[](size_t size) -> auto&
 {
     if (!_data && size >= _max_size)
     {
-        XLIB_EXCEPTION("Out of bounds.");
+        XKLIB_EXCEPTION("Out of bounds.");
     }
 
     return *shift<data_t>(size);

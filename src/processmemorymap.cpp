@@ -39,8 +39,8 @@ auto ProcessMemoryMap::refresh() -> void
 
     if (!file_memory_map.is_open())
     {
-        XLIB_EXCEPTION("Couldn't open /proc/"
-                       + std::to_string(_process_base.id()) + "/maps");
+        XKLIB_EXCEPTION("Couldn't open /proc/"
+                        + std::to_string(_process_base.id()) + "/maps");
     }
 
     while (std::getline(file_memory_map, line))
@@ -60,13 +60,13 @@ auto ProcessMemoryMap::refresh() -> void
          * Better to be safe than sorry.
          */
 
-//        std::sscanf(line.c_str(),
-//                    "%p-%p %c%c%c",
-//                    view_as<ptr_t*>(&start),
-//                    view_as<ptr_t*>(&end),
-//                    &prot[0],
-//                    &prot[1],
-//                    &prot[2]);
+        //        std::sscanf(line.c_str(),
+        //                    "%p-%p %c%c%c",
+        //                    view_as<ptr_t*>(&start),
+        //                    view_as<ptr_t*>(&end),
+        //                    &prot[0],
+        //                    &prot[1],
+        //                    &prot[2]);
 
         constexpr auto REGEX_HEX_NUMBER = "[0-9a-f]+";
         constexpr auto REGEX_PROT       = "[r-][w-][x-]p";
@@ -98,23 +98,23 @@ auto ProcessMemoryMap::refresh() -> void
                 }
                 else
                 {
-                    XLIB_EXCEPTION("Could not find memory protections");
+                    XKLIB_EXCEPTION("Could not find memory protections");
                 }
             }
             else
             {
-                XLIB_EXCEPTION("Could not find end address");
+                XKLIB_EXCEPTION("Could not find end address");
             }
         }
         else
         {
-            XLIB_EXCEPTION("Could not find start address");
+            XKLIB_EXCEPTION("Could not find start address");
         }
 
         if (prot.size() != 4)
         {
-            XLIB_EXCEPTION("Memory protection should have matched 4 "
-                           "characters");
+            XKLIB_EXCEPTION("Memory protection should have matched 4 "
+                            "characters");
         }
 
         std::regex regex_name(REGEX_NAME);

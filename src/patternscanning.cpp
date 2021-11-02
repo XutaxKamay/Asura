@@ -8,49 +8,37 @@ auto XKLib::PatternScanning::search(XKLib::PatternByte& pattern,
     auto& pattern_values  = pattern.values();
     auto old_matches_size = pattern.matches().size();
 
-    /* Let's just skip the first wildcards */
-    size_t wildcard_skip = 0;
-
-    while (pattern_values[wildcard_skip].value < 0)
+    for (size_t index = 0; index < bytes.size(); index++)
     {
-        wildcard_skip++;
-    }
+        /* Then scan the rest */
+        auto start_index = index;
 
-    for (size_t index = wildcard_skip; index < bytes.size(); index++)
-    {
-        /* Check if first byte is the same as we go on first */
-        if (bytes[index] == pattern_values[wildcard_skip].value)
+        for (size_t pattern_index = 0;
+             pattern_index < pattern_values.size();
+             pattern_index++)
         {
-            /* Then scan the rest */
-            auto start_index = index;
+            auto pattern_byte = pattern_values[pattern_index];
 
-            for (size_t pattern_index = wildcard_skip;
-                 pattern_index < pattern_values.size();
-                 pattern_index++)
+            if (start_index >= bytes.size())
             {
-                auto pattern_byte = pattern_values[pattern_index];
-
-                if (start_index >= bytes.size())
-                {
-                    XLIB_EXCEPTION("Out of bounds pattern.");
-                }
-                else if (pattern_byte.value
-                         == PatternByte::Value::type_t::UNKNOWN)
-                {
-                    start_index++;
-                    continue;
-                }
-                else if (pattern_byte.value != bytes[start_index])
-                {
-                    goto skip;
-                }
-
+                XKLIB_EXCEPTION("Out of bounds pattern.");
+            }
+            else if (pattern_byte.value
+                     == PatternByte::Value::type_t::UNKNOWN)
+            {
                 start_index++;
+                continue;
+            }
+            else if (pattern_byte.value != bytes[start_index])
+            {
+                goto skip;
             }
 
-            pattern.matches().push_back(
-              view_as<ptr_t>(view_as<uintptr_t>(baseAddress) + index));
+            start_index++;
         }
+
+        pattern.matches().push_back(
+          view_as<ptr_t>(view_as<uintptr_t>(baseAddress) + index));
 
     skip:;
     }

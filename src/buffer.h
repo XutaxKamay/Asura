@@ -180,7 +180,7 @@ namespace XKLib
         {
             if (!_data && size >= _max_size)
             {
-                XLIB_EXCEPTION("Out of bounds.");
+                XKLIB_EXCEPTION("Out of bounds.");
             }
 
             return view_as<cast_T>(view_as<uintptr_t>(_data) + size);

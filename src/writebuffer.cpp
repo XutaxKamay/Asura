@@ -21,7 +21,7 @@ auto WriteBuffer::addData(ptr_t data, size_t size) -> void
 {
     if (_written_size >= maxSize())
     {
-        XLIB_EXCEPTION("Filled buffer");
+        XKLIB_EXCEPTION("Filled buffer");
     }
 
     std::copy(view_as<data_t>(data),

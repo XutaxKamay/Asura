@@ -15,7 +15,7 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
 {
     if (!isValid())
     {
-        XLIB_EXCEPTION("Invalid pattern.");
+        XKLIB_EXCEPTION("Invalid pattern.");
     }
 }
 
@@ -37,6 +37,18 @@ auto XKLib::PatternByte::isValid() -> bool
         {
             return false;
         }
+    }
+
+    /* ? xx xx ... */
+    if (_values[0].value == Value::type_t::UNKNOWN)
+    {
+        return false;
+    }
+
+    /* xx xx ? */
+    if (_values[_values.size() - 1].value == Value::type_t::UNKNOWN)
+    {
+        return false;
     }
 
     return true;

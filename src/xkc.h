@@ -265,8 +265,8 @@ void XKLib::XKC<T>::BinaryTree::find_value(PathInfoResult& pathInfo)
 {
     if (root->height() < pathInfo.depth)
     {
-        XLIB_EXCEPTION("Can't go deeper than the height of the "
-                       "tree.");
+        XKLIB_EXCEPTION("Can't go deeper than the height of the "
+                        "tree.");
     }
 
     std::shared_ptr<Node> current_node = root;
@@ -284,7 +284,7 @@ void XKLib::XKC<T>::BinaryTree::find_value(PathInfoResult& pathInfo)
 
         if (current_node == nullptr)
         {
-            XLIB_EXCEPTION("The node doesn't exist!");
+            XKLIB_EXCEPTION("The node doesn't exist!");
         }
     }
 
@@ -646,7 +646,7 @@ auto XKLib::XKC<T>::decode(XKLib::data_t data, size_t size)
 
     if (written_bits / CHAR_BIT >= size)
     {
-        XLIB_EXCEPTION("there's too much bits to decode.");
+        XKLIB_EXCEPTION("there's too much bits to decode.");
     }
 
     auto max_count_occurs_bits = data[read_bytes];
@@ -705,8 +705,8 @@ auto XKLib::XKC<T>::decode(XKLib::data_t data, size_t size)
 
                 if (read_bytes >= size)
                 {
-                    XLIB_EXCEPTION("Too much bytes decoded.. "
-                                   "Something is wrong.");
+                    XKLIB_EXCEPTION("Too much bytes decoded.. "
+                                    "Something is wrong.");
                 }
             }
 

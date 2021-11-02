@@ -19,7 +19,7 @@ namespace XKLib
         std::string _msg {};
     };
 
-#define XLIB_EXCEPTION(msg)                                              \
+#define XKLIB_EXCEPTION(msg)                                             \
     throw XKLib::Exception(std::string(CURRENT_CONTEXT) + (msg))
 };
 

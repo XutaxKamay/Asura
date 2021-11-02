@@ -100,7 +100,7 @@ namespace XKLib
 
             if (ret < 0)
             {
-                XLIB_EXCEPTION("System call rmprotect failed");
+                XKLIB_EXCEPTION("System call rmprotect failed");
             }
 #endif
         }
@@ -178,7 +178,7 @@ namespace XKLib
 
             if (ret < 0)
             {
-                XLIB_EXCEPTION(+"System call rmunmap failed");
+                XKLIB_EXCEPTION(+"System call rmunmap failed");
             }
 #endif
         }
@@ -200,9 +200,9 @@ namespace XKLib
 
             if (ret != view_as<decltype(ret)>(size))
             {
-                XLIB_EXCEPTION("process_vm_readv failed with "
-                               + std::to_string(address)
-                               + " and size: " + std::to_string(size));
+                XKLIB_EXCEPTION("process_vm_readv failed with "
+                                + std::to_string(address)
+                                + " and size: " + std::to_string(size));
             }
 #else
 
@@ -238,7 +238,7 @@ namespace XKLib
 
             if (ret != view_as<decltype(ret)>(bytes.size()))
             {
-                XLIB_EXCEPTION("process_vm_writev failed");
+                XKLIB_EXCEPTION("process_vm_writev failed");
             }
 
 #else

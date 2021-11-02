@@ -98,15 +98,15 @@ namespace XKLib
 
             if (fd < 0)
             {
-                XLIB_EXCEPTION("Couldn't open module in "
-                               "runtime.");
+                XKLIB_EXCEPTION("Couldn't open module in "
+                                "runtime.");
             }
 
             if (fstat(fd, &st) < 0)
             {
                 close(fd);
-                XLIB_EXCEPTION("Couldn't fstat module in "
-                               "runtime.");
+                XKLIB_EXCEPTION("Couldn't fstat module in "
+                                "runtime.");
             }
 
             auto file_header = view_as<ElfW(Ehdr*)>(
@@ -123,7 +123,7 @@ namespace XKLib
                 || file_header->e_shstrndx == SHN_UNDEF)
             {
                 munmap(file_header, view_as<size_t>(st.st_size));
-                XLIB_EXCEPTION("No symbols.");
+                XKLIB_EXCEPTION("No symbols.");
             }
 
             auto sections = view_as<ElfW(Shdr*)>(
@@ -158,7 +158,7 @@ namespace XKLib
             if (section_str_tab == nullptr && section_sym_tab == nullptr)
             {
                 munmap(file_header, view_as<size_t>(st.st_size));
-                XLIB_EXCEPTION("No symbols.");
+                XKLIB_EXCEPTION("No symbols.");
             }
 
             auto sym_tab = view_as<ElfW(Sym*)>(
@@ -192,7 +192,7 @@ namespace XKLib
             }
 
             munmap(file_header, view_as<size_t>(st.st_size));
-            XLIB_EXCEPTION("Cannot find function.");
+            XKLIB_EXCEPTION("Cannot find function.");
             return nullptr;
         }
 #else
