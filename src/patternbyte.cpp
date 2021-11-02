@@ -31,6 +31,11 @@ auto XKLib::PatternByte::matches() -> std::vector<ptr_t>&
 
 auto XKLib::PatternByte::isValid() -> bool
 {
+    if (_values.size() == 0)
+    {
+        return 0;
+    }
+
     for (auto&& byte : _values)
     {
         if (byte.value == Value::type_t::INVALID)
