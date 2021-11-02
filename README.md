@@ -24,5 +24,5 @@ pass: yu9Ooya7
 ```
 You might need to fix the patch to suit your kernel version (changing system calls numbers).
 
-- Just include <repo>/src in your project and link the a library. (xklib.rel or xklib.dbg)
+- Just include <repo>/src in your project and link the a library. (xklib.rel.a or xklib.dbg.a)
 
