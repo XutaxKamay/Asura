@@ -506,11 +506,7 @@ auto XKLib::Test::run() -> void
         Timer timer;
 
         timer.start();
-
         pattern.scan(process);
-
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-
         timer.end();
 
         ConsoleOutput("scan took: ")

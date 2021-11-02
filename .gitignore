@@ -1,6 +1,8 @@
 *
-!*.cpp
+#Whitelist subdirectories
+!*/
 !*.h
+!*.cpp
 !Makefile
 !TODO
 !README.md
