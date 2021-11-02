@@ -20,12 +20,14 @@ DLOPEN_LIB:=
 DBGHELP_LIB:=
 PTHREAD_LIB:=
 DATARACES:=
+MOREFLAGS:=
 
 ifneq (,$(findstring mingw, $(CXX)))
   XKLIB_TEST_DEBUG:=$(XKLIB_TEST_DEBUG).exe
   XKLIB_TEST_RELEASE:=$(XKLIB_TEST_RELEASE).exe
   DBGHELP_LIB:=-ldbghelp -lpsapi 
   DATARACES:=--allow-store-data-races
+  MOREFLAGS:=-static-libgcc -static-libstdc++
 else
   DLOPEN_LIB:=-ldl
   PTHREAD_LIB:=-lpthread
@@ -42,8 +44,8 @@ XKLIB_DEBUG:=$(XKLIB_DEBUG).a
 XKLIB_RELEASE:=$(XKLIB_RELEASE).a
 
 ## FLAGS
-CPPFLAGS_DEBUG:=-fPIC -std=c++2a -O0 -g $(ERRORS) $(INCLUDES)
-CPPFLAGS_RELEASE:=-fPIC -std=c++2a -O3 -pipe $(DATARACES) -frename-registers -fomit-frame-pointer -s $(ERRORS) $(INCLUDES)
+CPPFLAGS_DEBUG:=$(MOREFLAGS) -fPIC -std=c++2a -O0 -g $(ERRORS) $(INCLUDES)
+CPPFLAGS_RELEASE:=$(MOREFLAGS) -fPIC -std=c++2a -O3 -pipe $(DATARACES) -frename-registers -fomit-frame-pointer -s $(ERRORS) $(INCLUDES)
 
 ## RULES
 all: xklib xklib_test
