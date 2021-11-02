@@ -5,10 +5,11 @@ For this library or just in my every day life, I'm using a patch on  Linux kerne
 https://github.com/XutaxKamay/mylib/blob/master/src/custom_linux_syscalls.h
 
 ## Requirements
-- make
-- gcc
-- optional:
-    - mingw
+- GNU/Linux:
+    - make
+    - g++ / clang++
+
+- For Windows you need MinGW with g++
 
 ## How to build
 Type `make -j$(nproc)` inside the root directory of the repository.
