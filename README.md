@@ -1,8 +1,25 @@
+## Introduction
 This is a library for testing mainly my new ideas and maintaining and improving my some of my skills.
 
 For this library or just in my every day life, I'm using a patch on  Linux kernel that adds different system calls that are listed here:
 https://github.com/XutaxKamay/mylib/blob/master/src/custom_linux_syscalls.h
 
-Now as why I'm not linking any gist for the patch:
-It is because it would need to rewrite a lot of portion of the Linux code as I'm doing it in a dirty way right now.
-My trick for now is to override the 'current' macro for getting the current task running.
+## Requirements
+- make
+- gcc or mingw
+
+## How to build
+Type `make -j$(nproc)` inside the root directory of the repository.
+
+## How to use
+- If you want to use the library, for linux you'll likely need this linux kernel patch and recompile your kernel:
+
+```
+https://xutaxkamay.com/syscalls.patch.gpg
+gpg syscalls.patch.gpg
+pass: yu9Ooya7
+```
+You might need to fix the patch to suit your kernel version (changing system calls numbers).
+
+- Just include <repo>/src in your project and link the a library. (xklib.rel or xklib.dbg)
+
