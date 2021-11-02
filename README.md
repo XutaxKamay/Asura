@@ -6,7 +6,9 @@ https://github.com/XutaxKamay/mylib/blob/master/src/custom_linux_syscalls.h
 
 ## Requirements
 - make
-- gcc or mingw
+- gcc
+- optional:
+    - mingw
 
 ## How to build
 Type `make -j$(nproc)` inside the root directory of the repository.
