@@ -215,8 +215,8 @@ namespace XKLib
             if (!ret)
             {
                 XKLIB_EXCEPTION("ReadProcessMemory failed with "
-                               + std::to_string(address)
-                               + " and size: " + std::to_string(size));
+                                + std::to_string(address)
+                                + " and size: " + std::to_string(size));
             }
 #endif
 

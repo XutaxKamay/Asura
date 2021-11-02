@@ -503,16 +503,30 @@ auto XKLib::Test::run() -> void
 
         auto process = Process::self();
 
-        Timer timer;
+        Timer timer {};
 
         timer.start();
         pattern.scan(process);
         timer.end();
 
         ConsoleOutput("scan took: ")
-          << std::dec << timer.seconds() << "." << timer.millis() << "."
-          << timer.micros() << "." << timer.nanos() << " seconds or "
           << std::dec << timer.difference() << " nanoseconds "
+          << "with: " <<
+          [&process]()
+        {
+            auto mmap = process.mmap();
+
+            size_t mmap_size = 0;
+
+            for (auto&& area : mmap.areas())
+            {
+                mmap_size += area->size();
+            }
+
+            return std::to_string(view_as<double>(mmap_size) / 1000000.0);
+        }()
+          << " process memory in megabytes and "
+          << pattern.values().size() << " of pattern size in bytes"
           << std::endl;
 
         if (pattern.matches().size() != 0)

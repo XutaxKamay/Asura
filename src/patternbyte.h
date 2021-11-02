@@ -31,12 +31,23 @@ namespace XKLib
             int value = INVALID;
         };
 
+        using fastval_t = uint64_t;
+
+        struct FastValue
+        {
+            bool unknown;
+            fastval_t val;
+            size_t var_size;
+            uint64_t mask;
+        };
+
         PatternByte(std::vector<Value> values,
                     std::string _area_name     = "",
                     std::vector<ptr_t> matches = {});
 
       public:
         auto values() -> std::vector<Value>&;
+        auto fvalues() -> std::vector<FastValue>&;
         auto matches() -> std::vector<ptr_t>&;
         auto isValid() -> bool;
         auto scan(Process& process) -> void;
@@ -44,6 +55,7 @@ namespace XKLib
 
       private:
         std::vector<Value> _values;
+        std::vector<FastValue> _fast_values;
         std::vector<ptr_t> _matches;
         std::string _area_name;
     };

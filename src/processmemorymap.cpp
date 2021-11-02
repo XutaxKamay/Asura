@@ -157,7 +157,7 @@ auto ProcessMemoryMap::refresh() -> void
     if (process_handle == nullptr)
     {
         XKLIB_EXCEPTION("Couldn't open process from pid: "
-                       + std::to_string(_process_base.id()));
+                        + std::to_string(_process_base.id()));
     }
 
     MEMORY_BASIC_INFORMATION info;

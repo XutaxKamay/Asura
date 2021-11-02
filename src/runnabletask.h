@@ -61,8 +61,8 @@ namespace XKLib
         if (!process_handle)
         {
             XKLIB_EXCEPTION("Could not get permissions to create a "
-                           "new "
-                           "task");
+                            "new "
+                            "task");
         }
 
         _thread_handle = CreateRemoteThread(
