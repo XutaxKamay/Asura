@@ -13,12 +13,8 @@ auto XKLib::PatternScanning::search(XKLib::PatternByte& pattern,
         /* Then scan the rest */
         auto start_index = index;
 
-        for (size_t pattern_index = 0;
-             pattern_index < pattern_values.size();
-             pattern_index++)
+        for (auto&& pattern_byte : pattern_values)
         {
-            auto pattern_byte = pattern_values[pattern_index];
-
             if (start_index >= bytes.size())
             {
                 XKLIB_EXCEPTION("Out of bounds pattern.");
