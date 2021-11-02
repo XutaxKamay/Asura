@@ -74,7 +74,7 @@ namespace XKLib
 
             if (process_handle == nullptr)
             {
-                XLIB_EXCEPTION("Couldn't open process");
+                XKLIB_EXCEPTION("Couldn't open process");
             }
 
             DWORD dwOldFlags;
@@ -87,7 +87,7 @@ namespace XKLib
 
             if (!ret)
             {
-                XLIB_EXCEPTION("VirtualProtectEx failed");
+                XKLIB_EXCEPTION("VirtualProtectEx failed");
             }
 
             CloseHandle(process_handle);
@@ -120,7 +120,7 @@ namespace XKLib
 
             if (process_handle == nullptr)
             {
-                XLIB_EXCEPTION("Couldn't open process");
+                XKLIB_EXCEPTION("Couldn't open process");
             }
 
             auto area_start = VirtualAllocEx(
@@ -159,7 +159,7 @@ namespace XKLib
 
             if (process_handle == nullptr)
             {
-                XLIB_EXCEPTION("Couldn't open process");
+                XKLIB_EXCEPTION("Couldn't open process");
             }
 
             auto ret = VirtualFreeEx(process_handle,
@@ -169,7 +169,7 @@ namespace XKLib
 
             if (!ret)
             {
-                XLIB_EXCEPTION("VirtualFreeEx failed");
+                XKLIB_EXCEPTION("VirtualFreeEx failed");
             }
 
             CloseHandle(process_handle);
@@ -214,7 +214,7 @@ namespace XKLib
 
             if (!ret)
             {
-                XLIB_EXCEPTION("ReadProcessMemory failed with "
+                XKLIB_EXCEPTION("ReadProcessMemory failed with "
                                + std::to_string(address)
                                + " and size: " + std::to_string(size));
             }
@@ -251,7 +251,7 @@ namespace XKLib
 
             if (process_handle == nullptr)
             {
-                XLIB_EXCEPTION("Couldn't open process");
+                XKLIB_EXCEPTION("Couldn't open process");
             }
 
             auto ret = WriteProcessMemory(process_handle,
@@ -262,7 +262,7 @@ namespace XKLib
 
             if (!ret)
             {
-                XLIB_EXCEPTION("WriteProcessMemory failed");
+                XKLIB_EXCEPTION("WriteProcessMemory failed");
             }
 
             CloseHandle(process_handle);

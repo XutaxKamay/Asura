@@ -15,6 +15,7 @@
 #include "patternscanning.h"
 #include "process.h"
 #include "readbuffer.h"
+#include "timer.h"
 #include "virtualtabletools.h"
 #include "writebuffer.h"
 #include "xkc.h"

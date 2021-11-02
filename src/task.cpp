@@ -25,7 +25,7 @@ auto Task::list(ProcessBase processBase) -> tasks_t
       0);
 
     if (thread_handle_snapshot == INVALID_HANDLE_VALUE)
-        XLIB_EXCEPTION("Could not get snapshot handle for "
+        XKLIB_EXCEPTION("Could not get snapshot handle for "
                        "getting the task list");
 
     te32.dwSize = sizeof(THREADENTRY32);
@@ -109,13 +109,13 @@ auto Task::kill() -> void
 
     if (!thread_handle)
     {
-        XLIB_EXCEPTION("Don't have permissions to terminate "
+        XKLIB_EXCEPTION("Don't have permissions to terminate "
                        "task");
     }
 
     if (!TerminateThread(thread_handle, EXIT_CODE))
     {
-        XLIB_EXCEPTION("Could not terminate task");
+        XKLIB_EXCEPTION("Could not terminate task");
     }
 
     CloseHandle(thread_handle);
@@ -136,7 +136,7 @@ auto Task::wait() -> void
 
     if (!thread_handle)
     {
-        XLIB_EXCEPTION("Don't have permissions to wait "
+        XKLIB_EXCEPTION("Don't have permissions to wait "
                        "for task termination");
     }
 

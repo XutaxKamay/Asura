@@ -503,7 +503,21 @@ auto XKLib::Test::run() -> void
 
         auto process = Process::self();
 
+        Timer timer;
+
+        timer.start();
+
         pattern.scan(process);
+
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+
+        timer.end();
+
+        ConsoleOutput("scan took: ")
+          << std::dec << timer.seconds() << "." << timer.millis() << "."
+          << timer.micros() << "." << timer.nanos() << " seconds or "
+          << std::dec << timer.difference() << " nanoseconds "
+          << std::endl;
 
         if (pattern.matches().size() != 0)
         {

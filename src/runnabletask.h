@@ -60,7 +60,7 @@ namespace XKLib
 
         if (!process_handle)
         {
-            XLIB_EXCEPTION("Could not get permissions to create a "
+            XKLIB_EXCEPTION("Could not get permissions to create a "
                            "new "
                            "task");
         }
@@ -77,7 +77,7 @@ namespace XKLib
         if (_thread_handle == nullptr)
         {
             _id = INVALID_ID;
-            XLIB_EXCEPTION("Could not create task");
+            XKLIB_EXCEPTION("Could not create task");
         }
 
         CloseHandle(process_handle);
@@ -120,12 +120,12 @@ namespace XKLib
 #ifdef WINDOWS
         if (!_thread_handle)
         {
-            XLIB_EXCEPTION("Thread did not start yet");
+            XKLIB_EXCEPTION("Thread did not start yet");
         }
 
         if (!TerminateThread(_thread_handle, EXIT_CODE))
         {
-            XLIB_EXCEPTION("Could not terminate task");
+            XKLIB_EXCEPTION("Could not terminate task");
         }
 
         CloseHandle(_thread_handle);
@@ -145,7 +145,7 @@ namespace XKLib
 #ifdef WINDOWS
         if (!_thread_handle)
         {
-            XLIB_EXCEPTION("Thread did not start yet");
+            XKLIB_EXCEPTION("Thread did not start yet");
         }
 
         WaitForSingleObject(_thread_handle, INFINITE);

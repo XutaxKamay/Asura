@@ -95,7 +95,7 @@ auto XKLib::Process::ProcessName(pid_t pid) -> std::string
 
     if (!process_handle)
     {
-        XLIB_EXCEPTION("Could not get process handle.");
+        XKLIB_EXCEPTION("Could not get process handle.");
     }
 
     if (GetModuleFileNameExA(process_handle,
@@ -104,7 +104,7 @@ auto XKLib::Process::ProcessName(pid_t pid) -> std::string
                              result.size())
         <= 0)
     {
-        XLIB_EXCEPTION("Could not read process path.");
+        XKLIB_EXCEPTION("Could not read process path.");
     }
 
     CloseHandle(process_handle);

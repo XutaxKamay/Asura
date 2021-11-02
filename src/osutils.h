@@ -211,7 +211,7 @@ namespace XKLib
                 return view_as<T>(sym_info.Address);
             }
 
-            XLIB_EXCEPTION("Couldn't find symbol in runtime.");
+            XKLIB_EXCEPTION("Couldn't find symbol in runtime.");
         }
 #endif
     };
