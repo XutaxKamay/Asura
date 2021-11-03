@@ -45,8 +45,8 @@ XKLIB_DEBUG:=$(XKLIB_DEBUG).a
 XKLIB_RELEASE:=$(XKLIB_RELEASE).a
 
 ## FLAGS
-CPPFLAGS_DEBUG:=$(MOREFLAGS) -march=native -mtune=native -fPIC -std=c++2a -O0 -g $(ERRORS) $(INCLUDES)
-CPPFLAGS_RELEASE:=$(MOREFLAGS) -march=native -mtune=native -fPIC -std=c++2a -O3 -pipe $(DATARACES) -frename-registers -fomit-frame-pointer -s $(ERRORS) $(INCLUDES)
+CPPFLAGS_DEBUG:=$(MOREFLAGS) -fPIC -std=c++2a -O0 -g $(ERRORS) $(INCLUDES)
+CPPFLAGS_RELEASE:=$(MOREFLAGS) -fPIC -std=c++2a -O3 -pipe $(DATARACES) -frename-registers -fomit-frame-pointer -s $(ERRORS) $(INCLUDES)
 
 ## RULES
 all: xklib xklib_test
@@ -101,6 +101,4 @@ clean:
 	${RM} $(XKLIB_TEST_RELEASE)
 	${RM} $(XKLIB_TEST_OBJ_DEBUG)
 	${RM} $(XKLIB_TEST_OBJ_RELEASE)
-
-mrproper: clean
 	$(MAKE) -C vendor/cryptopp clean
