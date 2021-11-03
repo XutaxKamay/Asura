@@ -32,11 +32,35 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
         {
             if (index_of_fastval != 0)
             {
-                fastval_t mask {};
-                std::memset(view_as<ptr_t>(view_as<uintptr_t>(&mask)
-                                           + index_of_fastval),
-                            0xFF,
-                            sizeof(fastval) - index_of_fastval);
+                auto max_bits = index_of_fastval * CHAR_BIT;
+#ifndef __AVX512F__
+                fastval_t mask = (1ull << max_bits) - 1ull;
+#else
+                std::array<int64_t, 8> e {};
+                size_t ei = 0;
+
+                for (; ei < 8 && max_bits >= sizeof(int64_t); ei++)
+                {
+                    *view_as<uint64_t*>(&e[ei]) = std::numeric_limits<
+                      uint64_t>::max();
+                    max_bits -= sizeof(int64_t);
+                }
+
+                if (max_bits > 0)
+                {
+                    *view_as<uint64_t*>(&e[ei]) = (1ull << max_bits)
+                                                  - 1ull;
+                }
+
+                auto mask = _mm512_set_epi64(e[7],
+                                             e[6],
+                                             e[5],
+                                             e[4],
+                                             e[3],
+                                             e[2],
+                                             e[1],
+                                             e[0]);
+#endif
 
                 _fast_values.push_back(
                   { false, fastval, index_of_fastval, mask });
@@ -74,8 +98,12 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
 
             if (index_of_fastval >= sizeof(fastval_t))
             {
-                fastval_t mask;
-                std::memset(&mask, 0xFF, sizeof(fastval));
+#ifndef __AVX512F__
+                fastval_t mask = std::numeric_limits<uint64_t>::max();
+#else
+                fastval_t mask {};
+#endif
+
                 _fast_values.push_back(
                   { false, fastval, sizeof(fastval_t), mask });
 
@@ -89,12 +117,34 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
 
     if (index_of_fastval != 0)
     {
-        fastval_t mask {};
-        std::memset(view_as<ptr_t>(view_as<uintptr_t>(&mask)
-                                   + index_of_fastval),
-                    0xFF,
-                    sizeof(fastval) - index_of_fastval);
+        auto max_bits = index_of_fastval * CHAR_BIT;
+#ifndef __AVX512F__
+        fastval_t mask = (1ull << max_bits) - 1ull;
+#else
+        std::array<int64_t, 8> e {};
+        size_t ei = 0;
 
+        for (; ei < 8 && max_bits >= sizeof(int64_t); ei++)
+        {
+            *view_as<uint64_t*>(&e[ei]) = std::numeric_limits<
+              uint64_t>::max();
+            max_bits -= sizeof(int64_t);
+        }
+
+        if (max_bits > 0)
+        {
+            *view_as<uint64_t*>(&e[ei]) = (1ull << max_bits) - 1ull;
+        }
+
+        auto mask = _mm512_set_epi64(e[7],
+                                     e[6],
+                                     e[5],
+                                     e[4],
+                                     e[3],
+                                     e[2],
+                                     e[1],
+                                     e[0]);
+#endif
         _fast_values.push_back({ false, fastval, index_of_fastval, mask });
     }
 }

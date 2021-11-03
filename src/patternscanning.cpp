@@ -5,10 +5,10 @@ auto XKLib::PatternScanning::search(XKLib::PatternByte& pattern,
                                     const XKLib::bytes_t& bytes,
                                     ptr_t baseAddress) -> bool
 {
-    auto& pattern_fvalues = pattern.fvalues();
-    auto old_matches_size = pattern.matches().size();
-    auto buffer_size      = bytes.size();
-    auto& patterh_values  = pattern.values();
+    auto&& pattern_fvalues = pattern.fvalues();
+    auto old_matches_size  = pattern.matches().size();
+    auto buffer_size       = bytes.size();
+    auto&& patterh_values  = pattern.values();
 
     for (size_t index = 0;
          index < buffer_size
@@ -30,18 +30,15 @@ auto XKLib::PatternScanning::search(XKLib::PatternByte& pattern,
                 goto skip;
             }
 #else
-            if (!pattern_value.unknown)
+            /* _mm512_load_si512 needs to be aligned, so we use
+             * _mm512_loadu_si512 instead */
+            if (!pattern_value.unknown
+                && !_mm512_cmpeq_epi64_mask(
+                  _mm512_and_epi64(_mm512_loadu_si512(&bytes[start_index]),
+                                   pattern_value.mask),
+                  pattern_value.val))
             {
-                /* _mm512_load_si512 needs to be aligned, so we use
-                 * _mm512_loadu_si512 instead */
-                if (!_mm512_cmpeq_epi64_mask(
-                      _mm512_and_epi64(_mm512_loadu_si512(
-                                         &bytes[start_index]),
-                                       pattern_value.mask),
-                      pattern_value.val))
-                {
-                    goto skip;
-                }
+                goto skip;
             }
 #endif
             start_index += pattern_value.var_size;
