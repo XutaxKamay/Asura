@@ -31,8 +31,9 @@ ifneq (,$(findstring mingw, $(CXX)))
 else
   DLOPEN_LIB:=-ldl
   PTHREAD_LIB:=-lpthread
-  DATARACES:=--allow-store-data-races
 endif
+
+MOREFLAGS:=$(MOREFLAGS) -Wno-ignored-optimization-argument -Wno-unused-command-line-argument
 
 XKLIB_OBJ_DEBUG=$(subst .cpp,$(XKLIB_OBJ_DEBUG_OUT),$(wildcard src/*.cpp))
 XKLIB_OBJ_RELEASE=$(subst .cpp,$(XKLIB_OBJ_RELEASE_OUT),$(wildcard src/*.cpp))
