@@ -2,6 +2,7 @@
 
 #include "patternscanning.h"
 #include "process.h"
+#include <cstring>
 
 XKLib::PatternByte::Value::Value(int value) : value(value)
 {
@@ -19,9 +20,9 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
     }
 
     /* Convert to fast values for faster pattern scanning */
-    auto pattern_size       = _values.size();
-    fastval_t fastval       = 0;
-    size_t index_of_fastval = 0;
+    auto pattern_size = _values.size();
+    fastval_t fastval {};
+    size_t index_of_fastval {};
 
     for (size_t index = 0; index < pattern_size;)
     {
@@ -31,14 +32,17 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
         {
             if (index_of_fastval != 0)
             {
-                FastValue fvalue { false,
-                                   fastval,
-                                   index_of_fastval,
-                                   (1ull << (index_of_fastval * CHAR_BIT))
-                                     - 1ull };
-                _fast_values.push_back(fvalue);
-                fastval          = 0;
+                fastval_t mask {};
+                std::memset(view_as<ptr_t>(view_as<uintptr_t>(&mask)
+                                           + index_of_fastval),
+                            0xFF,
+                            sizeof(fastval) - index_of_fastval);
+
+                _fast_values.push_back(
+                  { false, fastval, index_of_fastval, mask });
+
                 index_of_fastval = 0;
+                std::memset(&fastval, 0, sizeof(fastval));
             }
 
             /* We got one already */
@@ -56,8 +60,9 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
                 }
             }
 
-            FastValue fvalue { true, 0, index_of_fastval, 0 };
+            FastValue fvalue { true, {}, index_of_fastval, {} };
             _fast_values.push_back(fvalue);
+
             index_of_fastval = 0;
         }
         else
@@ -69,15 +74,13 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
 
             if (index_of_fastval >= sizeof(fastval_t))
             {
-                FastValue fvalue {
-                    false,
-                    fastval,
-                    sizeof(fastval_t),
-                    std::numeric_limits<PatternByte::fastval_t>::max()
-                };
-                _fast_values.push_back(fvalue);
+                fastval_t mask;
+                std::memset(&mask, 0xFF, sizeof(fastval));
+                _fast_values.push_back(
+                  { false, fastval, sizeof(fastval_t), mask });
+
                 index_of_fastval = 0;
-                fastval          = 0;
+                std::memset(&fastval, 0, sizeof(fastval));
             }
 
             index++;
@@ -86,12 +89,13 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
 
     if (index_of_fastval != 0)
     {
-        FastValue fvalue { false,
-                           fastval,
-                           index_of_fastval,
-                           (1ull << (index_of_fastval * CHAR_BIT))
-                             - 1ull };
-        _fast_values.push_back(fvalue);
+        fastval_t mask {};
+        std::memset(view_as<ptr_t>(view_as<uintptr_t>(&mask)
+                                   + index_of_fastval),
+                    0xFF,
+                    sizeof(fastval) - index_of_fastval);
+
+        _fast_values.push_back({ false, fastval, index_of_fastval, mask });
     }
 }
 

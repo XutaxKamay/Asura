@@ -2,7 +2,7 @@
 #include "patternbyte.h"
 
 auto XKLib::PatternScanning::search(XKLib::PatternByte& pattern,
-                                    XKLib::bytes_t bytes,
+                                    const XKLib::bytes_t& bytes,
                                     ptr_t baseAddress) -> bool
 {
     auto& pattern_fvalues = pattern.fvalues();
@@ -20,6 +20,7 @@ auto XKLib::PatternScanning::search(XKLib::PatternByte& pattern,
 
         for (auto&& pattern_value : pattern_fvalues)
         {
+#ifndef __AVX512F__
             if (!pattern_value.unknown
                 && pattern_value.val
                      != (*view_as<PatternByte::fastval_t*>(
@@ -28,7 +29,21 @@ auto XKLib::PatternScanning::search(XKLib::PatternByte& pattern,
             {
                 goto skip;
             }
-
+#else
+            if (!pattern_value.unknown)
+            {
+                /* _mm512_load_si512 needs to be aligned, so we use
+                 * _mm512_loadu_si512 instead */
+                if (!_mm512_cmpeq_epi64_mask(
+                      _mm512_and_epi64(_mm512_loadu_si512(
+                                         &bytes[start_index]),
+                                       pattern_value.mask),
+                      pattern_value.val))
+                {
+                    goto skip;
+                }
+            }
+#endif
             start_index += pattern_value.var_size;
         }
 

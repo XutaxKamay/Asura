@@ -19,7 +19,7 @@ namespace XKLib
           const std::string& areaName) -> void;
 
         static auto search(PatternByte& pattern,
-                           bytes_t bytes,
+                           const bytes_t& bytes,
                            ptr_t baseAddress) -> bool;
     };
 };

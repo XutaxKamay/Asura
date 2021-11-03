@@ -3,6 +3,8 @@
 
 #include "process.h"
 
+#include <immintrin.h>
+
 namespace XKLib
 {
     class Process;
@@ -31,14 +33,18 @@ namespace XKLib
             int value = INVALID;
         };
 
+#ifndef __AVX512F__
         using fastval_t = uint64_t;
+#else
+        using fastval_t = __m512i;
+#endif
 
         struct FastValue
         {
             bool unknown;
             fastval_t val;
             size_t var_size;
-            uint64_t mask;
+            fastval_t mask;
         };
 
         PatternByte(std::vector<Value> values,
