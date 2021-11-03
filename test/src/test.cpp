@@ -507,6 +507,7 @@ auto XKLib::Test::run() -> void
 
         timer.start();
         pattern.scan(process);
+        // PatternScanning::search(pattern, random_bytes, nullptr);
         timer.end();
 
         ConsoleOutput("scan took: ")

@@ -33,10 +33,12 @@ namespace XKLib
             int value = INVALID;
         };
 
-#ifndef __AVX512F__
-        using fastval_t = uint64_t;
-#else
+#ifdef __AVX512F__
         using fastval_t = __m512i;
+#elif __AVX2__
+        using fastval_t = __m256i;
+#else
+        using fastval_t = uint64_t;
 #endif
 
         struct FastValue

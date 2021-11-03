@@ -32,26 +32,43 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
         {
             if (index_of_fastval != 0)
             {
-                auto max_bits = index_of_fastval * CHAR_BIT;
-#ifndef __AVX512F__
-                fastval_t mask = (1ull << max_bits) - 1ull;
-#else
+                auto bytes_mask = index_of_fastval;
+
+#if defined(__AVX512F__) || defined(__AVX2__)
+    #ifdef __AVX512F__
                 std::array<int64_t, 8> e {};
+    #elif __AVX2__
+                std::array<int64_t, 4> e {};
+    #endif
                 size_t ei = 0;
 
-                for (; ei < 8 && max_bits >= sizeof(int64_t); ei++)
+                if (bytes_mask >= sizeof(int64_t))
                 {
-                    *view_as<uint64_t*>(&e[ei]) = std::numeric_limits<
-                      uint64_t>::max();
-                    max_bits -= sizeof(int64_t);
-                }
+                    for (; ei < e.size() && bytes_mask >= sizeof(int64_t);
+                         ei++)
+                    {
+                        *view_as<uint64_t*>(&e[ei]) = std::numeric_limits<
+                          uint64_t>::max();
+                        bytes_mask -= sizeof(int64_t);
+                    }
 
-                if (max_bits > 0)
+                    if (bytes_mask > 0)
+                    {
+                        *view_as<uint64_t*>(&e[ei]) = (1ull
+                                                       << (bytes_mask
+                                                           * CHAR_BIT))
+                                                      - 1ull;
+                    }
+                }
+                else
                 {
-                    *view_as<uint64_t*>(&e[ei]) = (1ull << max_bits)
+                    *view_as<uint64_t*>(&e[ei]) = (1ull << (bytes_mask
+                                                            * CHAR_BIT))
                                                   - 1ull;
                 }
+#endif
 
+#ifdef __AVX512F__
                 auto mask = _mm512_set_epi64(e[7],
                                              e[6],
                                              e[5],
@@ -60,6 +77,11 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
                                              e[2],
                                              e[1],
                                              e[0]);
+#elif __AVX2__
+                auto mask = _mm256_set_epi64x(e[3], e[2], e[1], e[0]);
+
+#else
+                fastval_t mask = (1ull << bytes_mask * CHAR_BIT) - 1ull;
 #endif
 
                 _fast_values.push_back(
@@ -98,10 +120,11 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
 
             if (index_of_fastval >= sizeof(fastval_t))
             {
-#ifndef __AVX512F__
-                fastval_t mask = std::numeric_limits<uint64_t>::max();
-#else
+#if defined(__AVX512F__) || defined(__AVX2__)
                 fastval_t mask {};
+                std::memset(&mask, 0xFF, sizeof(fastval_t));
+#else
+                fastval_t mask = std::numeric_limits<uint64_t>::max();
 #endif
 
                 _fast_values.push_back(
@@ -117,25 +140,41 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
 
     if (index_of_fastval != 0)
     {
-        auto max_bits = index_of_fastval * CHAR_BIT;
-#ifndef __AVX512F__
-        fastval_t mask = (1ull << max_bits) - 1ull;
-#else
+        auto bytes_mask = index_of_fastval;
+
+#if defined(__AVX512F__) || defined(__AVX2__)
+    #ifdef __AVX512F__
         std::array<int64_t, 8> e {};
+    #elif __AVX2__
+        std::array<int64_t, 4> e {};
+    #endif
         size_t ei = 0;
 
-        for (; ei < 8 && max_bits >= sizeof(int64_t); ei++)
+        if (bytes_mask >= sizeof(int64_t))
         {
-            *view_as<uint64_t*>(&e[ei]) = std::numeric_limits<
-              uint64_t>::max();
-            max_bits -= sizeof(int64_t);
-        }
+            for (; ei < e.size() && bytes_mask >= sizeof(int64_t); ei++)
+            {
+                *view_as<uint64_t*>(&e[ei]) = std::numeric_limits<
+                  uint64_t>::max();
+                bytes_mask -= sizeof(int64_t);
+            }
 
-        if (max_bits > 0)
+            if (bytes_mask > 0)
+            {
+                *view_as<uint64_t*>(&e[ei]) = (1ull
+                                               << (bytes_mask * CHAR_BIT))
+                                              - 1ull;
+            }
+        }
+        else
         {
-            *view_as<uint64_t*>(&e[ei]) = (1ull << max_bits) - 1ull;
+            *view_as<uint64_t*>(&e[ei]) = (1ull
+                                           << (bytes_mask * CHAR_BIT))
+                                          - 1ull;
         }
+#endif
 
+#ifdef __AVX512F__
         auto mask = _mm512_set_epi64(e[7],
                                      e[6],
                                      e[5],
@@ -144,6 +183,11 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
                                      e[2],
                                      e[1],
                                      e[0]);
+#elif __AVX2__
+        auto mask = _mm256_set_epi64x(e[3], e[2], e[1], e[0]);
+
+#else
+        fastval_t mask = (1ull << bytes_mask * CHAR_BIT) - 1ull;
 #endif
         _fast_values.push_back({ false, fastval, index_of_fastval, mask });
     }

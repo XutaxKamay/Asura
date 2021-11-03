@@ -20,23 +20,36 @@ auto XKLib::PatternScanning::search(XKLib::PatternByte& pattern,
 
         for (auto&& pattern_value : pattern_fvalues)
         {
-#ifndef __AVX512F__
+#ifdef __AVX512F__
+            /* _mm512_load_si512 needs to be aligned, so we use
+             * _mm512_loadu_si512 instead */
+            if (!pattern_value.unknown
+                && !_mm512_cmpeq_epi64_mask(
+                  _mm512_and_si512(_mm512_loadu_si512(
+                                     view_as<PatternByte::fastval_t*>(
+                                       &bytes[start_index])),
+                                   pattern_value.mask),
+                  pattern_value.val))
+            {
+                goto skip;
+            }
+#elif __AVX2__
+            if (!pattern_value.unknown
+                && !_mm256_movemask_epi8(_mm256_cmpeq_epi64(
+                  _mm256_and_si256(_mm256_loadu_si256(
+                                     view_as<PatternByte::fastval_t*>(
+                                       &bytes[start_index])),
+                                   pattern_value.mask),
+                  pattern_value.val)))
+            {
+                goto skip;
+            }
+#else
             if (!pattern_value.unknown
                 && pattern_value.val
                      != (*view_as<PatternByte::fastval_t*>(
                            &bytes[start_index])
                          & pattern_value.mask))
-            {
-                goto skip;
-            }
-#else
-            /* _mm512_load_si512 needs to be aligned, so we use
-             * _mm512_loadu_si512 instead */
-            if (!pattern_value.unknown
-                && !_mm512_cmpeq_epi64_mask(
-                  _mm512_and_epi64(_mm512_loadu_si512(&bytes[start_index]),
-                                   pattern_value.mask),
-                  pattern_value.val))
             {
                 goto skip;
             }
