@@ -101,4 +101,6 @@ clean:
 	${RM} $(XKLIB_TEST_RELEASE)
 	${RM} $(XKLIB_TEST_OBJ_DEBUG)
 	${RM} $(XKLIB_TEST_OBJ_RELEASE)
+
+mrproper: clean
 	$(MAKE) -C vendor/cryptopp clean
