@@ -451,7 +451,7 @@ auto XKLib::Test::run() -> void
         random_bytes.push_back(add + 63);
     }
 
-    random_bytes.push_back(1);
+    // random_bytes.push_back(1);
 
     /*
     byte_t result;
@@ -508,9 +508,14 @@ auto XKLib::Test::run() -> void
 
         Timer timer {};
 
+        std::vector<byte_t> more_bytes;
+        more_bytes.resize(random_bytes.size() * 8);
+        std::memcpy(&more_bytes.data()[random_bytes.size() * 7 - 1],
+                    random_bytes.data(),
+                    random_bytes.size());
+
         timer.start();
-        // pattern.scan(process);
-        PatternScanning::search(pattern, random_bytes, nullptr);
+        PatternScanning::search(pattern, more_bytes, nullptr);
         timer.end();
 
         ConsoleOutput("scan took: ")
