@@ -1,6 +1,8 @@
 #ifndef PATTERNBYTE_H
 #define PATTERNBYTE_H
 
+#define PATTERN_UNALIGNED_SIMD_V1_V2
+
 #include "process.h"
 
 #include <immintrin.h>
@@ -73,8 +75,13 @@ namespace XKLib
         auto isValid() -> bool;
         auto scan(Process& process) -> void;
         auto areaName() -> std::string;
+        auto fast_masks() -> simd_value_t*;
+        auto first_known_values() -> std::vector<byte_t>&;
+        uintptr_t first_cpuarch_value();
+        uintptr_t first_cpuarch_mask_value();
 
       private:
+        simd_value_t* _fast_masks;
         std::vector<std::shared_ptr<Value>> _values;
         std::vector<unknown_value_t> _unknown_values;
         simd_value_t* _simd_values {};
@@ -82,6 +89,9 @@ namespace XKLib
         std::vector<fast_value_t> _fast_values;
         std::vector<ptr_t> _matches;
         std::string _area_name;
+        std::vector<byte_t> _first_known_values;
+        uint64_t _first_cpuarch_value;
+        uint64_t _first_cpuarch_mask_value;
     };
 
     using patterns_bytes_t = std::vector<PatternByte>;

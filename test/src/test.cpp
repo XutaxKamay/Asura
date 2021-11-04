@@ -6,6 +6,7 @@
     #include <windows.h>
 #endif
 
+#include <cstring>
 #include <fstream>
 
 using namespace XKLib;
@@ -490,6 +491,10 @@ auto XKLib::Test::run() -> void
           << std::endl;
     }
 
+    auto aligned_memory = view_as<data_t>(
+      std::aligned_alloc(sizeof(PatternByte::simd_value_t),
+                         random_bytes.size() * 8));
+
     try
     {
         std::vector<std::shared_ptr<PatternByte::Value>> pattern_bytes;
@@ -508,83 +513,79 @@ auto XKLib::Test::run() -> void
 
         Timer timer {};
 
-        std::vector<byte_t> more_bytes;
-        more_bytes.resize(random_bytes.size() * 8);
-        std::memcpy(&more_bytes.data()[random_bytes.size() * 7 - 1],
+        std::memcpy(&aligned_memory[random_bytes.size() * 7],
                     random_bytes.data(),
                     random_bytes.size());
 
         timer.start();
-        PatternScanning::search(pattern, more_bytes, nullptr);
+        PatternScanning::searchV1(pattern,
+                                  aligned_memory,
+                                  random_bytes.size() * 8,
+                                  nullptr);
         timer.end();
 
-        ConsoleOutput("scan took: ")
+        ConsoleOutput("v1 scan took: ")
           << std::dec << timer.difference() << " nanoseconds "
-          << "with: " <<
-          [&process]()
-        {
-            auto mmap = process.mmap();
-
-            size_t mmap_size = 0;
-
-            for (auto&& area : mmap.areas())
-            {
-                mmap_size += area->size();
-            }
-
-            return std::to_string(view_as<double>(mmap_size) / 1000000.0);
-        }()
-          << " process memory in megabytes and "
-          << pattern.values().size() << " of pattern size in bytes"
-          << std::endl;
+          << "with: "
+          << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
+          << " page count and " << pattern.values().size()
+          << " of pattern size in bytes" << std::endl;
 
         timer.start();
-        PatternScanning::searchv2(pattern, more_bytes, nullptr);
+        PatternScanning::searchV2(pattern,
+                                  aligned_memory,
+                                  random_bytes.size() * 8,
+                                  nullptr);
         timer.end();
 
-        ConsoleOutput("scan took: ")
+        ConsoleOutput("v2 scan took: ")
           << std::dec << timer.difference() << " nanoseconds "
-          << "with: " <<
-          [&process]()
-        {
-            auto mmap = process.mmap();
-
-            size_t mmap_size = 0;
-
-            for (auto&& area : mmap.areas())
-            {
-                mmap_size += area->size();
-            }
-
-            return std::to_string(view_as<double>(mmap_size) / 1000000.0);
-        }()
-          << " process memory in megabytes and "
-          << pattern.values().size() << " of pattern size in bytes"
-          << std::endl;
+          << "with: "
+          << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
+          << " page count and " << pattern.values().size()
+          << " of pattern size in bytes" << std::endl;
 
         timer.start();
-        PatternScanning::searchv3(pattern, more_bytes, nullptr);
+        PatternScanning::searchV3(pattern,
+                                  aligned_memory,
+                                  random_bytes.size() * 8,
+                                  nullptr);
         timer.end();
 
-        ConsoleOutput("scan took: ")
+        ConsoleOutput("v3 scan took: ")
           << std::dec << timer.difference() << " nanoseconds "
-          << "with: " <<
-          [&process]()
-        {
-            auto mmap = process.mmap();
+          << "with: "
+          << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
+          << " page count and " << pattern.values().size()
+          << " of pattern size in bytes" << std::endl;
 
-            size_t mmap_size = 0;
+        timer.start();
+        PatternScanning::searchAlignedV1(pattern,
+                                         aligned_memory,
+                                         random_bytes.size() * 8,
+                                         nullptr);
+        timer.end();
 
-            for (auto&& area : mmap.areas())
-            {
-                mmap_size += area->size();
-            }
+        ConsoleOutput("aligned v1 scan took: ")
+          << std::dec << timer.difference() << " nanoseconds "
+          << "with: "
+          << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
+          << " page count and " << pattern.values().size()
+          << " of pattern size in bytes" << std::endl;
 
-            return std::to_string(view_as<double>(mmap_size) / 1000000.0);
-        }()
-          << " process memory in megabytes and "
-          << pattern.values().size() << " of pattern size in bytes"
-          << std::endl;
+        timer.start();
+        PatternScanning::searchAlignedV2(pattern,
+                                         aligned_memory,
+                                         random_bytes.size() * 8,
+                                         nullptr);
+        timer.end();
+
+        ConsoleOutput("aligned v2 scan took: ")
+          << std::dec << timer.difference() << " nanoseconds "
+          << "with: "
+          << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
+          << " page count and " << pattern.values().size()
+          << " of pattern size in bytes" << std::endl;
 
         if (pattern.matches().size() != 0)
         {
@@ -607,6 +608,8 @@ auto XKLib::Test::run() -> void
     {
         ConsoleOutput(e.msg()) << std::endl;
     }
+
+    std::free(aligned_memory);
 
     class TestMember : Offset
     {

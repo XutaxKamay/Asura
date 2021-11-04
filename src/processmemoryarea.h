@@ -41,12 +41,28 @@ namespace XKLib
         auto protectionFlags() -> ModifiableProtectionFlags&;
         auto initProtectionFlags(mapf_t flags) -> void;
         auto processBase() -> ProcessBase;
-        auto read() -> bytes_t;
         auto read(size_t size, size_t shift = 0) -> bytes_t;
         auto write(const bytes_t& bytes, size_t shift = 0) -> void;
         auto isDeniedByOS() -> bool;
         auto isReadable() -> bool;
         auto isWritable() -> bool;
+
+      public:
+        template <typename T = byte_t>
+        auto read() -> std::vector<T>
+        {
+            if (ProcessBase::self().id() == _process_base.id())
+            {
+                std::vector<T> result(size() / sizeof(T));
+                std::copy(result.begin(), result.end(), begin<T*>());
+                return result;
+            }
+
+            return MemoryUtils::ReadProcessMemoryAreaAligned<T>(
+              _process_base.id(),
+              begin(),
+              size());
+        }
 
       private:
         ModifiableProtectionFlags _protection_flags;

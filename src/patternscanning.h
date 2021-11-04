@@ -13,27 +13,40 @@ namespace XKLib
         static auto searchInProcess(
           PatternByte& pattern,
           Process& process,
-          const std::function<auto(PatternByte&, const bytes_t&, ptr_t)->void>& func = searchv3)
+          const std::function<auto(PatternByte&, data_t, size_t, ptr_t)->bool>& func = searchAlignedV2)
           -> void;
 
         static auto searchInProcessWithAreaName(
           PatternByte& pattern,
           Process& process,
           const std::string& areaName,
-          const std::function<auto(PatternByte&, const bytes_t&, ptr_t)->void>& func = searchv3)
+          const std::function<auto(PatternByte&, data_t, size_t, ptr_t)->bool>& func = searchAlignedV2)
           -> void;
 
-        static auto search(PatternByte& pattern,
-                           const bytes_t& bytes,
-                           ptr_t baseAddress) -> bool;
-
-        static auto searchv2(PatternByte& pattern,
-                             const bytes_t& bytes,
+        static auto searchV1(PatternByte& pattern,
+                             data_t data,
+                             size_t size,
                              ptr_t baseAddress) -> bool;
 
-        static auto searchv3(PatternByte& pattern,
-                             const bytes_t& bytes,
+        static auto searchV2(PatternByte& pattern,
+                             data_t data,
+                             size_t size,
                              ptr_t baseAddress) -> bool;
+
+        static auto searchV3(PatternByte& pattern,
+                             data_t data,
+                             size_t size,
+                             ptr_t baseAddress) -> bool;
+
+        static auto searchAlignedV1(PatternByte& pattern,
+                                  data_t aligned_data,
+                                  size_t size,
+                                  ptr_t baseAddress) -> bool;
+
+        static auto searchAlignedV2(PatternByte& pattern,
+                                    data_t aligned_data,
+                                    size_t size,
+                                    ptr_t baseAddress) -> bool;
     };
 };
 

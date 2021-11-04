@@ -32,6 +32,8 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
         /* Allocate simd values in aligned way for optimizations */
         _simd_values = view_as<simd_value_t*>(
           std::aligned_alloc(sizeof(simd_value_t), _values.size()));
+        _fast_masks = view_as<simd_value_t*>(
+          std::aligned_alloc(sizeof(simd_value_t), _values.size()));
 
         auto left = _values.size() % sizeof(simd_value_t);
 
@@ -45,6 +47,9 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
         size_t index                       = 0;
         size_t ukval_contigous_count       = 0;
         size_t index_since_contigous_count = 0;
+        size_t byte_simd_index             = 0;
+        bool are_first_known_values        = true;
+        simd_value_t mask {};
 
         for (auto&& value : _values)
         {
@@ -55,6 +60,8 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
                 index_since_contigous_count = index;
                 ukval_contigous_count++;
 
+                view_as<byte_t*>(&mask)[byte_simd_index] = 0x00;
+
                 if (ukval_contigous_count >= sizeof(simd_value_t))
                 {
                     _unknown_values.push_back(
@@ -64,9 +71,18 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
                         ukval_contigous_count });
                     ukval_contigous_count = 0;
                 }
+
+                view_as<byte_t*>(_simd_values)[index] = 0;
+                are_first_known_values                = false;
             }
             else
             {
+                if (are_first_known_values)
+                {
+                    _first_known_values.push_back(
+                      view_as<byte_t>(value->value));
+                }
+
                 if (ukval_contigous_count > 0)
                 {
                     _unknown_values.push_back(
@@ -77,13 +93,30 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
                     ukval_contigous_count = 0;
                 }
 
+                view_as<byte_t*>(&mask)[byte_simd_index] = 0xFF;
+
                 view_as<byte_t*>(_simd_values)[index] = view_as<byte_t>(
                   value->value);
             }
 
             index++;
+            byte_simd_index++;
+
+            if (byte_simd_index >= sizeof(simd_value_t))
+            {
+                _fast_masks[index / sizeof(simd_value_t)] = mask;
+                byte_simd_index                           = 0;
+            }
         }
     }
+
+    _first_cpuarch_value = *view_as<uintptr_t*>(&_first_known_values[0]);
+    _first_cpuarch_mask_value = (_first_known_values.size()
+                                 >= sizeof(uintptr_t)) ?
+                                  std::numeric_limits<uintptr_t>::max() :
+                                  (1u << _first_known_values.size()) - 1u;
+    _first_cpuarch_value      = _first_cpuarch_value
+                           & _first_cpuarch_mask_value;
 
     /* Second scanning method using masks */
     {
@@ -101,7 +134,8 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
                 {
                     auto bytes_mask = index_of_smid_value;
 
-#if defined(__AVX512F__) || defined(__AVX2__)
+#if (defined(__AVX512F__) || defined(__AVX2__))                          \
+  && defined(PATTERN_UNALIGNED_SIMD_V1_V2)
     #ifdef __AVX512F__
                     std::array<int64_t, 8> e {};
     #elif defined(__AVX2__)
@@ -137,7 +171,7 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
                     }
 #endif
 
-#ifdef __AVX512F__
+#if defined(__AVX512F__) && defined(PATTERN_UNALIGNED_SIMD_V1_V2)
                     auto mask = _mm512_set_epi64(e[7],
                                                  e[6],
                                                  e[5],
@@ -146,7 +180,7 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
                                                  e[2],
                                                  e[1],
                                                  e[0]);
-#elif defined(__AVX2__)
+#elif defined(__AVX2__) && defined(PATTERN_UNALIGNED_SIMD_V1_V2)
                     auto mask = _mm256_set_epi64x(e[3], e[2], e[1], e[0]);
 
 #else
@@ -191,7 +225,8 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
 
                 if (index_of_smid_value >= sizeof(simd_value_t))
                 {
-#if defined(__AVX512F__) || defined(__AVX2__)
+#if (defined(__AVX512F__) || defined(__AVX2__))                          \
+  && defined(PATTERN_UNALIGNED_SIMD_V1_V2)
                     simd_value_t mask {};
                     std::memset(&mask, 0xFF, sizeof(simd_value_t));
 #else
@@ -214,7 +249,8 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
         {
             auto bytes_mask = index_of_smid_value;
 
-#if defined(__AVX512F__) || defined(__AVX2__)
+#if (defined(__AVX512F__) || defined(__AVX2__))                          \
+  && defined(PATTERN_UNALIGNED_SIMD_V1_V2)
     #if defined(__AVX512F__)
             std::array<int64_t, 8> e {};
     #elif defined(__AVX2__)
@@ -247,7 +283,7 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
             }
 #endif
 
-#ifdef __AVX512F__
+#if defined(__AVX512F__) && defined(PATTERN_UNALIGNED_SIMD_V1_V2)
             auto mask = _mm512_set_epi64(e[7],
                                          e[6],
                                          e[5],
@@ -256,7 +292,7 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
                                          e[2],
                                          e[1],
                                          e[0]);
-#elif defined(__AVX2__)
+#elif defined(__AVX2__) && defined(PATTERN_UNALIGNED_SIMD_V1_V2)
             auto mask = _mm256_set_epi64x(e[3], e[2], e[1], e[0]);
 
 #else
@@ -271,6 +307,7 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
 XKLib::PatternByte::~PatternByte()
 {
     std::free(_simd_values);
+    std::free(_fast_masks);
 }
 
 auto XKLib::PatternByte::values() -> std::vector<std::shared_ptr<Value>>&
@@ -341,4 +378,24 @@ auto XKLib::PatternByte::scan(Process& process) -> void
 auto XKLib::PatternByte::areaName() -> std::string
 {
     return _area_name;
+}
+
+auto XKLib::PatternByte::fast_masks() -> simd_value_t*
+{
+    return _fast_masks;
+}
+
+auto XKLib::PatternByte::first_known_values() -> std::vector<byte_t>&
+{
+    return _first_known_values;
+}
+
+uintptr_t XKLib::PatternByte::first_cpuarch_value()
+{
+    return _first_cpuarch_value;
+}
+
+uintptr_t XKLib::PatternByte::first_cpuarch_mask_value()
+{
+    return _first_cpuarch_mask_value;
 }

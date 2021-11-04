@@ -223,6 +223,48 @@ namespace XKLib
             return result;
         }
 
+        template <typename A, typename T = uintptr_t>
+        static auto ReadProcessMemoryAreaAligned(pid_t pid,
+                                                 T address,
+                                                 size_t size)
+          -> std::vector<A>
+        {
+            std::vector<A> result(size / sizeof(A));
+
+#ifndef WINDOWS
+            iovec local  = { .iov_base = result.data(),
+                            .iov_len  = result.size() * sizeof(A) };
+            iovec remote = { .iov_base = view_as<ptr_t>(address),
+                             .iov_len  = result.size() * sizeof(A) };
+
+            auto ret = process_vm_readv(pid, &local, 1, &remote, 1, 0);
+
+            if (ret != view_as<decltype(ret)>(size))
+            {
+                XKLIB_EXCEPTION("process_vm_readv failed with "
+                                + std::to_string(address)
+                                + " and size: " + std::to_string(size));
+            }
+#else
+
+            auto ret = Toolhelp32ReadProcessMemory(
+              view_as<DWORD>(pid),
+              view_as<ptr_t>(address),
+              result.data(),
+              result.size() * sizeof(A),
+              nullptr);
+
+            if (!ret)
+            {
+                XKLIB_EXCEPTION("ReadProcessMemory failed with "
+                                + std::to_string(address)
+                                + " and size: " + std::to_string(size));
+            }
+#endif
+
+            return result;
+        }
+
         template <typename T = uintptr_t>
         static auto WriteProcessMemoryArea(pid_t pid,
                                            const bytes_t& bytes,
