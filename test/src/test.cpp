@@ -451,6 +451,8 @@ auto XKLib::Test::run() -> void
         random_bytes.push_back(add + 63);
     }
 
+    random_bytes.push_back(1);
+
     /*
     byte_t result;
 
@@ -507,8 +509,8 @@ auto XKLib::Test::run() -> void
         Timer timer {};
 
         timer.start();
-        pattern.scan(process);
-        // PatternScanning::search(pattern, random_bytes, nullptr);
+        // pattern.scan(process);
+        PatternScanning::search(pattern, random_bytes, nullptr);
         timer.end();
 
         ConsoleOutput("scan took: ")

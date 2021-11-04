@@ -21,21 +21,67 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
         XKLIB_EXCEPTION("Invalid pattern.");
     }
 
-    _simd_values.reserve(_values.size() / sizeof(simd_value_t));
     _unknown_values.reserve(_values.size());
 
-    size_t index = 0;
+    /* Allocate simd values in aligned way for optimizations */
+    _simd_values = view_as<simd_value_t*>(
+      std::aligned_alloc(sizeof(simd_value_t), _values.size()));
+
+    auto left = _values.size() % sizeof(simd_value_t);
+
+    if (left > 0)
+    {
+        left = sizeof(simd_value_t) - left;
+    }
+
+    _simd_values_size = _values.size() + left;
+
+    size_t index                       = 0;
+    size_t ukval_contigous_count       = 0;
+    size_t index_since_contigous_count = 0;
+
     for (auto&& value : _values)
     {
         value->index = index;
 
         if (value->value == Value::UNKNOWN)
         {
-            _unknown_values.push_back(index);
+            index_since_contigous_count = index;
+            ukval_contigous_count++;
+
+            if (ukval_contigous_count >= sizeof(simd_value_t))
+            {
+                _unknown_values.push_back(
+                  { index_since_contigous_count / sizeof(simd_value_t),
+                    index_since_contigous_count % sizeof(simd_value_t),
+                    index_since_contigous_count,
+                    ukval_contigous_count });
+                ukval_contigous_count = 0;
+            }
+        }
+        else
+        {
+            if (ukval_contigous_count > 0)
+            {
+                _unknown_values.push_back(
+                  { index_since_contigous_count / sizeof(simd_value_t),
+                    index_since_contigous_count % sizeof(simd_value_t),
+                    index_since_contigous_count,
+                    ukval_contigous_count });
+                ukval_contigous_count = 0;
+            }
+
+            view_as<byte_t*>(_simd_values)[index] = view_as<byte_t>(
+              value->value);
         }
 
         index++;
     }
+}
+
+XKLib::PatternByte::~PatternByte()
+{
+    std::free(_simd_values);
 }
 
 auto XKLib::PatternByte::values() -> std::vector<std::shared_ptr<Value>>&
@@ -48,14 +94,14 @@ auto XKLib::PatternByte::unknown_values() -> std::vector<unknown_value_t>&
     return _unknown_values;
 }
 
-auto XKLib::PatternByte::simd_values() -> std::vector<simd_value_t>&
+auto XKLib::PatternByte::simd_values() -> simd_value_t*
 {
     return _simd_values;
 }
 
-auto XKLib::PatternByte::aligned_simd_values()
-  -> std::vector<XKLib::PatternByte::simd_value_t>
+auto XKLib::PatternByte::simd_values_size() -> size_t&
 {
+    return _simd_values_size;
 }
 
 auto XKLib::PatternByte::matches() -> std::vector<ptr_t>&
