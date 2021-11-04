@@ -2,6 +2,8 @@
 
 #include "patternscanning.h"
 #include "process.h"
+
+#include <cstdlib>
 #include <cstring>
 
 XKLib::PatternByte::Value::Value(int value) : value(value)
@@ -19,7 +21,7 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
         XKLIB_EXCEPTION("Invalid pattern.");
     }
 
-    _raw_values.reserve(_values.size());
+    _simd_values.reserve(_values.size() / sizeof(simd_value_t));
     _unknown_values.reserve(_values.size());
 
     size_t index = 0;
@@ -30,11 +32,6 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
         if (value->value == Value::UNKNOWN)
         {
             _unknown_values.push_back(index);
-            _raw_values.push_back(0);
-        }
-        else
-        {
-            _raw_values.push_back(view_as<byte_t>(value->value));
         }
 
         index++;
@@ -46,14 +43,19 @@ auto XKLib::PatternByte::values() -> std::vector<std::shared_ptr<Value>>&
     return _values;
 }
 
-auto XKLib::PatternByte::unknown_values() -> std::vector<size_t>&
+auto XKLib::PatternByte::unknown_values() -> std::vector<unknown_value_t>&
 {
     return _unknown_values;
 }
 
-auto XKLib::PatternByte::raw_values() -> bytes_t&
+auto XKLib::PatternByte::simd_values() -> std::vector<simd_value_t>&
 {
-    return _raw_values;
+    return _simd_values;
+}
+
+auto XKLib::PatternByte::aligned_simd_values()
+  -> std::vector<XKLib::PatternByte::simd_value_t>
+{
 }
 
 auto XKLib::PatternByte::matches() -> std::vector<ptr_t>&

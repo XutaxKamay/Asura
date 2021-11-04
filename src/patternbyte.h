@@ -34,21 +34,30 @@ namespace XKLib
             size_t index {};
         };
 
+        struct unknown_value_t
+        {
+            size_t simd_index;
+            size_t byte_index;
+            size_t index;
+        };
+
 #ifdef __AVX512F__
-        using fastval_t = __m512i;
+        using simd_value_t = __m512i;
 #elif defined(__AVX2__)
-        using fastval_t = __m256i;
+        using simd_value_t = __m256i;
 #else
-        using fastval_t = uint64_t;
+        using simd_value_t = uint64_t;
 #endif
+
         PatternByte(std::vector<std::shared_ptr<Value>> values,
                     std::string _area_name     = "",
                     std::vector<ptr_t> matches = {});
 
       public:
         auto values() -> std::vector<std::shared_ptr<Value>>&;
-        auto unknown_values() -> std::vector<size_t>&;
-        auto raw_values() -> bytes_t&;
+        auto unknown_values() -> std::vector<unknown_value_t>&;
+        auto simd_values() -> std::vector<simd_value_t>&;
+        auto aligned_simd_values() -> std::vector<simd_value_t>;
         auto matches() -> std::vector<ptr_t>&;
         auto isValid() -> bool;
         auto scan(Process& process) -> void;
@@ -56,8 +65,8 @@ namespace XKLib
 
       private:
         std::vector<std::shared_ptr<Value>> _values;
-        std::vector<size_t> _unknown_values;
-        bytes_t _raw_values;
+        std::vector<unknown_value_t> _unknown_values;
+        std::vector<simd_value_t> _simd_values {};
         std::vector<ptr_t> _matches;
         std::string _area_name;
     };

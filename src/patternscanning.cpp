@@ -8,28 +8,74 @@ auto XKLib::PatternScanning::search(XKLib::PatternByte& pattern,
 {
     auto&& matches        = pattern.matches();
     auto old_matches_size = matches.size();
-    auto buffer_size      = bytes.size();
     auto&& unknown_values = pattern.unknown_values();
-    auto&& raw_values     = pattern.raw_values();
+    auto&& simd_values    = pattern.simd_values();
+    auto&& pattern_values = pattern.values();
 
-    for (size_t index = 0; index < buffer_size
-                           && (index + raw_values.size()) <= buffer_size;
+    for (size_t index = 0;
+         index < bytes.size()
+         && (index + pattern_values.size()) <= bytes.size();
          index++)
     {
-        for (auto&& unknown_value_index : unknown_values)
+        /* Fill unknown bytes by the data we want to compare */
+        for (auto&& unknown_value : unknown_values)
         {
-            raw_values[unknown_value_index] = bytes[index
-                                                    + unknown_value_index];
+            auto simd_bytes = view_as<data_t>(
+              &simd_values[unknown_value.simd_index]);
+            simd_bytes[unknown_value.byte_index] = bytes
+              [index + unknown_value.index];
         }
 
-        if (std::memcmp(&bytes[index],
-                        raw_values.data(),
-                        raw_values.size())
-            == 0)
+        auto left = view_as<size_t>(&bytes[index])
+                    % sizeof(PatternByte::simd_value_t);
+
+        auto start_index = index;
+
+        for (auto&& simd_value : simd_values)
         {
-            matches.push_back(
-              view_as<ptr_t>(view_as<uintptr_t>(baseAddress) + index));
+#if defined(__AVX512F__)
+            auto loaded_simd = left == 0 ?
+                                 _mm512_load_si512(
+                                   view_as<PatternByte::simd_value_t*>(
+                                     &bytes[start_index])) :
+                                 _mm512_loadu_si512(
+                                   view_as<PatternByte::simd_value_t*>(
+                                     &bytes[start_index]));
+#elif defined(__AVX2__)
+            auto loaded_simd = left == 0 ?
+                                 _mm256_load_si256(
+                                   view_as<PatternByte::simd_value_t*>(
+                                     &bytes[start_index])) :
+                                 _mm256_loadu_si256(
+                                   view_as<PatternByte::simd_value_t*>(
+                                     &bytes[start_index]));
+#endif
+
+#if defined(__AVX512F__)
+            if (!_mm512_cmpeq_epi64_mask(loaded_simd, simd_value))
+            {
+                goto skip;
+            }
+#elif defined(__AVX2__)
+            if (!_mm256_movemask_epi8(
+                  _mm256_cmpeq_epi64(loaded_simd, simd_value)))
+            {
+                goto skip;
+            }
+#else
+            if (*view_as<PatternByte::simd_value_t*>(&bytes[+start_index])
+                != simd_value)
+            {
+                goto skip;
+            }
+#endif
+            start_index += sizeof(PatternByte::simd_value_t);
         }
+
+        pattern.matches().push_back(
+          view_as<ptr_t>(view_as<uintptr_t>(baseAddress) + index));
+
+    skip:;
     }
 
     return matches.size() != old_matches_size;
