@@ -10,13 +10,18 @@ namespace XKLib
     class PatternScanning
     {
       public:
-        static auto searchInProcess(PatternByte& pattern,
-                                    Process& process) -> void;
+        static auto searchInProcess(
+          PatternByte& pattern,
+          Process& process,
+          const std::function<auto(PatternByte&, const bytes_t&, ptr_t)->void>& func = searchv3)
+          -> void;
 
         static auto searchInProcessWithAreaName(
           PatternByte& pattern,
           Process& process,
-          const std::string& areaName) -> void;
+          const std::string& areaName,
+          const std::function<auto(PatternByte&, const bytes_t&, ptr_t)->void>& func = searchv3)
+          -> void;
 
         static auto search(PatternByte& pattern,
                            const bytes_t& bytes,
