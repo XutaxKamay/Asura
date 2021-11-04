@@ -24,46 +24,40 @@ namespace XKLib
           public:
             Value(int value);
 
-            enum type_t
+            enum
             {
                 INVALID = -1,
                 UNKNOWN = -2
             };
 
             int value = INVALID;
+            size_t index {};
         };
 
 #ifdef __AVX512F__
         using fastval_t = __m512i;
-#elif __AVX2__
+#elif defined(__AVX2__)
         using fastval_t = __m256i;
 #else
         using fastval_t = uint64_t;
 #endif
-
-        struct FastValue
-        {
-            int unknown;
-            size_t var_size;
-            fastval_t val;
-            fastval_t mask;
-        };
-
-        PatternByte(std::vector<Value> values,
+        PatternByte(std::vector<std::shared_ptr<Value>> values,
                     std::string _area_name     = "",
                     std::vector<ptr_t> matches = {});
 
       public:
-        auto values() -> std::vector<Value>&;
-        auto fvalues() -> std::vector<FastValue>&;
+        auto values() -> std::vector<std::shared_ptr<Value>>&;
+        auto unknown_values() -> std::vector<size_t>&;
+        auto raw_values() -> bytes_t&;
         auto matches() -> std::vector<ptr_t>&;
         auto isValid() -> bool;
         auto scan(Process& process) -> void;
         auto areaName() -> std::string;
 
       private:
-        std::vector<Value> _values;
-        std::vector<FastValue> _fast_values;
+        std::vector<std::shared_ptr<Value>> _values;
+        std::vector<size_t> _unknown_values;
+        bytes_t _raw_values;
         std::vector<ptr_t> _matches;
         std::string _area_name;
     };

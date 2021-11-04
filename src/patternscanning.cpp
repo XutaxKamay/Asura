@@ -1,69 +1,38 @@
 #include "patternscanning.h"
 #include "patternbyte.h"
+#include <cstring>
 
 auto XKLib::PatternScanning::search(XKLib::PatternByte& pattern,
                                     const XKLib::bytes_t& bytes,
                                     ptr_t baseAddress) -> bool
 {
-    auto&& pattern_fvalues = pattern.fvalues();
-    auto old_matches_size  = pattern.matches().size();
-    auto buffer_size       = bytes.size();
-    auto&& patterh_values  = pattern.values();
+    auto&& matches        = pattern.matches();
+    auto old_matches_size = matches.size();
+    auto buffer_size      = bytes.size();
+    auto&& unknown_values = pattern.unknown_values();
+    auto&& raw_values     = pattern.raw_values();
 
-    for (size_t index = 0;
-         index < buffer_size
-         && (index + patterh_values.size()) <= buffer_size;
+    for (size_t index = 0; index < buffer_size
+                           && (index + raw_values.size()) <= buffer_size;
          index++)
     {
-        /* Then scan the rest */
-        auto start_index = index;
-
-        for (auto&& pattern_value : pattern_fvalues)
+        for (auto&& unknown_value_index : unknown_values)
         {
-#ifdef __AVX512F__
-            /* _mm512_load_si512 needs to be aligned, so we use
-             * _mm512_loadu_si512 instead */
-            if (!pattern_value.unknown
-                && !_mm512_cmpeq_epi64_mask(
-                  _mm512_and_si512(_mm512_loadu_si512(
-                                     view_as<PatternByte::fastval_t*>(
-                                       &bytes[start_index])),
-                                   pattern_value.mask),
-                  pattern_value.val))
-            {
-                goto skip;
-            }
-#elif defined(__AVX2__)
-            if (!pattern_value.unknown
-                && !_mm256_movemask_epi8(_mm256_cmpeq_epi64(
-                  _mm256_and_si256(_mm256_loadu_si256(
-                                     view_as<PatternByte::fastval_t*>(
-                                       &bytes[start_index])),
-                                   pattern_value.mask),
-                  pattern_value.val)))
-            {
-                goto skip;
-            }
-#else
-            if (!pattern_value.unknown
-                && pattern_value.val
-                     != (*view_as<PatternByte::fastval_t*>(
-                           &bytes[start_index])
-                         & pattern_value.mask))
-            {
-                goto skip;
-            }
-#endif
-            start_index += pattern_value.var_size;
+            raw_values[unknown_value_index] = bytes[index
+                                                    + unknown_value_index];
         }
 
-        pattern.matches().push_back(
-          view_as<ptr_t>(view_as<uintptr_t>(baseAddress) + index));
-
-    skip:;
+        if (std::memcmp(&bytes[index],
+                        raw_values.data(),
+                        raw_values.size())
+            == 0)
+        {
+            matches.push_back(
+              view_as<ptr_t>(view_as<uintptr_t>(baseAddress) + index));
+        }
     }
 
-    return pattern.matches().size() != old_matches_size;
+    return matches.size() != old_matches_size;
 }
 
 // auto XKLib::PatternScanning::search(XKLib::PatternByte& pattern,

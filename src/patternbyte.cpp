@@ -8,200 +8,52 @@ XKLib::PatternByte::Value::Value(int value) : value(value)
 {
 }
 
-XKLib::PatternByte::PatternByte(std::vector<Value> values,
+XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
                                 std::string areaName,
                                 std::vector<ptr_t> matches)
- : _values(std::move(values)), _fast_values({}),
-   _matches(std::move(matches)), _area_name(std::move(areaName))
+ : _values(std::move(values)), _matches(std::move(matches)),
+   _area_name(std::move(areaName))
 {
     if (!isValid())
     {
         XKLIB_EXCEPTION("Invalid pattern.");
     }
 
-    /* Convert to fast values for faster pattern scanning */
-    auto pattern_size = _values.size();
-    fastval_t fastval {};
-    size_t index_of_fastval {};
+    _raw_values.reserve(_values.size());
+    _unknown_values.reserve(_values.size());
 
-    for (size_t index = 0; index < pattern_size;)
+    size_t index = 0;
+    for (auto&& value : _values)
     {
-        auto pattern_value = _values[index].value;
+        value->index = index;
 
-        if (pattern_value == Value::type_t::UNKNOWN)
+        if (value->value == Value::UNKNOWN)
         {
-            if (index_of_fastval != 0)
-            {
-                auto bytes_mask = index_of_fastval;
-
-#if defined(__AVX512F__) || defined(__AVX2__)
-    #ifdef __AVX512F__
-                std::array<int64_t, 8> e {};
-    #elif defined(__AVX2__)
-                std::array<int64_t, 4> e {};
-    #endif
-                size_t ei = 0;
-
-                if (bytes_mask >= sizeof(int64_t))
-                {
-                    for (; ei < e.size() && bytes_mask >= sizeof(int64_t);
-                         ei++)
-                    {
-                        *view_as<uint64_t*>(&e[ei]) = std::numeric_limits<
-                          uint64_t>::max();
-                        bytes_mask -= sizeof(int64_t);
-                    }
-
-                    if (bytes_mask > 0)
-                    {
-                        *view_as<uint64_t*>(&e[ei]) = (1ull
-                                                       << (bytes_mask
-                                                           * CHAR_BIT))
-                                                      - 1ull;
-                    }
-                }
-                else
-                {
-                    *view_as<uint64_t*>(&e[ei]) = (1ull << (bytes_mask
-                                                            * CHAR_BIT))
-                                                  - 1ull;
-                }
-#endif
-
-#ifdef __AVX512F__
-                auto mask = _mm512_set_epi64(e[7],
-                                             e[6],
-                                             e[5],
-                                             e[4],
-                                             e[3],
-                                             e[2],
-                                             e[1],
-                                             e[0]);
-#elif defined(__AVX2__)
-                auto mask = _mm256_set_epi64x(e[3], e[2], e[1], e[0]);
-
-#else
-                fastval_t mask = (1ull << bytes_mask * CHAR_BIT) - 1ull;
-#endif
-
-                _fast_values.push_back(
-                  { 0, index_of_fastval, fastval, mask });
-
-                index_of_fastval = 0;
-                std::memset(&fastval, 0, sizeof(fastval));
-            }
-
-            /* We got one already */
-            index++;
-            index_of_fastval++;
-
-            /* Search for the next ones, if there is */
-            for (; index < pattern_size; index++, index_of_fastval++)
-            {
-                pattern_value = _values[index].value;
-
-                if (pattern_value != Value::type_t::UNKNOWN)
-                {
-                    break;
-                }
-            }
-
-            FastValue fvalue { -1, index_of_fastval, {}, {} };
-            _fast_values.push_back(fvalue);
-
-            index_of_fastval = 0;
+            _unknown_values.push_back(index);
+            _raw_values.push_back(0);
         }
         else
         {
-            *view_as<byte_t*>(view_as<uintptr_t>(&fastval) + index_of_fastval) = view_as<
-              byte_t>(pattern_value);
-
-            index_of_fastval++;
-
-            if (index_of_fastval >= sizeof(fastval_t))
-            {
-#if defined(__AVX512F__) || defined(__AVX2__)
-                fastval_t mask {};
-                std::memset(&mask, 0xFF, sizeof(fastval_t));
-#else
-                fastval_t mask = std::numeric_limits<uint64_t>::max();
-#endif
-
-                _fast_values.push_back(
-                  { 0, sizeof(fastval_t), fastval, mask });
-
-                index_of_fastval = 0;
-                std::memset(&fastval, 0, sizeof(fastval));
-            }
-
-            index++;
+            _raw_values.push_back(view_as<byte_t>(value->value));
         }
-    }
 
-    if (index_of_fastval != 0)
-    {
-        auto bytes_mask = index_of_fastval;
-
-#if defined(__AVX512F__) || defined(__AVX2__)
-    #ifdef __AVX512F__
-        std::array<int64_t, 8> e {};
-    #elif __AVX2__
-        std::array<int64_t, 4> e {};
-    #endif
-        size_t ei = 0;
-
-        if (bytes_mask >= sizeof(int64_t))
-        {
-            for (; ei < e.size() && bytes_mask >= sizeof(int64_t); ei++)
-            {
-                *view_as<uint64_t*>(&e[ei]) = std::numeric_limits<
-                  uint64_t>::max();
-                bytes_mask -= sizeof(int64_t);
-            }
-
-            if (bytes_mask > 0)
-            {
-                *view_as<uint64_t*>(&e[ei]) = (1ull
-                                               << (bytes_mask * CHAR_BIT))
-                                              - 1ull;
-            }
-        }
-        else
-        {
-            *view_as<uint64_t*>(&e[ei]) = (1ull
-                                           << (bytes_mask * CHAR_BIT))
-                                          - 1ull;
-        }
-#endif
-
-#ifdef __AVX512F__
-        auto mask = _mm512_set_epi64(e[7],
-                                     e[6],
-                                     e[5],
-                                     e[4],
-                                     e[3],
-                                     e[2],
-                                     e[1],
-                                     e[0]);
-#elif defined(__AVX2__)
-        auto mask = _mm256_set_epi64x(e[3], e[2], e[1], e[0]);
-
-#else
-        fastval_t mask = (1ull << bytes_mask * CHAR_BIT) - 1ull;
-#endif
-        _fast_values.push_back({ 0, index_of_fastval, fastval, mask });
+        index++;
     }
 }
 
-auto XKLib::PatternByte::values() -> std::vector<Value>&
+auto XKLib::PatternByte::values() -> std::vector<std::shared_ptr<Value>>&
 {
     return _values;
 }
 
-auto XKLib::PatternByte::fvalues()
-  -> std::vector<XKLib::PatternByte::FastValue>&
+auto XKLib::PatternByte::unknown_values() -> std::vector<size_t>&
 {
-    return _fast_values;
+    return _unknown_values;
+}
+
+auto XKLib::PatternByte::raw_values() -> bytes_t&
+{
+    return _raw_values;
 }
 
 auto XKLib::PatternByte::matches() -> std::vector<ptr_t>&
@@ -218,20 +70,20 @@ auto XKLib::PatternByte::isValid() -> bool
 
     for (auto&& byte : _values)
     {
-        if (byte.value == Value::type_t::INVALID)
+        if (byte->value == Value::INVALID)
         {
             return false;
         }
     }
 
     /* ? xx xx ... */
-    if (_values[0].value == Value::type_t::UNKNOWN)
+    if (_values[0]->value == Value::UNKNOWN)
     {
         return false;
     }
 
     /* xx xx ? */
-    if (_values[_values.size() - 1].value == Value::type_t::UNKNOWN)
+    if (_values[_values.size() - 1]->value == Value::UNKNOWN)
     {
         return false;
     }

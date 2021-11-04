@@ -490,10 +490,15 @@ auto XKLib::Test::run() -> void
 
     try
     {
-        std::vector<PatternByte::Value> pattern_bytes(random_bytes.begin(),
-                                                      random_bytes.end());
+        std::vector<std::shared_ptr<PatternByte::Value>> pattern_bytes;
 
-        pattern_bytes[5] = PatternByte::Value::UNKNOWN;
+        for (auto&& byte : random_bytes)
+        {
+            pattern_bytes.push_back(
+              std::make_shared<PatternByte::Value>(byte));
+        }
+
+        (*pattern_bytes[5]) = PatternByte::Value::UNKNOWN;
 
         PatternByte pattern(pattern_bytes);
 
