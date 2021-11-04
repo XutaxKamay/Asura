@@ -21,6 +21,14 @@ namespace XKLib
         static auto search(PatternByte& pattern,
                            const bytes_t& bytes,
                            ptr_t baseAddress) -> bool;
+
+        static auto searchv2(PatternByte& pattern,
+                             const bytes_t& bytes,
+                             ptr_t baseAddress) -> bool;
+
+        static auto searchv3(PatternByte& pattern,
+                             const bytes_t& bytes,
+                             ptr_t baseAddress) -> bool;
     };
 };
 

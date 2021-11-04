@@ -277,44 +277,102 @@ auto XKLib::PatternScanning::search(XKLib::PatternByte& pattern,
     return matches.size() != old_matches_size;
 }
 
-// auto XKLib::PatternScanning::search(XKLib::PatternByte& pattern,
-//                                    XKLib::const bytes_t& bytes,
-//                                    ptr_t baseAddress) -> bool
-//{
-//    auto& pattern_values  = pattern.values();
-//    auto old_matches_size = pattern.matches().size();
-//    auto buffer_size      = bytes.size();
+auto XKLib::PatternScanning::searchv2(XKLib::PatternByte& pattern,
+                                      const bytes_t& bytes,
+                                      ptr_t baseAddress) -> bool
+{
+    auto&& pattern_fvalues = pattern.fvalues();
+    auto old_matches_size  = pattern.matches().size();
+    auto buffer_size       = bytes.size();
+    auto&& pattern_values  = pattern.values();
 
-//    for (size_t index = 0; index < buffer_size; index++)
-//    {
-//       if ((start_index + pattern_values.size()) > buffer_size)
-//       {
-//          return pattern.matches().size() != old_matches_size;
-//       }
+    for (size_t index = 0;
+         index < buffer_size
+         && (index + pattern_values.size()) <= buffer_size;
+         index++)
+    {
+        auto start_index = index;
 
-//        /* Then scan the rest */
-//        auto start_index = index;
+        for (auto&& pattern_value : pattern_fvalues)
+        {
+#ifdef __AVX512F__
+            /* _mm512_load_si512 needs to be aligned, so we use
+             * _mm512_loadu_si512 instead */
+            if (!pattern_value.unknown
+                && !_mm512_cmpeq_epi64_mask(
+                  _mm512_and_si512(_mm512_loadu_si512(
+                                     view_as<PatternByte::simd_value_t*>(
+                                       &bytes[start_index])),
+                                   pattern_value.mask),
+                  pattern_value.value))
+            {
+                goto skip;
+            }
+#elif defined(__AVX2__)
+            if (!pattern_value.unknown
+                && !_mm256_movemask_epi8(_mm256_cmpeq_epi64(
+                  _mm256_and_si256(_mm256_loadu_si256(
+                                     view_as<PatternByte::simd_value_t*>(
+                                       &bytes[start_index])),
+                                   pattern_value.mask),
+                  pattern_value.value)))
+            {
+                goto skip;
+            }
+#else
+            if (!pattern_value.unknown
+                && pattern_value.value
+                     != (*view_as<PatternByte::simd_value_t*>(
+                           &bytes[start_index])
+                         & pattern_value.mask))
+            {
+                goto skip;
+            }
+#endif
+            start_index += pattern_value.var_size;
+        }
 
-//        for (auto&& pattern_byte : pattern_values)
-//        {
-//            if (pattern_byte.value !=
-//            PatternByte::Value::type_t::UNKNOWN
-//                && pattern_byte.value != bytes[start_index])
-//            {
-//                goto skip;
-//            }
+        pattern.matches().push_back(
+          view_as<ptr_t>(view_as<uintptr_t>(baseAddress) + index));
 
-//            start_index++;
-//        }
+    skip:;
+    }
 
-//        pattern.matches().push_back(
-//          view_as<ptr_t>(view_as<uintptr_t>(baseAddress) + index));
+    return pattern.matches().size() != old_matches_size;
+}
 
-//    skip:;
-//    }
+auto XKLib::PatternScanning::searchv3(XKLib::PatternByte& pattern,
+                                      const bytes_t& bytes,
+                                      ptr_t baseAddress) -> bool
+{
+    auto& pattern_values  = pattern.values();
+    auto old_matches_size = pattern.matches().size();
+    auto buffer_size      = bytes.size();
 
-//    return pattern.matches().size() != old_matches_size;
-//}
+    for (size_t index = 0; (index + pattern_values.size()) <= buffer_size;
+         index++)
+    {
+        auto start_index = index;
+
+        for (auto&& pattern_byte : pattern_values)
+        {
+            if (pattern_byte->value != PatternByte::Value::UNKNOWN
+                && pattern_byte->value != bytes[start_index])
+            {
+                goto skip;
+            }
+
+            start_index++;
+        }
+
+        pattern.matches().push_back(
+          view_as<ptr_t>(view_as<uintptr_t>(baseAddress) + index));
+
+    skip:;
+    }
+
+    return pattern.matches().size() != old_matches_size;
+}
 
 auto XKLib::PatternScanning::searchInProcess(XKLib::PatternByte& pattern,
                                              Process& process) -> void

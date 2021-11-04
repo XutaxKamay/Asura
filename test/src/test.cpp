@@ -538,6 +538,54 @@ auto XKLib::Test::run() -> void
           << pattern.values().size() << " of pattern size in bytes"
           << std::endl;
 
+        timer.start();
+        PatternScanning::searchv2(pattern, more_bytes, nullptr);
+        timer.end();
+
+        ConsoleOutput("scan took: ")
+          << std::dec << timer.difference() << " nanoseconds "
+          << "with: " <<
+          [&process]()
+        {
+            auto mmap = process.mmap();
+
+            size_t mmap_size = 0;
+
+            for (auto&& area : mmap.areas())
+            {
+                mmap_size += area->size();
+            }
+
+            return std::to_string(view_as<double>(mmap_size) / 1000000.0);
+        }()
+          << " process memory in megabytes and "
+          << pattern.values().size() << " of pattern size in bytes"
+          << std::endl;
+
+        timer.start();
+        PatternScanning::searchv3(pattern, more_bytes, nullptr);
+        timer.end();
+
+        ConsoleOutput("scan took: ")
+          << std::dec << timer.difference() << " nanoseconds "
+          << "with: " <<
+          [&process]()
+        {
+            auto mmap = process.mmap();
+
+            size_t mmap_size = 0;
+
+            for (auto&& area : mmap.areas())
+            {
+                mmap_size += area->size();
+            }
+
+            return std::to_string(view_as<double>(mmap_size) / 1000000.0);
+        }()
+          << " process memory in megabytes and "
+          << pattern.values().size() << " of pattern size in bytes"
+          << std::endl;
+
         if (pattern.matches().size() != 0)
         {
             ConsoleOutput("Found match(es):") << std::endl;
