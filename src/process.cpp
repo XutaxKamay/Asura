@@ -91,7 +91,7 @@ auto XKLib::Process::ProcessName(pid_t pid) -> std::string
     auto process_handle = OpenProcess(PROCESS_QUERY_INFORMATION
                                         | PROCESS_VM_READ,
                                       false,
-                                      pid);
+                                      view_as<DWORD>(pid));
 
     if (!process_handle)
     {

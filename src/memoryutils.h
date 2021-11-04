@@ -70,7 +70,7 @@ namespace XKLib
                                     GetCurrentProcess() :
                                     OpenProcess(PROCESS_VM_OPERATION,
                                                 false,
-                                                pid);
+                                                view_as<DWORD>(pid));
 
             if (process_handle == nullptr)
             {
@@ -116,7 +116,7 @@ namespace XKLib
                                     GetCurrentProcess() :
                                     OpenProcess(PROCESS_VM_OPERATION,
                                                 false,
-                                                pid);
+                                                view_as<DWORD>(pid));
 
             if (process_handle == nullptr)
             {
@@ -155,7 +155,7 @@ namespace XKLib
                                     GetCurrentProcess() :
                                     OpenProcess(PROCESS_VM_OPERATION,
                                                 false,
-                                                pid);
+                                                view_as<DWORD>(pid));
 
             if (process_handle == nullptr)
             {
@@ -206,7 +206,7 @@ namespace XKLib
             }
 #else
 
-            auto ret = Toolhelp32ReadProcessMemory(pid,
+            auto ret = Toolhelp32ReadProcessMemory(view_as<DWORD>(pid),
                                                    view_as<ptr_t>(address),
                                                    result.data(),
                                                    result.size(),
@@ -225,11 +225,11 @@ namespace XKLib
 
         template <typename T = uintptr_t>
         static auto WriteProcessMemoryArea(pid_t pid,
-                                           bytes_t bytes,
+                                           const bytes_t& bytes,
                                            T address) -> void
         {
 #ifndef WINDOWS
-            iovec local  = { .iov_base = bytes.data(),
+            iovec local  = { .iov_base = view_as<data_t>(bytes.data()),
                             .iov_len  = bytes.size() };
             iovec remote = { .iov_base = view_as<ptr_t>(address),
                              .iov_len  = bytes.size() };
@@ -247,7 +247,7 @@ namespace XKLib
                                     OpenProcess(PROCESS_VM_OPERATION
                                                   | PROCESS_VM_WRITE,
                                                 false,
-                                                pid);
+                                                view_as<DWORD>(pid));
 
             if (process_handle == nullptr)
             {

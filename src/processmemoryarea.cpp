@@ -115,7 +115,7 @@ auto ProcessMemoryArea::read(size_t size, size_t shift) -> bytes_t
                                               size);
 }
 
-auto ProcessMemoryArea::write(bytes_t bytes, size_t shift) -> void
+auto ProcessMemoryArea::write(const bytes_t& bytes, size_t shift) -> void
 {
     if (ProcessBase::self().id() == _process_base.id())
     {

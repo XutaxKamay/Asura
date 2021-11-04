@@ -33,7 +33,7 @@ auto XKLib::PatternScanning::search(XKLib::PatternByte& pattern,
             {
                 goto skip;
             }
-#elif __AVX2__
+#elif defined(__AVX2__)
             if (!pattern_value.unknown
                 && !_mm256_movemask_epi8(_mm256_cmpeq_epi64(
                   _mm256_and_si256(_mm256_loadu_si256(
@@ -67,7 +67,7 @@ auto XKLib::PatternScanning::search(XKLib::PatternByte& pattern,
 }
 
 // auto XKLib::PatternScanning::search(XKLib::PatternByte& pattern,
-//                                    XKLib::bytes_t bytes,
+//                                    XKLib::const bytes_t& bytes,
 //                                    ptr_t baseAddress) -> bool
 //{
 //    auto& pattern_values  = pattern.values();

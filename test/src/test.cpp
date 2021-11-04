@@ -432,7 +432,7 @@ auto XKLib::Test::run() -> void
 
     ConsoleOutput(intBits) << std::endl;
 
-    std::vector<byte_t> random_bytes;
+    bytes_t random_bytes;
 
     for (int i = 0; i < 0x10000; i++)
     {
@@ -490,12 +490,8 @@ auto XKLib::Test::run() -> void
 
     try
     {
-        std::vector<PatternByte::Value> pattern_bytes;
-
-        for (auto&& value : random_bytes)
-        {
-            pattern_bytes.push_back(value);
-        }
+        std::vector<PatternByte::Value> pattern_bytes(random_bytes.begin(),
+                                                      random_bytes.end());
 
         pattern_bytes[5] = PatternByte::Value::UNKNOWN;
 
@@ -587,7 +583,7 @@ auto XKLib::Test::run() -> void
     {
         static const std::string my_name = "xutaxkamay";
         auto encoded                     = XKC<byte_t>::encode(
-          std::vector<byte_t>(my_name.begin(), my_name.end()));
+          bytes_t(my_name.begin(), my_name.end()));
         encoded.push_back('\0');
 
         ConsoleOutput(std::string(encoded.begin(), encoded.end()))

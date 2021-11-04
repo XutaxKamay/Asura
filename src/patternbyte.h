@@ -43,9 +43,9 @@ namespace XKLib
 
         struct FastValue
         {
-            bool unknown;
-            fastval_t val;
+            int unknown;
             size_t var_size;
+            fastval_t val;
             fastval_t mask;
         };
 

@@ -96,10 +96,10 @@ namespace XKLib
 
       public:
         static auto encode(data_t data, size_t size) -> bytes_t;
-        static auto encode(bytes_t bytes) -> bytes_t;
+        static auto encode(const bytes_t& bytes) -> bytes_t;
 
         static auto decode(data_t data, size_t size) -> bytes_t;
-        static auto decode(bytes_t bytes) -> bytes_t;
+        static auto decode(const bytes_t& bytes) -> bytes_t;
     };
 };
 
@@ -210,9 +210,9 @@ void XKLib::XKC<T>::BinaryTree::insert(T value)
 }
 
 template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::encode(XKLib::bytes_t bytes) -> XKLib::bytes_t
+auto XKLib::XKC<T>::encode(const bytes_t& bytes) -> XKLib::bytes_t
 {
-    return encode(bytes.data(), bytes.size());
+    return encode(view_as<data_t>(bytes.data()), bytes.size());
 }
 
 template <XKLib::XKCAlphabetType T>
@@ -628,9 +628,9 @@ auto XKLib::XKC<T>::encode(XKLib::data_t data, size_t size)
 }
 
 template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::decode(XKLib::bytes_t bytes) -> XKLib::bytes_t
+auto XKLib::XKC<T>::decode(const bytes_t& bytes) -> XKLib::bytes_t
 {
-    return decode(bytes.data(), bytes.size());
+    return decode(view_as<data_t>(bytes.data()), bytes.size());
 }
 
 template <XKLib::XKCAlphabetType T>

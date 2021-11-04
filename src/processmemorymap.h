@@ -174,7 +174,7 @@ namespace XKLib
         }
 
         template <typename T = uintptr_t>
-        auto write(T address, bytes_t bytes) -> void
+        auto write(T address, const bytes_t& bytes) -> void
         {
             MemoryUtils::WriteProcessMemoryArea(_process_base.id(),
                                                 bytes,
@@ -182,7 +182,7 @@ namespace XKLib
         }
 
         template <typename T = uintptr_t>
-        auto forceWrite(T address, bytes_t bytes) -> void
+        auto forceWrite(T address, const bytes_t& bytes) -> void
         {
             refresh();
 

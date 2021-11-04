@@ -14,7 +14,7 @@ namespace XKLib
 
       public:
         auto publicKey() -> auto&;
-        auto encrypt(bytes_t bytes) -> bytes_t;
+        auto encrypt(const bytes_t& bytes) -> bytes_t;
 
       private:
         CryptoPP::RSA::PublicKey _public_key {};

@@ -202,7 +202,7 @@ namespace XKLib
             SYMBOL_INFO sym_info;
 
             sym_info.SizeOfStruct = sizeof(SYMBOL_INFO);
-            sym_info.MaxNameLen   = funcName.size();
+            sym_info.MaxNameLen   = view_as<ULONG>(funcName.size());
 
             if (SymFromName(GetCurrentProcess(),
                             funcName.c_str(),

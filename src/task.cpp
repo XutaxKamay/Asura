@@ -105,7 +105,9 @@ auto Task::id() -> tid_t&
 auto Task::kill() -> void
 {
 #ifdef WINDOWS
-    auto thread_handle = OpenThread(THREAD_TERMINATE, false, _id);
+    auto thread_handle = OpenThread(THREAD_TERMINATE,
+                                    false,
+                                    view_as<DWORD>(_id));
 
     if (!thread_handle)
     {
@@ -113,7 +115,7 @@ auto Task::kill() -> void
                         "task");
     }
 
-    if (!TerminateThread(thread_handle, EXIT_CODE))
+    if (!TerminateThread(thread_handle, view_as<DWORD>(EXIT_CODE)))
     {
         XKLIB_EXCEPTION("Could not terminate task");
     }
@@ -132,7 +134,9 @@ auto Task::kill() -> void
 auto Task::wait() -> void
 {
 #ifdef WINDOWS
-    auto thread_handle = OpenThread(THREAD_QUERY_INFORMATION, false, _id);
+    auto thread_handle = OpenThread(THREAD_QUERY_INFORMATION,
+                                    false,
+                                    view_as<DWORD>(_id));
 
     if (!thread_handle)
     {

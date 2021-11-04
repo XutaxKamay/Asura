@@ -152,7 +152,7 @@ auto ProcessMemoryMap::refresh() -> void
 #else
     auto process_handle = OpenProcess(PROCESS_QUERY_INFORMATION,
                                       false,
-                                      _process_base.id());
+                                      view_as<DWORD>(_process_base.id()));
 
     if (process_handle == nullptr)
     {
@@ -162,7 +162,7 @@ auto ProcessMemoryMap::refresh() -> void
 
     MEMORY_BASIC_INFORMATION info;
     data_t bs;
-    char module_path[MAX_PATH];
+    std::array<char, MAX_PATH> module_path {};
 
     for (bs = nullptr;
          VirtualQueryEx(process_handle, bs, &info, sizeof(info))
@@ -176,14 +176,11 @@ auto ProcessMemoryMap::refresh() -> void
           ProcessMemoryArea::ProtectionFlags::ToOwn(info.Protect));
 
         if (GetModuleFileNameA(view_as<HMODULE>(info.AllocationBase),
-                               module_path,
-                               sizeof(module_path)))
+                               module_path.data(),
+                               module_path.size()))
         {
-            area->setName(module_path);
-        }
-        else
-        {
-            area->setName("unknown");
+            area->setName(
+              std::string(module_path.begin(), module_path.end()));
         }
 
         _areas.push_back(std::move(area));

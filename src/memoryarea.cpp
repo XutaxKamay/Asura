@@ -125,7 +125,7 @@ auto MemoryArea::ProtectionFlags::ToOS(mapf_t flags) -> mapf_t
         }
     }
 
-    return os_flags;
+    return view_as<mapf_t>(os_flags);
 #else
     return flags;
 #endif

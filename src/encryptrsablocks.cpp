@@ -18,37 +18,39 @@ XKLib::EncryptRSABlocks::EncryptRSABlocks(RSA::PublicKey publicKey)
 {
 }
 
-auto XKLib::EncryptRSABlocks::encrypt(XKLib::bytes_t bytes) -> bytes_t
+auto XKLib::EncryptRSABlocks::encrypt(const bytes_t& bytes) -> bytes_t
 {
+    auto result        = bytes;
     auto min_size      = _public_key.GetModulus().MinEncodedSize();
-    auto remainder     = min_size - (bytes.size() % min_size);
-    auto original_size = view_as<g_v_t<type_64us>>(bytes.size());
+    auto remainder     = min_size - (result.size() % min_size);
+    auto original_size = view_as<g_v_t<type_64us>>(result.size());
 
     /**
      * Write header
      */
-    bytes.resize(bytes.size() + remainder + min_size);
+    result.resize(result.size() + remainder + min_size);
 
-    WriteBuffer writeBuffer(bytes.data(),
-                            bytes.size(),
-                            bytes.size() - min_size);
+    WriteBuffer writeBuffer(result.data(),
+                            result.size(),
+                            result.size() - min_size);
 
     writeBuffer.addVar<type_64us>(original_size);
 
     AutoSeededRandomPool rng;
     /* randomize last bytes */
-    for (size_t i = writeBuffer.writeSize(); i < bytes.size(); i++)
+    for (size_t i = writeBuffer.writeSize(); i < result.size(); i++)
     {
-        bytes[i] = view_as<byte_t>((Integer(rng, 0, 255).ConvertToLong()));
+        result[i] = view_as<byte_t>(
+          (Integer(rng, 0, 255).ConvertToLong()));
     }
 
-    auto block_count_max = bytes.size() / min_size;
+    auto block_count_max = result.size() / min_size;
 
     for (decltype(block_count_max) block_count = 0;
          block_count < block_count_max;
          block_count++)
     {
-        auto start = view_as<data_t>(view_as<uintptr_t>(bytes.data())
+        auto start = view_as<data_t>(view_as<uintptr_t>(result.data())
                                      + block_count * min_size);
 
         Integer encrypt_block(start, min_size);
@@ -58,7 +60,7 @@ auto XKLib::EncryptRSABlocks::encrypt(XKLib::bytes_t bytes) -> bytes_t
         encrypted_block.Encode(start, min_size);
     }
 
-    return bytes;
+    return result;
 }
 
 auto XKLib::EncryptRSABlocks::publicKey() -> auto&

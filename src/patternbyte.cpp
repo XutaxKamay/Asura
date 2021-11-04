@@ -37,7 +37,7 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
 #if defined(__AVX512F__) || defined(__AVX2__)
     #ifdef __AVX512F__
                 std::array<int64_t, 8> e {};
-    #elif __AVX2__
+    #elif defined(__AVX2__)
                 std::array<int64_t, 4> e {};
     #endif
                 size_t ei = 0;
@@ -77,7 +77,7 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
                                              e[2],
                                              e[1],
                                              e[0]);
-#elif __AVX2__
+#elif defined(__AVX2__)
                 auto mask = _mm256_set_epi64x(e[3], e[2], e[1], e[0]);
 
 #else
@@ -85,7 +85,7 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
 #endif
 
                 _fast_values.push_back(
-                  { false, fastval, index_of_fastval, mask });
+                  { 0, index_of_fastval, fastval, mask });
 
                 index_of_fastval = 0;
                 std::memset(&fastval, 0, sizeof(fastval));
@@ -106,7 +106,7 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
                 }
             }
 
-            FastValue fvalue { true, {}, index_of_fastval, {} };
+            FastValue fvalue { -1, index_of_fastval, {}, {} };
             _fast_values.push_back(fvalue);
 
             index_of_fastval = 0;
@@ -128,7 +128,7 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
 #endif
 
                 _fast_values.push_back(
-                  { false, fastval, sizeof(fastval_t), mask });
+                  { 0, sizeof(fastval_t), fastval, mask });
 
                 index_of_fastval = 0;
                 std::memset(&fastval, 0, sizeof(fastval));
@@ -183,13 +183,13 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
                                      e[2],
                                      e[1],
                                      e[0]);
-#elif __AVX2__
+#elif defined(__AVX2__)
         auto mask = _mm256_set_epi64x(e[3], e[2], e[1], e[0]);
 
 #else
         fastval_t mask = (1ull << bytes_mask * CHAR_BIT) - 1ull;
 #endif
-        _fast_values.push_back({ false, fastval, index_of_fastval, mask });
+        _fast_values.push_back({ 0, index_of_fastval, fastval, mask });
     }
 }
 

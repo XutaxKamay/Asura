@@ -153,17 +153,17 @@ namespace XKLib
          *
          * @return auto
          */
-        constexpr auto generateCallBackFuncType();
+        static constexpr auto GenerateCallBackFuncType();
         /**
          * @brief generateNewFuncType
          *
          * @return auto
          */
-        constexpr auto generateNewFuncType();
+        static constexpr auto GenerateNewFuncType();
 
       public:
-        using cbfunc_t = typename decltype(generateCallBackFuncType())::type;
-        using func_t = typename decltype(generateNewFuncType())::type;
+        using cbfunc_t = typename decltype(GenerateCallBackFuncType())::type;
+        using func_t = typename decltype(GenerateNewFuncType())::type;
 
 #else /* Otherwise it should be always the same convention */
         using cbfunc_t = ret_type_T (*)(args_T...);
@@ -203,7 +203,7 @@ namespace XKLib
     constexpr auto TraditionalDetourX86<
       calling_convention_T,
       ret_type_T,
-      args_T...>::generateCallBackFuncType()
+      args_T...>::GenerateCallBackFuncType()
     {
         if constexpr (calling_convention_T == cc_fastcall)
         {
@@ -225,7 +225,7 @@ namespace XKLib
               typename... args_T>
     constexpr auto TraditionalDetourX86<calling_convention_T,
                                         ret_type_T,
-                                        args_T...>::generateNewFuncType()
+                                        args_T...>::GenerateNewFuncType()
     {
         if constexpr (calling_convention_T == cc_fastcall)
         {
