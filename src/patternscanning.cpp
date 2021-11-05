@@ -7,6 +7,7 @@ auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
                                       size_t size,
                                       ptr_t baseAddress) -> bool
 {
+    /* prepare stuffs */
     auto&& matches                 = pattern.matches();
     auto old_matches_size          = matches.size();
     auto&& pattern_values          = pattern.values();
@@ -23,6 +24,7 @@ auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
     {
         do
         {
+            /* if ((value & mask) == pattern_value) */
 #if defined(__AVX512F__)
             if (!_mm512_cmpeq_epi64_mask(
                   _mm512_and_si512(_mm512_loadu_si512(
