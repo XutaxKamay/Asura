@@ -61,7 +61,8 @@ namespace XKLib
         auto isValid() -> bool;
         auto scan(Process& process) -> void;
         auto areaName() -> std::string;
-        auto vec_known_values() -> std::vector<std::vector<byte_t>>&;
+        auto vec_known_values()
+          -> std::vector<std::shared_ptr<std::vector<byte_t>>>&;
         auto vec_skipper_uk_values() -> std::vector<size_t>&;
         auto fast_aligned_values() -> simd_value_t*;
         auto fast_aligned_masks() -> simd_value_t*;
@@ -72,7 +73,7 @@ namespace XKLib
         std::vector<simd_unknown_value_t> _unknown_values;
         std::vector<ptr_t> _matches;
         std::string _area_name;
-        std::vector<std::vector<byte_t>> _vec_known_values;
+        std::vector<std::shared_ptr<std::vector<byte_t>>> _vec_known_values;
         std::vector<size_t> _vec_skipper_uk_values;
         simd_value_t* _fast_aligned_values;
         simd_value_t* _fast_aligned_masks;

@@ -1,7 +1,7 @@
 #include "pch.h"
 
-#include "processmemorymap.h"
 #include "process.h"
+#include "processmemorymap.h"
 
 using namespace XKLib;
 

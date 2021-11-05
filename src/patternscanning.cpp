@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "patternscanning.h"
+
 #include "patternbyte.h"
 
 auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
@@ -85,33 +86,27 @@ auto XKLib::PatternScanning::searchV2(XKLib::PatternByte& pattern,
     auto&& vec_known_values      = pattern.vec_known_values();
     auto&& vec_skipper_uk_values = pattern.vec_skipper_uk_values();
     auto vec_known_values_size   = vec_known_values.size();
-    size_t index_known_value     = 0;
     size_t start_index           = 0;
     size_t skipper_index         = 0;
     size_t index                 = 0;
-    auto known_values            = vec_known_values[0];
+    std::shared_ptr<std::vector<byte_t>> known_values = vec_known_values[0];
 
     do
     {
         do
         {
-            do
+            if (std::memcmp(known_values->data(),
+                            &data[start_index],
+                            known_values->size())
+                != 0)
             {
-                if (known_values[index_known_value] != data[start_index])
-                {
-                    index_known_value = 0;
-                    known_values      = vec_known_values[0];
-                    goto skip;
-                }
-
-                index_known_value++;
-                start_index++;
+                known_values = vec_known_values[0];
+                goto skip;
             }
-            while (index_known_value < known_values.size());
 
             start_index += vec_skipper_uk_values[skipper_index];
+            start_index += known_values->size();
             skipper_index++;
-            index_known_value = 0;
 
             if (skipper_index >= vec_known_values_size)
             {

@@ -1,7 +1,7 @@
 #include "pch.h"
 
-#include "memoryarea.h"
 #include "exception.h"
+#include "memoryarea.h"
 
 #ifdef WINDOWS
     #include "windows.h"

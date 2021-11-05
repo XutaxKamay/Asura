@@ -3,7 +3,6 @@
 #include "patternscanning.h"
 #include "process.h"
 
-
 XKLib::PatternByte::Value::Value(int value) : value(value)
 {
 }
@@ -77,7 +76,8 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
             /* push back the last known values */
             if (are_known_values)
             {
-                _vec_known_values.push_back(known_values);
+                _vec_known_values.push_back(
+                  std::make_shared<decltype(known_values)>(known_values));
                 known_values.clear();
                 are_known_values = false;
             }
@@ -160,7 +160,8 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
     if (known_values.size())
     {
         /* if yes push it back */
-        _vec_known_values.push_back(known_values);
+        _vec_known_values.push_back(
+          std::make_shared<decltype(known_values)>(known_values));
     }
 
     /**
@@ -261,7 +262,7 @@ auto XKLib::PatternByte::areaName() -> std::string
 }
 
 auto XKLib::PatternByte::vec_known_values()
-  -> std::vector<std::vector<byte_t>>&
+  -> std::vector<std::shared_ptr<std::vector<byte_t>>>&
 {
     return _vec_known_values;
 }

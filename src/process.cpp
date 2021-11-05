@@ -1,8 +1,7 @@
 #include "pch.h"
 
-#include "process.h"
 #include "patternscanning.h"
-
+#include "process.h"
 
 #ifdef WINDOWS
     #include <psapi.h>
