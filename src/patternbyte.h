@@ -58,15 +58,11 @@ namespace XKLib
             simd_value_t mask;
         };
 
-        struct fast_aligned_value_t
-        {
-            simd_value_t value;
-            simd_value_t mask;
-        };
-
         PatternByte(std::vector<std::shared_ptr<Value>> values,
                     std::string _area_name     = "",
                     std::vector<ptr_t> matches = {});
+
+        ~PatternByte();
 
       public:
         auto values() -> std::vector<std::shared_ptr<Value>>&;
@@ -78,7 +74,9 @@ namespace XKLib
         auto areaName() -> std::string;
         auto vec_known_values() -> std::vector<std::vector<byte_t>>&;
         auto vec_skipper_uk_values() -> std::vector<size_t>&;
-        auto fast_aligned_values() -> std::vector<fast_aligned_value_t>&;
+        auto fast_aligned_values() -> simd_value_t*;
+        auto fast_aligned_masks() -> simd_value_t*;
+        auto fast_aligned_values_count() -> size_t;
 
       private:
         std::vector<std::shared_ptr<Value>> _values;
@@ -88,7 +86,9 @@ namespace XKLib
         std::string _area_name;
         std::vector<std::vector<byte_t>> _vec_known_values;
         std::vector<size_t> _vec_skipper_uk_values;
-        std::vector<fast_aligned_value_t> _fast_aligned_values;
+        simd_value_t* _fast_aligned_values;
+        simd_value_t* _fast_aligned_masks;
+        size_t _fast_aligned_values_count;
     };
 
     using patterns_bytes_t = std::vector<PatternByte>;

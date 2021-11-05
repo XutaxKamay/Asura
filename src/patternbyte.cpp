@@ -14,7 +14,7 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
                                 std::string areaName,
                                 std::vector<ptr_t> matches)
  : _values(std::move(values)), _matches(std::move(matches)),
-   _area_name(std::move(areaName))
+   _area_name(std::move(areaName)), _fast_aligned_values_count(0)
 {
     if (!isValid())
     {
@@ -35,8 +35,11 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
         size_t count_unknown_byte          = 0;
         bool are_known_values              = true;
         std::vector<byte_t> known_values;
-        fast_aligned_value_t fast_aligned_value;
-        std::memset(&fast_aligned_value, 0, sizeof(fast_aligned_value));
+        _fast_aligned_masks = view_as<simd_value_t*>(
+          std::aligned_alloc(sizeof(simd_value_t), _values.size()));
+        _fast_aligned_values = view_as<simd_value_t*>(
+          std::aligned_alloc(sizeof(simd_value_t), _values.size()));
+        simd_value_t simd_value {}, simd_mask {};
 
         for (auto&& value : _values)
         {
@@ -86,9 +89,9 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
                     ukval_contigous_count = 0;
                 }
 
-                view_as<byte_t*>(&fast_aligned_value.value)[byte_simd_index] = view_as<
+                view_as<byte_t*>(&simd_value)[byte_simd_index] = view_as<
                   byte_t>(value->value);
-                view_as<byte_t*>(&fast_aligned_value.mask)[byte_simd_index] = 0xFF;
+                view_as<byte_t*>(&simd_mask)[byte_simd_index] = 0xFF;
             }
 
             index++;
@@ -96,11 +99,28 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
 
             if (byte_simd_index >= sizeof(simd_value_t))
             {
-                _fast_aligned_values.push_back(fast_aligned_value);
-                std::memset(&fast_aligned_value,
-                            0,
-                            sizeof(fast_aligned_value));
+#if defined(__AVX512F__)
+                _mm512_store_si512(
+                  &_fast_aligned_values[_fast_aligned_values_count],
+                  simd_value);
+                _mm512_store_si512(
+                  &_fast_aligned_masks[_fast_aligned_values_count],
+                  simd_mask);
+#elif defined(__AVX2__)
+                _mm256_store_si256(
+                  &_fast_aligned_values[_fast_aligned_values_count],
+                  simd_value);
+                _mm256_store_si256(
+                  &_fast_aligned_masks[_fast_aligned_values_count],
+                  simd_mask);
+#else
+                _fast_aligned_values[_fast_aligned_values_count] = simd_value;
+                _fast_aligned_masks[_fast_aligned_values_count] = simd_mask;
+#endif
+                std::memset(&simd_value, 0, sizeof(simd_value));
+                std::memset(&simd_mask, 0, sizeof(simd_mask));
                 byte_simd_index = 0;
+                _fast_aligned_values_count++;
             }
         }
 
@@ -111,7 +131,25 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
 
         if (byte_simd_index > 0)
         {
-            _fast_aligned_values.push_back(fast_aligned_value);
+#if defined(__AVX512F__)
+            _mm512_store_si512(
+              &_fast_aligned_values[_fast_aligned_values_count],
+              simd_value);
+            _mm512_store_si512(
+              &_fast_aligned_masks[_fast_aligned_values_count],
+              simd_mask);
+#elif defined(__AVX2__)
+            _mm256_store_si256(
+              &_fast_aligned_values[_fast_aligned_values_count],
+              simd_value);
+            _mm256_store_si256(
+              &_fast_aligned_masks[_fast_aligned_values_count],
+              simd_mask);
+#else
+            _fast_aligned_values[_fast_aligned_values_count] = simd_value;
+            _fast_aligned_masks[_fast_aligned_values_count] = simd_mask;
+#endif
+            _fast_aligned_values_count++;
         }
     }
 
@@ -305,6 +343,12 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
     }
 }
 
+XKLib::PatternByte::~PatternByte()
+{
+    std::free(_fast_aligned_values);
+    std::free(_fast_aligned_masks);
+}
+
 auto XKLib::PatternByte::values() -> std::vector<std::shared_ptr<Value>>&
 {
     return _values;
@@ -377,8 +421,17 @@ auto XKLib::PatternByte::vec_skipper_uk_values() -> std::vector<size_t>&
     return _vec_skipper_uk_values;
 }
 
-auto XKLib::PatternByte::fast_aligned_values()
-  -> std::vector<fast_aligned_value_t>&
+auto XKLib::PatternByte::fast_aligned_values() -> simd_value_t*
 {
     return _fast_aligned_values;
+}
+
+auto XKLib::PatternByte::fast_aligned_masks() -> simd_value_t*
+{
+    return _fast_aligned_masks;
+}
+
+auto XKLib::PatternByte::fast_aligned_values_count() -> size_t
+{
+    return _fast_aligned_values_count;
 }

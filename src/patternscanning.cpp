@@ -259,12 +259,13 @@ auto XKLib::PatternScanning::searchAlignedV2(XKLib::PatternByte& pattern,
                                              size_t size,
                                              ptr_t baseAddress) -> bool
 {
-    auto&& pattern_values         = pattern.values();
-    auto&& matches                = pattern.matches();
-    auto old_matches_size         = matches.size();
-    auto pattern_size             = pattern_values.size();
-    auto&& fast_aligned_values    = pattern.fast_aligned_values();
-    auto fast_aligned_values_size = fast_aligned_values.size();
+    auto&& pattern_values          = pattern.values();
+    auto&& matches                 = pattern.matches();
+    auto old_matches_size          = matches.size();
+    auto pattern_size              = pattern_values.size();
+    auto fast_aligned_values       = pattern.fast_aligned_values();
+    auto fast_aligned_masks        = pattern.fast_aligned_masks();
+    auto fast_aligned_values_count = pattern.fast_aligned_values_count();
 
     size_t index            = 0;
     size_t simd_value_index = 0;
@@ -288,29 +289,29 @@ auto XKLib::PatternScanning::searchAlignedV2(XKLib::PatternByte& pattern,
         {
 #if defined(__AVX512F__)
             if (!_mm512_cmpeq_epi64_mask(
-                  _mm512_and_si512(
-                    _mm512_load_si512(view_as<PatternByte::simd_value_t*>(
-                      &aligned_data[start_index])),
-                    fast_aligned_values[simd_value_index].mask),
-                  fast_aligned_values[simd_value_index].value))
+                  _mm512_and_si512(_mm512_load_si512(
+                                     view_as<PatternByte::simd_value_t*>(
+                                       &aligned_data[start_index])),
+                                   fast_aligned_masks[simd_value_index]),
+                  fast_aligned_values[simd_value_index]))
             {
                 goto skip;
             }
 #elif defined(__AVX2__)
             if (!_mm256_movemask_epi8(_mm256_cmpeq_epi64(
-                  _mm256_and_si256(
-                    _mm256_load_si256(view_as<PatternByte::simd_value_t*>(
-                      &aligned_data[start_index])),
-                    fast_aligned_values[simd_value_index].mask),
-                  fast_aligned_values[simd_value_index].value)))
+                  _mm256_and_si256(_mm256_load_si256(
+                                     view_as<PatternByte::simd_value_t*>(
+                                       &aligned_data[start_index])),
+                                   fast_aligned_masks[simd_value_index]),
+                  fast_aligned_values[simd_value_index])))
             {
                 goto skip;
             }
 #else
             if ((*view_as<PatternByte::simd_value_t*>(
                    &aligned_data[start_index])
-                 & fast_aligned_values[simd_value_index].mask)
-                != fast_aligned_values[simd_value_index].value)
+                 & fast_aligned_masks[simd_value_index])
+                != fast_aligned_values[simd_value_index])
             {
                 goto skip;
             }
@@ -318,7 +319,7 @@ auto XKLib::PatternScanning::searchAlignedV2(XKLib::PatternByte& pattern,
             start_index += sizeof(PatternByte::simd_value_t);
             simd_value_index++;
         }
-        while (simd_value_index < fast_aligned_values_size);
+        while (simd_value_index < fast_aligned_values_count);
 
         matches.push_back(
           view_as<ptr_t>(view_as<uintptr_t>(baseAddress) + index));
