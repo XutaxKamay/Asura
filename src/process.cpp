@@ -1,14 +1,13 @@
+#include "pch.h"
+
 #include "process.h"
 #include "patternscanning.h"
 
-#include <filesystem>
-#include <unistd.h>
 
 #ifdef WINDOWS
     #include <psapi.h>
 #else
-    #include <fcntl.h>
-    #include <linux/limits.h>
+
 #endif
 
 using namespace XKLib;

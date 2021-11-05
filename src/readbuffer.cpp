@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "readbuffer.h"
 
 using namespace XKLib;

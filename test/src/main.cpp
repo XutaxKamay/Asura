@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "test.h"
 
 auto main() -> int

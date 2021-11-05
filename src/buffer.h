@@ -3,7 +3,6 @@
 
 #include "bits.h"
 #include "types.h"
-#include <algorithm>
 
 namespace XKLib
 {

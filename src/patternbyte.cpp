@@ -1,10 +1,8 @@
-#include <utility>
+#include "pch.h"
 
 #include "patternscanning.h"
 #include "process.h"
 
-#include <cstdlib>
-#include <cstring>
 
 XKLib::PatternByte::Value::Value(int value) : value(value)
 {

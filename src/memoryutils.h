@@ -9,26 +9,6 @@
 #include "memoryarea.h"
 #include "types.h"
 
-#ifndef WINDOWS
-    #include <fstream>
-
-    #include <errno.h>
-    #include <string.h>
-    #include <sys/file.h>
-    #include <sys/ioctl.h>
-    #include <sys/mman.h>
-    #include <sys/types.h>
-    #include <sys/uio.h>
-    #include <unistd.h>
-#else
-    #include <tlhelp32.h>
-    #include <windows.h>
-#endif
-
-#ifndef WINDOWS
-
-#endif
-
 namespace XKLib
 {
     /**

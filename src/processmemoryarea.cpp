@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "processmemoryarea.h"
 #include "processbase.h"
 

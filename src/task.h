@@ -3,7 +3,6 @@
 
 #include "memoryutils.h"
 #include "processbase.h"
-#include <list>
 
 namespace XKLib
 {

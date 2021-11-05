@@ -1,15 +1,7 @@
+#include "pch.h"
+
 #include "task.h"
 #include "exception.h"
-
-#ifdef WINDOWS
-    #include <tlhelp32.h>
-    #include <windows.h>
-#else
-    #include <csignal>
-    #include <cstdlib>
-    #include <filesystem>
-    #include <sys/wait.h>
-#endif
 
 using namespace XKLib;
 

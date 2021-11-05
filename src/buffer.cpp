@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "buffer.h"
 
 using namespace XKLib;

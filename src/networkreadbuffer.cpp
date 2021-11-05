@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "networkreadbuffer.h"
 
 XKLib::NetworkReadBuffer::NetworkReadBuffer(XKLib::data_t data,

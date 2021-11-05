@@ -1,8 +1,6 @@
 #ifndef VIRTUALTABLETOOLS_H
 #define VIRTUALTABLETOOLS_H
 
-#include <functional>
-
 #include "buffer.h"
 #include "process.h"
 

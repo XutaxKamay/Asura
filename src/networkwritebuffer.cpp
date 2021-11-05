@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "networkwritebuffer.h"
 
 XKLib::NetworkWriteBuffer::NetworkWriteBuffer(XKLib::data_t data,

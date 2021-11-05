@@ -1,10 +1,6 @@
 #ifndef BITS_H
 #define BITS_H
 
-#include <bitset>
-#include <climits>
-#include <cmath>
-
 #include "exception.h"
 #include "types.h"
 

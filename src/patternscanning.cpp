@@ -1,6 +1,7 @@
+#include "pch.h"
+
 #include "patternscanning.h"
 #include "patternbyte.h"
-#include <cstring>
 
 auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
                                       data_t data,

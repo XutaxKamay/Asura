@@ -5,16 +5,6 @@
 #include "exception.h"
 #include "task.h"
 
-#ifdef WINDOWS
-    #include <tlhelp32.h>
-#else
-    #include <cstdlib>
-    #include <ctime>
-    #include <filesystem>
-    #include <signal.h>
-    #include <sys/wait.h>
-#endif
-
 namespace XKLib
 {
     template <size_t stack_size_T>

@@ -3,8 +3,6 @@
 
 #include "process.h"
 
-#include <immintrin.h>
-
 namespace XKLib
 {
     class Process;

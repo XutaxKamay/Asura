@@ -5,11 +5,6 @@
 #include "buffer.h"
 #include "types.h"
 
-#include <algorithm>
-#include <concepts>
-#include <limits>
-#include <memory>
-
 /**
  * This was done for fun, huffman is better
  **/

@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "writebuffer.h"
 
 using namespace XKLib;

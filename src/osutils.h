@@ -1,23 +1,8 @@
 #ifndef OSUTILS_H
 #define OSUTILS_H
 
-#include <cstring>
-#include <fstream>
-
 #include "exception.h"
 #include "memoryutils.h"
-
-#ifndef WIN32
-    #include <dlfcn.h>
-    #include <fcntl.h>
-    #include <link.h>
-
-    #include <sys/mman.h>
-    #include <sys/stat.h>
-    #include <sys/types.h>
-#else
-    #include <dbghelp.h>
-#endif
 
 namespace XKLib
 {

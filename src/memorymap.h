@@ -4,8 +4,6 @@
 #include "memoryarea.h"
 #include "memoryutils.h"
 
-#include <memory>
-
 namespace XKLib
 {
     class ProcessMemoryMap;

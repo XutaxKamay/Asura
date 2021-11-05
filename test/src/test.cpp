@@ -1,13 +1,6 @@
-#include "test.h"
-#ifndef WINDOWS
-    #include <sys/mman.h>
-    #include <unistd.h>
-#else
-    #include <windows.h>
-#endif
+#include "pch.h"
 
-#include <cstring>
-#include <fstream>
+#include "test.h"
 
 using namespace XKLib;
 using namespace CryptoPP;

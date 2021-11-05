@@ -2,7 +2,6 @@
 #define DETOURX86_H
 
 #include "process.h"
-#include <functional>
 
 #ifdef WINDOWS
 enum calling_conventions_t

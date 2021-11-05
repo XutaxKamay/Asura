@@ -2,9 +2,6 @@
 #define MEMORYAREA_H
 
 #include "types.h"
-#ifdef WINDOWS
-    #include "windows.h"
-#endif
 
 namespace XKLib
 {

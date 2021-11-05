@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "timer.h"
 
 auto XKLib::Timer::start() -> void

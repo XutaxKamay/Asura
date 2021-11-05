@@ -1,6 +1,6 @@
-#include "exception.h"
+#include "pch.h"
 
-#include <utility>
+#include "exception.h"
 
 XKLib::Exception::Exception(std::string msg) : _msg(std::move(msg))
 {

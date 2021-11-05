@@ -1,19 +1,7 @@
+#include "pch.h"
+
 #include "processmemorymap.h"
 #include "process.h"
-#include <regex>
-#include <utility>
-
-#ifndef WINDOWS
-    #include <fstream>
-    #include <unistd.h>
-
-    #include <sys/file.h>
-    #include <sys/ioctl.h>
-    #include <sys/mman.h>
-    #include <sys/types.h>
-#else
-    #include <windows.h>
-#endif
 
 using namespace XKLib;
 

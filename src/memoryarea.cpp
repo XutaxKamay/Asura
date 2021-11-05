@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "memoryarea.h"
 #include "exception.h"
 
