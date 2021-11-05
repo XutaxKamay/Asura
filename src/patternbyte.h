@@ -50,14 +50,6 @@ namespace XKLib
             size_t size_to_copy;
         };
 
-        struct fast_value_t
-        {
-            int unknown;
-            size_t var_size;
-            simd_value_t value;
-            simd_value_t mask;
-        };
-
         PatternByte(std::vector<std::shared_ptr<Value>> values,
                     std::string _area_name     = "",
                     std::vector<ptr_t> matches = {});
@@ -66,7 +58,6 @@ namespace XKLib
 
       public:
         auto values() -> std::vector<std::shared_ptr<Value>>&;
-        auto fvalues() -> std::vector<fast_value_t>&;
         auto simd_unknown_values() -> std::vector<simd_unknown_value_t>&;
         auto matches() -> std::vector<ptr_t>&;
         auto isValid() -> bool;
@@ -81,7 +72,6 @@ namespace XKLib
       private:
         std::vector<std::shared_ptr<Value>> _values;
         std::vector<simd_unknown_value_t> _unknown_values;
-        std::vector<fast_value_t> _fast_values;
         std::vector<ptr_t> _matches;
         std::string _area_name;
         std::vector<std::vector<byte_t>> _vec_known_values;

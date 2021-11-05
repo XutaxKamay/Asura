@@ -33,11 +33,6 @@ namespace XKLib
                              size_t size,
                              ptr_t baseAddress) -> bool;
 
-        //        static auto searchAlignedV1(PatternByte& pattern,
-        //                                    data_t aligned_data,
-        //                                    size_t size,
-        //                                    ptr_t baseAddress) -> bool;
-
         static auto searchAlignedV2(PatternByte& pattern,
                                     data_t aligned_data,
                                     size_t size,
