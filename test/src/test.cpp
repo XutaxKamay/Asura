@@ -547,9 +547,9 @@ auto XKLib::Test::run() -> void
 
         timer.start();
         PatternScanning::searchTest(pattern,
-                                    aligned_memory,
-                                    random_bytes.size() * 8,
-                                    nullptr);
+                                  aligned_memory,
+                                  random_bytes.size() * 8,
+                                  nullptr);
         timer.end();
 
         ConsoleOutput("test scan took: ")

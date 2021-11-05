@@ -7,91 +7,62 @@ auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
                                       size_t size,
                                       ptr_t baseAddress) -> bool
 {
-    auto&& pattern_fvalues     = pattern.fvalues();
-    auto&& matches             = pattern.matches();
-    auto old_matches_size      = matches.size();
-    auto&& pattern_values      = pattern.values();
-    auto pattern_values_size   = pattern_values.size();
-    auto pattern_fvalues_size  = pattern_fvalues.size();
-    size_t index               = 0;
-    size_t start_index         = 0;
-    size_t pattern_value_index = 0;
-    auto&& pattern_value       = pattern_fvalues[0];
-#if (defined(__AVX512F__) || defined(__AVX2__))
-    bool is_aligned;
-#endif
+    auto&& matches                 = pattern.matches();
+    auto old_matches_size          = matches.size();
+    auto&& pattern_values          = pattern.values();
+    auto pattern_values_size       = pattern_values.size();
+    auto fast_aligned_values       = pattern.fast_aligned_values();
+    auto fast_aligned_masks        = pattern.fast_aligned_masks();
+    auto fast_aligned_values_count = pattern.fast_aligned_values_count();
 
+    size_t index            = 0;
+    size_t start_index      = 0;
+    size_t simd_value_index = 0;
     do
     {
         do
         {
-#if (defined(__AVX512F__) || defined(__AVX2__))
-
-            is_aligned = view_as<size_t>(&data[start_index])
-                             % sizeof(PatternByte::simd_value_t) ?
-                           false :
-                           true;
-#endif
-
 #if defined(__AVX512F__)
-            if (!pattern_value.unknown
-                && !_mm512_cmpeq_epi64_mask(
-                  _mm512_and_si512(
-                    is_aligned ? _mm512_load_si512(
-                      view_as<PatternByte::simd_value_t*>(
-                        &data[start_index])) :
-                                 _mm512_loadu_si512(
-                                   view_as<PatternByte::simd_value_t*>(
-                                     &data[start_index])),
-                    pattern_value.mask),
-                  pattern_value.value))
+            if (!_mm512_cmpeq_epi64_mask(
+                  _mm512_and_si512(_mm512_loadu_si512(
+                                     view_as<PatternByte::simd_value_t*>(
+                                       &data[start_index])),
+                                   fast_aligned_masks[simd_value_index]),
+                  fast_aligned_values[simd_value_index]))
             {
                 goto skip;
             }
 #elif defined(__AVX2__)
-            if (!pattern_value.unknown
-                && !_mm256_movemask_epi8(_mm256_cmpeq_epi64(
-                  _mm256_and_si256(
-                    is_aligned ? _mm256_load_si256(
-                      view_as<PatternByte::simd_value_t*>(
-                        &data[start_index])) :
-                                 _mm256_loadu_si256(
-                                   view_as<PatternByte::simd_value_t*>(
-                                     &data[start_index])),
-                    pattern_value.mask),
-                  pattern_value.value)))
+            if (!_mm256_movemask_epi8(_mm256_cmpeq_epi64(
+                  _mm256_and_si256(_mm256_loadu_si256(
+                                     view_as<PatternByte::simd_value_t*>(
+                                       &data[start_index])),
+                                   fast_aligned_masks[simd_value_index]),
+                  fast_aligned_values[simd_value_index])))
             {
                 goto skip;
             }
 #else
-            if (!pattern_value.unknown
-                && pattern_value.value
+            if (fast_aligned_values[simd_value_index]
                      != (*view_as<PatternByte::simd_value_t*>(
                            &data[start_index])
-                         & pattern_value.mask))
+                         &    fast_aligned_masks[simd_value_index])
             {
                 goto skip;
             }
 #endif
-            start_index += pattern_value.var_size;
-
-            pattern_value_index++;
-
-            if (pattern_value_index >= pattern_fvalues_size)
-            {
-                break;
-            }
-
-            pattern_value = pattern_fvalues[pattern_value_index];
+            start_index += sizeof(PatternByte::simd_value_t);
+            simd_value_index++;
         }
-        while (true);
+        while (simd_value_index < fast_aligned_values_count);
 
         matches.push_back(
           view_as<ptr_t>(view_as<uintptr_t>(baseAddress) + index));
 
     skip:
         index++;
-        start_index = index;
+        start_index      = index;
+        simd_value_index = 0;
     }
     while (index + pattern_values_size <= size);
 
