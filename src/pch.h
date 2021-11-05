@@ -54,7 +54,6 @@
 #include <unistd.h>
 
 /* CryptoPP */
-
 #include <vendor/cryptopp/aes.h>
 #include <vendor/cryptopp/modes.h>
 #include <vendor/cryptopp/osrng.h>

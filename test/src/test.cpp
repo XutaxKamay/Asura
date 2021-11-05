@@ -492,6 +492,13 @@ auto XKLib::Test::run() -> void
     {
         std::vector<std::shared_ptr<PatternByte::Value>> pattern_bytes;
 
+        random_bytes.clear();
+
+        for (size_t i = 0; i < 0x10000; i++)
+        {
+            random_bytes.push_back(view_as<byte_t>(rand() % 256));
+        }
+
         for (auto&& byte : random_bytes)
         {
             pattern_bytes.push_back(
