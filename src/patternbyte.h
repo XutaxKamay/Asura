@@ -1,8 +1,6 @@
 #ifndef PATTERNBYTE_H
 #define PATTERNBYTE_H
 
-#define PATTERN_UNALIGNED_SIMD_V1_V2
-
 #include "process.h"
 
 #include <immintrin.h>
@@ -60,36 +58,37 @@ namespace XKLib
             simd_value_t mask;
         };
 
+        struct fast_aligned_value_t
+        {
+            simd_value_t value;
+            simd_value_t mask;
+        };
+
         PatternByte(std::vector<std::shared_ptr<Value>> values,
                     std::string _area_name     = "",
                     std::vector<ptr_t> matches = {});
-        ~PatternByte();
 
       public:
         auto values() -> std::vector<std::shared_ptr<Value>>&;
         auto fvalues() -> std::vector<fast_value_t>&;
         auto simd_unknown_values() -> std::vector<simd_unknown_value_t>&;
-        auto simd_values() -> simd_value_t*;
-        auto simd_values_size() -> size_t&;
         auto matches() -> std::vector<ptr_t>&;
         auto isValid() -> bool;
         auto scan(Process& process) -> void;
         auto areaName() -> std::string;
-        auto fast_masks() -> simd_value_t*;
         auto vec_known_values() -> std::vector<std::vector<byte_t>>&;
         auto vec_skipper_uk_values() -> std::vector<size_t>&;
+        auto fast_aligned_values() -> std::vector<fast_aligned_value_t>&;
 
       private:
-        simd_value_t* _fast_masks;
         std::vector<std::shared_ptr<Value>> _values;
         std::vector<simd_unknown_value_t> _unknown_values;
-        simd_value_t* _simd_values {};
-        size_t _simd_values_size {};
         std::vector<fast_value_t> _fast_values;
         std::vector<ptr_t> _matches;
         std::string _area_name;
         std::vector<std::vector<byte_t>> _vec_known_values;
         std::vector<size_t> _vec_skipper_uk_values;
+        std::vector<fast_aligned_value_t> _fast_aligned_values;
     };
 
     using patterns_bytes_t = std::vector<PatternByte>;
