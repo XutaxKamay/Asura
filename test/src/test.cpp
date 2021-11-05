@@ -517,6 +517,10 @@ auto XKLib::Test::run() -> void
                     random_bytes.data(),
                     random_bytes.size());
 
+        std::memcpy(&aligned_memory[random_bytes.size() * 2],
+                    random_bytes.data(),
+                    random_bytes.size() - 1096);
+
         timer.start();
         PatternScanning::searchV1(pattern,
                                   aligned_memory,
@@ -546,10 +550,11 @@ auto XKLib::Test::run() -> void
           << " of pattern size in bytes" << std::endl;
 
         timer.start();
-        PatternScanning::searchTest(pattern,
-                                  aligned_memory,
-                                  random_bytes.size() * 8,
-                                  nullptr);
+        PatternScanning::searchMethodThatOthersUsesAndItsBad(
+          pattern,
+          aligned_memory,
+          random_bytes.size() * 8,
+          nullptr);
         timer.end();
 
         ConsoleOutput("test scan took: ")

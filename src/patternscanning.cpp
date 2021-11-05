@@ -18,6 +18,7 @@ auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
     size_t index            = 0;
     size_t start_index      = 0;
     size_t simd_value_index = 0;
+
     do
     {
         do
@@ -44,9 +45,9 @@ auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
             }
 #else
             if (fast_aligned_values[simd_value_index]
-                     != (*view_as<PatternByte::simd_value_t*>(
-                           &data[start_index])
-                         &    fast_aligned_masks[simd_value_index])
+                != (*view_as<PatternByte::simd_value_t*>(
+                      &data[start_index])
+                    & fast_aligned_masks[simd_value_index]))
             {
                 goto skip;
             }
@@ -85,7 +86,7 @@ auto XKLib::PatternScanning::searchV2(XKLib::PatternByte& pattern,
     size_t start_index           = 0;
     size_t skipper_index         = 0;
     size_t index                 = 0;
-    auto&& known_values          = vec_known_values[0];
+    auto known_values            = vec_known_values[0];
 
     do
     {
@@ -95,6 +96,8 @@ auto XKLib::PatternScanning::searchV2(XKLib::PatternByte& pattern,
             {
                 if (known_values[index_known_value] != data[start_index])
                 {
+                    index_known_value = 0;
+                    known_values      = vec_known_values[0];
                     goto skip;
                 }
 
@@ -121,7 +124,8 @@ auto XKLib::PatternScanning::searchV2(XKLib::PatternByte& pattern,
 
     skip:
         index++;
-        start_index = index;
+        start_index   = index;
+        skipper_index = 0;
     }
     while ((index + pattern_size) <= size);
 
@@ -305,14 +309,11 @@ auto XKLib::PatternScanning::searchAlignedV2(XKLib::PatternByte& pattern,
     return matches.size() != old_matches_size;
 }
 
-/**
- * I don't know, and I don't want to know why, but searchV3 should be
- * faster than V4 because
- */
-auto XKLib::PatternScanning::searchTest(XKLib::PatternByte& pattern,
-                                        data_t data,
-                                        size_t size,
-                                        ptr_t baseAddress) -> bool
+auto XKLib::PatternScanning::searchMethodThatOthersUsesAndItsBad(
+  XKLib::PatternByte& pattern,
+  data_t data,
+  size_t size,
+  ptr_t baseAddress) -> bool
 {
     auto&& pattern_values     = pattern.values();
     auto&& matches            = pattern.matches();
@@ -323,12 +324,6 @@ auto XKLib::PatternScanning::searchTest(XKLib::PatternByte& pattern,
 
     do
     {
-        /**
-         * TODO:
-         * This would need to be more generic,
-         * but it would need a constexpr pattern to generate the if
-         * conditions for each known byte.
-         */
         if (pattern_values[0]->value == data[index])
         {
             do
