@@ -25,7 +25,7 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
      *  Let's do some preprocessing now *
      */
 
-    /* First scanning method, using filling bytes */
+    /* First & third scanning method, using filling bytes */
     {
         _unknown_values.reserve(_values.size());
 
@@ -48,7 +48,9 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
         size_t ukval_contigous_count       = 0;
         size_t index_since_contigous_count = 0;
         size_t byte_simd_index             = 0;
-        bool are_first_known_values        = true;
+        size_t count_unknown_byte          = 0;
+        bool are_known_values              = true;
+        std::vector<byte_t> known_values;
         simd_value_t mask {};
 
         for (auto&& value : _values)
@@ -73,15 +75,25 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
                 }
 
                 view_as<byte_t*>(_simd_values)[index] = 0;
-                are_first_known_values                = false;
+
+                if (are_known_values)
+                {
+                    _vec_known_values.push_back(known_values);
+                    known_values.clear();
+                    are_known_values = false;
+                }
+
+                count_unknown_byte++;
             }
             else
             {
-                if (are_first_known_values)
+                if (!are_known_values)
                 {
-                    _first_known_values.push_back(
-                      view_as<byte_t>(value->value));
+                    _vec_skipper_uk_values.push_back(count_unknown_byte);
+                    are_known_values = true;
                 }
+
+                known_values.push_back(view_as<byte_t>(value->value));
 
                 if (ukval_contigous_count > 0)
                 {
@@ -108,15 +120,12 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
                 byte_simd_index                           = 0;
             }
         }
-    }
 
-    _first_cpuarch_value = *view_as<uintptr_t*>(&_first_known_values[0]);
-    _first_cpuarch_mask_value = (_first_known_values.size()
-                                 >= sizeof(uintptr_t)) ?
-                                  std::numeric_limits<uintptr_t>::max() :
-                                  (1u << _first_known_values.size()) - 1u;
-    _first_cpuarch_value      = _first_cpuarch_value
-                           & _first_cpuarch_mask_value;
+        if (known_values.size())
+        {
+            _vec_known_values.push_back(known_values);
+        }
+    }
 
     /* Second scanning method using masks */
     {
@@ -302,6 +311,12 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
               { 0, index_of_smid_value, smid_value, mask });
         }
     }
+
+    if (_vec_skipper_uk_values.size() != (_vec_known_values.size() - 1))
+    {
+        XKLIB_EXCEPTION("The amount of vec known values should be the "
+                        "same of vec of unknown values");
+    }
 }
 
 XKLib::PatternByte::~PatternByte()
@@ -320,7 +335,8 @@ auto XKLib::PatternByte::fvalues() -> std::vector<fast_value_t>&
     return _fast_values;
 }
 
-auto XKLib::PatternByte::unknown_values() -> std::vector<unknown_value_t>&
+auto XKLib::PatternByte::simd_unknown_values()
+  -> std::vector<simd_unknown_value_t>&
 {
     return _unknown_values;
 }
@@ -385,17 +401,13 @@ auto XKLib::PatternByte::fast_masks() -> simd_value_t*
     return _fast_masks;
 }
 
-auto XKLib::PatternByte::first_known_values() -> std::vector<byte_t>&
+auto XKLib::PatternByte::vec_known_values()
+  -> std::vector<std::vector<byte_t>>&
 {
-    return _first_known_values;
+    return _vec_known_values;
 }
 
-uintptr_t XKLib::PatternByte::first_cpuarch_value()
+auto XKLib::PatternByte::vec_skipper_uk_values() -> std::vector<size_t>&
 {
-    return _first_cpuarch_value;
-}
-
-uintptr_t XKLib::PatternByte::first_cpuarch_mask_value()
-{
-    return _first_cpuarch_mask_value;
+    return _vec_skipper_uk_values;
 }

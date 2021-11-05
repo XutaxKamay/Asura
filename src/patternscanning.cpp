@@ -12,7 +12,7 @@ auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
     auto&& pattern_values      = pattern.values();
     auto&& matches             = pattern.matches();
     auto old_matches_size      = matches.size();
-    auto&& unknown_values      = pattern.unknown_values();
+    auto&& simd_unknown_values = pattern.simd_unknown_values();
     auto&& simd_values         = pattern.simd_values();
     auto pattern_size          = pattern_values.size();
     auto left_bytes_to_analyze = pattern_size
@@ -84,7 +84,7 @@ auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
              * this permits to gain few instructions compared to a mask
              * every iterations our simd value loaded.
              */
-            for (auto&& unknown_value : unknown_values)
+            for (auto&& unknown_value : simd_unknown_values)
             {
                 std::memcpy(&view_as<data_t>(
                               &simd_values[unknown_value.simd_index])
@@ -207,7 +207,7 @@ auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
              * this permits to gain few instructions compared to a mask
              * every iterations our simd value loaded.
              */
-            for (auto&& unknown_value : unknown_values)
+            for (auto&& unknown_value : simd_unknown_values)
             {
                 std::memcpy(&view_as<data_t>(
                               &simd_values[unknown_value.simd_index])
@@ -358,43 +358,107 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
                                       size_t size,
                                       ptr_t baseAddress) -> bool
 {
-    auto& pattern_values  = pattern.values();
-    auto old_matches_size = pattern.matches().size();
-    auto pattern_size     = pattern_values.size();
-    size_t index_pattern_byte;
+    auto&& pattern_values        = pattern.values();
+    auto old_matches_size        = pattern.matches().size();
+    auto pattern_size            = pattern_values.size();
+    auto&& first_known_values    = pattern.vec_known_values()[0];
+    auto first_known_values_size = first_known_values.size();
+    size_t index_pattern_byte    = 0;
     size_t start_index;
 
     for (size_t index = 0; (index + pattern_size) <= size; index++)
     {
+        start_index = index;
+
         /**
          * TODO:
-         * This would need to be more generic !!!
-         * Basically we would need to compare the first known values,
-         * so we can avoid the unknown byte check properly.
+         * This would need to be more generic,
+         * but it would need a constexpr pattern to generate the if
+         * conditions for each known byte.
          */
-        if (pattern_values[0]->value == data[index])
+        do
         {
-            start_index = index;
-
-            for (index_pattern_byte = 1;
-                 index_pattern_byte < pattern_size;
-                 index_pattern_byte++)
+            if (first_known_values[index_pattern_byte]
+                != data[start_index])
             {
-                if (pattern_values[index_pattern_byte]->value
-                    == PatternByte::Value::UNKNOWN)
-                {
-                    start_index++;
-                }
-                else if (pattern_values[index_pattern_byte]->value
-                         != data[start_index])
+                goto skip;
+            }
+
+            start_index++;
+            index_pattern_byte++;
+        }
+        while (index_pattern_byte < first_known_values_size);
+
+        do
+        {
+            if (pattern_values[index_pattern_byte]->value
+                == PatternByte::Value::UNKNOWN)
+            {
+                start_index++;
+            }
+            else if (pattern_values[index_pattern_byte]->value
+                     != data[start_index])
+            {
+                goto skip;
+            }
+
+            index_pattern_byte++;
+        }
+        while (index_pattern_byte < pattern_size);
+
+        pattern.matches().push_back(
+          view_as<ptr_t>(view_as<uintptr_t>(baseAddress) + index));
+
+    skip:
+        index_pattern_byte = 0;
+    }
+
+    return pattern.matches().size() != old_matches_size;
+}
+
+auto XKLib::PatternScanning::searchV4(XKLib::PatternByte& pattern,
+                                      data_t data,
+                                      size_t size,
+                                      ptr_t baseAddress) -> bool
+{
+    auto&& pattern_values        = pattern.values();
+    auto old_matches_size        = pattern.matches().size();
+    auto pattern_size            = pattern_values.size();
+    auto&& vec_known_values      = pattern.vec_known_values();
+    auto&& vec_skipper_uk_values = pattern.vec_skipper_uk_values();
+    auto vec_known_values_size   = vec_known_values.size();
+    size_t index_pattern_byte    = 0;
+    size_t start_index;
+    size_t skipper_index = 0;
+
+    for (size_t index = 0; (index + pattern_size) <= size; index++)
+    {
+        start_index = index;
+
+        do
+        {
+            auto&& known_values = vec_known_values[skipper_index];
+
+            do
+            {
+                if (known_values[index_pattern_byte] != data[start_index])
                 {
                     goto skip;
                 }
-            }
 
-            pattern.matches().push_back(
-              view_as<ptr_t>(view_as<uintptr_t>(baseAddress) + index));
+                start_index++;
+                index_pattern_byte++;
+            }
+            while (index_pattern_byte < known_values.size());
+
+            start_index += vec_skipper_uk_values[skipper_index];
+            skipper_index++;
         }
+        while (skipper_index < vec_known_values_size);
+
+        pattern.matches().push_back(
+          view_as<ptr_t>(view_as<uintptr_t>(baseAddress) + index));
+
     skip:;
     }
 
@@ -408,13 +472,13 @@ auto XKLib::PatternScanning::searchAlignedV1(XKLib::PatternByte& pattern,
 {
     size_t simd_value_index;
     size_t start_index;
-    auto&& pattern_values = pattern.values();
-    auto&& matches        = pattern.matches();
-    auto old_matches_size = matches.size();
-    auto&& unknown_values = pattern.unknown_values();
-    auto&& simd_values    = pattern.simd_values();
-    auto pattern_size     = pattern_values.size();
-    auto simd_count       = MemoryUtils::align(pattern_size,
+    auto&& pattern_values      = pattern.values();
+    auto&& matches             = pattern.matches();
+    auto old_matches_size      = matches.size();
+    auto&& simd_unknown_values = pattern.simd_unknown_values();
+    auto&& simd_values         = pattern.simd_values();
+    auto pattern_size          = pattern_values.size();
+    auto simd_count            = MemoryUtils::align(pattern_size,
                                          sizeof(PatternByte::simd_value_t))
                       / sizeof(PatternByte::simd_value_t);
 
@@ -438,7 +502,7 @@ auto XKLib::PatternScanning::searchAlignedV1(XKLib::PatternByte& pattern,
          * this permits to gain few instructions compared to a mask
          * every iterations our simd value loaded.
          */
-        for (auto&& unknown_value : unknown_values)
+        for (auto&& unknown_value : simd_unknown_values)
         {
             std::memcpy(
               &view_as<data_t>(&simd_values[unknown_value.simd_index])
