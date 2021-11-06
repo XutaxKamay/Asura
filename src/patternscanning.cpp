@@ -187,7 +187,7 @@ auto XKLib::PatternScanning::searchAlignedV2(XKLib::PatternByte& pattern,
             }
 #elif defined(__AVX2__)
             if (_mm256_movemask_epi8(_mm256_cmpeq_epi64(
-                  _mm256_and_si256(_mm256_loadu_si256(
+                  _mm256_and_si256(_mm256_load_si256(
                                      view_as<PatternByte::simd_value_t*>(
                                        &aligned_data[start_index])),
                                    fast_aligned_masks[simd_value_index]),
