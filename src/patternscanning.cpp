@@ -29,20 +29,22 @@ auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
             /* if ((value & mask) == pattern_value) */
 #if defined(__AVX512F__)
             if (!_mm512_cmpeq_epi64_mask(
-                  _mm512_and_si512(_mm512_loadu_si512(
-                                     view_as<PatternByte::simd_value_t*>(
-                                       &data[start_index])),
-                                   fast_aligned_masks[simd_value_index]),
+                  _mm512_and_si512(
+                    _mm512_loadu_si512(view_as<PatternByte::simd_value_t*>(
+                      &data[start_index])),
+                    _mm512_load_si512(
+                      &fast_aligned_masks[simd_value_index])),
                   fast_aligned_values[simd_value_index]))
             {
                 goto skip;
             }
 #elif defined(__AVX2__)
             if (_mm256_movemask_epi8(_mm256_cmpeq_epi64(
-                  _mm256_and_si256(_mm256_loadu_si256(
-                                     view_as<PatternByte::simd_value_t*>(
-                                       &data[start_index])),
-                                   fast_aligned_masks[simd_value_index]),
+                  _mm256_and_si256(
+                    _mm256_loadu_si256(view_as<PatternByte::simd_value_t*>(
+                      &data[start_index])),
+                    _mm256_load_si256(
+                      &fast_aligned_masks[simd_value_index])),
                   fast_aligned_values[simd_value_index]))
                 != -1)
             {
@@ -181,7 +183,8 @@ auto XKLib::PatternScanning::searchAlignedV2(XKLib::PatternByte& pattern,
                                      view_as<PatternByte::simd_value_t*>(
                                        &aligned_data[start_index])),
                                    fast_aligned_masks[simd_value_index]),
-                  fast_aligned_values[simd_value_index]))
+                  _mm512_load_si512(
+                    &fast_aligned_values[simd_value_index])))
             {
                 goto skip;
             }
@@ -191,7 +194,8 @@ auto XKLib::PatternScanning::searchAlignedV2(XKLib::PatternByte& pattern,
                                      view_as<PatternByte::simd_value_t*>(
                                        &aligned_data[start_index])),
                                    fast_aligned_masks[simd_value_index]),
-                  fast_aligned_values[simd_value_index]))
+                  _mm256_load_si256(
+                    &fast_aligned_values[simd_value_index])))
                 != -1)
             {
                 goto skip;
