@@ -110,7 +110,7 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
             }
 
             /**
-             *  copy pattern data to the simd value and create the
+             * copy pattern data to the simd value and create the
              * mask
              */
             view_as<byte_t*>(&simd_value)[byte_simd_index] = view_as<

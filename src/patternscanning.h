@@ -81,11 +81,10 @@ namespace XKLib
                                     size_t size,
                                     ptr_t baseAddress) -> bool;
 
-        static auto searchMethodThatOthersUsesAndItsBad(
-          PatternByte& pattern,
-          data_t data,
-          size_t size,
-          ptr_t baseAddress) -> bool;
+        static auto searchTest(PatternByte& pattern,
+                               data_t data,
+                               size_t size,
+                               ptr_t baseAddress) -> bool;
     };
 };
 

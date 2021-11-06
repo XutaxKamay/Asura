@@ -505,7 +505,8 @@ auto XKLib::Test::run() -> void
               std::make_shared<PatternByte::Value>(byte));
         }
 
-        (*pattern_bytes[5]) = PatternByte::Value::UNKNOWN;
+        (*pattern_bytes[5])    = PatternByte::Value::UNKNOWN;
+        (*pattern_bytes[2048]) = PatternByte::Value::UNKNOWN;
 
         PatternByte pattern(pattern_bytes);
 
@@ -519,7 +520,15 @@ auto XKLib::Test::run() -> void
 
         std::memcpy(&aligned_memory[random_bytes.size() * 2],
                     random_bytes.data(),
-                    random_bytes.size() - 1096);
+                    random_bytes.size() - 1);
+
+        std::memcpy(&aligned_memory[random_bytes.size() * 3],
+                    random_bytes.data(),
+                    random_bytes.size() - 1);
+
+        std::memcpy(&aligned_memory[random_bytes.size() * 4],
+                    random_bytes.data(),
+                    random_bytes.size() - 1);
 
         timer.start();
         PatternScanning::searchV1(pattern,
@@ -550,11 +559,10 @@ auto XKLib::Test::run() -> void
           << " of pattern size in bytes" << std::endl;
 
         timer.start();
-        PatternScanning::searchMethodThatOthersUsesAndItsBad(
-          pattern,
-          aligned_memory,
-          random_bytes.size() * 8,
-          nullptr);
+        PatternScanning::searchTest(pattern,
+                                    aligned_memory,
+                                    random_bytes.size() * 8,
+                                    nullptr);
         timer.end();
 
         ConsoleOutput("test scan took: ")

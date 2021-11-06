@@ -38,12 +38,13 @@ auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
                 goto skip;
             }
 #elif defined(__AVX2__)
-            if (!_mm256_movemask_epi8(_mm256_cmpeq_epi64(
+            if (_mm256_movemask_epi8(_mm256_cmpeq_epi64(
                   _mm256_and_si256(_mm256_loadu_si256(
                                      view_as<PatternByte::simd_value_t*>(
                                        &data[start_index])),
                                    fast_aligned_masks[simd_value_index]),
-                  fast_aligned_values[simd_value_index])))
+                  fast_aligned_values[simd_value_index]))
+                != -1)
             {
                 goto skip;
             }
@@ -79,51 +80,62 @@ auto XKLib::PatternScanning::searchV2(XKLib::PatternByte& pattern,
                                       size_t size,
                                       ptr_t baseAddress) -> bool
 {
-    auto&& pattern_values        = pattern.values();
-    auto&& matches               = pattern.matches();
-    auto old_matches_size        = matches.size();
-    auto pattern_size            = pattern_values.size();
-    auto&& vec_known_values      = pattern.vec_known_values();
-    auto&& vec_skipper_uk_values = pattern.vec_skipper_uk_values();
-    auto vec_known_values_size   = vec_known_values.size();
-    size_t start_index           = 0;
-    size_t skipper_index         = 0;
-    size_t index                 = 0;
-    std::shared_ptr<std::vector<byte_t>> known_values = vec_known_values[0];
+    auto&& pattern_values           = pattern.values();
+    auto&& matches                  = pattern.matches();
+    auto old_matches_size           = matches.size();
+    auto pattern_size               = pattern_values.size();
+    auto&& vec_known_values         = pattern.vec_known_values();
+    auto&& vec_skipper_uk_values    = pattern.vec_skipper_uk_values();
+    auto vec_skipper_uk_values_size = vec_skipper_uk_values.size();
+    size_t start_index              = 0;
+    size_t skipper_index            = 0;
+    size_t index                    = 0;
+    std::shared_ptr<std::vector<byte_t>> known_values;
 
     do
     {
+        if (std::memcmp(vec_known_values[0]->data(),
+                        &data[index],
+                        vec_known_values[0]->size())
+            != 0)
+        {
+            goto skip;
+        }
+
+        known_values = vec_known_values[0];
+
         do
         {
+            if (skipper_index >= vec_skipper_uk_values_size)
+            {
+                break;
+            }
+
+            start_index += vec_skipper_uk_values[skipper_index];
+            start_index += known_values->size();
+
+            skipper_index++;
+            known_values = vec_known_values[skipper_index];
+
             if (std::memcmp(known_values->data(),
                             &data[start_index],
                             known_values->size())
                 != 0)
             {
-                known_values = vec_known_values[0];
+                skipper_index = 0;
                 goto skip;
             }
-
-            start_index += vec_skipper_uk_values[skipper_index];
-            start_index += known_values->size();
-            skipper_index++;
-
-            if (skipper_index >= vec_known_values_size)
-            {
-                break;
-            }
-
-            known_values = vec_known_values[skipper_index];
         }
         while (true);
+
+        skipper_index = 0;
 
         matches.push_back(
           view_as<ptr_t>(view_as<uintptr_t>(baseAddress) + index));
 
     skip:
         index++;
-        start_index   = index;
-        skipper_index = 0;
+        start_index = index;
     }
     while ((index + pattern_size) <= size);
 
@@ -174,12 +186,13 @@ auto XKLib::PatternScanning::searchAlignedV2(XKLib::PatternByte& pattern,
                 goto skip;
             }
 #elif defined(__AVX2__)
-            if (!_mm256_movemask_epi8(_mm256_cmpeq_epi64(
-                  _mm256_and_si256(_mm256_load_si256(
+            if (_mm256_movemask_epi8(_mm256_cmpeq_epi64(
+                  _mm256_and_si256(_mm256_loadu_si256(
                                      view_as<PatternByte::simd_value_t*>(
                                        &aligned_data[start_index])),
                                    fast_aligned_masks[simd_value_index]),
-                  fast_aligned_values[simd_value_index])))
+                  fast_aligned_values[simd_value_index]))
+                != -1)
             {
                 goto skip;
             }
@@ -210,11 +223,10 @@ auto XKLib::PatternScanning::searchAlignedV2(XKLib::PatternByte& pattern,
     return matches.size() != old_matches_size;
 }
 
-auto XKLib::PatternScanning::searchMethodThatOthersUsesAndItsBad(
-  XKLib::PatternByte& pattern,
-  data_t data,
-  size_t size,
-  ptr_t baseAddress) -> bool
+auto XKLib::PatternScanning::searchTest(XKLib::PatternByte& pattern,
+                                        data_t data,
+                                        size_t size,
+                                        ptr_t baseAddress) -> bool
 {
     auto&& pattern_values     = pattern.values();
     auto&& matches            = pattern.matches();
