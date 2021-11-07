@@ -209,7 +209,7 @@ namespace XKLib
                                                  size_t size)
           -> std::vector<A>
         {
-            std::vector<A> result(size / sizeof(A));
+            std::vector<A> result(align_to_page_size(size, sizeof(A)));
 
 #ifndef WINDOWS
             iovec local  = { .iov_base = result.data(),
