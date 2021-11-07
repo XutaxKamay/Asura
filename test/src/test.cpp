@@ -559,6 +559,20 @@ auto XKLib::Test::run() -> void
           << " of pattern size in bytes" << std::endl;
 
         timer.start();
+        PatternScanning::searchV3(pattern,
+                                  aligned_memory,
+                                  random_bytes.size() * 8,
+                                  nullptr);
+        timer.end();
+
+        ConsoleOutput("v3 scan took: ")
+          << std::dec << timer.difference() << " nanoseconds "
+          << "with: "
+          << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
+          << " page count and " << pattern.bytes().size()
+          << " of pattern size in bytes" << std::endl;
+
+        timer.start();
         PatternScanning::searchTest(pattern,
                                     aligned_memory,
                                     random_bytes.size() * 8,

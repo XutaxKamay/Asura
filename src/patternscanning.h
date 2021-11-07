@@ -64,6 +64,19 @@ namespace XKLib
                              data_t data,
                              size_t size,
                              ptr_t baseAddress) -> bool;
+        /**
+         * @brief searchV2
+         * @param pattern
+         * @param data
+         * @param size
+         * @param baseAddress
+         * @return
+         * Same as v2 but uses SIMD for checking bytes.
+         */
+        static auto searchV3(PatternByte& pattern,
+                             data_t data,
+                             size_t size,
+                             ptr_t baseAddress) -> bool;
 
         /**
          * @brief searchAlignedV2

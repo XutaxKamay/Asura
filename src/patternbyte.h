@@ -54,9 +54,17 @@ namespace XKLib
             simd_value_t value;
         };
 
+        struct organized_simd_mv_t
+        {
+            simd_value_t mask;
+            simd_value_t value;
+            size_t size_to_move;
+        };
+
         struct organized_values_t
         {
             std::vector<byte_t> bytes;
+            std::vector<organized_simd_mv_t> fast_aligned_mvs;
             size_t skip_bytes;
         };
 
