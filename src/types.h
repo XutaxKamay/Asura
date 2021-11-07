@@ -25,7 +25,7 @@ namespace XKLib
     template <typename T>
     struct type_wrapper_t
     {
-        using type = T;
+            using type = T;
     };
 
     template <typename T>

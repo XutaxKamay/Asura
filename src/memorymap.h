@@ -11,16 +11,16 @@ namespace XKLib
     template <class MemoryArea_T = MemoryArea>
     class MemoryMap
     {
-        friend ProcessMemoryMap;
+            friend ProcessMemoryMap;
 
-      public:
-        auto areas() -> std::vector<std::shared_ptr<MemoryArea_T>>&
-        {
-            return _areas;
-        }
+        public:
+            auto areas() -> std::vector<std::shared_ptr<MemoryArea_T>>&
+            {
+                return _areas;
+            }
 
-      private:
-        std::vector<std::shared_ptr<MemoryArea_T>> _areas {};
+        private:
+            std::vector<std::shared_ptr<MemoryArea_T>> _areas {};
     };
 
 } // namespace XKLib

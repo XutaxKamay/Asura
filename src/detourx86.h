@@ -109,82 +109,84 @@ namespace XKLib
      */
     class TraditionalDetourX86
     {
-        /**
-         * This is a manager in order to find for each detours
-         * the closest memory area possible we can use in order to jmp and
-         * callback the instructions we've overwritten.
-         */
-        class Fragment
-        {
-          public:
-            uintptr_t address;
-            size_t size;
-        };
+            /**
+             * This is a manager in order to find for each detours
+             * the closest memory area possible we can use in order to jmp
+             * and callback the instructions we've overwritten.
+             */
+            class Fragment
+            {
+                public:
+                    uintptr_t address;
+                    size_t size;
+            };
 
-        using HandleFragment_t = std::shared_ptr<Fragment>;
+            using HandleFragment_t = std::shared_ptr<Fragment>;
 
-        class FragmentsArea
-        {
-          public:
-            std::shared_ptr<ProcessMemoryArea> process_memory_area;
-            std::vector<std::shared_ptr<Fragment>> _fragments;
-        };
+            class FragmentsArea
+            {
+                public:
+                    std::shared_ptr<ProcessMemoryArea> process_memory_area;
+                    std::vector<std::shared_ptr<Fragment>> _fragments;
+            };
 
-        class FragmentManager
-        {
-          public:
-            FragmentManager();
+            class FragmentManager
+            {
+                public:
+                    FragmentManager();
 
-            auto newFragment(bytes_t data, ptr_t originalFunc)
-              -> HandleFragment_t;
+                    auto newFragment(bytes_t data, ptr_t originalFunc)
+                      -> HandleFragment_t;
 
-            auto wipeFragment(HandleFragment_t HandleFragment);
+                    auto wipeFragment(HandleFragment_t HandleFragment);
 
-          private:
-            std::vector<std::shared_ptr<FragmentsArea>> _fragments_area;
-        };
+                private:
+                    std::vector<std::shared_ptr<FragmentsArea>>
+                      _fragments_area;
+            };
 
-      private:
-        /* This case is only for windows 32 bits program */
+        private:
+            /* This case is only for windows 32 bits program */
 #ifdef _WIN32
-        /**
-         * @brief generateCallBackFuncType
-         *
-         * @return auto
-         */
-        static constexpr auto GenerateCallBackFuncType();
-        /**
-         * @brief generateNewFuncType
-         *
-         * @return auto
-         */
-        static constexpr auto GenerateNewFuncType();
+            /**
+             * @brief generateCallBackFuncType
+             *
+             * @return auto
+             */
+            static constexpr auto GenerateCallBackFuncType();
+            /**
+             * @brief generateNewFuncType
+             *
+             * @return auto
+             */
+            static constexpr auto GenerateNewFuncType();
 
-      public:
-        using cbfunc_t = typename decltype(GenerateCallBackFuncType())::type;
-        using func_t = typename decltype(GenerateNewFuncType())::type;
+        public:
+            using cbfunc_t = typename decltype(GenerateCallBackFuncType())::
+              type;
+            using func_t = typename decltype(GenerateNewFuncType())::type;
 
 #else /* Otherwise it should be always the same convention */
-        using cbfunc_t = ret_type_T (*)(args_T...);
-        using func_t   = cbfunc_t;
+            using cbfunc_t = ret_type_T (*)(args_T...);
+            using func_t   = cbfunc_t;
 #endif
-      public:
-        TraditionalDetourX86(cbfunc_t originalFunc, ptr_t newFunc);
+        public:
+            TraditionalDetourX86(cbfunc_t originalFunc, ptr_t newFunc);
 
-      private:
-        /**
-         * @brief _callback_func
-         * The call back function permits to call the original function
-         * inside the new function.
-         */
-        cbfunc_t _callback_func {};
-        /**
-         * @brief _new_func
-         * Pointer to the new function.
-         */
-        func_t _new_func {};
-        func_t _original_func {};
-        HandleFragment_t _handle_fragment {};
+        private:
+            /**
+             * @brief _callback_func
+             * The call back function permits to call the original
+             * function inside the new function.
+             */
+            cbfunc_t _callback_func {};
+            /**
+             * @brief _new_func
+             * Pointer to the new function.
+             */
+            func_t _new_func {};
+            func_t _original_func {};
+            HandleFragment_t _handle_fragment {};
     };
 
 /**

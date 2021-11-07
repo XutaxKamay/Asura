@@ -500,10 +500,11 @@ auto XKLib::Test::run() -> void
 
         for (size_t i = 1; i < size_of_random - 1; i++)
         {
-            if ((rand() % (1 << 8)) == 0)
+            if ((rand() % (1 << 16)) == 0)
             {
-                for (size_t j = 0; j < view_as<size_t>(rand() % (1 << 8))
-                                   && (j + i < size_of_random);
+                for (size_t j = 0;
+                     j < (512 + view_as<size_t>(rand() % (1 << 10)))
+                     && (j + i < size_of_random);
                      j++)
                 {
                     pattern_bytes[i + j].value = PatternByte::Value::UNKNOWN;
@@ -638,34 +639,34 @@ auto XKLib::Test::run() -> void
 
     class TestMember : public Offset
     {
-      public:
-        TestMember()
-        {
-            _first = new Something();
-        }
+        public:
+            TestMember()
+            {
+                _first = new Something();
+            }
 
-        ~TestMember()
-        {
-            delete _first;
-        }
+            ~TestMember()
+            {
+                delete _first;
+            }
 
-        void call_me(int something)
-        {
-            std::cout << "hehe" << something << std::endl;
-        }
+            void call_me(int something)
+            {
+                std::cout << "hehe" << something << std::endl;
+            }
 
-        class Something
-        {
-          public:
-            int ok = 1337;
-        };
+            class Something
+            {
+                public:
+                    int ok = 1337;
+            };
 
-        auto first()
-        {
-            return *member_at<0x0, Something**>();
-        }
+            auto first()
+            {
+                return *member_at<0x0, Something**>();
+            }
 
-        Something* _first;
+            Something* _first;
     };
 
     TestMember member;

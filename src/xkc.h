@@ -17,84 +17,86 @@ namespace XKLib
     template <XKCAlphabetType T>
     class XKC
     {
-      public:
-        /* 64 bits because of -1 */
-        using value_t = int64_t;
+        public:
+            /* 64 bits because of -1 */
+            using value_t = int64_t;
 
-        using bit_path_t = std::bitset<std::numeric_limits<T>::max() + 1>;
+            using bit_path_t = std::bitset<std::numeric_limits<T>::max()
+                                           + 1>;
 
-        struct Occurrence
-        {
-            T letter_value;
-            /* let's limit the occurences to 256 times */
-            byte_t count = 0;
-        };
-
-        struct Letter
-        {
-            T value;
-            size_t freq = 0;
-        };
-
-        struct PathInfo
-        {
-            bit_path_t bit_path = 0;
-            size_t depth        = 0;
-        };
-
-        struct PathInfoResult : PathInfo
-        {
-            T letter_value;
-        };
-
-        struct BinaryTree
-        {
-            struct Node
+            struct Occurrence
             {
-                enum Value : value_t
-                {
-                    INVALID = -1
-                };
-
-                auto height() -> size_t;
-                auto depth() -> size_t;
-                auto count_subnodes() -> size_t;
-
-                std::shared_ptr<Node> root   = nullptr;
-                std::shared_ptr<Node> parent = nullptr;
-                value_t value                = INVALID;
-                std::shared_ptr<Node> left   = nullptr;
-                std::shared_ptr<Node> right  = nullptr;
+                    T letter_value;
+                    /* let's limit the occurences to 256 times */
+                    byte_t count = 0;
             };
 
-            BinaryTree();
+            struct Letter
+            {
+                    T value;
+                    size_t freq = 0;
+            };
 
-            void insert(std::shared_ptr<Node> parent, T value);
-            void insert(T value);
+            struct PathInfo
+            {
+                    bit_path_t bit_path = 0;
+                    size_t depth        = 0;
+            };
 
-            auto path_info(PathInfo& pathInfo,
-                           std::shared_ptr<Node> parent,
-                           T value) -> bool;
+            struct PathInfoResult : PathInfo
+            {
+                    T letter_value;
+            };
 
-            auto path_info(PathInfo& pathInfo, T value) -> bool;
+            struct BinaryTree
+            {
+                    struct Node
+                    {
+                            enum Value : value_t
+                            {
+                                INVALID = -1
+                            };
 
-            void find_value(PathInfoResult& pathInfo);
+                            auto height() -> size_t;
+                            auto depth() -> size_t;
+                            auto count_subnodes() -> size_t;
 
-            auto dot_format(std::shared_ptr<Node> parent) -> std::string;
-            auto dot_format() -> std::string;
+                            std::shared_ptr<Node> root   = nullptr;
+                            std::shared_ptr<Node> parent = nullptr;
+                            value_t value                = INVALID;
+                            std::shared_ptr<Node> left   = nullptr;
+                            std::shared_ptr<Node> right  = nullptr;
+                    };
 
-            std::shared_ptr<Node> root;
-        };
+                    BinaryTree();
 
-        using alphabet_t    = std::vector<Letter>;
-        using occurrences_t = std::vector<Occurrence>;
+                    void insert(std::shared_ptr<Node> parent, T value);
+                    void insert(T value);
 
-      public:
-        static auto encode(data_t data, size_t size) -> bytes_t;
-        static auto encode(const bytes_t& bytes) -> bytes_t;
+                    auto path_info(PathInfo& pathInfo,
+                                   std::shared_ptr<Node> parent,
+                                   T value) -> bool;
 
-        static auto decode(data_t data, size_t size) -> bytes_t;
-        static auto decode(const bytes_t& bytes) -> bytes_t;
+                    auto path_info(PathInfo& pathInfo, T value) -> bool;
+
+                    void find_value(PathInfoResult& pathInfo);
+
+                    auto dot_format(std::shared_ptr<Node> parent)
+                      -> std::string;
+                    auto dot_format() -> std::string;
+
+                    std::shared_ptr<Node> root;
+            };
+
+            using alphabet_t    = std::vector<Letter>;
+            using occurrences_t = std::vector<Occurrence>;
+
+        public:
+            static auto encode(data_t data, size_t size) -> bytes_t;
+            static auto encode(const bytes_t& bytes) -> bytes_t;
+
+            static auto decode(data_t data, size_t size) -> bytes_t;
+            static auto decode(const bytes_t& bytes) -> bytes_t;
     };
 };
 

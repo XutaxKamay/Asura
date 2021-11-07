@@ -7,18 +7,19 @@ namespace XKLib
 {
     class DecryptRSABlocks
     {
-      public:
-        DecryptRSABlocks(const CryptoPP::Integer& publicExponent,
-                         const CryptoPP::Integer& privateExponent,
-                         const CryptoPP::Integer& modulus);
-        explicit DecryptRSABlocks(CryptoPP::RSA::PrivateKey privateKey);
+        public:
+            DecryptRSABlocks(const CryptoPP::Integer& publicExponent,
+                             const CryptoPP::Integer& privateExponent,
+                             const CryptoPP::Integer& modulus);
+            explicit DecryptRSABlocks(
+              CryptoPP::RSA::PrivateKey privateKey);
 
-      public:
-        auto privateKey() -> auto&;
-        auto decrypt(const bytes_t& bytes) -> bytes_t;
+        public:
+            auto privateKey() -> auto&;
+            auto decrypt(const bytes_t& bytes) -> bytes_t;
 
-      private:
-        CryptoPP::RSA::PrivateKey _private_key {};
+        private:
+            CryptoPP::RSA::PrivateKey _private_key {};
     };
 };
 

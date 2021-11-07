@@ -7,13 +7,13 @@ namespace XKLib
 {
     class Exception : std::exception
     {
-      public:
-        explicit Exception(std::string msg);
+        public:
+            explicit Exception(std::string msg);
 
-        auto msg() -> const std::string&;
+            auto msg() -> const std::string&;
 
-      private:
-        std::string _msg {};
+        private:
+            std::string _msg {};
     };
 
 #define XKLIB_EXCEPTION(msg)                                             \

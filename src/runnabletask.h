@@ -10,20 +10,20 @@ namespace XKLib
     template <size_t stack_size_T>
     class RunnableTask : public Task
     {
-      public:
-        RunnableTask(ProcessBase processBase, ptr_t routineAddress);
+        public:
+            RunnableTask(ProcessBase processBase, ptr_t routineAddress);
 
-      public:
-        auto kill() -> void;
-        auto wait() -> void;
+        public:
+            auto kill() -> void;
+            auto wait() -> void;
 
-      public:
-        auto run() -> void;
+        public:
+            auto run() -> void;
 
-      private:
-        ptr_t _routine_address;
+        private:
+            ptr_t _routine_address;
 #ifdef WINDOWS
-        HANDLE _thread_handle;
+            HANDLE _thread_handle;
 #endif
     };
 

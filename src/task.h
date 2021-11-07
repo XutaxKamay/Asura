@@ -15,30 +15,30 @@ namespace XKLib
 
     class Task
     {
-        template <size_t>
-        friend class RunnableTask;
+            template <size_t>
+            friend class RunnableTask;
 
-      public:
-        static inline auto EXIT_CODE   = 0x1338;
-        static inline tid_t INVALID_ID = -1;
+        public:
+            static inline auto EXIT_CODE   = 0x1338;
+            static inline tid_t INVALID_ID = -1;
 
-      public:
-        static auto list(ProcessBase processBase) -> tasks_t;
+        public:
+            static auto list(ProcessBase processBase) -> tasks_t;
 
-      public:
-        Task(ProcessBase processBase, tid_t id);
+        public:
+            Task(ProcessBase processBase, tid_t id);
 
-      private:
-        explicit Task(ProcessBase processBase);
+        private:
+            explicit Task(ProcessBase processBase);
 
-      public:
-        auto wait() -> void;
-        auto kill() -> void;
-        auto id() -> tid_t&;
+        public:
+            auto wait() -> void;
+            auto kill() -> void;
+            auto id() -> tid_t&;
 
-      private:
-        ProcessBase _process_base;
-        tid_t _id;
+        private:
+            ProcessBase _process_base;
+            tid_t _id;
     };
 };
 

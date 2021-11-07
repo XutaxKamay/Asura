@@ -8,18 +8,18 @@ namespace XKLib
 {
     class RSABlocks
     {
-      public:
-        template <size_t rsa_key_size_T = 0x1000>
-        static auto GenerateRSAPrivateKey()
-        {
-            using namespace CryptoPP;
-            RSA::PrivateKey privateKey;
+        public:
+            template <size_t rsa_key_size_T = 0x1000>
+            static auto GenerateRSAPrivateKey()
+            {
+                using namespace CryptoPP;
+                RSA::PrivateKey privateKey;
 
-            AutoSeededRandomPool rng;
-            privateKey.GenerateRandomWithKeySize(rng, rsa_key_size_T);
+                AutoSeededRandomPool rng;
+                privateKey.GenerateRandomWithKeySize(rng, rsa_key_size_T);
 
-            return privateKey;
-        }
+                return privateKey;
+            }
     };
 
 };

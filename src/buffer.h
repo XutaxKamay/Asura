@@ -154,74 +154,74 @@ namespace XKLib
 
     class Buffer
     {
-      public:
-        explicit Buffer(size_t maxSize);
-        explicit Buffer(data_t data = nullptr, size_t maxSize = 0);
-        ~Buffer();
+        public:
+            explicit Buffer(size_t maxSize);
+            explicit Buffer(data_t data = nullptr, size_t maxSize = 0);
+            ~Buffer();
 
-      public:
-        /**
-         * @brief operator []
-         * @param size
-         * @return
-         */
-        auto operator[](size_t size) -> auto&;
-        /**
-         * @brief data
-         * @return
-         */
-        auto data() -> data_t;
-        /**
-         * @brief setData
-         * @param data
-         */
-        auto setData(XKLib::data_t data);
-        /**
-         * @brief maxSize
-         * @return
-         */
-        auto maxSize() -> size_t;
-        /**
-         * @brief setMaxSize
-         * @param maxSize
-         */
-        auto setMaxSize(size_t maxSize);
-        /**
-         * @brief toBytes
-         * @return bytes_t
-         */
-        auto toBytes() -> bytes_t;
+        public:
+            /**
+             * @brief operator []
+             * @param size
+             * @return
+             */
+            auto operator[](size_t size) -> auto&;
+            /**
+             * @brief data
+             * @return
+             */
+            auto data() -> data_t;
+            /**
+             * @brief setData
+             * @param data
+             */
+            auto setData(XKLib::data_t data);
+            /**
+             * @brief maxSize
+             * @return
+             */
+            auto maxSize() -> size_t;
+            /**
+             * @brief setMaxSize
+             * @param maxSize
+             */
+            auto setMaxSize(size_t maxSize);
+            /**
+             * @brief toBytes
+             * @return bytes_t
+             */
+            auto toBytes() -> bytes_t;
 
-      public:
-        template <typename cast_T = ptr_t>
-        /**
-         * @brief shift
-         * @param size
-         * Gets a pointer from data + size.
-         */
-        constexpr inline auto shift(size_t size = 0)
-        {
-            if (!_data && size >= _max_size)
+        public:
+            template <typename cast_T = ptr_t>
+            /**
+             * @brief shift
+             * @param size
+             * Gets a pointer from data + size.
+             */
+            constexpr inline auto shift(size_t size = 0)
             {
-                XKLIB_EXCEPTION("Out of bounds.");
+                if (!_data && size >= _max_size)
+                {
+                    XKLIB_EXCEPTION("Out of bounds.");
+                }
+
+                return view_as<cast_T>(view_as<uintptr_t>(_data) + size);
             }
 
-            return view_as<cast_T>(view_as<uintptr_t>(_data) + size);
-        }
-
-      private:
-        /**
-         * @brief _data
-         */
-        data_t _data {};
-        /**
-         * @brief _max_size
-         */
-        size_t _max_size {};
-        /**
-         * @brief _allocated
-         */
-        bool _allocated {};
+        private:
+            /**
+             * @brief _data
+             */
+            data_t _data {};
+            /**
+             * @brief _max_size
+             */
+            size_t _max_size {};
+            /**
+             * @brief _allocated
+             */
+            bool _allocated {};
     };
 
 } // namespace XKLib

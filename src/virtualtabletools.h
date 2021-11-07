@@ -93,26 +93,26 @@ namespace XKLib
     template <class T>
     class VirtualTable : public T
     {
-      public:
-        template <size_t index_T,
-                  typename ret_type_T = void,
-                  typename... args_T>
-        constexpr inline auto callVFunc(ptr_t* vptr, args_T... args)
-        {
-            return call_vfunc<index_T, ret_type_T, args_T...>(this,
-                                                              vptr,
-                                                              args...);
-        }
+        public:
+            template <size_t index_T,
+                      typename ret_type_T = void,
+                      typename... args_T>
+            constexpr inline auto callVFunc(ptr_t* vptr, args_T... args)
+            {
+                return call_vfunc<index_T, ret_type_T, args_T...>(this,
+                                                                  vptr,
+                                                                  args...);
+            }
 
-        template <typename ret_type_T = void, typename... args_T>
-        constexpr inline auto callVfuncDynIndex(ptr_t* vptr,
-                                                size_t index,
-                                                args_T... args)
-        {
-            return call_vfunc_dyn_index<ret_type_T, args_T...>(
-              vptr,
-              index)(this, vptr, index, args...);
-        }
+            template <typename ret_type_T = void, typename... args_T>
+            constexpr inline auto callVfuncDynIndex(ptr_t* vptr,
+                                                    size_t index,
+                                                    args_T... args)
+            {
+                return call_vfunc_dyn_index<ret_type_T, args_T...>(
+                  vptr,
+                  index)(this, vptr, index, args...);
+            }
     };
 
     template <size_t index_T, typename T2 = ptr_t>
