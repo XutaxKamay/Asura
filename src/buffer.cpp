@@ -14,35 +14,25 @@ using namespace XKLib;
 
 auto XKLib::get_variable_type_str(typesize_t typeSize) -> std::string
 {
-    switch (typeSize)
+    static std::string strings[] = { "safesize (32 bits)",
+                                     "8 bits signed",
+                                     "16 bits signed",
+                                     "32 bits signed",
+                                     "64 bits signed",
+                                     "8 bits unsigned",
+                                     "16 bits unsigned",
+                                     "32 bits unsigned",
+                                     "64 bits unsigned",
+                                     "array",
+                                     "float",
+                                     "double" };
+
+    if (typeSize < strings->size())
     {
-        case (type_safesize):
-            return "safesize (32 bits)";
-        case (type_8s):
-            return "8 bits signed";
-        case (type_16s):
-            return "16 bits signed";
-        case (type_32s):
-            return "32 bits signed";
-        case (type_64s):
-            return "64 bits signed";
-        case (type_8us):
-            return "8 bits unsigned";
-        case (type_16us):
-            return "16 bits unsigned";
-        case (type_32us):
-            return "32 bits unsigned";
-        case (type_64us):
-            return "64 bits unsigned";
-        case (type_array):
-            return "array";
-        case (type_float):
-            return "float";
-        case (type_double):
-            return "double";
+        return "unknown";
     }
 
-    return "unknown";
+    return strings[typeSize];
 }
 
 Buffer::Buffer(size_t maxSize) : _max_size(maxSize), _allocated(true)
