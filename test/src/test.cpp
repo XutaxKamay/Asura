@@ -610,16 +610,22 @@ auto XKLib::Test::run() -> void
 
     std::free(aligned_memory);
 
-    class TestMember : Offset
+    class TestMember : public Offset
     {
       public:
         TestMember()
         {
-            first = new Something();
+            _first = new Something();
         }
+
         ~TestMember()
         {
-            delete first;
+            delete _first;
+        }
+
+        void call_me(int something)
+        {
+            std::cout << "hehe" << something << std::endl;
         }
 
         class Something
@@ -628,17 +634,19 @@ auto XKLib::Test::run() -> void
             int ok = 1337;
         };
 
-        auto _first()
+        auto first()
         {
             return *member_at<0x0, Something**>();
         }
 
-        Something* first;
+        Something* _first;
     };
 
     TestMember member;
+    auto method_ptr = &TestMember::call_me;
+    member.call_at<void, int>(*view_as<ptr_t*>(&method_ptr), 3);
 
-    std::cout << member._first()->ok << std::endl;
+    std::cout << member.first()->ok << std::endl;
 
     rogue();
 

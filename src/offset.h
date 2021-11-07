@@ -15,7 +15,7 @@ namespace XKLib
         }
 
         template <typename ret_T, typename... args_T>
-        auto call_at(uintptr_t addr, args_T... args)
+        auto call_at(auto addr, args_T... args)
         {
 #ifndef WIN32
             return view_as<ret_T (*)(ptr_t, args_T...)>(addr)(this,
