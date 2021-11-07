@@ -38,9 +38,10 @@
 
     #include <linux/limits.h>
 #else
+    #include <windows.h>
+
     #include <dbghelp.h>
     #include <tlhelp32.h>
-    #include <windows.h>
 #endif
 
 /* std */
