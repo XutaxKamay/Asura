@@ -2,7 +2,7 @@
 #define TEST_H
 
 #include <cstdarg>
-#include <xklib.h>
+#include "xklib.h"
 
 namespace XKLib
 {
