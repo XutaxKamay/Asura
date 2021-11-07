@@ -183,51 +183,7 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
     return matches.size() != old_matches_size;
 }
 
-auto XKLib::PatternScanning::searchAlignedV2(XKLib::PatternByte& pattern,
-                                             data_t data,
-                                             size_t size,
-                                             ptr_t baseAddress) -> bool
-{
-    auto&& pattern_bytes        = pattern.bytes();
-    auto&& matches              = pattern.matches();
-    auto old_matches_size       = matches.size();
-    auto pattern_size           = pattern_bytes.size();
-    auto&& vec_organized_values = pattern.vec_organized_values();
-
-    data_t start_data   = data;
-    data_t current_data = data;
-
-    do
-    {
-        for (auto&& organized_values : vec_organized_values)
-        {
-            for (auto&& byte : organized_values.bytes)
-            {
-                if (byte != *current_data)
-                {
-                    goto skip;
-                }
-
-                current_data++;
-            }
-
-            current_data += organized_values.skip_bytes;
-        }
-
-        matches.push_back(
-          view_as<ptr_t>(view_as<uintptr_t>(baseAddress)
-                         + view_as<uintptr_t>(start_data - data)));
-
-    skip:
-        start_data += sizeof(PatternByte::simd_value_t);
-        current_data = start_data;
-    }
-    while ((current_data + pattern_size) <= (data + size));
-
-    return matches.size() != old_matches_size;
-}
-
-auto XKLib::PatternScanning::searchAlignedV3(XKLib::PatternByte& pattern,
+auto XKLib::PatternScanning::searchAlignedV1(XKLib::PatternByte& pattern,
                                              data_t aligned_data,
                                              size_t size,
                                              ptr_t baseAddress) -> bool
@@ -299,6 +255,50 @@ auto XKLib::PatternScanning::searchAlignedV3(XKLib::PatternByte& pattern,
         current_data = start_data;
     }
     while (current_data + pattern_size <= aligned_data + size);
+
+    return matches.size() != old_matches_size;
+}
+
+auto XKLib::PatternScanning::searchAlignedV2(XKLib::PatternByte& pattern,
+                                             data_t data,
+                                             size_t size,
+                                             ptr_t baseAddress) -> bool
+{
+    auto&& pattern_bytes        = pattern.bytes();
+    auto&& matches              = pattern.matches();
+    auto old_matches_size       = matches.size();
+    auto pattern_size           = pattern_bytes.size();
+    auto&& vec_organized_values = pattern.vec_organized_values();
+
+    data_t start_data   = data;
+    data_t current_data = data;
+
+    do
+    {
+        for (auto&& organized_values : vec_organized_values)
+        {
+            for (auto&& byte : organized_values.bytes)
+            {
+                if (byte != *current_data)
+                {
+                    goto skip;
+                }
+
+                current_data++;
+            }
+
+            current_data += organized_values.skip_bytes;
+        }
+
+        matches.push_back(
+          view_as<ptr_t>(view_as<uintptr_t>(baseAddress)
+                         + view_as<uintptr_t>(start_data - data)));
+
+    skip:
+        start_data += sizeof(PatternByte::simd_value_t);
+        current_data = start_data;
+    }
+    while ((current_data + pattern_size) <= (data + size));
 
     return matches.size() != old_matches_size;
 }

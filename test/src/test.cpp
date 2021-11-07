@@ -427,7 +427,7 @@ auto XKLib::Test::run() -> void
     ConsoleOutput(intBits) << std::endl;
 
     bytes_t random_bytes;
-    constexpr auto size_of_random = 0x2000000ull;
+    constexpr auto size_of_random = 0xF000000ull;
 
     for (size_t i = 0; i < size_of_random; i++)
     {
@@ -500,9 +500,9 @@ auto XKLib::Test::run() -> void
 
         for (size_t i = 1; i < size_of_random - 1; i++)
         {
-            if ((rand() % (1 << 16)) == 0)
+            if ((rand() % (1 << 8)) == 0)
             {
-                for (size_t j = 0; j < view_as<size_t>(rand() % (1 << 16))
+                for (size_t j = 0; j < view_as<size_t>(rand() % (1 << 8))
                                    && (j + i < size_of_random);
                      j++)
                 {
@@ -511,16 +511,13 @@ auto XKLib::Test::run() -> void
             }
         }
 
-        pattern_bytes[view_as<size_t>(rand()) % (size_of_random - 1)].value = PatternByte::
-          Value::UNKNOWN;
-
         PatternByte pattern(pattern_bytes);
 
         auto process = Process::self();
 
         Timer timer {};
 
-        for (size_t i = 0; i < 8; i++)
+        for (size_t i = 0; i < 7; i++)
         {
             std::memcpy(&aligned_memory[size_of_random * i],
                         random_bytes.data(),
@@ -588,13 +585,13 @@ auto XKLib::Test::run() -> void
           << " of pattern size in bytes" << std::endl;
 
         timer.start();
-        PatternScanning::searchAlignedV2(pattern,
+        PatternScanning::searchAlignedV1(pattern,
                                          aligned_memory,
                                          size_of_random * 8,
                                          nullptr);
         timer.end();
 
-        ConsoleOutput("aligned v2 scan took: ")
+        ConsoleOutput("aligned v1 scan took: ")
           << std::dec << timer.difference() << " nanoseconds "
           << "with: "
           << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
@@ -602,13 +599,13 @@ auto XKLib::Test::run() -> void
           << " of pattern size in bytes" << std::endl;
 
         timer.start();
-        PatternScanning::searchAlignedV3(pattern,
+        PatternScanning::searchAlignedV2(pattern,
                                          aligned_memory,
                                          size_of_random * 8,
                                          nullptr);
         timer.end();
 
-        ConsoleOutput("aligned v3 scan took: ")
+        ConsoleOutput("aligned v2 scan took: ")
           << std::dec << timer.difference() << " nanoseconds "
           << "with: "
           << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()

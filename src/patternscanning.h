@@ -39,8 +39,8 @@ namespace XKLib
          * pattern = 0xDE??CO??
          *
          * We can't do straight data == pattern, but we can do:
-         * (data & 0xFF00FF00) == (0xDE??C0DE & 0xFF00FF00)
-         * => 0xDE00CO00 == 0xDE00CO00
+         * (data & 0xFF00FF00) == (0xDE??C0?? & 0xFF00FF00)
+         * => 0xDE00CO00 == 0xDE00CO00, so we get a match here.
          *
          * Of course the pattern is preprocessed, so we gain one
          * instruction aka (data & 0xFF00FF00) == 0xDE00CO00.
@@ -57,6 +57,7 @@ namespace XKLib
          * @param size
          * @param baseAddress
          * @return
+         *
          * This one is a byte by byte check, skipping the unknown bytes
          * when it can. This is traditional.
          */
@@ -65,12 +66,13 @@ namespace XKLib
                              size_t size,
                              ptr_t baseAddress) -> bool;
         /**
-         * @brief searchV2
+         * @brief searchV3
          * @param pattern
          * @param data
          * @param size
          * @param baseAddress
          * @return
+         *
          * Same as v2 but uses SIMD for checking bytes.
          */
         static auto searchV3(PatternByte& pattern,
@@ -79,7 +81,7 @@ namespace XKLib
                              ptr_t baseAddress) -> bool;
 
         /**
-         * @brief searchAlignedV2
+         * @brief searchAlignedV1
          * @param pattern
          * @param aligned_data
          * @param size
@@ -89,27 +91,43 @@ namespace XKLib
          * This one is the same as V2, but works on pattern that was
          * previously taken on aligned code. This is extremely fast.
          */
-        static auto searchAlignedV2(PatternByte& pattern,
+        static auto searchAlignedV1(PatternByte& pattern,
                                     data_t aligned_data,
                                     size_t size,
                                     ptr_t baseAddress) -> bool;
 
         /**
-         * @brief searchAlignedV3
+         * @brief searchAlignedV2
          * @param pattern
          * @param aligned_data
          * @param size
          * @param baseAddress
          * @return
          *
-         * This one is the same as V3, but works on pattern that was
+         * This one is the same as V1, but works on pattern that was
          * previously taken on aligned code. This is extremely fast.
          */
-        static auto searchAlignedV3(PatternByte& pattern,
+        static auto searchAlignedV2(PatternByte& pattern,
                                     data_t aligned_data,
                                     size_t size,
                                     ptr_t baseAddress) -> bool;
 
+        /**
+         * V3 can't be implemented as aligned because in order to load
+         * simd value, the memory is at some point not aligned due to the
+         * bytes we skip
+         */
+
+        /**
+         * @brief searchTest
+         * @param pattern
+         * @param aligned_data
+         * @param size
+         * @param baseAddress
+         * @return
+         *
+         * This is the one who has been copied over and over again.
+         */
         static auto searchTest(PatternByte& pattern,
                                data_t data,
                                size_t size,
