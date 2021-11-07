@@ -4,18 +4,14 @@
 
 auto XKLib::Timer::start() -> void
 {
-    _start = view_as<uint64_t>(std::chrono::high_resolution_clock::now()
-                                 .time_since_epoch()
-                                 .count());
+    _start = std::chrono::high_resolution_clock::now();
 }
 
 auto XKLib::Timer::end() -> void
 {
-    _end = view_as<uint64_t>(std::chrono::high_resolution_clock::now()
-                               .time_since_epoch()
-                               .count());
+    _end = std::chrono::high_resolution_clock::now();
 
-    _difference = _end - _start;
+    _difference = std::chrono::nanoseconds(_end - _start).count();
 }
 
 auto XKLib::Timer::nanos() -> uint16_t

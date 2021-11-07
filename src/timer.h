@@ -21,8 +21,8 @@ namespace XKLib
             auto difference() -> uint64_t;
 
         private:
-            uint64_t _start;
-            uint64_t _end;
+            std::chrono::high_resolution_clock::time_point _start;
+            std::chrono::high_resolution_clock::time_point _end;
             uint64_t _difference;
     };
 };
