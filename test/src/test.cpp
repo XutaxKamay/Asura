@@ -427,8 +427,9 @@ auto XKLib::Test::run() -> void
     ConsoleOutput(intBits) << std::endl;
 
     bytes_t random_bytes;
+    constexpr auto size_of_random = 0x8000000ull;
 
-    for (int i = 0; i < 0x10000; i++)
+    for (size_t i = 0; i < size_of_random; i++)
     {
         static int add = 0;
 
@@ -486,7 +487,7 @@ auto XKLib::Test::run() -> void
 
     auto aligned_memory = view_as<data_t>(
       std::aligned_alloc(sizeof(PatternByte::simd_value_t),
-                         random_bytes.size() * 8));
+                         size_of_random * 8));
 
     try
     {
@@ -494,7 +495,7 @@ auto XKLib::Test::run() -> void
 
         random_bytes.clear();
 
-        for (size_t i = 0; i < 0x10000; i++)
+        for (size_t i = 0; i < size_of_random; i++)
         {
             random_bytes.push_back(view_as<byte_t>(rand() % 256));
         }
@@ -504,12 +505,12 @@ auto XKLib::Test::run() -> void
             pattern_bytes.push_back(byte);
         }
 
-        for (size_t i = 1; i < random_bytes.size() - 1; i++)
+        for (size_t i = 1; i < size_of_random - 1; i++)
         {
-            if ((rand() % 2048) == 0)
+            if ((rand() % (1 << 16)) == 0)
             {
-                for (size_t j = 0; j < sizeof(PatternByte::simd_value_t)
-                                   && (j + i < random_bytes.size());
+                for (size_t j = 0;
+                     j < view_as<size_t>(rand() % (1 << 16)) && (j + i < size_of_random);
                      j++)
                 {
                     pattern_bytes[i + j].value = PatternByte::Value::UNKNOWN;
@@ -517,7 +518,7 @@ auto XKLib::Test::run() -> void
             }
         }
 
-        pattern_bytes[view_as<size_t>(rand()) % (0x10000 - 1)].value = PatternByte::
+        pattern_bytes[view_as<size_t>(rand()) % (size_of_random - 1)].value = PatternByte::
           Value::UNKNOWN;
 
         PatternByte pattern(pattern_bytes);
@@ -525,16 +526,17 @@ auto XKLib::Test::run() -> void
         auto process = Process::self();
 
         Timer timer {};
-        for (size_t i = 0; i < 7; i++)
+
+        for (size_t i = 0; i < 8; i++)
         {
-            std::memcpy(&aligned_memory[random_bytes.size() * i],
+            std::memcpy(&aligned_memory[size_of_random * i],
                         random_bytes.data(),
-                        random_bytes.size() - 1);
+                        size_of_random - 1);
         }
 
-        std::memcpy(&aligned_memory[random_bytes.size() * 7],
+        std::memcpy(&aligned_memory[size_of_random * 7],
                     random_bytes.data(),
-                    random_bytes.size());
+                    size_of_random);
 
         timer.start();
         PatternScanning::searchV1(pattern,
@@ -553,7 +555,7 @@ auto XKLib::Test::run() -> void
         timer.start();
         PatternScanning::searchV2(pattern,
                                   aligned_memory,
-                                  random_bytes.size() * 8,
+                                  size_of_random * 8,
                                   nullptr);
         timer.end();
 
@@ -567,7 +569,7 @@ auto XKLib::Test::run() -> void
         timer.start();
         PatternScanning::searchV3(pattern,
                                   aligned_memory,
-                                  random_bytes.size() * 8,
+                                  size_of_random * 8,
                                   nullptr);
         timer.end();
 
@@ -581,7 +583,7 @@ auto XKLib::Test::run() -> void
         timer.start();
         PatternScanning::searchTest(pattern,
                                     aligned_memory,
-                                    random_bytes.size() * 8,
+                                    size_of_random * 8,
                                     nullptr);
         timer.end();
 
@@ -595,7 +597,7 @@ auto XKLib::Test::run() -> void
         timer.start();
         PatternScanning::searchAlignedV2(pattern,
                                          aligned_memory,
-                                         random_bytes.size() * 8,
+                                         size_of_random * 8,
                                          nullptr);
         timer.end();
 
