@@ -1,5 +1,5 @@
 ## INCLUDES
-INCLUDES:=-Isrc/ -Itest/src/ -I./ 
+INCLUDES:=-iquote src/ -iquote test/src/ -iquote ./ 
 
 ## ERRORS
 ERRORS:= -Wextra -W -Wall -Werror 
