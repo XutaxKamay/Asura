@@ -11,7 +11,7 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
                                 std::string areaName,
                                 std::vector<ptr_t> matches)
  : _values(std::move(values)), _matches(std::move(matches)),
-   _area_name(std::move(areaName)), _fast_aligned_values_count(0)
+   _area_name(std::move(areaName))
 {
     if (!isValid())
     {
@@ -44,10 +44,6 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
      * Allocate SIMD values here, we're not using std::vector but we
      * could. std::vector should be optimized, but I like this way.
      */
-    _fast_aligned_masks = view_as<simd_value_t*>(
-      std::aligned_alloc(sizeof(simd_value_t), _values.size()));
-    _fast_aligned_values = view_as<simd_value_t*>(
-      std::aligned_alloc(sizeof(simd_value_t), _values.size()));
     simd_value_t simd_value {}, simd_mask {};
 
     for (auto&& value : _values)
@@ -124,35 +120,12 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
         /* do wo we got a full simd value here */
         if (byte_simd_index >= sizeof(simd_value_t))
         {
-            /**
-             * if yes we store the mask & the value inside the fast
-             * aligned vectors with SIMD instructions
-             */
-#if defined(__AVX512F__)
-            _mm512_store_si512(
-              &_fast_aligned_values[_fast_aligned_values_count],
-              simd_value);
-            _mm512_store_si512(
-              &_fast_aligned_masks[_fast_aligned_values_count],
-              simd_mask);
-#elif defined(__AVX2__)
-            _mm256_store_si256(
-              &_fast_aligned_values[_fast_aligned_values_count],
-              simd_value);
-            _mm256_store_si256(
-              &_fast_aligned_masks[_fast_aligned_values_count],
-              simd_mask);
-#else
-            _fast_aligned_values[_fast_aligned_values_count] = simd_value;
-            _fast_aligned_masks[_fast_aligned_values_count]  = simd_mask;
-#endif
+            _fast_aligned_mvs.push_back({ simd_mask, simd_value });
+
             /* reset values */
             std::memset(&simd_value, 0, sizeof(simd_value));
             std::memset(&simd_mask, 0, sizeof(simd_mask));
             byte_simd_index = 0;
-
-            /* increment counter */
-            _fast_aligned_values_count++;
         }
     }
 
@@ -169,27 +142,7 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
      */
     if (byte_simd_index > 0)
     {
-        /* if yes push it back */
-#if defined(__AVX512F__)
-        _mm512_store_si512(
-          &_fast_aligned_values[_fast_aligned_values_count],
-          simd_value);
-        _mm512_store_si512(
-          &_fast_aligned_masks[_fast_aligned_values_count],
-          simd_mask);
-#elif defined(__AVX2__)
-        _mm256_store_si256(
-          &_fast_aligned_values[_fast_aligned_values_count],
-          simd_value);
-        _mm256_store_si256(
-          &_fast_aligned_masks[_fast_aligned_values_count],
-          simd_mask);
-#else
-        _fast_aligned_values[_fast_aligned_values_count] = simd_value;
-        _fast_aligned_masks[_fast_aligned_values_count] = simd_mask;
-#endif
-        /* don't forget to increment */
-        _fast_aligned_values_count++;
+        _fast_aligned_mvs.push_back({ simd_mask, simd_value });
     }
 
     if (_vec_skipper_uk_values.size() != (_vec_known_values.size() - 1))
@@ -197,12 +150,6 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
         XKLIB_EXCEPTION("The amount of vec known values should be the "
                         "same of vec of unknown values");
     }
-}
-
-XKLib::PatternByte::~PatternByte()
-{
-    std::free(_fast_aligned_values);
-    std::free(_fast_aligned_masks);
 }
 
 auto XKLib::PatternByte::values() -> std::vector<std::shared_ptr<Value>>&
@@ -272,17 +219,7 @@ auto XKLib::PatternByte::vec_skipper_uk_values() -> std::vector<size_t>&
     return _vec_skipper_uk_values;
 }
 
-auto XKLib::PatternByte::fast_aligned_values() -> simd_value_t*
+auto XKLib::PatternByte::fast_aligned_mvs() -> std::vector<simd_mv_t>&
 {
-    return _fast_aligned_values;
-}
-
-auto XKLib::PatternByte::fast_aligned_masks() -> simd_value_t*
-{
-    return _fast_aligned_masks;
-}
-
-auto XKLib::PatternByte::fast_aligned_values_count() -> size_t
-{
-    return _fast_aligned_values_count;
+    return _fast_aligned_mvs;
 }
