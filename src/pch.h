@@ -1,20 +1,14 @@
 #ifndef PCH_H
 #define PCH_H
 
-#if defined _WIN32 || defined _WIN64
+#if defined(_WIN32) || defined(_WIN64)
     #define WINDOWS
-#endif
-
-#if _WIN32 || _WIN64
     #if _WIN64
         #define ENVIRONMENT64
     #else
         #define ENVIRONMENT32
     #endif
-#endif
-
-// Check GCC
-#if __GNUC__
+#elif defined(__GNUC__)
     #if __x86_64__ || __ppc64__
         #define ENVIRONMENT64
     #else
@@ -77,7 +71,11 @@
 #include <utility>
 #include <vector>
 
+/* C stuff */
 #include <unistd.h>
+
+/* SIMD */
+#include <immintrin.h>
 
 /* CryptoPP */
 #include <vendor/cryptopp/aes.h>
@@ -89,8 +87,5 @@
 #include <vendor/cryptopp/rsa.h>
 #include <vendor/cryptopp/sha.h>
 #include <vendor/cryptopp/zlib.h>
-
-/* SIMD */
-#include <immintrin.h>
 
 #endif
