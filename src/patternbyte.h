@@ -54,29 +54,32 @@ namespace XKLib
             simd_value_t value;
         };
 
-        PatternByte(std::vector<std::shared_ptr<Value>> values,
+        struct organized_values_t
+        {
+            std::vector<byte_t> bytes;
+            size_t skip_bytes;
+        };
+
+        PatternByte(std::vector<Value> values,
                     std::string _area_name     = "",
                     std::vector<ptr_t> matches = {});
 
       public:
-        auto values() -> std::vector<std::shared_ptr<Value>>&;
+        auto bytes() -> std::vector<Value>&;
         auto simd_unknown_values() -> std::vector<simd_unknown_value_t>&;
         auto matches() -> std::vector<ptr_t>&;
         auto isValid() -> bool;
         auto scan(Process& process) -> void;
         auto areaName() -> std::string;
-        auto vec_known_values()
-          -> std::vector<std::shared_ptr<std::vector<byte_t>>>&;
-        auto vec_skipper_uk_values() -> std::vector<size_t>&;
+        auto vec_organized_values() -> std::vector<organized_values_t>&;
         auto fast_aligned_mvs() -> std::vector<simd_mv_t>&;
 
       private:
-        std::vector<std::shared_ptr<Value>> _values;
+        std::vector<Value> _bytes;
         std::vector<simd_unknown_value_t> _unknown_values;
         std::vector<ptr_t> _matches;
         std::string _area_name;
-        std::vector<std::shared_ptr<std::vector<byte_t>>> _vec_known_values;
-        std::vector<size_t> _vec_skipper_uk_values;
+        std::vector<organized_values_t> _vec_organized_values;
         std::vector<simd_mv_t> _fast_aligned_mvs;
     };
 

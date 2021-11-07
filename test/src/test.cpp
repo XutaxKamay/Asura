@@ -490,7 +490,7 @@ auto XKLib::Test::run() -> void
 
     try
     {
-        std::vector<std::shared_ptr<PatternByte::Value>> pattern_bytes;
+        std::vector<PatternByte::Value> pattern_bytes;
 
         random_bytes.clear();
 
@@ -501,12 +501,11 @@ auto XKLib::Test::run() -> void
 
         for (auto&& byte : random_bytes)
         {
-            pattern_bytes.push_back(
-              std::make_shared<PatternByte::Value>(byte));
+            pattern_bytes.push_back(byte);
         }
 
-        (*pattern_bytes[5])    = PatternByte::Value::UNKNOWN;
-        (*pattern_bytes[2048]) = PatternByte::Value::UNKNOWN;
+        pattern_bytes[5].value    = PatternByte::Value::UNKNOWN;
+        pattern_bytes[2048].value = PatternByte::Value::UNKNOWN;
 
         PatternByte pattern(pattern_bytes);
 
@@ -541,7 +540,7 @@ auto XKLib::Test::run() -> void
           << std::dec << timer.difference() << " nanoseconds "
           << "with: "
           << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
-          << " page count and " << pattern.values().size()
+          << " page count and " << pattern.bytes().size()
           << " of pattern size in bytes" << std::endl;
 
         timer.start();
@@ -555,7 +554,7 @@ auto XKLib::Test::run() -> void
           << std::dec << timer.difference() << " nanoseconds "
           << "with: "
           << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
-          << " page count and " << pattern.values().size()
+          << " page count and " << pattern.bytes().size()
           << " of pattern size in bytes" << std::endl;
 
         timer.start();
@@ -569,7 +568,7 @@ auto XKLib::Test::run() -> void
           << std::dec << timer.difference() << " nanoseconds "
           << "with: "
           << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
-          << " page count and " << pattern.values().size()
+          << " page count and " << pattern.bytes().size()
           << " of pattern size in bytes" << std::endl;
 
         timer.start();
@@ -583,7 +582,7 @@ auto XKLib::Test::run() -> void
           << std::dec << timer.difference() << " nanoseconds "
           << "with: "
           << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
-          << " page count and " << pattern.values().size()
+          << " page count and " << pattern.bytes().size()
           << " of pattern size in bytes" << std::endl;
 
         if (pattern.matches().size() != 0)

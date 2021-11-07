@@ -7,10 +7,10 @@ XKLib::PatternByte::Value::Value(int value) : value(value)
 {
 }
 
-XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
+XKLib::PatternByte::PatternByte(std::vector<Value> values,
                                 std::string areaName,
                                 std::vector<ptr_t> matches)
- : _values(std::move(values)), _matches(std::move(matches)),
+ : _bytes(std::move(values)), _matches(std::move(matches)),
    _area_name(std::move(areaName))
 {
     if (!isValid())
@@ -22,7 +22,7 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
      *  Let's do some preprocessing now for different scanning systems
      */
 
-    _unknown_values.reserve(_values.size());
+    _unknown_values.reserve(_bytes.size());
 
     /* index of the byte in the pattern */
     size_t index = 0;
@@ -46,11 +46,11 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
      */
     simd_value_t simd_value {}, simd_mask {};
 
-    for (auto&& value : _values)
+    for (auto&& byte : _bytes)
     {
-        value->index = index;
+        byte.index = index;
 
-        if (value->value == Value::UNKNOWN)
+        if (byte.value == Value::UNKNOWN)
         {
             index_since_contigous_count = index;
             ukval_contigous_count++;
@@ -69,12 +69,8 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
                 ukval_contigous_count = 0;
             }
 
-            /* push back the last known values */
             if (are_known_values)
             {
-                _vec_known_values.push_back(
-                  std::make_shared<decltype(known_values)>(known_values));
-                known_values.clear();
                 are_known_values = false;
             }
 
@@ -85,13 +81,15 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
             if (!are_known_values)
             {
                 /* push back the last count of unknown_bytes */
-                _vec_skipper_uk_values.push_back(count_unknown_byte);
+                _vec_organized_values.push_back(
+                  { known_values, count_unknown_byte });
                 count_unknown_byte = 0;
-                are_known_values   = true;
+                known_values.clear();
+                are_known_values = true;
             }
 
             /* push back known value */
-            known_values.push_back(view_as<byte_t>(value->value));
+            known_values.push_back(view_as<byte_t>(byte.value));
 
             /* check if previous unknown bytes weren't a full simd
              * value and push it back */
@@ -110,7 +108,7 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
              * mask
              */
             view_as<byte_t*>(&simd_value)[byte_simd_index] = view_as<
-              byte_t>(value->value);
+              byte_t>(byte.value);
             view_as<byte_t*>(&simd_mask)[byte_simd_index] = 0xFF;
         }
 
@@ -133,8 +131,7 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
     if (known_values.size())
     {
         /* if yes push it back */
-        _vec_known_values.push_back(
-          std::make_shared<decltype(known_values)>(known_values));
+        _vec_organized_values.push_back({ known_values, 0 });
     }
 
     /**
@@ -144,17 +141,11 @@ XKLib::PatternByte::PatternByte(std::vector<std::shared_ptr<Value>> values,
     {
         _fast_aligned_mvs.push_back({ simd_mask, simd_value });
     }
-
-    if (_vec_skipper_uk_values.size() != (_vec_known_values.size() - 1))
-    {
-        XKLIB_EXCEPTION("The amount of vec known values should be the "
-                        "same of vec of unknown values");
-    }
 }
 
-auto XKLib::PatternByte::values() -> std::vector<std::shared_ptr<Value>>&
+auto XKLib::PatternByte::bytes() -> std::vector<Value>&
 {
-    return _values;
+    return _bytes;
 }
 
 auto XKLib::PatternByte::simd_unknown_values()
@@ -170,27 +161,27 @@ auto XKLib::PatternByte::matches() -> std::vector<ptr_t>&
 
 auto XKLib::PatternByte::isValid() -> bool
 {
-    if (_values.size() == 0)
+    if (_bytes.size() == 0)
     {
         return false;
     }
 
-    for (auto&& byte : _values)
+    for (auto&& byte : _bytes)
     {
-        if (byte->value == Value::INVALID)
+        if (byte.value == Value::INVALID)
         {
             return false;
         }
     }
 
     /* ? xx xx ... */
-    if (_values[0]->value == Value::UNKNOWN)
+    if (_bytes[0].value == Value::UNKNOWN)
     {
         return false;
     }
 
     /* xx xx ? */
-    if (_values[_values.size() - 1]->value == Value::UNKNOWN)
+    if (_bytes[_bytes.size() - 1].value == Value::UNKNOWN)
     {
         return false;
     }
@@ -208,15 +199,10 @@ auto XKLib::PatternByte::areaName() -> std::string
     return _area_name;
 }
 
-auto XKLib::PatternByte::vec_known_values()
-  -> std::vector<std::shared_ptr<std::vector<byte_t>>>&
+auto XKLib::PatternByte::vec_organized_values()
+  -> std::vector<organized_values_t>&
 {
-    return _vec_known_values;
-}
-
-auto XKLib::PatternByte::vec_skipper_uk_values() -> std::vector<size_t>&
-{
-    return _vec_skipper_uk_values;
+    return _vec_organized_values;
 }
 
 auto XKLib::PatternByte::fast_aligned_mvs() -> std::vector<simd_mv_t>&
