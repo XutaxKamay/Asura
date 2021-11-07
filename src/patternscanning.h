@@ -86,10 +86,26 @@ namespace XKLib
          * @param baseAddress
          * @return
          *
-         * This one is the same as V1, but works on pattern that was
+         * This one is the same as V2, but works on pattern that was
          * previously taken on aligned code. This is extremely fast.
          */
         static auto searchAlignedV2(PatternByte& pattern,
+                                    data_t aligned_data,
+                                    size_t size,
+                                    ptr_t baseAddress) -> bool;
+
+        /**
+         * @brief searchAlignedV3
+         * @param pattern
+         * @param aligned_data
+         * @param size
+         * @param baseAddress
+         * @return
+         *
+         * This one is the same as V3, but works on pattern that was
+         * previously taken on aligned code. This is extremely fast.
+         */
+        static auto searchAlignedV3(PatternByte& pattern,
                                     data_t aligned_data,
                                     size_t size,
                                     ptr_t baseAddress) -> bool;

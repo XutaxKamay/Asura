@@ -427,7 +427,7 @@ auto XKLib::Test::run() -> void
     ConsoleOutput(intBits) << std::endl;
 
     bytes_t random_bytes;
-    constexpr auto size_of_random = 0x8000000ull;
+    constexpr auto size_of_random = 0x2000000ull;
 
     for (size_t i = 0; i < size_of_random; i++)
     {
@@ -459,13 +459,6 @@ auto XKLib::Test::run() -> void
         random_bytes.push_back(result);
     }
     */
-
-    std::ofstream file("random_bytes.txt",
-                       std::ios::binary | std::ios::out);
-
-    file.write(view_as<char*>(random_bytes.data()),
-               view_as<std::streamsize>(random_bytes.size()));
-    file.close();
 
     ConsoleOutput("size of orginal: ")
       << random_bytes.size() << std::endl;
@@ -509,8 +502,8 @@ auto XKLib::Test::run() -> void
         {
             if ((rand() % (1 << 16)) == 0)
             {
-                for (size_t j = 0;
-                     j < view_as<size_t>(rand() % (1 << 16)) && (j + i < size_of_random);
+                for (size_t j = 0; j < view_as<size_t>(rand() % (1 << 16))
+                                   && (j + i < size_of_random);
                      j++)
                 {
                     pattern_bytes[i + j].value = PatternByte::Value::UNKNOWN;
@@ -602,6 +595,20 @@ auto XKLib::Test::run() -> void
         timer.end();
 
         ConsoleOutput("aligned v2 scan took: ")
+          << std::dec << timer.difference() << " nanoseconds "
+          << "with: "
+          << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
+          << " page count and " << pattern.bytes().size()
+          << " of pattern size in bytes" << std::endl;
+
+        timer.start();
+        PatternScanning::searchAlignedV3(pattern,
+                                         aligned_memory,
+                                         size_of_random * 8,
+                                         nullptr);
+        timer.end();
+
+        ConsoleOutput("aligned v3 scan took: ")
           << std::dec << timer.difference() << " nanoseconds "
           << "with: "
           << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
