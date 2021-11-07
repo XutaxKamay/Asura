@@ -504,30 +504,31 @@ auto XKLib::Test::run() -> void
             pattern_bytes.push_back(byte);
         }
 
-        pattern_bytes[5].value    = PatternByte::Value::UNKNOWN;
-        pattern_bytes[2048].value = PatternByte::Value::UNKNOWN;
+        for (size_t i = 1 + view_as<size_t>(rand()) % (0x10000 - 1);
+             i < view_as<size_t>(rand()) % (0x10000 - 1);
+             i++)
+        {
+            pattern_bytes[i].value = PatternByte::Value::UNKNOWN;
+        }
+
+        pattern_bytes[view_as<size_t>(rand()) % (0x10000 - 1)].value = PatternByte::
+          Value::UNKNOWN;
 
         PatternByte pattern(pattern_bytes);
 
         auto process = Process::self();
 
         Timer timer {};
+        for (size_t i = 0; i < 7; i++)
+        {
+            std::memcpy(&aligned_memory[random_bytes.size() * i],
+                        random_bytes.data(),
+                        random_bytes.size() - 1);
+        }
 
         std::memcpy(&aligned_memory[random_bytes.size() * 7],
                     random_bytes.data(),
                     random_bytes.size());
-
-        std::memcpy(&aligned_memory[random_bytes.size() * 2],
-                    random_bytes.data(),
-                    random_bytes.size() - 1);
-
-        std::memcpy(&aligned_memory[random_bytes.size() * 3],
-                    random_bytes.data(),
-                    random_bytes.size() - 1);
-
-        std::memcpy(&aligned_memory[random_bytes.size() * 4],
-                    random_bytes.data(),
-                    random_bytes.size() - 1);
 
         timer.start();
         PatternScanning::searchV1(pattern,
