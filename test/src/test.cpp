@@ -478,9 +478,9 @@ auto XKLib::Test::run() -> void
           << std::endl;
     }
 
-    auto aligned_memory = view_as<data_t>(
-      std::aligned_alloc(sizeof(PatternByte::simd_value_t),
-                         size_of_random * 8));
+    auto aligned_memory = align_alloc<data_t>(
+      size_of_random * 8,
+      sizeof(PatternByte::simd_value_t));
 
     try
     {
@@ -637,7 +637,7 @@ auto XKLib::Test::run() -> void
         ConsoleOutput(e.msg()) << std::endl;
     }
 
-    std::free(aligned_memory);
+    align_free(aligned_memory);
 
     class TestMember : public Offset
     {

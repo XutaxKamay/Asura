@@ -1,5 +1,13 @@
 #include "pch.h"
 
+#ifdef WINDOWS
+    #include <windows.h>
+
+    #include <dbghelp.h>
+    #include <psapi.h>
+    #include <tlhelp32.h>
+#endif
+
 #include "buffer.h"
 
 using namespace XKLib;

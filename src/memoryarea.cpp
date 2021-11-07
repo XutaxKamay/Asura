@@ -3,10 +3,6 @@
 #include "exception.h"
 #include "memoryarea.h"
 
-#ifdef WINDOWS
-    #include "windows.h"
-#endif
-
 using namespace XKLib;
 
 auto MemoryArea::ProtectionFlags::ToOwn(mapf_t flags) -> mapf_t

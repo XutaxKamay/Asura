@@ -3,12 +3,6 @@
 #include "patternscanning.h"
 #include "process.h"
 
-#ifdef WINDOWS
-    #include <psapi.h>
-#else
-
-#endif
-
 using namespace XKLib;
 
 auto XKLib::Process::find(const std::string& name) -> XKLib::Process

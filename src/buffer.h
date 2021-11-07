@@ -48,6 +48,7 @@ namespace XKLib
         if (it != tracking_memory_allocs.end())
         {
             ::operator delete(view_as<ptr_t>(pBuf));
+            pBuf = nullptr;
             tracking_memory_allocs.erase(it);
 
             return true;
@@ -58,8 +59,31 @@ namespace XKLib
         }
 #else
         ::operator delete(view_as<ptr_t>(pBuf));
+        pBuf = nullptr;
 #endif
     }
+
+    template <typename T = ptr_t>
+    constexpr inline auto align_alloc(size_t size, size_t align)
+    {
+#ifdef WINDOWS
+        return view_as<T>(_aligned_malloc(size, align));
+#else
+        return view_as<T>(std::aligned_alloc(align, size));
+#endif
+    }
+
+    template <typename T = ptr_t>
+    constexpr inline auto align_free(T& pBuf)
+    {
+#ifdef WINDOWS
+        _aligned_free(pBuf);
+#else
+        std::free(pBuf);
+#endif
+        pBuf = nullptr;
+    }
+
     /**
      * @brief The typesize_t enum
      * Enumerate all kind of primitive types that could be possibly used

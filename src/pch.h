@@ -41,6 +41,9 @@
     #include <windows.h>
 
     #include <dbghelp.h>
+    /* fuck windows not supporting std::aligned_alloc */
+    #include <malloc.h>
+    #include <psapi.h>
     #include <tlhelp32.h>
 #endif
 

@@ -33,7 +33,7 @@ ifneq (,$(findstring mingw, $(CXX)))
   XKLIB_TEST_DEBUG:=$(XKLIB_TEST_DEBUG).exe
   XKLIB_TEST_RELEASE:=$(XKLIB_TEST_RELEASE).exe
   DBGHELP_LIB:=-ldbghelp -lpsapi 
-  DATARACES:=--allow-store-data-races
+	# Windows needs WinMain, we just ignore it
   MOREFLAGS:=-static-libgcc -static-libstdc++
 else
   DLOPEN_LIB:=-ldl
@@ -75,10 +75,10 @@ cryptopplib:
 .PHONY: all clean
 
 $(PCH_COMPILED_DBG): $(PCH)
-	$(CXX) $(CPPFLAGS_DEBUG) -o $@ $<
+	$(CXX) -c $(CPPFLAGS_DEBUG) -o $@ $<
 
 $(PCH_COMPILED_REL): $(PCH)
-	$(CXX) $(CPPFLAGS_RELEASE) -o $@ $<
+	$(CXX) -c $(CPPFLAGS_RELEASE) -o $@ $<
 
 $(XKLIB_DEBUG): cryptopplib $(XKLIB_OBJ_DEBUG)
 	ar rcs $@ $(XKLIB_OBJ_DEBUG)
