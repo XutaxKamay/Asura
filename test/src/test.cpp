@@ -504,11 +504,17 @@ auto XKLib::Test::run() -> void
             pattern_bytes.push_back(byte);
         }
 
-        for (size_t i = 1 + view_as<size_t>(rand()) % (0x10000 - 1);
-             i < view_as<size_t>(rand()) % (0x10000 - 1);
-             i++)
+        for (size_t i = 1; i < random_bytes.size() - 1; i++)
         {
-            pattern_bytes[i].value = PatternByte::Value::UNKNOWN;
+            if ((rand() % 2048) == 0)
+            {
+                for (size_t j = 0; j < sizeof(PatternByte::simd_value_t)
+                                   && (j + i < random_bytes.size());
+                     j++)
+                {
+                    pattern_bytes[i + j].value = PatternByte::Value::UNKNOWN;
+                }
+            }
         }
 
         pattern_bytes[view_as<size_t>(rand()) % (0x10000 - 1)].value = PatternByte::
