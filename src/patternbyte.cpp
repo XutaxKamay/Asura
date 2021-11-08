@@ -40,11 +40,6 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
     /* organized values */
     bool are_known_values = true;
     std::vector<byte_t> known_bytes;
-
-    /**
-     * Allocate SIMD values here, we're not using std::vector but we
-     * could. std::vector should be optimized, but I like this way.
-     */
     simd_value_t simd_value {}, simd_mask {};
 
     for (auto&& byte : _bytes)
