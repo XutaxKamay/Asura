@@ -76,44 +76,9 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
         {
             if (!are_known_values)
             {
-                organized_simd_mv_t tmp_organized_mv {};
-                std::size_t tmp_mv_byte_index = 0;
-                std::vector<organized_simd_mv_t> aligned_fast_mvs;
-
-                /**
-                 * convert all unknown bytes to simd values
-                 */
-
-                for (auto&& known_byte : known_bytes)
-                {
-                    view_as<byte_t*>(&tmp_organized_mv.value)[tmp_mv_byte_index] = view_as<
-                      byte_t>(known_byte);
-
-                    view_as<byte_t*>(&tmp_organized_mv.mask)[tmp_mv_byte_index] = 0xFF;
-
-                    tmp_mv_byte_index++;
-
-                    if (tmp_mv_byte_index >= sizeof(simd_value_t))
-                    {
-                        tmp_organized_mv.size_to_move = sizeof(
-                          simd_value_t);
-                        aligned_fast_mvs.push_back(tmp_organized_mv);
-                        std::memset(&tmp_organized_mv,
-                                    0,
-                                    sizeof(tmp_organized_mv));
-                        tmp_mv_byte_index = 0;
-                    }
-                }
-
-                if (tmp_mv_byte_index)
-                {
-                    tmp_organized_mv.size_to_move = tmp_mv_byte_index;
-                    aligned_fast_mvs.push_back(tmp_organized_mv);
-                }
-
                 /* push back the last count of unknown_bytes */
                 _vec_organized_values.push_back(
-                  { known_bytes, aligned_fast_mvs, count_unknown_byte });
+                  { known_bytes, count_unknown_byte });
                 count_unknown_byte = 0;
                 known_bytes.clear();
                 are_known_values = true;
@@ -161,43 +126,8 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
     /* was there still some known values left after an unknown byte */
     if (known_bytes.size())
     {
-        organized_simd_mv_t tmp_organized_mv {};
-        std::size_t tmp_mv_byte_index = 0;
-        std::vector<organized_simd_mv_t> aligned_fast_mvs;
-
-        /**
-         * convert all unknown bytes to simd values
-         */
-
-        for (auto&& known_byte : known_bytes)
-        {
-            view_as<byte_t*>(&tmp_organized_mv.value)[tmp_mv_byte_index] = view_as<
-              byte_t>(known_byte);
-
-            view_as<byte_t*>(&tmp_organized_mv.mask)[tmp_mv_byte_index] = 0xFF;
-
-            tmp_mv_byte_index++;
-
-            if (tmp_mv_byte_index >= sizeof(simd_value_t))
-            {
-                tmp_organized_mv.size_to_move = sizeof(simd_value_t);
-                aligned_fast_mvs.push_back(tmp_organized_mv);
-                std::memset(&tmp_organized_mv,
-                            0,
-                            sizeof(tmp_organized_mv));
-                tmp_mv_byte_index = 0;
-            }
-        }
-
-        if (tmp_mv_byte_index)
-        {
-            tmp_organized_mv.size_to_move = tmp_mv_byte_index;
-            aligned_fast_mvs.push_back(tmp_organized_mv);
-        }
-
         /* if yes push it back */
-        _vec_organized_values.push_back(
-          { known_bytes, aligned_fast_mvs, 0 });
+        _vec_organized_values.push_back({ known_bytes, 0 });
     }
 
     /**
