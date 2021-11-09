@@ -92,7 +92,8 @@ auto ProcessMemoryArea::processBase() -> ProcessBase
     return _process_base;
 }
 
-auto ProcessMemoryArea::read(size_t size, size_t shift) -> bytes_t
+auto ProcessMemoryArea::read(std::size_t size, std::size_t shift)
+  -> bytes_t
 {
     if (ProcessBase::self().id() == _process_base.id())
     {
@@ -101,11 +102,13 @@ auto ProcessMemoryArea::read(size_t size, size_t shift) -> bytes_t
     }
 
     return MemoryUtils::ReadProcessMemoryArea(_process_base.id(),
-                                              begin<size_t>() + shift,
+                                              begin<std::size_t>()
+                                                + shift,
                                               size);
 }
 
-auto ProcessMemoryArea::write(const bytes_t& bytes, size_t shift) -> void
+auto ProcessMemoryArea::write(const bytes_t& bytes, std::size_t shift)
+  -> void
 {
     if (ProcessBase::self().id() == _process_base.id())
     {
@@ -115,7 +118,7 @@ auto ProcessMemoryArea::write(const bytes_t& bytes, size_t shift) -> void
 
     MemoryUtils::WriteProcessMemoryArea(_process_base.id(),
                                         bytes,
-                                        begin<size_t>() + shift);
+                                        begin<std::size_t>() + shift);
 }
 
 auto XKLib::ProcessMemoryArea::isDeniedByOS() -> bool

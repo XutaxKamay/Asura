@@ -20,7 +20,7 @@ namespace XKLib
     {
         public:
             template <typename T = uintptr_t>
-            static constexpr inline auto align(T value, size_t size)
+            static constexpr inline auto align(T value, std::size_t size)
             {
                 auto original_value = view_as<uintptr_t>(value);
                 original_value -= original_value % size;
@@ -30,10 +30,10 @@ namespace XKLib
             template <typename T = uintptr_t>
             static constexpr inline auto align_to_page_size(
               T sizeToAlign,
-              size_t pageSize)
+              std::size_t pageSize)
             {
                 return view_as<T>(
-                  ((view_as<size_t>(sizeToAlign) + (pageSize - 1))
+                  ((view_as<std::size_t>(sizeToAlign) + (pageSize - 1))
                    / pageSize)
                   * pageSize);
             }
@@ -41,7 +41,7 @@ namespace XKLib
             template <typename T = uintptr_t>
             static auto ProtectMemoryArea(pid_t pid,
                                           T address,
-                                          size_t size,
+                                          std::size_t size,
                                           mapf_t flags) -> void
             {
                 auto aligned_address = align<ptr_t>(view_as<ptr_t>(
@@ -93,7 +93,7 @@ namespace XKLib
             template <typename T = uintptr_t>
             static auto AllocArea(pid_t pid,
                                   T address,
-                                  size_t size,
+                                  std::size_t size,
                                   mapf_t flags) -> ptr_t
             {
 #ifdef WINDOWS
@@ -133,7 +133,7 @@ namespace XKLib
             }
 
             template <typename T = uintptr_t>
-            static auto FreeArea(pid_t pid, T address, size_t size)
+            static auto FreeArea(pid_t pid, T address, std::size_t size)
               -> void
             {
 #ifdef WINDOWS
@@ -172,7 +172,7 @@ namespace XKLib
             template <typename T = uintptr_t>
             static auto ReadProcessMemoryArea(pid_t pid,
                                               T address,
-                                              size_t size) -> bytes_t
+                                              std::size_t size) -> bytes_t
             {
                 bytes_t result(size);
 
@@ -215,7 +215,7 @@ namespace XKLib
             template <typename A, typename T = uintptr_t>
             static auto ReadProcessMemoryAreaAligned(pid_t pid,
                                                      T address,
-                                                     size_t size)
+                                                     std::size_t size)
               -> std::vector<A>
             {
                 std::vector<A> result(align_to_page_size(size, sizeof(A)));
@@ -307,10 +307,10 @@ namespace XKLib
 #endif
             }
 
-            static auto GetPageSize() -> size_t;
+            static auto GetPageSize() -> std::size_t;
 
         private:
-            static size_t _page_size;
+            static std::size_t _page_size;
             static std::once_flag _get_page_size_once_flag;
     };
 

@@ -118,7 +118,7 @@ namespace XKLib
             {
                 public:
                     uintptr_t address;
-                    size_t size;
+                    std::size_t size;
             };
 
             using HandleFragment_t = std::shared_ptr<Fragment>;

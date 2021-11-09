@@ -35,12 +35,12 @@ auto XKLib::get_variable_type_str(typesize_t typeSize) -> std::string
     return strings[typeSize];
 }
 
-Buffer::Buffer(size_t maxSize) : _max_size(maxSize), _allocated(true)
+Buffer::Buffer(std::size_t maxSize) : _max_size(maxSize), _allocated(true)
 {
     _data = alloc<data_t>(_max_size);
 }
 
-Buffer::Buffer(data_t data, size_t maxSize) : _max_size(maxSize)
+Buffer::Buffer(data_t data, std::size_t maxSize) : _max_size(maxSize)
 {
     if (data)
     {
@@ -64,7 +64,7 @@ Buffer::~Buffer()
         free(_data);
 }
 
-auto Buffer::operator[](size_t size) -> auto&
+auto Buffer::operator[](std::size_t size) -> auto&
 {
     if (!_data && size >= _max_size)
     {
@@ -84,12 +84,12 @@ auto Buffer::setData(XKLib::data_t data)
     _data = data;
 }
 
-auto Buffer::maxSize() -> size_t
+auto Buffer::maxSize() -> std::size_t
 {
     return _max_size;
 }
 
-auto Buffer::setMaxSize(size_t maxSize)
+auto Buffer::setMaxSize(std::size_t maxSize)
 {
     _max_size = maxSize;
 }

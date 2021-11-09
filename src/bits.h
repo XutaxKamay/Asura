@@ -6,7 +6,7 @@
 
 namespace XKLib
 {
-    template <size_t pos, typename T = data_t>
+    template <std::size_t pos, typename T = data_t>
     constexpr auto read_bit(T data)
     {
         constexpr auto read_byte_pos = pos / CHAR_BIT;
@@ -19,7 +19,7 @@ namespace XKLib
         return view_as<bool>(byte_value & wanted_bit_value);
     }
 
-    template <size_t pos, bool val, typename T = data_t>
+    template <std::size_t pos, bool val, typename T = data_t>
     constexpr auto write_bit(T data)
     {
         constexpr auto read_byte_pos = pos / CHAR_BIT;
@@ -40,7 +40,7 @@ namespace XKLib
     }
 
     template <typename T = data_t>
-    constexpr auto read_bit(T data, size_t pos)
+    constexpr auto read_bit(T data, std::size_t pos)
     {
         auto read_byte_pos = pos / CHAR_BIT;
 
@@ -53,7 +53,7 @@ namespace XKLib
     }
 
     template <bool val, typename T = data_t>
-    constexpr auto write_bit(T data, size_t pos)
+    constexpr auto write_bit(T data, std::size_t pos)
     {
         auto read_byte_pos = pos / CHAR_BIT;
 
@@ -73,7 +73,7 @@ namespace XKLib
     }
 
     template <typename T = data_t>
-    constexpr auto write_bit(T data, size_t pos, bool val)
+    constexpr auto write_bit(T data, std::size_t pos, bool val)
     {
         auto read_byte_pos = pos / CHAR_BIT;
 
@@ -97,7 +97,7 @@ namespace XKLib
     {
         T var {};
 
-        for (size_t i = 0; i < bits.size(); i++)
+        for (std::size_t i = 0; i < bits.size(); i++)
         {
             if (bits[i])
             {
@@ -109,11 +109,11 @@ namespace XKLib
     }
 
     template <typename T>
-    auto bits_to_int(data_t data, size_t nbBits = 1)
+    auto bits_to_int(data_t data, std::size_t nbBits = 1)
     {
         T var {};
 
-        for (size_t i = 0; i < nbBits; i++)
+        for (std::size_t i = 0; i < nbBits; i++)
         {
             if (read_bit(data, i))
             {
@@ -129,7 +129,7 @@ namespace XKLib
     {
         std::vector<bool> bits;
 
-        for (size_t i = 0; i < sizeof(T) * CHAR_BIT; i++)
+        for (std::size_t i = 0; i < sizeof(T) * CHAR_BIT; i++)
         {
             bits.push_back(read_bit(&val, i));
         }

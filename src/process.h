@@ -32,7 +32,7 @@ namespace XKLib
             auto search(PatternByte& patternByte) -> void;
 
         public:
-            template <size_t stack_size_T = 0x10000>
+            template <std::size_t stack_size_T = 0x10000>
             auto createTask(ptr_t routineAddress)
               -> RunnableTask<stack_size_T>
             {
@@ -40,26 +40,28 @@ namespace XKLib
             }
 
             template <typename T = uintptr_t>
-            auto allocArea(T address, size_t size, mapf_t flags) -> ptr_t
+            auto allocArea(T address, std::size_t size, mapf_t flags)
+              -> ptr_t
             {
                 return mmap().allocArea<T>(address, size, flags);
             }
 
             template <typename T = uintptr_t>
-            auto freeArea(T address, size_t size) -> void
+            auto freeArea(T address, std::size_t size) -> void
             {
                 mmap().freeArea<T>(address, size);
             }
 
             template <typename T = uintptr_t>
-            auto protectMemoryArea(T address, size_t size, mapf_t flags)
-              -> void
+            auto protectMemoryArea(T address,
+                                   std::size_t size,
+                                   mapf_t flags) -> void
             {
                 mmap().protectMemoryArea(address, size, flags);
             }
 
             template <typename T = uintptr_t>
-            auto read(T address, size_t size) -> bytes_t
+            auto read(T address, std::size_t size) -> bytes_t
             {
                 return mmap().read(address, size);
             }

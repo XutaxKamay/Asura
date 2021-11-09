@@ -4,7 +4,7 @@
 
 using namespace XKLib;
 
-size_t MemoryUtils::_page_size;
+std::size_t MemoryUtils::_page_size;
 std::once_flag MemoryUtils::_get_page_size_once_flag;
 
 #ifdef WINDOWS
@@ -19,11 +19,11 @@ static auto _GetPageSize()
 #else
 static auto _GetPageSize()
 {
-    return view_as<size_t>(sysconf(_SC_PAGESIZE));
+    return view_as<std::size_t>(sysconf(_SC_PAGESIZE));
 }
 #endif
 
-auto MemoryUtils::GetPageSize() -> size_t
+auto MemoryUtils::GetPageSize() -> std::size_t
 {
     std::call_once(_get_page_size_once_flag,
                    []()

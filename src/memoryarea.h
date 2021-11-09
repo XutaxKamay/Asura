@@ -53,7 +53,7 @@ namespace XKLib
              *
              * @param size
              */
-            auto setSize(size_t size) -> void;
+            auto setSize(std::size_t size) -> void;
             auto setName(const std::string& name) -> void;
             auto operator==(MemoryArea& area) -> bool;
 
@@ -73,7 +73,8 @@ namespace XKLib
             template <typename T = uintptr_t>
             auto size() -> T
             {
-                return view_as<T>(end<size_t>() - begin<size_t>());
+                return view_as<T>(end<std::size_t>()
+                                  - begin<std::size_t>());
             }
 
             auto name() -> const std::string&;
@@ -88,7 +89,7 @@ namespace XKLib
              * @brief _size
              * Size of the memory area
              */
-            size_t _size {};
+            std::size_t _size {};
             /**
              * @brief _name
              * Name of the memory area

@@ -5,7 +5,7 @@
 
 namespace XKLib
 {
-    template <typename T, size_t max_history_T>
+    template <typename T, std::size_t max_history_T>
     /**
      * @brief The CircularBuffer class
      * Simple circular buffer with having in mind the best performance.
@@ -65,7 +65,7 @@ namespace XKLib
             int _index {};
     };
 
-    template <typename T, size_t max_history_T>
+    template <typename T, std::size_t max_history_T>
     auto CircularBuffer<T, max_history_T>::push(T element)
     {
         /**
@@ -100,7 +100,7 @@ namespace XKLib
         return Filling;
     }
 
-    template <typename T, size_t max_history_T>
+    template <typename T, std::size_t max_history_T>
     auto CircularBuffer<T, max_history_T>::get(int wantedSlot)
     {
         auto real_slot = _slot(wantedSlot);
@@ -108,7 +108,7 @@ namespace XKLib
         return (real_slot == -1) ? nullptr : &_buffer[real_slot];
     }
 
-    template <typename T, size_t max_history_T>
+    template <typename T, std::size_t max_history_T>
     auto CircularBuffer<T, max_history_T>::_slot(int wantedSlot)
     {
         if (wantedSlot >= _filled_history || wantedSlot < 0

@@ -37,7 +37,7 @@ auto XKLib::EncryptRSABlocks::encrypt(const bytes_t& bytes) -> bytes_t
 
     AutoSeededRandomPool rng;
     /* randomize last bytes */
-    for (size_t i = writeBuffer.writeSize(); i < result.size(); i++)
+    for (std::size_t i = writeBuffer.writeSize(); i < result.size(); i++)
     {
         result[i] = view_as<byte_t>(
           (Integer(rng, 0, 255).ConvertToLong()));

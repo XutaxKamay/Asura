@@ -8,7 +8,7 @@ namespace XKLib
     class Offset
     {
         public:
-            template <size_t offset, typename T>
+            template <std::size_t offset, typename T>
             auto member_at() -> T
             {
                 return view_as<T>(view_as<uintptr_t>(this) + offset);

@@ -34,13 +34,13 @@ namespace XKLib
             struct Letter
             {
                     T value;
-                    size_t freq = 0;
+                    std::size_t freq = 0;
             };
 
             struct PathInfo
             {
                     bit_path_t bit_path = 0;
-                    size_t depth        = 0;
+                    std::size_t depth   = 0;
             };
 
             struct PathInfoResult : PathInfo
@@ -57,9 +57,9 @@ namespace XKLib
                                 INVALID = -1
                             };
 
-                            auto height() -> size_t;
-                            auto depth() -> size_t;
-                            auto count_subnodes() -> size_t;
+                            auto height() -> std::size_t;
+                            auto depth() -> std::size_t;
+                            auto count_subnodes() -> std::size_t;
 
                             std::shared_ptr<Node> root   = nullptr;
                             std::shared_ptr<Node> parent = nullptr;
@@ -92,18 +92,18 @@ namespace XKLib
             using occurrences_t = std::vector<Occurrence>;
 
         public:
-            static auto encode(data_t data, size_t size) -> bytes_t;
+            static auto encode(data_t data, std::size_t size) -> bytes_t;
             static auto encode(const bytes_t& bytes) -> bytes_t;
 
-            static auto decode(data_t data, size_t size) -> bytes_t;
+            static auto decode(data_t data, std::size_t size) -> bytes_t;
             static auto decode(const bytes_t& bytes) -> bytes_t;
     };
 };
 
 template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::Node::count_subnodes() -> size_t
+auto XKLib::XKC<T>::BinaryTree::Node::count_subnodes() -> std::size_t
 {
-    size_t result = 0;
+    std::size_t result = 0;
 
     if (left)
     {
@@ -121,10 +121,10 @@ auto XKLib::XKC<T>::BinaryTree::Node::count_subnodes() -> size_t
 }
 
 template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::Node::depth() -> size_t
+auto XKLib::XKC<T>::BinaryTree::Node::depth() -> std::size_t
 {
-    size_t result = 0;
-    auto node     = parent;
+    std::size_t result = 0;
+    auto node          = parent;
 
     while (node)
     {
@@ -136,9 +136,9 @@ auto XKLib::XKC<T>::BinaryTree::Node::depth() -> size_t
 }
 
 template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::Node::height() -> size_t
+auto XKLib::XKC<T>::BinaryTree::Node::height() -> std::size_t
 {
-    size_t height_left = 0, height_right = 0;
+    std::size_t height_left = 0, height_right = 0;
 
     if (left)
     {
@@ -268,7 +268,7 @@ void XKLib::XKC<T>::BinaryTree::find_value(PathInfoResult& pathInfo)
 
     std::shared_ptr<Node> current_node = root;
 
-    for (size_t depth = 0; depth < pathInfo.depth; depth++)
+    for (std::size_t depth = 0; depth < pathInfo.depth; depth++)
     {
         if (pathInfo.bit_path[depth])
         {
@@ -303,7 +303,7 @@ auto XKLib::XKC<T>::BinaryTree::dot_format(std::shared_ptr<Node> parent)
 
         std::string depth;
 
-        for (size_t depth_bit = 0; depth_bit < max_depth_bits;
+        for (std::size_t depth_bit = 0; depth_bit < max_depth_bits;
              depth_bit++)
         {
             if (parent->depth() & (1u << depth_bit))
@@ -318,7 +318,7 @@ auto XKLib::XKC<T>::BinaryTree::dot_format(std::shared_ptr<Node> parent)
 
         result += depth;
 
-        for (size_t depth_bit = 0; depth_bit < parent->depth();
+        for (std::size_t depth_bit = 0; depth_bit < parent->depth();
              depth_bit++)
         {
             result += "x";
@@ -329,7 +329,7 @@ auto XKLib::XKC<T>::BinaryTree::dot_format(std::shared_ptr<Node> parent)
 
         depth = "";
 
-        for (size_t depth_bit = 0; depth_bit < max_depth_bits;
+        for (std::size_t depth_bit = 0; depth_bit < max_depth_bits;
              depth_bit++)
         {
             if (parent->left->depth() & (1u << depth_bit))
@@ -344,7 +344,7 @@ auto XKLib::XKC<T>::BinaryTree::dot_format(std::shared_ptr<Node> parent)
 
         result += depth;
 
-        for (size_t depth_bit = 0; depth_bit < parent->left->depth();
+        for (std::size_t depth_bit = 0; depth_bit < parent->left->depth();
              depth_bit++)
         {
             result += "x";
@@ -361,7 +361,7 @@ auto XKLib::XKC<T>::BinaryTree::dot_format(std::shared_ptr<Node> parent)
 
         std::string depth;
 
-        for (size_t depth_bit = 0; depth_bit < max_depth_bits;
+        for (std::size_t depth_bit = 0; depth_bit < max_depth_bits;
              depth_bit++)
         {
             if (parent->depth() & (1u << depth_bit))
@@ -376,7 +376,7 @@ auto XKLib::XKC<T>::BinaryTree::dot_format(std::shared_ptr<Node> parent)
 
         result += depth;
 
-        for (size_t depth_bit = 0; depth_bit < parent->depth();
+        for (std::size_t depth_bit = 0; depth_bit < parent->depth();
              depth_bit++)
         {
             result += "x";
@@ -387,7 +387,7 @@ auto XKLib::XKC<T>::BinaryTree::dot_format(std::shared_ptr<Node> parent)
 
         depth = "";
 
-        for (size_t depth_bit = 0; depth_bit < max_depth_bits;
+        for (std::size_t depth_bit = 0; depth_bit < max_depth_bits;
              depth_bit++)
         {
             if (parent->right->depth() & (1u << depth_bit))
@@ -402,7 +402,8 @@ auto XKLib::XKC<T>::BinaryTree::dot_format(std::shared_ptr<Node> parent)
 
         result += depth;
 
-        for (size_t depth_bit = 0; depth_bit < parent->right->depth();
+        for (std::size_t depth_bit = 0;
+             depth_bit < parent->right->depth();
              depth_bit++)
         {
             result += "x";
@@ -429,15 +430,15 @@ auto XKLib::XKC<T>::BinaryTree::dot_format() -> std::string
 }
 
 template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::encode(XKLib::data_t data, size_t size)
+auto XKLib::XKC<T>::encode(XKLib::data_t data, std::size_t size)
   -> XKLib::bytes_t
 {
     bytes_t result;
     alphabet_t alphabet;
     occurrences_t occurrences;
 
-    auto values        = view_as<T*>(data);
-    size_t value_index = 0;
+    auto values             = view_as<T*>(data);
+    std::size_t value_index = 0;
 
     auto max_values = size / sizeof(T);
 
@@ -446,7 +447,7 @@ auto XKLib::XKC<T>::encode(XKLib::data_t data, size_t size)
      */
     while (value_index < max_values)
     {
-        size_t start_occurrence_index = value_index++;
+        std::size_t start_occurrence_index = value_index++;
 
         Occurrence occurrence;
         occurrence.letter_value = values[start_occurrence_index];
@@ -528,7 +529,7 @@ auto XKLib::XKC<T>::encode(XKLib::data_t data, size_t size)
     auto tmp                     = view_as<uint32_t>(alphabet.size());
     auto bytes_max_alphabet_size = view_as<byte_t*>(&tmp);
 
-    for (size_t i = 0; i < sizeof(uint32_t); i++)
+    for (std::size_t i = 0; i < sizeof(uint32_t); i++)
     {
         result.push_back(bytes_max_alphabet_size[i]);
     }
@@ -537,15 +538,15 @@ auto XKLib::XKC<T>::encode(XKLib::data_t data, size_t size)
     {
         auto letter_value = view_as<T*>(&letter.value);
 
-        for (size_t i = 0; i < sizeof(T); i++)
+        for (std::size_t i = 0; i < sizeof(T); i++)
         {
             result.push_back(letter_value[i]);
         }
     }
 
-    byte_t result_byte                 = 0;
-    size_t written_bits_on_result_byte = 0;
-    uint32_t written_bits              = 0;
+    byte_t result_byte                      = 0;
+    std::size_t written_bits_on_result_byte = 0;
+    uint32_t written_bits                   = 0;
 
     auto check_bit = [&written_bits_on_result_byte,
                       &result,
@@ -576,7 +577,7 @@ auto XKLib::XKC<T>::encode(XKLib::data_t data, size_t size)
         /**
          * TODO: find a better method to encode the depth
          */
-        for (size_t count_bit = 0; count_bit < max_count_occurs_bits;
+        for (std::size_t count_bit = 0; count_bit < max_count_occurs_bits;
              count_bit++)
         {
             if (occurrence.count & (1u << count_bit))
@@ -598,7 +599,7 @@ auto XKLib::XKC<T>::encode(XKLib::data_t data, size_t size)
             check_bit();
         }
 
-        for (size_t depth = 0; depth < path_info.depth; depth++)
+        for (std::size_t depth = 0; depth < path_info.depth; depth++)
         {
             if (path_info.bit_path[depth])
             {
@@ -616,7 +617,7 @@ auto XKLib::XKC<T>::encode(XKLib::data_t data, size_t size)
 
     auto bytes_written_bits = view_as<byte_t*>(&written_bits);
 
-    for (size_t i = 0; i < sizeof(uint32_t); i++)
+    for (std::size_t i = 0; i < sizeof(uint32_t); i++)
     {
         result.push_back(bytes_written_bits[i]);
     }
@@ -631,12 +632,12 @@ auto XKLib::XKC<T>::decode(const bytes_t& bytes) -> XKLib::bytes_t
 }
 
 template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::decode(XKLib::data_t data, size_t size)
+auto XKLib::XKC<T>::decode(XKLib::data_t data, std::size_t size)
   -> XKLib::bytes_t
 {
     bytes_t result;
 
-    size_t read_bytes = 0;
+    std::size_t read_bytes = 0;
 
     auto written_bits = *view_as<uint32_t*>(view_as<uintptr_t>(data)
                                             + size - sizeof(uint32_t));
@@ -654,7 +655,7 @@ auto XKLib::XKC<T>::decode(XKLib::data_t data, size_t size)
 
     alphabet_t alphabet;
 
-    for (size_t alphabet_index = 0; alphabet_index < alphabet_size;
+    for (std::size_t alphabet_index = 0; alphabet_index < alphabet_size;
          alphabet_index++)
     {
         auto letter_value = *view_as<T*>(&data[read_bytes]);
@@ -675,8 +676,8 @@ auto XKLib::XKC<T>::decode(XKLib::data_t data, size_t size)
 
     auto max_depth_bits = view_as<uint32_t>(bits_needed(max_tree_depth));
 
-    size_t read_bits_on_result_byte = 0;
-    size_t bits_read                = 0;
+    std::size_t read_bits_on_result_byte = 0;
+    std::size_t bits_read                = 0;
     occurrences_t occurrences;
 
     while (bits_read < written_bits)
@@ -713,7 +714,7 @@ auto XKLib::XKC<T>::decode(XKLib::data_t data, size_t size)
         PathInfoResult path_info;
         byte_t count = 0;
 
-        for (size_t count_bit = 0; count_bit < max_count_occurs_bits;
+        for (std::size_t count_bit = 0; count_bit < max_count_occurs_bits;
              count_bit++)
         {
             count |= read_bit() << count_bit;
@@ -725,7 +726,7 @@ auto XKLib::XKC<T>::decode(XKLib::data_t data, size_t size)
             path_info.depth |= read_bit() << depth_bit;
         }
 
-        for (size_t depth = 0; depth < path_info.depth; depth++)
+        for (std::size_t depth = 0; depth < path_info.depth; depth++)
         {
             path_info.bit_path[depth] = read_bit();
         }
@@ -737,7 +738,7 @@ auto XKLib::XKC<T>::decode(XKLib::data_t data, size_t size)
 
     for (auto&& occurrence : occurrences)
     {
-        for (size_t count = 0; count < occurrence.count; count++)
+        for (std::size_t count = 0; count < occurrence.count; count++)
         {
             result.push_back(occurrence.letter_value);
         }

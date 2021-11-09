@@ -8,12 +8,12 @@ namespace XKLib
     class NetworkReadBuffer : public Buffer
     {
         public:
-            NetworkReadBuffer(data_t data     = nullptr,
-                              size_t maxSize  = 0,
-                              size_t readBits = 0);
+            NetworkReadBuffer(data_t data          = nullptr,
+                              std::size_t maxSize  = 0,
+                              std::size_t readBits = 0);
 
             bool readBit();
-            void pos(size_t toBit = 0);
+            void pos(std::size_t toBit = 0);
 
             template <typesize_t typesize = type_array>
             auto readVar()
@@ -27,7 +27,7 @@ namespace XKLib
                 {
                     g_v_t<typesize> var {};
 
-                    for (size_t i = 0;
+                    for (std::size_t i = 0;
                          i < sizeof(g_v_t<typesize>) * CHAR_BIT;
                          i++)
                     {
@@ -43,7 +43,7 @@ namespace XKLib
             }
 
         private:
-            size_t _read_bits {};
+            std::size_t _read_bits {};
     };
 };
 

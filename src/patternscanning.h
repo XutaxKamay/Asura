@@ -13,16 +13,18 @@ namespace XKLib
             static auto searchInProcess(
               PatternByte& pattern,
               Process& process,
-              const std::function<auto(PatternByte&, data_t, size_t, ptr_t)
-                                    ->bool>& searchMethod
+              const std::function<
+                auto(PatternByte&, data_t, std::size_t, ptr_t)->bool>&
+                searchMethod
               = searchV1) -> void;
 
             static auto searchInProcessWithAreaName(
               PatternByte& pattern,
               Process& process,
               const std::string& areaName,
-              const std::function<auto(PatternByte&, data_t, size_t, ptr_t)
-                                    ->bool>& searchMethod
+              const std::function<
+                auto(PatternByte&, data_t, std::size_t, ptr_t)->bool>&
+                searchMethod
               = searchV1) -> void;
 
             /**
@@ -49,7 +51,7 @@ namespace XKLib
              */
             static auto searchV1(PatternByte& pattern,
                                  data_t data,
-                                 size_t size,
+                                 std::size_t size,
                                  ptr_t baseAddress) -> bool;
 
             /**
@@ -65,7 +67,7 @@ namespace XKLib
              */
             static auto searchV2(PatternByte& pattern,
                                  data_t data,
-                                 size_t size,
+                                 std::size_t size,
                                  ptr_t baseAddress) -> bool;
             /**
              * @brief searchV3
@@ -79,7 +81,7 @@ namespace XKLib
              */
             static auto searchV3(PatternByte& pattern,
                                  data_t data,
-                                 size_t size,
+                                 std::size_t size,
                                  ptr_t baseAddress) -> bool;
 
             /**
@@ -95,7 +97,7 @@ namespace XKLib
              */
             static auto searchAlignedV1(PatternByte& pattern,
                                         data_t aligned_data,
-                                        size_t size,
+                                        std::size_t size,
                                         ptr_t baseAddress) -> bool;
 
             /**
@@ -111,7 +113,7 @@ namespace XKLib
              */
             static auto searchAlignedV2(PatternByte& pattern,
                                         data_t aligned_data,
-                                        size_t size,
+                                        std::size_t size,
                                         ptr_t baseAddress) -> bool;
 
             /**
@@ -132,7 +134,7 @@ namespace XKLib
              */
             static auto searchTest(PatternByte& pattern,
                                    data_t data,
-                                   size_t size,
+                                   std::size_t size,
                                    ptr_t baseAddress) -> bool;
     };
 };

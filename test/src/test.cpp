@@ -39,7 +39,7 @@ auto XKLib::Test::run() -> void
 
     WriteBuffer writeBuffer;
 
-    auto strSize = view_as<size_t>(str.size());
+    auto strSize = view_as<std::size_t>(str.size());
 
     writeBuffer.addVar<type_array>(view_as<get_variable_t<type_array>>(
                                      str.data()),
@@ -105,7 +105,7 @@ auto XKLib::Test::run() -> void
 
     if (std::memcmp(readBuffer.data(),
                     writeBuffer.data(),
-                    view_as<size_t>(writeBuffer.writeSize()))
+                    view_as<std::size_t>(writeBuffer.writeSize()))
         == 0)
     {
         ConsoleOutput("Passed decryption test") << std::endl;
@@ -429,7 +429,7 @@ auto XKLib::Test::run() -> void
     bytes_t random_bytes;
     constexpr auto size_of_random = 0xF000000ull;
 
-    for (size_t i = 0; i < size_of_random; i++)
+    for (std::size_t i = 0; i < size_of_random; i++)
     {
         static int add = 0;
 
@@ -451,7 +451,7 @@ auto XKLib::Test::run() -> void
     /*
     byte_t result;
 
-    for (size_t i = 0; i < 0x1000; i++)
+    for (std::size_t i = 0; i < 0x1000; i++)
     {
         result = (rand() % 2) ? 64 : (rand() % 7 + 63);
 
@@ -488,7 +488,7 @@ auto XKLib::Test::run() -> void
 
         random_bytes.clear();
 
-        for (size_t i = 0; i < size_of_random; i++)
+        for (std::size_t i = 0; i < size_of_random; i++)
         {
             random_bytes.push_back(view_as<byte_t>(rand() % 256));
         }
@@ -498,12 +498,12 @@ auto XKLib::Test::run() -> void
             pattern_bytes.push_back(byte);
         }
 
-        for (size_t i = 1; i < size_of_random - 1; i++)
+        for (std::size_t i = 1; i < size_of_random - 1; i++)
         {
             if ((rand() % (1 << 16)) == 0)
             {
-                for (size_t j = 0;
-                     j < (512 + view_as<size_t>(rand() % (1 << 10)))
+                for (std::size_t j = 0;
+                     j < (512 + view_as<std::size_t>(rand() % (1 << 10)))
                      && (j + i < size_of_random);
                      j++)
                 {
@@ -518,7 +518,7 @@ auto XKLib::Test::run() -> void
 
         Timer timer {};
 
-        for (size_t i = 0; i < 7; i++)
+        for (std::size_t i = 0; i < 7; i++)
         {
             std::memcpy(&aligned_memory[size_of_random * i],
                         random_bytes.data(),
@@ -711,7 +711,7 @@ auto XKLib::Test::API::func2(const char* str, ...) -> std::vector<int>
 
     std::vector<int> result;
 
-    for (size_t i = 0; i < sizeof(buffer) / sizeof(int); i++)
+    for (std::size_t i = 0; i < sizeof(buffer) / sizeof(int); i++)
     {
         result.push_back(ints[i]);
     }

@@ -7,7 +7,7 @@
 namespace XKLib
 {
     class Task;
-    template <size_t stack_size_T>
+    template <std::size_t stack_size_T>
     class RunnableTask;
 
     using tasks_t = std::list<Task>;
@@ -15,7 +15,7 @@ namespace XKLib
 
     class Task
     {
-            template <size_t>
+            template <std::size_t>
             friend class RunnableTask;
 
         public:

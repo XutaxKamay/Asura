@@ -10,8 +10,8 @@ namespace XKLib
     {
         public:
             explicit ReadBuffer(data_t data,
-                                size_t maxSize  = 0,
-                                size_t readSize = 0);
+                                std::size_t maxSize  = 0,
+                                std::size_t readSize = 0);
 
             ~ReadBuffer() = default;
 
@@ -21,7 +21,7 @@ namespace XKLib
              * @brief readVar
              * @param pSize
              */
-            constexpr inline auto readVar(size_t* pSize = nullptr)
+            constexpr inline auto readVar(std::size_t* pSize = nullptr)
             {
                 if (_read_size >= maxSize())
                 {
@@ -53,8 +53,8 @@ namespace XKLib
                 if constexpr (typesize_T == type_array)
                 {
                     /* If it's an array we read first its size */
-                    auto dataSize = *this->shift<size_t*>(_read_size);
-                    advance(sizeof(size_t));
+                    auto dataSize = *this->shift<std::size_t*>(_read_size);
+                    advance(sizeof(std::size_t));
 
                     /* Then we give the pointer of where is located data
                      */
@@ -90,7 +90,7 @@ namespace XKLib
              * @brief shift
              * @param size
              */
-            constexpr inline auto shift(size_t size = 0) -> cast_T
+            constexpr inline auto shift(std::size_t size = 0) -> cast_T
             {
                 if (size == 0)
                 {
@@ -112,22 +112,22 @@ namespace XKLib
              * @brief advance
              * @param size
              */
-            auto advance(size_t size) -> void;
+            auto advance(std::size_t size) -> void;
             /**
              * @brief readSize
              */
-            auto readSize() -> size_t;
+            auto readSize() -> std::size_t;
             /**
              * @brief setReadSize
              * @param readSize
              */
-            auto setReadSize(size_t readSize);
+            auto setReadSize(std::size_t readSize);
 
         private:
             /**
              * @brief _read_size
              */
-            size_t _read_size {};
+            std::size_t _read_size {};
     };
 
 } // namespace XKLib

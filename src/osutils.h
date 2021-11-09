@@ -16,7 +16,7 @@ namespace XKLib
             };
 
             static auto retrievePHDRInfos(struct dl_phdr_info* info,
-                                          size_t,
+                                          std::size_t,
                                           void* param) -> int
             {
                 auto arg = view_as<iterate_phdr_arg*>(param);
@@ -96,7 +96,7 @@ namespace XKLib
 
                 auto file_header = view_as<ElfW(Ehdr*)>(
                   mmap(nullptr,
-                       view_as<size_t>(st.st_size),
+                       view_as<std::size_t>(st.st_size),
                        PROT_READ,
                        MAP_PRIVATE,
                        fd,
@@ -107,7 +107,7 @@ namespace XKLib
                 if (file_header->e_shoff == 0
                     || file_header->e_shstrndx == SHN_UNDEF)
                 {
-                    munmap(file_header, view_as<size_t>(st.st_size));
+                    munmap(file_header, view_as<std::size_t>(st.st_size));
                     XKLIB_EXCEPTION("No symbols.");
                 }
 
@@ -143,7 +143,7 @@ namespace XKLib
                 if (section_str_tab == nullptr
                     && section_sym_tab == nullptr)
                 {
-                    munmap(file_header, view_as<size_t>(st.st_size));
+                    munmap(file_header, view_as<std::size_t>(st.st_size));
                     XKLIB_EXCEPTION("No symbols.");
                 }
 
@@ -178,7 +178,7 @@ namespace XKLib
                     }
                 }
 
-                munmap(file_header, view_as<size_t>(st.st_size));
+                munmap(file_header, view_as<std::size_t>(st.st_size));
                 XKLIB_EXCEPTION("Cannot find function.");
                 return nullptr;
             }

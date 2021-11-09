@@ -25,18 +25,18 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
     _unknown_values.reserve(_bytes.size());
 
     /* index of the byte in the pattern */
-    size_t index = 0;
+    std::size_t index = 0;
     /* count unknown bytes that were contigous inside the pattern */
-    size_t ukval_contigous_count = 0;
+    std::size_t ukval_contigous_count = 0;
     /**
      * store the last time the unknown bytes were contigous for
      * pushing into a vector the unknown bytes
      */
-    size_t index_since_contigous_count = 0;
+    std::size_t index_since_contigous_count = 0;
     /* index of the simd value */
-    size_t byte_simd_index = 0;
+    std::size_t byte_simd_index = 0;
     /* count how many unknown bytes we got */
-    size_t count_unknown_byte = 0;
+    std::size_t count_unknown_byte = 0;
     /* organized values */
     bool are_known_values = true;
     std::vector<byte_t> known_bytes;
@@ -77,7 +77,7 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
             if (!are_known_values)
             {
                 organized_simd_mv_t tmp_organized_mv {};
-                size_t tmp_mv_byte_index = 0;
+                std::size_t tmp_mv_byte_index = 0;
                 std::vector<organized_simd_mv_t> aligned_fast_mvs;
 
                 /**
@@ -162,7 +162,7 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
     if (known_bytes.size())
     {
         organized_simd_mv_t tmp_organized_mv {};
-        size_t tmp_mv_byte_index = 0;
+        std::size_t tmp_mv_byte_index = 0;
         std::vector<organized_simd_mv_t> aligned_fast_mvs;
 
         /**

@@ -22,9 +22,9 @@ namespace XKLib
      * @brief alloc
      * @param size
      */
-    constexpr inline auto alloc(size_t size)
+    constexpr inline auto alloc(std::size_t size)
     {
-        auto ptr = view_as<T>(::operator new(view_as<size_t>(size)));
+        auto ptr = view_as<T>(::operator new(view_as<std::size_t>(size)));
 
 #ifdef DEBUG
         tracking_memory_allocs.push_back(view_as<ptr_t>(ptr));
@@ -64,7 +64,7 @@ namespace XKLib
     }
 
     template <typename T = ptr_t>
-    constexpr inline auto align_alloc(size_t size, size_t align)
+    constexpr inline auto align_alloc(std::size_t size, std::size_t align)
     {
 #ifdef WINDOWS
         return view_as<T>(_aligned_malloc(size, align));
@@ -114,7 +114,7 @@ namespace XKLib
     constexpr inline auto _gvt()
     {
         if constexpr (type == type_safesize)
-            return type_wrapper<size_t>;
+            return type_wrapper<std::size_t>;
         else if constexpr (type == type_8us)
             return type_wrapper<byte_t>;
         else if constexpr (type == type_16us)
@@ -155,8 +155,9 @@ namespace XKLib
     class Buffer
     {
         public:
-            explicit Buffer(size_t maxSize);
-            explicit Buffer(data_t data = nullptr, size_t maxSize = 0);
+            explicit Buffer(std::size_t maxSize);
+            explicit Buffer(data_t data         = nullptr,
+                            std::size_t maxSize = 0);
             ~Buffer();
 
         public:
@@ -165,7 +166,7 @@ namespace XKLib
              * @param size
              * @return
              */
-            auto operator[](size_t size) -> auto&;
+            auto operator[](std::size_t size) -> auto&;
             /**
              * @brief data
              * @return
@@ -180,12 +181,12 @@ namespace XKLib
              * @brief maxSize
              * @return
              */
-            auto maxSize() -> size_t;
+            auto maxSize() -> std::size_t;
             /**
              * @brief setMaxSize
              * @param maxSize
              */
-            auto setMaxSize(size_t maxSize);
+            auto setMaxSize(std::size_t maxSize);
             /**
              * @brief toBytes
              * @return bytes_t
@@ -199,7 +200,7 @@ namespace XKLib
              * @param size
              * Gets a pointer from data + size.
              */
-            constexpr inline auto shift(size_t size = 0)
+            constexpr inline auto shift(std::size_t size = 0)
             {
                 if (!_data && size >= _max_size)
                 {
@@ -217,7 +218,7 @@ namespace XKLib
             /**
              * @brief _max_size
              */
-            size_t _max_size {};
+            std::size_t _max_size {};
             /**
              * @brief _allocated
              */

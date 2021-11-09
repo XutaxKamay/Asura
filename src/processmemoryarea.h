@@ -43,8 +43,9 @@ namespace XKLib
             auto protectionFlags() -> ModifiableProtectionFlags&;
             auto initProtectionFlags(mapf_t flags) -> void;
             auto processBase() -> ProcessBase;
-            auto read(size_t size, size_t shift = 0) -> bytes_t;
-            auto write(const bytes_t& bytes, size_t shift = 0) -> void;
+            auto read(std::size_t size, std::size_t shift = 0) -> bytes_t;
+            auto write(const bytes_t& bytes, std::size_t shift = 0)
+              -> void;
             auto isDeniedByOS() -> bool;
             auto isReadable() -> bool;
             auto isWritable() -> bool;

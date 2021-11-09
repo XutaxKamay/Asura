@@ -14,9 +14,9 @@ namespace XKLib
         public:
             constexpr static auto DEFAULT_MAX_SIZE = 0x100000;
 
-            explicit WriteBuffer(data_t data      = nullptr,
-                                 size_t maxSize   = DEFAULT_MAX_SIZE,
-                                 size_t writeSize = 0);
+            explicit WriteBuffer(data_t data           = nullptr,
+                                 std::size_t maxSize   = DEFAULT_MAX_SIZE,
+                                 std::size_t writeSize = 0);
 
             ~WriteBuffer() = default;
 
@@ -35,22 +35,22 @@ namespace XKLib
              * @param data
              * @param size
              */
-            auto addData(ptr_t data, size_t size) -> void;
+            auto addData(ptr_t data, std::size_t size) -> void;
             /**
              * @brief advance
              * @param size
              */
-            auto advance(size_t size) -> void;
+            auto advance(std::size_t size) -> void;
             /**
              * @brief writeSize
              * @return
              */
-            auto writeSize() -> size_t;
+            auto writeSize() -> std::size_t;
             /**
              * @brief setWriteSize
              * @param writeSize
              */
-            auto setWriteSize(size_t writeSize) -> void;
+            auto setWriteSize(std::size_t writeSize) -> void;
             /**
              * @brief toBytes
              */
@@ -65,7 +65,7 @@ namespace XKLib
              * @param size
              */
             constexpr inline auto addVar(get_variable_t<typesize_T> value,
-                                         size_t size = 0)
+                                         std::size_t size = 0)
             {
                 /* Add first the type of variable */
                 addType(typesize_T);
@@ -73,12 +73,12 @@ namespace XKLib
                 if constexpr (typesize_T == type_array)
                 {
                     /* Add the size of the array if it's an array */
-                    addData(&size, view_as<size_t>(sizeof(size)));
-                    addData(value, view_as<size_t>(size));
+                    addData(&size, view_as<std::size_t>(sizeof(size)));
+                    addData(value, view_as<std::size_t>(size));
                 }
                 else
                 {
-                    addData(&value, view_as<size_t>(sizeof(value)));
+                    addData(&value, view_as<std::size_t>(sizeof(value)));
                 }
             }
 
@@ -87,7 +87,7 @@ namespace XKLib
              * @brief shift
              * @param size
              */
-            constexpr inline auto shift(size_t size = 0)
+            constexpr inline auto shift(std::size_t size = 0)
             {
                 if (size == 0)
                 {
@@ -104,7 +104,7 @@ namespace XKLib
             /**
              * @brief m_written_size
              */
-            size_t _written_size {};
+            std::size_t _written_size {};
     };
 
 } // namespace XKLib

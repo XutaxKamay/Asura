@@ -9,7 +9,7 @@ namespace XKLib
     class RSABlocks
     {
         public:
-            template <size_t rsa_key_size_T = 0x1000>
+            template <std::size_t rsa_key_size_T = 0x1000>
             static auto GenerateRSAPrivateKey()
             {
                 using namespace CryptoPP;

@@ -4,7 +4,9 @@
 
 using namespace XKLib;
 
-ReadBuffer::ReadBuffer(data_t data, size_t maxSize, size_t readSize)
+ReadBuffer::ReadBuffer(data_t data,
+                       std::size_t maxSize,
+                       std::size_t readSize)
  : Buffer(data, maxSize), _read_size(readSize)
 {
 }
@@ -14,17 +16,17 @@ auto ReadBuffer::reset() -> void
     _read_size = 0;
 }
 
-auto ReadBuffer::advance(size_t size) -> void
+auto ReadBuffer::advance(std::size_t size) -> void
 {
     _read_size += size;
 }
 
-auto ReadBuffer::readSize() -> size_t
+auto ReadBuffer::readSize() -> std::size_t
 {
     return _read_size;
 }
 
-auto ReadBuffer::setReadSize(size_t readSize)
+auto ReadBuffer::setReadSize(std::size_t readSize)
 {
     _read_size = readSize;
 }

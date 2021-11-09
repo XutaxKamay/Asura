@@ -40,7 +40,7 @@ namespace XKLib
                  * Thanks to the operating system, the areas are already
                  * in order.
                  */
-                size_t area_index = 0;
+                std::size_t area_index = 0;
 
                 while (area_index < _areas.size())
                 {
@@ -135,7 +135,8 @@ namespace XKLib
             }
 
             template <typename T = uintptr_t>
-            auto allocArea(T address, size_t size, mapf_t flags) -> ptr_t
+            auto allocArea(T address, std::size_t size, mapf_t flags)
+              -> ptr_t
             {
                 auto ret = MemoryUtils::AllocArea(_process_base.id(),
                                                   address,
@@ -148,7 +149,7 @@ namespace XKLib
             }
 
             template <typename T = uintptr_t>
-            auto freeArea(T address, size_t size) -> void
+            auto freeArea(T address, std::size_t size) -> void
             {
                 MemoryUtils::FreeArea(_process_base.id(), address, size);
 
@@ -156,8 +157,9 @@ namespace XKLib
             }
 
             template <typename T = uintptr_t>
-            auto protectMemoryArea(T address, size_t size, mapf_t flags)
-              -> void
+            auto protectMemoryArea(T address,
+                                   std::size_t size,
+                                   mapf_t flags) -> void
             {
                 MemoryUtils::ProtectMemoryArea(_process_base.id(),
                                                address,
@@ -168,7 +170,7 @@ namespace XKLib
             }
 
             template <typename T = uintptr_t>
-            auto read(T address, size_t size) -> bytes_t
+            auto read(T address, std::size_t size) -> bytes_t
             {
                 return MemoryUtils::ReadProcessMemoryArea(
                   _process_base.id(),

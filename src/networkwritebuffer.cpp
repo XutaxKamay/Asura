@@ -3,8 +3,8 @@
 #include "networkwritebuffer.h"
 
 XKLib::NetworkWriteBuffer::NetworkWriteBuffer(XKLib::data_t data,
-                                              size_t maxSize,
-                                              size_t writtenBits)
+                                              std::size_t maxSize,
+                                              std::size_t writtenBits)
  : Buffer(data, maxSize), _written_bits(writtenBits)
 {
 }
@@ -19,7 +19,7 @@ void XKLib::NetworkWriteBuffer::writeBit(bool value)
     write_bit(data(), _written_bits++, value);
 }
 
-void XKLib::NetworkWriteBuffer::pos(size_t toBit)
+void XKLib::NetworkWriteBuffer::pos(std::size_t toBit)
 {
     _written_bits = toBit;
 }

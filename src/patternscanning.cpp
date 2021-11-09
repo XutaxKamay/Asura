@@ -6,7 +6,7 @@
 
 auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
                                       data_t data,
-                                      size_t size,
+                                      std::size_t size,
                                       ptr_t baseAddress) -> bool
 {
     /* prepare stuffs */
@@ -70,7 +70,7 @@ auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
 
 auto XKLib::PatternScanning::searchV2(XKLib::PatternByte& pattern,
                                       data_t data,
-                                      size_t size,
+                                      std::size_t size,
                                       ptr_t baseAddress) -> bool
 {
     auto&& pattern_bytes        = pattern.bytes();
@@ -114,7 +114,7 @@ auto XKLib::PatternScanning::searchV2(XKLib::PatternByte& pattern,
 
 auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
                                       data_t data,
-                                      size_t size,
+                                      std::size_t size,
                                       ptr_t baseAddress) -> bool
 {
     auto&& pattern_bytes        = pattern.bytes();
@@ -185,7 +185,7 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
 
 auto XKLib::PatternScanning::searchAlignedV1(XKLib::PatternByte& pattern,
                                              data_t aligned_data,
-                                             size_t size,
+                                             std::size_t size,
                                              ptr_t baseAddress) -> bool
 {
     auto&& pattern_bytes    = pattern.bytes();
@@ -261,7 +261,7 @@ auto XKLib::PatternScanning::searchAlignedV1(XKLib::PatternByte& pattern,
 
 auto XKLib::PatternScanning::searchAlignedV2(XKLib::PatternByte& pattern,
                                              data_t data,
-                                             size_t size,
+                                             std::size_t size,
                                              ptr_t baseAddress) -> bool
 {
     auto&& pattern_bytes        = pattern.bytes();
@@ -305,7 +305,7 @@ auto XKLib::PatternScanning::searchAlignedV2(XKLib::PatternByte& pattern,
 
 auto XKLib::PatternScanning::searchTest(XKLib::PatternByte& pattern,
                                         data_t data,
-                                        size_t size,
+                                        std::size_t size,
                                         ptr_t baseAddress) -> bool
 {
     auto&& pattern_bytes  = pattern.bytes();
@@ -313,8 +313,8 @@ auto XKLib::PatternScanning::searchTest(XKLib::PatternByte& pattern,
     auto old_matches_size = matches.size();
     auto pattern_size     = pattern_bytes.size();
 
-    size_t index              = 0;
-    size_t index_pattern_byte = 1;
+    std::size_t index              = 0;
+    std::size_t index_pattern_byte = 1;
 
     do
     {
@@ -354,8 +354,9 @@ auto XKLib::PatternScanning::searchTest(XKLib::PatternByte& pattern,
 auto XKLib::PatternScanning::searchInProcess(
   XKLib::PatternByte& pattern,
   Process& process,
-  const std::function<auto(PatternByte&, data_t, size_t, ptr_t)->bool>&
-    searchMethod) -> void
+  const std::function<
+    auto(PatternByte&, data_t, std::size_t, ptr_t)->bool>& searchMethod)
+  -> void
 {
     auto mmap     = process.mmap();
     auto areaName = pattern.areaName();
@@ -384,8 +385,9 @@ auto XKLib::PatternScanning::searchInProcessWithAreaName(
   XKLib::PatternByte& pattern,
   Process& process,
   const std::string& areaName,
-  const std::function<auto(PatternByte&, data_t, size_t, ptr_t)->bool>&
-    searchMethod) -> void
+  const std::function<
+    auto(PatternByte&, data_t, std::size_t, ptr_t)->bool>& searchMethod)
+  -> void
 {
     auto mmap = process.mmap();
 

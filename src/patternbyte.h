@@ -29,7 +29,7 @@ namespace XKLib
                     };
 
                     int value = INVALID;
-                    size_t index {};
+                    std::size_t index {};
             };
 
 #ifdef __AVX512F__
@@ -42,10 +42,10 @@ namespace XKLib
 
             struct simd_unknown_value_t
             {
-                    size_t simd_index;
-                    size_t simd_byte_index;
-                    size_t data_byte_index;
-                    size_t size_to_copy;
+                    std::size_t simd_index;
+                    std::size_t simd_byte_index;
+                    std::size_t data_byte_index;
+                    std::size_t size_to_copy;
             };
 
             struct simd_mv_t
@@ -58,14 +58,14 @@ namespace XKLib
             {
                     simd_value_t mask;
                     simd_value_t value;
-                    size_t size_to_move;
+                    std::size_t size_to_move;
             };
 
             struct organized_values_t
             {
                     std::vector<byte_t> bytes;
                     std::vector<organized_simd_mv_t> fast_aligned_mvs;
-                    size_t skip_bytes;
+                    std::size_t skip_bytes;
             };
 
             PatternByte(std::vector<Value> values,

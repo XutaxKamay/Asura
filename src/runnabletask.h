@@ -7,7 +7,7 @@
 
 namespace XKLib
 {
-    template <size_t stack_size_T>
+    template <std::size_t stack_size_T>
     class RunnableTask : public Task
     {
         public:
@@ -27,7 +27,7 @@ namespace XKLib
 #endif
     };
 
-    template <size_t stack_size_T>
+    template <std::size_t stack_size_T>
     RunnableTask<stack_size_T>::RunnableTask(ProcessBase processBase,
                                              ptr_t routineAddress)
      : Task(processBase), _routine_address(routineAddress)
@@ -38,7 +38,7 @@ namespace XKLib
     {
     }
 
-    template <size_t stack_size_T>
+    template <std::size_t stack_size_T>
     auto RunnableTask<stack_size_T>::run() -> void
     {
 #ifdef WINDOWS
@@ -104,7 +104,7 @@ namespace XKLib
 #endif
     }
 
-    template <size_t stack_size_T>
+    template <std::size_t stack_size_T>
     auto RunnableTask<stack_size_T>::kill() -> void
     {
 #ifdef WINDOWS
@@ -129,7 +129,7 @@ namespace XKLib
 #endif
     }
 
-    template <size_t stack_size_T>
+    template <std::size_t stack_size_T>
     auto RunnableTask<stack_size_T>::wait() -> void
     {
 #ifdef WINDOWS

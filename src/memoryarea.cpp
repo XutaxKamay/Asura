@@ -134,7 +134,7 @@ auto MemoryArea::setAddress(ptr_t address) -> void
     _address = address;
 }
 
-auto MemoryArea::setSize(size_t size) -> void
+auto MemoryArea::setSize(std::size_t size) -> void
 {
     _size = size;
 }
