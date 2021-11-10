@@ -1,8 +1,8 @@
 ## INCLUDES
-INCLUDES:=-iquote src/ -iquote test/src/ -iquote ./ 
+INCLUDES:=-iquote src/ -iquote test/src/ -iquote ./
 
 ## ERRORS
-ERRORS:= -Wextra -W -Wall -Werror 
+ERRORS:= -Wextra -W -Wall -Werror
 
 ## XKLIB_TEST
 XKLIB_TEST_DEBUG:=xklib_test.dbg
@@ -32,7 +32,7 @@ MOREFLAGS:=
 ifneq (,$(findstring mingw, $(CXX)))
   XKLIB_TEST_DEBUG:=$(XKLIB_TEST_DEBUG).exe
   XKLIB_TEST_RELEASE:=$(XKLIB_TEST_RELEASE).exe
-  DBGHELP_LIB:=-ldbghelp -lpsapi 
+  DBGHELP_LIB:=-ldbghelp -lpsapi
 	# Windows needs WinMain, we just ignore it
   MOREFLAGS:=-static-libgcc -static-libstdc++
 else
@@ -40,7 +40,7 @@ else
   PTHREAD_LIB:=-lpthread
 endif
 
-MOREFLAGS:=$(MOREFLAGS) -fPIC -std=c++2a -Wno-ignored-optimization-argument -Wno-unused-command-line-argument
+MOREFLAGS:=$(MOREFLAGS) -fPIC -std=c++20 -Wno-ignored-optimization-argument -Wno-unused-command-line-argument
 
 XKLIB_OBJ_DEBUG=$(subst .cpp,$(XKLIB_OBJ_DEBUG_OUT),$(wildcard src/*.cpp))
 XKLIB_OBJ_RELEASE=$(subst .cpp,$(XKLIB_OBJ_RELEASE_OUT),$(wildcard src/*.cpp))
@@ -66,11 +66,11 @@ xklibdbg: $(XKLIB_DEBUG)
 xklibrel: $(XKLIB_RELEASE)
 
 xklib_testdbg: $(XKLIB_TEST_DEBUG)
-xklib_testrel: $(XKLIB_TEST_RELEASE) 
+xklib_testrel: $(XKLIB_TEST_RELEASE)
 
 cryptopplib:
 	@echo 'Compiling cryptopp'
-	$(MAKE) -C vendor/cryptopp static 
+	$(MAKE) -C vendor/cryptopp static
 
 .PHONY: all clean
 
