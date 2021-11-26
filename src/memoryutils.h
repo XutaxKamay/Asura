@@ -18,300 +18,287 @@ namespace XKLib
      */
     class MemoryUtils
     {
-        public:
-            template <typename T = uintptr_t>
-            static constexpr inline auto align(T value, std::size_t size)
+      public:
+        template <typename T = uintptr_t>
+        static constexpr inline auto align(T value, std::size_t size)
+        {
+            auto original_value = view_as<uintptr_t>(value);
+            original_value -= original_value % size;
+            return view_as<T>(original_value);
+        }
+
+        template <typename T = uintptr_t>
+        static constexpr inline auto align_to_page_size(
+          T sizeToAlign,
+          std::size_t pageSize)
+        {
+            return view_as<T>(
+              ((view_as<std::size_t>(sizeToAlign) + (pageSize - 1))
+               / pageSize)
+              * pageSize);
+        }
+
+        template <typename T = uintptr_t>
+        static auto ProtectMemoryArea(pid_t pid,
+                                      T address,
+                                      std::size_t size,
+                                      mapf_t flags) -> void
+        {
+            auto aligned_address = align<ptr_t>(view_as<ptr_t>(address),
+                                                GetPageSize());
+            auto aligned_size = align_to_page_size(size, GetPageSize());
+#ifdef WINDOWS
+            auto process_handle = GetCurrentProcessId() == pid ?
+                                    GetCurrentProcess() :
+                                    OpenProcess(PROCESS_VM_OPERATION,
+                                                false,
+                                                view_as<DWORD>(pid));
+
+            if (process_handle == nullptr)
             {
-                auto original_value = view_as<uintptr_t>(value);
-                original_value -= original_value % size;
-                return view_as<T>(original_value);
+                XKLIB_EXCEPTION("Couldn't open process");
             }
 
-            template <typename T = uintptr_t>
-            static constexpr inline auto align_to_page_size(
-              T sizeToAlign,
-              std::size_t pageSize)
+            DWORD dwOldFlags;
+            auto ret = VirtualProtectEx(process_handle,
+                                        aligned_address,
+                                        aligned_size,
+                                        MemoryArea::ProtectionFlags::ToOS(
+                                          flags),
+                                        &dwOldFlags);
+
+            if (!ret)
             {
-                return view_as<T>(
-                  ((view_as<std::size_t>(sizeToAlign) + (pageSize - 1))
-                   / pageSize)
-                  * pageSize);
+                XKLIB_EXCEPTION("VirtualProtectEx failed");
             }
 
-            template <typename T = uintptr_t>
-            static auto ProtectMemoryArea(pid_t pid,
+            CloseHandle(process_handle);
+#else
+            auto ret = syscall(__NR_rmprotect,
+                               pid,
+                               aligned_address,
+                               aligned_size,
+                               MemoryArea::ProtectionFlags::ToOS(flags));
+
+            if (ret < 0)
+            {
+                XKLIB_EXCEPTION("System call rmprotect failed");
+            }
+#endif
+        }
+
+        template <typename T = uintptr_t>
+        static auto AllocArea(pid_t pid,
+                              T address,
+                              std::size_t size,
+                              mapf_t flags) -> ptr_t
+        {
+#ifdef WINDOWS
+            auto process_handle = GetCurrentProcessId() == pid ?
+                                    GetCurrentProcess() :
+                                    OpenProcess(PROCESS_VM_OPERATION,
+                                                false,
+                                                view_as<DWORD>(pid));
+
+            if (process_handle == nullptr)
+            {
+                XKLIB_EXCEPTION("Couldn't open process");
+            }
+
+            auto area_start = VirtualAllocEx(
+              process_handle,
+              view_as<ptr_t>(address),
+              size,
+              MEM_COMMIT | MEM_RESERVE,
+              MemoryArea::ProtectionFlags::ToOS(flags));
+
+            CloseHandle(process_handle);
+
+            return view_as<ptr_t>(area_start);
+#else
+            auto area_start = syscall(__NR_rmmap,
+                                      pid,
+                                      address,
+                                      size,
+                                      MemoryArea::ProtectionFlags::ToOS(
+                                        flags),
+                                      MAP_PRIVATE | MAP_ANONYMOUS,
+                                      0,
+                                      0);
+            return view_as<ptr_t>(area_start);
+#endif
+        }
+
+        template <typename T = uintptr_t>
+        static auto FreeArea(pid_t pid, T address, std::size_t size)
+          -> void
+        {
+#ifdef WINDOWS
+            auto process_handle = GetCurrentProcessId() == pid ?
+                                    GetCurrentProcess() :
+                                    OpenProcess(PROCESS_VM_OPERATION,
+                                                false,
+                                                view_as<DWORD>(pid));
+
+            if (process_handle == nullptr)
+            {
+                XKLIB_EXCEPTION("Couldn't open process");
+            }
+
+            auto ret = VirtualFreeEx(process_handle,
+                                     view_as<ptr_t>(address),
+                                     size,
+                                     MEM_RELEASE);
+
+            if (!ret)
+            {
+                XKLIB_EXCEPTION("VirtualFreeEx failed");
+            }
+
+            CloseHandle(process_handle);
+#else
+            auto ret = syscall(__NR_rmunmap, pid, address, size);
+
+            if (ret < 0)
+            {
+                XKLIB_EXCEPTION(+"System call rmunmap failed");
+            }
+#endif
+        }
+
+        template <typename T = uintptr_t>
+        static auto ReadProcessMemoryArea(pid_t pid,
                                           T address,
-                                          std::size_t size,
-                                          mapf_t flags) -> void
-            {
-                auto aligned_address = align<ptr_t>(view_as<ptr_t>(
-                                                      address),
-                                                    GetPageSize());
-                auto aligned_size    = align_to_page_size(size,
-                                                       GetPageSize());
-#ifdef WINDOWS
-                auto process_handle = GetCurrentProcessId() == pid ?
-                                        GetCurrentProcess() :
-                                        OpenProcess(PROCESS_VM_OPERATION,
-                                                    false,
-                                                    view_as<DWORD>(pid));
-
-                if (process_handle == nullptr)
-                {
-                    XKLIB_EXCEPTION("Couldn't open process");
-                }
-
-                DWORD dwOldFlags;
-                auto ret = VirtualProtectEx(
-                  process_handle,
-                  aligned_address,
-                  aligned_size,
-                  MemoryArea::ProtectionFlags::ToOS(flags),
-                  &dwOldFlags);
-
-                if (!ret)
-                {
-                    XKLIB_EXCEPTION("VirtualProtectEx failed");
-                }
-
-                CloseHandle(process_handle);
-#else
-                auto ret = syscall(__NR_rmprotect,
-                                   pid,
-                                   aligned_address,
-                                   aligned_size,
-                                   MemoryArea::ProtectionFlags::ToOS(
-                                     flags));
-
-                if (ret < 0)
-                {
-                    XKLIB_EXCEPTION("System call rmprotect failed");
-                }
-#endif
-            }
-
-            template <typename T = uintptr_t>
-            static auto AllocArea(pid_t pid,
-                                  T address,
-                                  std::size_t size,
-                                  mapf_t flags) -> ptr_t
-            {
-#ifdef WINDOWS
-                auto process_handle = GetCurrentProcessId() == pid ?
-                                        GetCurrentProcess() :
-                                        OpenProcess(PROCESS_VM_OPERATION,
-                                                    false,
-                                                    view_as<DWORD>(pid));
-
-                if (process_handle == nullptr)
-                {
-                    XKLIB_EXCEPTION("Couldn't open process");
-                }
-
-                auto area_start = VirtualAllocEx(
-                  process_handle,
-                  view_as<ptr_t>(address),
-                  size,
-                  MEM_COMMIT | MEM_RESERVE,
-                  MemoryArea::ProtectionFlags::ToOS(flags));
-
-                CloseHandle(process_handle);
-
-                return view_as<ptr_t>(area_start);
-#else
-                auto area_start = syscall(
-                  __NR_rmmap,
-                  pid,
-                  address,
-                  size,
-                  MemoryArea::ProtectionFlags::ToOS(flags),
-                  MAP_PRIVATE | MAP_ANONYMOUS,
-                  0,
-                  0);
-                return view_as<ptr_t>(area_start);
-#endif
-            }
-
-            template <typename T = uintptr_t>
-            static auto FreeArea(pid_t pid, T address, std::size_t size)
-              -> void
-            {
-#ifdef WINDOWS
-                auto process_handle = GetCurrentProcessId() == pid ?
-                                        GetCurrentProcess() :
-                                        OpenProcess(PROCESS_VM_OPERATION,
-                                                    false,
-                                                    view_as<DWORD>(pid));
-
-                if (process_handle == nullptr)
-                {
-                    XKLIB_EXCEPTION("Couldn't open process");
-                }
-
-                auto ret = VirtualFreeEx(process_handle,
-                                         view_as<ptr_t>(address),
-                                         size,
-                                         MEM_RELEASE);
-
-                if (!ret)
-                {
-                    XKLIB_EXCEPTION("VirtualFreeEx failed");
-                }
-
-                CloseHandle(process_handle);
-#else
-                auto ret = syscall(__NR_rmunmap, pid, address, size);
-
-                if (ret < 0)
-                {
-                    XKLIB_EXCEPTION(+"System call rmunmap failed");
-                }
-#endif
-            }
-
-            template <typename T = uintptr_t>
-            static auto ReadProcessMemoryArea(pid_t pid,
-                                              T address,
-                                              std::size_t size) -> bytes_t
-            {
-                bytes_t result(size);
+                                          std::size_t size) -> bytes_t
+        {
+            bytes_t result(size);
 
 #ifndef WINDOWS
-                iovec local  = { .iov_base = result.data(),
-                                 .iov_len  = result.size() };
-                iovec remote = { .iov_base = view_as<ptr_t>(address),
-                                 .iov_len  = result.size() };
+            iovec local  = { .iov_base = result.data(),
+                             .iov_len  = result.size() };
+            iovec remote = { .iov_base = view_as<ptr_t>(address),
+                             .iov_len  = result.size() };
 
-                auto ret = process_vm_readv(pid, &local, 1, &remote, 1, 0);
+            auto ret = process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
-                if (ret != view_as<decltype(ret)>(size))
-                {
-                    XKLIB_EXCEPTION("process_vm_readv failed with "
-                                    + std::to_string(address)
-                                    + " and size: "
-                                    + std::to_string(size));
-                }
+            if (ret != view_as<decltype(ret)>(size))
+            {
+                XKLIB_EXCEPTION("process_vm_readv failed with "
+                                + std::to_string(address)
+                                + " and size: " + std::to_string(size));
+            }
 #else
 
-                auto ret = Toolhelp32ReadProcessMemory(
-                  view_as<DWORD>(pid),
-                  view_as<ptr_t>(address),
-                  result.data(),
-                  result.size(),
-                  nullptr);
+            auto ret = Toolhelp32ReadProcessMemory(view_as<DWORD>(pid),
+                                                   view_as<ptr_t>(address),
+                                                   result.data(),
+                                                   result.size(),
+                                                   nullptr);
 
-                if (!ret)
-                {
-                    XKLIB_EXCEPTION("ReadProcessMemory failed with "
-                                    + std::to_string(address)
-                                    + " and size: "
-                                    + std::to_string(size));
-                }
+            if (!ret)
+            {
+                XKLIB_EXCEPTION("ReadProcessMemory failed with "
+                                + std::to_string(address)
+                                + " and size: " + std::to_string(size));
+            }
 #endif
 
-                return result;
-            }
+            return result;
+        }
 
-            template <typename A, typename T = uintptr_t>
-            static auto ReadProcessMemoryAreaAligned(pid_t pid,
-                                                     T address,
-                                                     std::size_t size)
-              -> std::vector<A>
-            {
-                std::vector<A> result(align_to_page_size(size, sizeof(A)));
+        template <typename A, typename T = uintptr_t>
+        static auto ReadProcessMemoryAreaAligned(pid_t pid,
+                                                 T address,
+                                                 std::size_t size)
+          -> std::vector<A>
+        {
+            std::vector<A> result(align_to_page_size(size, sizeof(A)));
 
 #ifndef WINDOWS
-                iovec local  = { .iov_base = result.data(),
-                                 .iov_len  = result.size() * sizeof(A) };
-                iovec remote = { .iov_base = view_as<ptr_t>(address),
-                                 .iov_len  = result.size() * sizeof(A) };
+            iovec local  = { .iov_base = result.data(),
+                             .iov_len  = result.size() * sizeof(A) };
+            iovec remote = { .iov_base = view_as<ptr_t>(address),
+                             .iov_len  = result.size() * sizeof(A) };
 
-                auto ret = process_vm_readv(pid, &local, 1, &remote, 1, 0);
+            auto ret = process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
-                if (ret != view_as<decltype(ret)>(size))
-                {
-                    XKLIB_EXCEPTION("process_vm_readv failed with "
-                                    + std::to_string(address)
-                                    + " and size: "
-                                    + std::to_string(size));
-                }
-#else
-
-                auto ret = Toolhelp32ReadProcessMemory(
-                  view_as<DWORD>(pid),
-                  view_as<ptr_t>(address),
-                  result.data(),
-                  result.size() * sizeof(A),
-                  nullptr);
-
-                if (!ret)
-                {
-                    XKLIB_EXCEPTION("ReadProcessMemory failed with "
-                                    + std::to_string(address)
-                                    + " and size: "
-                                    + std::to_string(size));
-                }
-#endif
-
-                return result;
-            }
-
-            template <typename T = uintptr_t>
-            static auto WriteProcessMemoryArea(pid_t pid,
-                                               const bytes_t& bytes,
-                                               T address) -> void
+            if (ret != view_as<decltype(ret)>(size))
             {
-#ifndef WINDOWS
-                iovec local = { .iov_base = view_as<data_t>(bytes.data()),
-                                .iov_len  = bytes.size() };
-                iovec remote = { .iov_base = view_as<ptr_t>(address),
-                                 .iov_len  = bytes.size() };
-
-                auto ret = process_vm_writev(pid,
-                                             &local,
-                                             1,
-                                             &remote,
-                                             1,
-                                             0);
-
-                if (ret != view_as<decltype(ret)>(bytes.size()))
-                {
-                    XKLIB_EXCEPTION("process_vm_writev failed");
-                }
-
+                XKLIB_EXCEPTION("process_vm_readv failed with "
+                                + std::to_string(address)
+                                + " and size: " + std::to_string(size));
+            }
 #else
-                auto process_handle = GetCurrentProcessId() == pid ?
-                                        GetCurrentProcess() :
-                                        OpenProcess(PROCESS_VM_OPERATION
-                                                      | PROCESS_VM_WRITE,
-                                                    false,
-                                                    view_as<DWORD>(pid));
 
-                if (process_handle == nullptr)
-                {
-                    XKLIB_EXCEPTION("Couldn't open process");
-                }
+            auto ret = Toolhelp32ReadProcessMemory(
+              view_as<DWORD>(pid),
+              view_as<ptr_t>(address),
+              result.data(),
+              result.size() * sizeof(A),
+              nullptr);
 
-                auto ret = WriteProcessMemory(process_handle,
-                                              view_as<ptr_t>(address),
-                                              bytes.data(),
-                                              bytes.size(),
-                                              nullptr);
-
-                if (!ret)
-                {
-                    XKLIB_EXCEPTION("WriteProcessMemory failed");
-                }
-
-                CloseHandle(process_handle);
+            if (!ret)
+            {
+                XKLIB_EXCEPTION("ReadProcessMemory failed with "
+                                + std::to_string(address)
+                                + " and size: " + std::to_string(size));
+            }
 #endif
+
+            return result;
+        }
+
+        template <typename T = uintptr_t>
+        static auto WriteProcessMemoryArea(pid_t pid,
+                                           const bytes_t& bytes,
+                                           T address) -> void
+        {
+#ifndef WINDOWS
+            iovec local  = { .iov_base = view_as<data_t>(bytes.data()),
+                             .iov_len  = bytes.size() };
+            iovec remote = { .iov_base = view_as<ptr_t>(address),
+                             .iov_len  = bytes.size() };
+
+            auto ret = process_vm_writev(pid, &local, 1, &remote, 1, 0);
+
+            if (ret != view_as<decltype(ret)>(bytes.size()))
+            {
+                XKLIB_EXCEPTION("process_vm_writev failed");
             }
 
-            static auto GetPageSize() -> std::size_t;
+#else
+            auto process_handle = GetCurrentProcessId() == pid ?
+                                    GetCurrentProcess() :
+                                    OpenProcess(PROCESS_VM_OPERATION
+                                                  | PROCESS_VM_WRITE,
+                                                false,
+                                                view_as<DWORD>(pid));
 
-        private:
-            static std::size_t _page_size;
-            static std::once_flag _get_page_size_once_flag;
+            if (process_handle == nullptr)
+            {
+                XKLIB_EXCEPTION("Couldn't open process");
+            }
+
+            auto ret = WriteProcessMemory(process_handle,
+                                          view_as<ptr_t>(address),
+                                          bytes.data(),
+                                          bytes.size(),
+                                          nullptr);
+
+            if (!ret)
+            {
+                XKLIB_EXCEPTION("WriteProcessMemory failed");
+            }
+
+            CloseHandle(process_handle);
+#endif
+        }
+
+        static auto GetPageSize() -> std::size_t;
+
+      private:
+        static std::size_t _page_size;
+        static std::once_flag _get_page_size_once_flag;
     };
 
 } // namespace XKLib

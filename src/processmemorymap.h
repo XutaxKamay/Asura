@@ -11,204 +11,201 @@ namespace XKLib
     class ProcessMemoryArea;
     class ProcessMemoryMap : public MemoryMap<ProcessMemoryArea>
     {
-        public:
-            explicit ProcessMemoryMap(ProcessBase process);
+      public:
+        explicit ProcessMemoryMap(ProcessBase process);
 
-        public:
-            auto refresh() -> void;
+      public:
+        auto refresh() -> void;
 
-        public:
-            template <typename T = uintptr_t>
-            auto searchNearestEmptyArea(T address)
+      public:
+        template <typename T = uintptr_t>
+        auto searchNearestEmptyArea(T address)
+        {
+            if (_areas.size() == 0)
             {
-                if (_areas.size() == 0)
+                return address;
+            }
+
+            struct simplified_area_t
+            {
+                uintptr_t begin;
+                uintptr_t end;
+            };
+
+            std::vector<simplified_area_t> simplified_areas;
+
+            /**
+             * Merge areas, even if they're not the same memory
+             * protections.
+             * Thanks to the operating system, the areas are already
+             * in order.
+             */
+            std::size_t area_index = 0;
+
+            while (area_index < _areas.size())
+            {
+                simplified_area_t simplified_area;
+
+                auto first_area = _areas[area_index];
+                auto begin_ptr  = first_area->begin();
+                auto end_ptr    = first_area->end();
+
+                for (area_index = area_index + 1;
+                     area_index < _areas.size();
+                     area_index++)
                 {
-                    return address;
-                }
+                    auto next_area = _areas[area_index];
 
-                struct simplified_area_t
-                {
-                        uintptr_t begin;
-                        uintptr_t end;
-                };
-
-                std::vector<simplified_area_t> simplified_areas;
-
-                /**
-                 * Merge areas, even if they're not the same memory
-                 * protections.
-                 * Thanks to the operating system, the areas are already
-                 * in order.
-                 */
-                std::size_t area_index = 0;
-
-                while (area_index < _areas.size())
-                {
-                    simplified_area_t simplified_area;
-
-                    auto first_area = _areas[area_index];
-                    auto begin_ptr  = first_area->begin();
-                    auto end_ptr    = first_area->end();
-
-                    for (area_index = area_index + 1;
-                         area_index < _areas.size();
-                         area_index++)
+                    /**
+                     * If begin ptr is the same as the previous end
+                     * then affect the new end ptr and go on the next
+                     * area
+                     */
+                    if (next_area->begin() == end_ptr)
                     {
-                        auto next_area = _areas[area_index];
-
-                        /**
-                         * If begin ptr is the same as the previous end
-                         * then affect the new end ptr and go on the next
-                         * area
-                         */
-                        if (next_area->begin() == end_ptr)
-                        {
-                            end_ptr = next_area->end();
-                        }
-                        /**
-                         * Else we break and find our newest non-merged
-                         * area
-                         */
-                        else
-                        {
-                            break;
-                        }
+                        end_ptr = next_area->end();
                     }
-
-                    simplified_area.begin = begin_ptr;
-                    simplified_area.end   = end_ptr;
-                    simplified_areas.push(simplified_area);
-                }
-
-                /**
-                 * Now find the closest area we can get
-                 */
-                uintptr_t start_ptr, end_ptr;
-
-                for (auto&& simplified_area : simplified_areas)
-                {
-                    start_ptr = simplified_area.begin;
-                    end_ptr   = simplified_area.end;
-
-                    if (view_as<uintptr_t>(address) >= start_ptr
-                        && view_as<uintptr_t>(address) < end_ptr)
+                    /**
+                     * Else we break and find our newest non-merged
+                     * area
+                     */
+                    else
                     {
                         break;
                     }
                 }
 
-                auto relative_address = view_as<uintptr_t>(address)
-                                        - start_ptr;
+                simplified_area.begin = begin_ptr;
+                simplified_area.end   = end_ptr;
+                simplified_areas.push(simplified_area);
+            }
 
-                auto area_size = end_ptr - start_ptr;
+            /**
+             * Now find the closest area we can get
+             */
+            uintptr_t start_ptr, end_ptr;
 
-                uintptr_t closest_area = 0x0;
+            for (auto&& simplified_area : simplified_areas)
+            {
+                start_ptr = simplified_area.begin;
+                end_ptr   = simplified_area.end;
 
-                if (relative_address > (area_size / 2))
+                if (view_as<uintptr_t>(address) >= start_ptr
+                    && view_as<uintptr_t>(address) < end_ptr)
                 {
-                    closest_area = end_ptr;
+                    break;
                 }
-                else
+            }
+
+            auto relative_address = view_as<uintptr_t>(address)
+                                    - start_ptr;
+
+            auto area_size = end_ptr - start_ptr;
+
+            uintptr_t closest_area = 0x0;
+
+            if (relative_address > (area_size / 2))
+            {
+                closest_area = end_ptr;
+            }
+            else
+            {
+                closest_area = start_ptr - MemoryUtils::GetPageSize();
+            }
+
+            return closest_area;
+        }
+
+        template <typename T = uintptr_t>
+        auto search(T address) -> std::shared_ptr<ProcessMemoryArea>
+        {
+            for (auto&& area : _areas)
+            {
+                auto start_ptr = area->begin();
+                auto end_ptr   = area->end();
+
+                if (view_as<uintptr_t>(address) >= start_ptr
+                    && view_as<uintptr_t>(address) < end_ptr)
                 {
-                    closest_area = start_ptr - MemoryUtils::GetPageSize();
+                    return area;
                 }
-
-                return closest_area;
             }
 
-            template <typename T = uintptr_t>
-            auto search(T address) -> std::shared_ptr<ProcessMemoryArea>
+            return nullptr;
+        }
+
+        template <typename T = uintptr_t>
+        auto allocArea(T address, std::size_t size, mapf_t flags) -> ptr_t
+        {
+            auto ret = MemoryUtils::AllocArea(_process_base.id(),
+                                              address,
+                                              size,
+                                              flags);
+
+            refresh();
+
+            return ret;
+        }
+
+        template <typename T = uintptr_t>
+        auto freeArea(T address, std::size_t size) -> void
+        {
+            MemoryUtils::FreeArea(_process_base.id(), address, size);
+
+            refresh();
+        }
+
+        template <typename T = uintptr_t>
+        auto protectMemoryArea(T address, std::size_t size, mapf_t flags)
+          -> void
+        {
+            MemoryUtils::ProtectMemoryArea(_process_base.id(),
+                                           address,
+                                           size,
+                                           flags);
+
+            refresh();
+        }
+
+        template <typename T = uintptr_t>
+        auto read(T address, std::size_t size) -> bytes_t
+        {
+            return MemoryUtils::ReadProcessMemoryArea(_process_base.id(),
+                                                      address,
+                                                      size);
+        }
+
+        template <typename T = uintptr_t>
+        auto write(T address, const bytes_t& bytes) -> void
+        {
+            MemoryUtils::WriteProcessMemoryArea(_process_base.id(),
+                                                bytes,
+                                                address);
+        }
+
+        template <typename T = uintptr_t>
+        auto forceWrite(T address, const bytes_t& bytes) -> void
+        {
+            refresh();
+
+            auto area = search(address);
+
+            if (!area)
             {
-                for (auto&& area : _areas)
-                {
-                    auto start_ptr = area->begin();
-                    auto end_ptr   = area->end();
-
-                    if (view_as<uintptr_t>(address) >= start_ptr
-                        && view_as<uintptr_t>(address) < end_ptr)
-                    {
-                        return area;
-                    }
-                }
-
-                return nullptr;
+                XKLIB_EXCEPTION("Could not find area");
             }
 
-            template <typename T = uintptr_t>
-            auto allocArea(T address, std::size_t size, mapf_t flags)
-              -> ptr_t
-            {
-                auto ret = MemoryUtils::AllocArea(_process_base.id(),
-                                                  address,
-                                                  size,
-                                                  flags);
+            area->protectionFlags() |= MemoryArea::ProtectionFlags::W;
 
-                refresh();
+            MemoryUtils::WriteProcessMemoryArea(_process_base.id(),
+                                                address,
+                                                bytes);
 
-                return ret;
-            }
+            area->resetToDefaultFlags();
+        }
 
-            template <typename T = uintptr_t>
-            auto freeArea(T address, std::size_t size) -> void
-            {
-                MemoryUtils::FreeArea(_process_base.id(), address, size);
-
-                refresh();
-            }
-
-            template <typename T = uintptr_t>
-            auto protectMemoryArea(T address,
-                                   std::size_t size,
-                                   mapf_t flags) -> void
-            {
-                MemoryUtils::ProtectMemoryArea(_process_base.id(),
-                                               address,
-                                               size,
-                                               flags);
-
-                refresh();
-            }
-
-            template <typename T = uintptr_t>
-            auto read(T address, std::size_t size) -> bytes_t
-            {
-                return MemoryUtils::ReadProcessMemoryArea(
-                  _process_base.id(),
-                  address,
-                  size);
-            }
-
-            template <typename T = uintptr_t>
-            auto write(T address, const bytes_t& bytes) -> void
-            {
-                MemoryUtils::WriteProcessMemoryArea(_process_base.id(),
-                                                    bytes,
-                                                    address);
-            }
-
-            template <typename T = uintptr_t>
-            auto forceWrite(T address, const bytes_t& bytes) -> void
-            {
-                refresh();
-
-                auto area = search(address);
-
-                if (!area)
-                {
-                    XKLIB_EXCEPTION("Could not find area");
-                }
-
-                area->protectionFlags() |= MemoryArea::ProtectionFlags::W;
-
-                MemoryUtils::WriteProcessMemoryArea(_process_base.id(),
-                                                    address,
-                                                    bytes);
-
-                area->resetToDefaultFlags();
-            }
-
-        private:
-            ProcessBase _process_base;
+      private:
+        ProcessBase _process_base;
     };
 };
 

@@ -7,17 +7,17 @@ namespace XKLib
 {
     class EncryptRSABlocks
     {
-        public:
-            EncryptRSABlocks(const CryptoPP::Integer& publicExponent,
-                             const CryptoPP::Integer& modulus);
-            explicit EncryptRSABlocks(CryptoPP::RSA::PublicKey publicKey);
+      public:
+        EncryptRSABlocks(const CryptoPP::Integer& publicExponent,
+                         const CryptoPP::Integer& modulus);
+        explicit EncryptRSABlocks(CryptoPP::RSA::PublicKey publicKey);
 
-        public:
-            auto publicKey() -> auto&;
-            auto encrypt(const bytes_t& bytes) -> bytes_t;
+      public:
+        auto publicKey() -> auto&;
+        auto encrypt(const bytes_t& bytes) -> bytes_t;
 
-        private:
-            CryptoPP::RSA::PublicKey _public_key {};
+      private:
+        CryptoPP::RSA::PublicKey _public_key {};
     };
 };
 

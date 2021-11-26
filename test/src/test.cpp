@@ -625,34 +625,34 @@ auto XKLib::Test::run() -> void
 
     class TestMember : public Offset
     {
-        public:
-            TestMember()
-            {
-                _first = new Something();
-            }
+      public:
+        TestMember()
+        {
+            _first = new Something();
+        }
 
-            ~TestMember()
-            {
-                delete _first;
-            }
+        ~TestMember()
+        {
+            delete _first;
+        }
 
-            void call_me(int something)
-            {
-                std::cout << "hehe" << something << std::endl;
-            }
+        void call_me(int something)
+        {
+            std::cout << "hehe" << something << std::endl;
+        }
 
-            class Something
-            {
-                public:
-                    int ok = 1337;
-            };
+        class Something
+        {
+          public:
+            int ok = 1337;
+        };
 
-            auto first()
-            {
-                return *member_at<0x0, Something**>();
-            }
+        auto first()
+        {
+            return *member_at<0x0, Something**>();
+        }
 
-            Something* _first;
+        Something* _first;
     };
 
     TestMember member;

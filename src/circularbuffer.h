@@ -12,57 +12,57 @@ namespace XKLib
      */
     class CircularBuffer
     {
-        public:
-            using pT = T*;
+      public:
+        using pT = T*;
 
-            enum push_type_t
-            {
-                Filling,
-                Updating
-            };
+        enum push_type_t
+        {
+            Filling,
+            Updating
+        };
 
-        public:
-            /**
-             * @brief push
-             * @param element
-             * @return push_type_t
-             * Pushes your element as the first element into the history
-             * buffer.
-             */
-            auto push(T element);
-            /**
-             * @brief get
-             * @param wantedSlot
-             * @return int
-             * Get the desired element from the history buffer from a
-             * index/slot.
-             */
-            auto get(int wantedSlot = 0);
+      public:
+        /**
+         * @brief push
+         * @param element
+         * @return push_type_t
+         * Pushes your element as the first element into the history
+         * buffer.
+         */
+        auto push(T element);
+        /**
+         * @brief get
+         * @param wantedSlot
+         * @return int
+         * Get the desired element from the history buffer from a
+         * index/slot.
+         */
+        auto get(int wantedSlot = 0);
 
-        private:
-            /**
-             * @brief _slot
-             * @param wantedSlot
-             * @return int
-             */
-            auto _slot(int wantedSlot = 0);
+      private:
+        /**
+         * @brief _slot
+         * @param wantedSlot
+         * @return int
+         */
+        auto _slot(int wantedSlot = 0);
 
-        private:
-            /**
-             * @brief _buffer
-             * Buffer to the elements that will construct history.
-             */
-            T _buffer[max_history_T] {};
-            /**
-             * @brief _filled_history
-             * Counts the elements filled into history.
-             */
-            int _filled_history {};
-            /**
-             * @brief _index
-             * The index/slot of the first element into history.
-             */
-            int _index {};
+      private:
+        /**
+         * @brief _buffer
+         * Buffer to the elements that will construct history.
+         */
+        T _buffer[max_history_T] {};
+        /**
+         * @brief _filled_history
+         * Counts the elements filled into history.
+         */
+        int _filled_history {};
+        /**
+         * @brief _index
+         * The index/slot of the first element into history.
+         */
+        int _index {};
     };
 
     template <typename T, std::size_t max_history_T>

@@ -9,21 +9,21 @@ namespace XKLib
     class Task;
     class ProcessBase
     {
-            friend Process;
-            friend Task;
+        friend Process;
+        friend Task;
 
-        public:
-            static auto self() -> ProcessBase;
+      public:
+        static auto self() -> ProcessBase;
 
-        private:
-            explicit ProcessBase(pid_t);
+      private:
+        explicit ProcessBase(pid_t);
 
-        public:
-            auto setPID(pid_t pid);
-            auto id() -> pid_t;
+      public:
+        auto setPID(pid_t pid);
+        auto id() -> pid_t;
 
-        private:
-            pid_t _pid {};
+      private:
+        pid_t _pid {};
     };
 };
 

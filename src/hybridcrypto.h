@@ -14,24 +14,24 @@ namespace XKLib
      */
     class HybridCrypt
     {
-            /** HybridCrypt data /*/
+        /** HybridCrypt data /*/
 
-            /**
-             * @brief AESKeySize
-             */
-            static constexpr auto AESKeySize = CryptoPP::AES::MAX_KEYLENGTH;
-            /**
-             * @brief AESIVSize
-             */
-            static constexpr auto AESIVSize = CryptoPP::AES::BLOCKSIZE;
-            /**
-             * @brief The AESData_t struct
-             */
-            struct AESData_t
-            {
-                    std::array<CryptoPP::byte, AESKeySize> key;
-                    std::array<CryptoPP::byte, AESIVSize> iv;
-            };
+        /**
+         * @brief AESKeySize
+         */
+        static constexpr auto AESKeySize = CryptoPP::AES::MAX_KEYLENGTH;
+        /**
+         * @brief AESIVSize
+         */
+        static constexpr auto AESIVSize = CryptoPP::AES::BLOCKSIZE;
+        /**
+         * @brief The AESData_t struct
+         */
+        struct AESData_t
+        {
+            std::array<CryptoPP::byte, AESKeySize> key;
+            std::array<CryptoPP::byte, AESIVSize> iv;
+        };
     };
 
 } // namespace XKLib
