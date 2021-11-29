@@ -512,6 +512,8 @@ auto XKLib::Test::run() -> void
             }
         }
 
+        pattern_bytes[0] = PatternByte::Value::UNKNOWN;
+
         PatternByte pattern(pattern_bytes);
 
         auto process = Process::self();
@@ -551,20 +553,6 @@ auto XKLib::Test::run() -> void
         timer.end();
 
         ConsoleOutput("v2 scan took: ")
-          << std::dec << timer.difference() << " nanoseconds "
-          << "with: "
-          << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
-          << " page count and " << pattern.bytes().size()
-          << " of pattern size in bytes" << std::endl;
-
-        timer.start();
-        PatternScanning::searchTest(pattern,
-                                    aligned_memory,
-                                    size_of_random * 8,
-                                    nullptr);
-        timer.end();
-
-        ConsoleOutput("test scan took: ")
           << std::dec << timer.difference() << " nanoseconds "
           << "with: "
           << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
