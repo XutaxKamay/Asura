@@ -170,12 +170,6 @@ auto XKLib::PatternByte::isValid() -> bool
         }
     }
 
-    /* ? xx xx ... */
-    if (_bytes[0].value == Value::UNKNOWN)
-    {
-        return false;
-    }
-
     /* xx xx ? */
     if (_bytes[_bytes.size() - 1].value == Value::UNKNOWN)
     {
