@@ -69,6 +69,24 @@ namespace XKLib
                              data_t data,
                              std::size_t size,
                              ptr_t baseAddress) -> bool;
+
+        /**
+         * @brief searchV3
+         * @param pattern
+         * @param data
+         * @param size
+         * @param baseAddress
+         * @return
+         *
+         * TODO:
+         * This one is a byte by byte check, skipping the unknown
+         * bytes when it can combined with Boye Moore's Algorithm.
+         */
+        static auto searchV3(PatternByte& pattern,
+                             data_t data,
+                             std::size_t size,
+                             ptr_t baseAddress) -> bool;
+
         /**
          * @brief searchAlignedV1
          * @param pattern
@@ -84,43 +102,6 @@ namespace XKLib
                                     data_t aligned_data,
                                     std::size_t size,
                                     ptr_t baseAddress) -> bool;
-
-        /**
-         * @brief searchAlignedV2
-         * @param pattern
-         * @param aligned_data
-         * @param size
-         * @param baseAddress
-         * @return
-         *
-         * This one is the same as V1, but works on pattern that was
-         * previously taken on aligned code. This is extremely fast.
-         */
-        static auto searchAlignedV2(PatternByte& pattern,
-                                    data_t aligned_data,
-                                    std::size_t size,
-                                    ptr_t baseAddress) -> bool;
-
-        /**
-         * V3 can't be implemented as aligned because in order to load
-         * simd value, the memory is at some point not aligned due to
-         * the bytes we skip
-         */
-
-        /**
-         * @brief searchTest
-         * @param pattern
-         * @param aligned_data
-         * @param size
-         * @param baseAddress
-         * @return
-         *
-         * This is the one who has been copied over and over again.
-         */
-        static auto searchTest(PatternByte& pattern,
-                               data_t data,
-                               std::size_t size,
-                               ptr_t baseAddress) -> bool;
     };
 };
 
