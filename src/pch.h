@@ -76,6 +76,7 @@
 
 /* SIMD */
 #include <immintrin.h>
+#include <bmiintrin.h>
 
 /* CryptoPP */
 #include "vendor/cryptopp/aes.h"
