@@ -114,7 +114,8 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
         /* do wo we got a full simd value here */
         if (byte_simd_index >= sizeof(simd_value_t))
         {
-            _fast_aligned_mvs.push_back({ simd_mask, simd_value });
+            _fast_aligned_mvs.push_back(
+              { simd_mask, simd_value, sizeof(simd_value_t) });
 
             /* reset values */
             std::memset(&simd_value, 0, sizeof(simd_value));
@@ -135,7 +136,8 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
      */
     if (byte_simd_index > 0)
     {
-        _fast_aligned_mvs.push_back({ simd_mask, simd_value });
+        _fast_aligned_mvs.push_back(
+          { simd_mask, simd_value, byte_simd_index });
     }
 }
 

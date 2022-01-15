@@ -1,9 +1,6 @@
 #ifndef MEMORYUTILS_H
 #define MEMORYUTILS_H
 
-#include <mutex>
-#include <thread>
-
 #include "custom_linux_syscalls.h"
 #include "exception.h"
 #include "memoryarea.h"

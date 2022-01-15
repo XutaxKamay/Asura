@@ -79,8 +79,7 @@ namespace XKLib
          * @return
          *
          * TODO:
-         * This one is a byte by byte check, skipping the unknown
-         * bytes when it can combined with Boye Moore's Algorithm.
+         * SIMD Boye Moore's Algorithm.
          */
         static auto searchV3(PatternByte& pattern,
                              data_t data,
@@ -95,7 +94,7 @@ namespace XKLib
          * @param baseAddress
          * @return
          *
-         * This one is the same as V2, but works on pattern that was
+         * This one is the same as V1, but works on pattern that was
          * previously taken on aligned code. This is extremely fast.
          */
         static auto searchAlignedV1(PatternByte& pattern,

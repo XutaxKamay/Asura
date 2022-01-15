@@ -52,6 +52,7 @@ namespace XKLib
         {
             simd_value_t mask;
             simd_value_t value;
+            std::size_t size;
         };
 
         struct organized_values_t

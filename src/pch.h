@@ -64,9 +64,11 @@
 #include <limits>
 #include <list>
 #include <memory>
+#include <mutex>
 #include <random>
 #include <regex>
 #include <sstream>
+#include <thread>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -76,7 +78,8 @@
 
 /* SIMD */
 #include <immintrin.h>
-#include <bmiintrin.h>
+#include <mmintrin.h>
+#include <x86gprintrin.h>
 
 /* CryptoPP */
 #include "vendor/cryptopp/aes.h"
