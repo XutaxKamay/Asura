@@ -199,8 +199,9 @@ auto XKLib::Test::run() -> void
 
     for (auto&& area : mmap.areas())
     {
-        std::cout << std::hex << area->begin() << " -> " << area->name()
-                  << std::endl;
+        std::cout << std::hex << "[ " << area->begin() << " - "
+                  << area->end() << " ]"
+                  << " -> " << area->name() << std::endl;
     }
 
     try
