@@ -16,7 +16,7 @@ namespace XKLib
           const std::function<
             auto(PatternByte&, data_t, std::size_t, ptr_t)->bool>&
             searchMethod
-          = searchV1) -> void;
+          = searchV3) -> void;
 
         static auto searchInProcessWithAreaName(
           PatternByte& pattern,
@@ -25,7 +25,7 @@ namespace XKLib
           const std::function<
             auto(PatternByte&, data_t, std::size_t, ptr_t)->bool>&
             searchMethod
-          = searchV1) -> void;
+          = searchV3) -> void;
 
         /**
          * @brief searchV1

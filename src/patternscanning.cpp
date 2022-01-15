@@ -194,7 +194,7 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
          * Invert bits with cmp result and turn them into bits so we can
          * find the first set, so the mismatched byte.
          */
-        unsigned long long mismatch_byte_num = __builtin_ffsll(cmp);
+        const unsigned long long mismatch_byte_num = __builtin_ffsll(cmp);
 
         /* this part of the pattern mismatched ? */
         if (mismatch_byte_num > 0
