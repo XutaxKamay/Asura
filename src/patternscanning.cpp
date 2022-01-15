@@ -194,7 +194,7 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
          * Invert bits with cmp result and turn them into bits so we can
          * find the first set, so the mismatched byte.
          */
-        const unsigned long long mismatch_byte_num = __builtin_ffsll(cmp);
+        const std::size_t mismatch_byte_num = __builtin_ffsll(cmp);
 
         /* this part of the pattern mismatched ? */
         if (mismatch_byte_num > 0
@@ -218,7 +218,7 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
              * Do no enter if the last character of that part is
              * mismatching
              */
-            if (mismatch_byte_num < it_mv->size)
+            if (mismatch_byte_num < it_mv->part_size)
             {
                 const auto mask_value = _mm_and_simd_value(
                   simd_tmp,
@@ -237,17 +237,18 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
                   mask_value,
                   _mm_load_simd_value(&it_mv->value));
 
-                const unsigned long long match_byte_num = __builtin_ffsll(
+                const std::size_t match_byte_num = __builtin_ffsll(
                   cmp & other_bit_mask);
 
-                if (match_byte_num > 0 && match_byte_num <= it_mv->size)
+                if (match_byte_num > 0
+                    && match_byte_num <= it_mv->part_size)
                 {
                     to_skip  = match_byte_num - mismatch_byte_num;
                     bad_char = false;
                 }
                 else
                 {
-                    to_skip = it_mv->size - mismatch_byte_num;
+                    to_skip = it_mv->part_size - mismatch_byte_num;
                 }
             }
 
@@ -268,7 +269,7 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
                       mask_value,
                       _mm_load_simd_value(&it_mv->value));
 
-                    const unsigned long long match_byte_num = __builtin_ffsll(
+                    const std::size_t match_byte_num = __builtin_ffsll(
                       cmp);
 
                     /**
@@ -276,7 +277,7 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
                      * the rest of the pattern
                      */
                     if (match_byte_num > 0
-                        && match_byte_num <= it_mv->size)
+                        && match_byte_num <= it_mv->part_size)
                     {
                         to_skip += match_byte_num - 1;
                         bad_char = false;
@@ -284,7 +285,7 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
                         break;
                     }
 
-                    to_skip += it_mv->size;
+                    to_skip += it_mv->part_size;
                     it_mv++;
                 }
             }
@@ -323,7 +324,7 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
             }
             else
             {
-                current_data += it_mv->size;
+                current_data += it_mv->part_size;
                 it_mv++;
             }
         }
