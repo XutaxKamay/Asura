@@ -4,6 +4,55 @@
 
 #include "patternbyte.h"
 
+#if defined(__AVX512F__)
+    #define _mm_cmp_pi8_simd_value(mm1, mm2)                             \
+        _mm512_cmpeq_epi8_mask(mm1, mm2)
+#elif defined(__AVX2__)
+    #define _mm_cmp_pi8_simd_value(mm1, mm2)                             \
+        _mm256_movemask_epi8(_mm256_cmpeq_epi8(mm1, mm2))
+#else
+    #define _mm_cmp_pi8_simd_value(mm1, mm2)                             \
+        _mm_movemask_pi8(_mm_cmpeq_pi8(mm1, mm2))
+#endif
+
+#if defined(__AVX512F__)
+    #define _mm_and_simd_value(mm1, mm2) _mm512_and_si512(mm1, mm2)
+#elif defined(__AVX2__)
+    #define _mm_and_simd_value(mm1, mm2) _mm256_and_si256(mm1, mm2)
+#else
+    #define _mm_and_simd_value(mm1, mm2) _mm_and_si64(mm1, mm2)
+#endif
+
+#if defined(__AVX512F__)
+    #define _mm_load_simd_value(mm1)                                     \
+        _mm512_load_si512(view_as<PatternByte::simd_value_t*>(mm1))
+#elif defined(__AVX2__)
+    #define _mm_load_simd_value(mm1)                                     \
+        _mm256_load_si256(view_as<PatternByte::simd_value_t*>(mm1))
+#else
+    #define _mm_load_simd_value(mm1)                                     \
+        _mm_cvtsi64_m64(*view_as<uint64_t*>(mm1))
+#endif
+
+#if defined(__AVX512F__)
+    #define _mm_loadu_simd_value(mm1)                                    \
+        _mm512_loadu_si512(view_as<PatternByte::simd_value_t*>(mm1))
+#elif defined(__AVX2__)
+    #define _mm_loadu_simd_value(mm1)                                    \
+        _mm256_loadu_si256(view_as<PatternByte::simd_value_t*>(mm1))
+#else
+    #define _mm_loadu_simd_value(mm1)                                    \
+        _mm_cvtsi64_m64(*view_as<uint64_t*>(mm1))
+#endif
+
+#if defined(__AVX512F__)
+    #define _mm_set_pi8_simd_value(xx) _mm512_set1_epi8(xx)
+#elif defined(__AVX2__)
+    #define _mm_set_pi8_simd_value(xx) _mm256_set1_epi8(xx)
+#else
+    #define _mm_set_pi8_simd_value(xx) _mm_set1_pi8(xx)
+#endif
+
 auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
                                       data_t data,
                                       std::size_t size,
@@ -132,20 +181,20 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
     while (current_data >= data + pattern_size)
     {
         /* get masked value */
-        const auto mask_value = _mm_and_si64(
-          *view_as<__m64*>(current_data),
-          *view_as<__m64*>(&it_mv->mask));
+        const auto mask_value = _mm_and_simd_value(
+          _mm_loadu_simd_value(current_data),
+          _mm_load_simd_value(&it_mv->mask));
 
         /* compare with our value (with unknown bytes due to mask) */
-        const auto cmp = _mm_cmpeq_pi8(mask_value,
-                                       *view_as<__m64*>(&it_mv->value));
+        const auto cmp = ~_mm_cmp_pi8_simd_value(mask_value,
+                                                 _mm_load_simd_value(
+                                                   &it_mv->value));
 
         /**
          * Invert bits with cmp result and turn them into bits so we can
          * find the first set, so the mismatched byte.
          */
-        std::size_t mismatch_byte_num = __builtin_ffs(
-          ~_mm_movemask_pi8(cmp));
+        unsigned long long mismatch_byte_num = __builtin_ffsll(cmp);
 
         /* this part of the pattern mismatched ? */
         if (mismatch_byte_num > 0
@@ -156,55 +205,54 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
              * current data ptr
              */
 
-            const auto index = mismatch_byte_num;
-
-            /* Convert to index */
-            mismatch_byte_num--;
-
             /* get the mismatched byte */
             const auto byte_mismatched = *(current_data
-                                           + mismatch_byte_num);
+                                           + mismatch_byte_num - 1);
 
-            bool badChar        = true;
+            bool bad_char       = true;
             std::size_t to_skip = 0;
 
-            const auto simd_tmp = _mm_set1_pi8(byte_mismatched);
+            const auto simd_tmp = _mm_set_pi8_simd_value(byte_mismatched);
 
             /**
              * Do no enter if the last character of that part is
              * mismatching
              */
-            if (index < it_mv->size)
+            if (mismatch_byte_num < it_mv->size)
             {
-                const auto mask_value = _mm_and_si64(simd_tmp,
-                                                     *view_as<__m64*>(
-                                                       &it_mv->mask));
+                const auto mask_value = _mm_and_simd_value(
+                  simd_tmp,
+                  _mm_load_simd_value(&it_mv->mask));
 
-                /* 0xFF.. >> index * 8 */
-                const auto other_mask = _mm_slli_si64(_mm_set1_pi8(0xFF),
-                                                      index * CHAR_BIT);
+                /* (0xFF... << mismatch_byte_num) & __mmask<size> */
+                const unsigned long long other_bit_mask = (std::numeric_limits<
+                                                             uint64_t>::max()
+                                                           << mismatch_byte_num)
+                                                          & ((1ull << sizeof(
+                                                                PatternByte::
+                                                                  simd_value_t))
+                                                             - 1ull);
 
-                const auto cmp = _mm_and_si64(
-                  _mm_cmpeq_pi8(mask_value,
-                                *view_as<__m64*>(&it_mv->value)),
-                  other_mask);
+                const auto cmp = _mm_cmp_pi8_simd_value(
+                  mask_value,
+                  _mm_load_simd_value(&it_mv->value));
 
-                const std::size_t match_byte_num = __builtin_ffs(
-                  _mm_movemask_pi8(cmp));
+                const unsigned long long match_byte_num = __builtin_ffsll(
+                  cmp & other_bit_mask);
 
                 if (match_byte_num > 0 && match_byte_num <= it_mv->size)
                 {
-                    to_skip = match_byte_num - index;
-                    badChar = false;
+                    to_skip  = match_byte_num - mismatch_byte_num;
+                    bad_char = false;
                 }
                 else
                 {
-                    to_skip = it_mv->size - index;
+                    to_skip = it_mv->size - mismatch_byte_num;
                 }
             }
 
             /* Did we not find it ? */
-            if (badChar)
+            if (bad_char)
             {
                 /* Pass on the next part */
                 it_mv++;
@@ -212,16 +260,16 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
                 /* Then search inside the rest of the pattern */
                 while (it_mv != fast_aligned_mvs.end())
                 {
-                    const auto mask_value = _mm_and_si64(simd_tmp,
-                                                         *view_as<__m64*>(
-                                                           &it_mv->mask));
+                    const auto mask_value = _mm_and_simd_value(
+                      simd_tmp,
+                      _mm_load_simd_value(&it_mv->mask));
 
-                    const auto cmp = _mm_cmpeq_pi8(mask_value,
-                                                   *view_as<__m64*>(
-                                                     &it_mv->value));
+                    const auto cmp = _mm_cmp_pi8_simd_value(
+                      mask_value,
+                      _mm_load_simd_value(&it_mv->value));
 
-                    const std::size_t match_byte_num = __builtin_ffs(
-                      _mm_movemask_pi8(cmp));
+                    const std::size_t match_byte_num = __builtin_ffsll(
+                      cmp);
 
                     /**
                      * Matched, we found the mismatched byte inside
@@ -231,7 +279,7 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
                         && match_byte_num <= it_mv->size)
                     {
                         to_skip += match_byte_num - 1;
-                        badChar = false;
+                        bad_char = false;
                         /* exit */
                         break;
                     }
@@ -242,7 +290,7 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
             }
 
             /* if bad, we skip past to the last mismatched char */
-            if (badChar)
+            if (bad_char)
             {
                 /* set new cursor before the mismatched char (skip + 1) */
                 start_data -= to_skip + 1;

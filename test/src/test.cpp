@@ -463,7 +463,6 @@ auto XKLib::Test::run() -> void
     ConsoleOutput("size of orginal: ")
       << random_bytes.size() << std::endl;
 
-    /*
     {
         auto encoded = XKC<byte_t>::encode(random_bytes);
 
@@ -477,111 +476,118 @@ auto XKLib::Test::run() -> void
                          decoded.data(),
                          decoded.size())
           << std::endl;
-    }*/
+    }
 
     Timer timer {};
 
-    /*
-
-auto aligned_memory = align_alloc<data_t>(
-size_of_random * 8,
-sizeof(PatternByte::simd_value_t));
-
-*/
+    auto aligned_memory = align_alloc<data_t>(
+      size_of_random * 8,
+      sizeof(PatternByte::simd_value_t));
 
     try
     {
-        /* std::vector<PatternByte::Value> pattern_bytes;
+        std::vector<PatternByte::Value> pattern_bytes;
 
-         random_bytes.clear();
+        random_bytes.clear();
 
-         for (std::size_t i = 0; i < size_of_random; i++)
-         {
-             random_bytes.push_back(view_as<byte_t>(rand() % 256));
-         }
+        for (std::size_t i = 0; i < size_of_random; i++)
+        {
+            random_bytes.push_back(view_as<byte_t>(rand() % 256));
+        }
 
-         for (auto&& byte : random_bytes)
-         {
-             pattern_bytes.push_back(byte);
-         }
+        for (auto&& byte : random_bytes)
+        {
+            pattern_bytes.push_back(byte);
+        }
 
-         for (std::size_t i = 1; i < size_of_random - 1; i++)
-         {
-             if ((rand() % (1 << 16)) == 0)
-             {
-                 for (std::size_t j = 0;
-                      j < (512 + view_as<std::size_t>(rand() % (1 << 10)))
-                      && (j + i < size_of_random);
-                      j++)
-                 {
-                     pattern_bytes[i + j].value =
-         PatternByte::Value::UNKNOWN;
-                 }
-             }
-         }
+        for (std::size_t i = 1; i < size_of_random - 1; i++)
+        {
+            if ((rand() % (1 << 16)) == 0)
+            {
+                for (std::size_t j = 0;
+                     j < (512 + view_as<std::size_t>(rand() % (1 << 10)))
+                     && (j + i < size_of_random);
+                     j++)
+                {
+                    pattern_bytes[i + j].value = PatternByte::Value::UNKNOWN;
+                }
+            }
+        }
 
-         pattern_bytes[0] = PatternByte::Value::UNKNOWN;
+        pattern_bytes[0] = PatternByte::Value::UNKNOWN;
 
-         PatternByte pattern(pattern_bytes);
+        PatternByte pattern(pattern_bytes);
 
-         auto process = Process::self();
+        auto process = Process::self();
 
-         for (std::size_t i = 0; i < 7; i++)
-         {
-             std::memcpy(&aligned_memory[size_of_random * i],
-                         random_bytes.data(),
-                         size_of_random - 1);
-         }
+        for (std::size_t i = 0; i < 7; i++)
+        {
+            std::memcpy(&aligned_memory[size_of_random * i],
+                        random_bytes.data(),
+                        size_of_random - 1);
+        }
 
-         std::memcpy(&aligned_memory[size_of_random * 7],
-                     random_bytes.data(),
-                     size_of_random);
+        std::memcpy(&aligned_memory[size_of_random * 7],
+                    random_bytes.data(),
+                    size_of_random);
 
+        timer.start();
+        PatternScanning::searchV1(pattern,
+                                  aligned_memory,
+                                  random_bytes.size() * 8,
+                                  nullptr);
+        timer.end();
 
-             timer.start();
-             PatternScanning::searchV1(pattern,
-                                       aligned_memory,
-                                       random_bytes.size() * 8,
-                                       nullptr);
-             timer.end();
+        ConsoleOutput("v1 scan took: ")
+          << std::dec << timer.difference() << " nanoseconds "
+          << "with: "
+          << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
+          << " page count and " << pattern.bytes().size()
+          << " of pattern size in bytes" << std::endl;
 
-             ConsoleOutput("v1 scan took: ")
-               << std::dec << timer.difference() << " nanoseconds "
-               << "with: "
-               << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
-               << " page count and " << pattern.bytes().size()
-               << " of pattern size in bytes" << std::endl;
+        timer.start();
+        PatternScanning::searchV2(pattern,
+                                  aligned_memory,
+                                  size_of_random * 8,
+                                  nullptr);
+        timer.end();
 
-             timer.start();
-             PatternScanning::searchV2(pattern,
-                                       aligned_memory,
-                                       size_of_random * 8,
-                                       nullptr);
-             timer.end();
+        ConsoleOutput("v2 scan took: ")
+          << std::dec << timer.difference() << " nanoseconds "
+          << "with: "
+          << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
+          << " page count and " << pattern.bytes().size()
+          << " of pattern size in bytes" << std::endl;
 
-             ConsoleOutput("v2 scan took: ")
-               << std::dec << timer.difference() << " nanoseconds "
-               << "with: "
-               << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
-               << " page count and " << pattern.bytes().size()
-               << " of pattern size in bytes" << std::endl;
+        timer.start();
+        PatternScanning::searchV3(pattern,
+                                  aligned_memory,
+                                  size_of_random * 8,
+                                  nullptr);
+        timer.end();
 
-             timer.start();
-             PatternScanning::searchAlignedV1(pattern,
-                                              aligned_memory,
-                                              size_of_random * 8,
-                                              nullptr);
-             timer.end();
+        ConsoleOutput("v3 scan took: ")
+          << std::dec << timer.difference() << " nanoseconds "
+          << "with: "
+          << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
+          << " page count and " << pattern.bytes().size()
+          << " of pattern size in bytes" << std::endl;
 
-             ConsoleOutput("aligned v1 scan took: ")
-               << std::dec << timer.difference() << " nanoseconds "
-               << "with: "
-               << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
-               << " page count and " << pattern.bytes().size()
-               << " of pattern size in bytes" << std::endl;
+        timer.start();
+        PatternScanning::searchAlignedV1(pattern,
+                                         aligned_memory,
+                                         size_of_random * 8,
+                                         nullptr);
+        timer.end();
 
-           */
+        ConsoleOutput("aligned v1 scan took: ")
+          << std::dec << timer.difference() << " nanoseconds "
+          << "with: "
+          << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
+          << " page count and " << pattern.bytes().size()
+          << " of pattern size in bytes" << std::endl;
 
+        /*
         static PatternByte pattern2({ 'T',
                                       'A',
                                       'T',
@@ -618,12 +624,13 @@ sizeof(PatternByte::simd_value_t));
           << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
           << " page count and " << pattern2.bytes().size()
           << " of pattern size in bytes" << std::endl;
+          */
 
-        if (pattern2.matches().size() != 0)
+        if (pattern.matches().size() != 0)
         {
             ConsoleOutput("Found match(es):") << std::endl;
 
-            for (auto&& match : pattern2.matches())
+            for (auto&& match : pattern.matches())
             {
                 std::cout
                   << "   " << match << " at pos: "
@@ -641,7 +648,7 @@ sizeof(PatternByte::simd_value_t));
         ConsoleOutput(e.msg()) << std::endl;
     }
 
-    /* align_free(aligned_memory); */
+    align_free(aligned_memory);
 
     class TestMember : public Offset
     {
