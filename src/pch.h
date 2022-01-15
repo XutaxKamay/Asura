@@ -79,7 +79,6 @@
 /* SIMD */
 #include <immintrin.h>
 #include <mmintrin.h>
-#include <x86gprintrin.h>
 
 /* CryptoPP */
 #include "vendor/cryptopp/aes.h"
