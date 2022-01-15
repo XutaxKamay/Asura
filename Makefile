@@ -40,7 +40,7 @@ else
   PTHREAD_LIB:=-lpthread
 endif
 
-MOREFLAGS:=$(MOREFLAGS) -fPIC -std=c++20 -Wno-ignored-optimization-argument -Wno-unused-command-line-argument
+MOREFLAGS:=$(MOREFLAGS) -std=c++20 -Wno-ignored-optimization-argument -Wno-unused-command-line-argument
 
 XKLIB_OBJ_DEBUG=$(subst .cpp,$(XKLIB_OBJ_DEBUG_OUT),$(wildcard src/*.cpp))
 XKLIB_OBJ_RELEASE=$(subst .cpp,$(XKLIB_OBJ_RELEASE_OUT),$(wildcard src/*.cpp))
@@ -75,35 +75,35 @@ cryptopplib:
 .PHONY: all clean
 
 $(PCH_COMPILED_DBG): $(PCH)
-	$(CXX) -c $(CPPFLAGS_DEBUG) -o $@ $<
+	$(CXX) -c -Wno-deprecated $(CPPFLAGS_DEBUG) -o $@ $<
 
 $(PCH_COMPILED_REL): $(PCH)
-	$(CXX) -c $(CPPFLAGS_RELEASE) -o $@ $<
+	$(CXX) -c -Wno-deprecated $(CPPFLAGS_RELEASE) -o $@ $<
 
 $(XKLIB_DEBUG): cryptopplib $(XKLIB_OBJ_DEBUG)
 	ar rcs $@ $(XKLIB_OBJ_DEBUG)
 
 $(XKLIB_OBJ_DEBUG): %$(XKLIB_OBJ_DEBUG_OUT): %.cpp $(PCH_COMPILED_DBG)
-	$(CXX) -c $(CPPFLAGS_DEBUG) $< -o $@
+	$(CXX) -c -fPIC $(CPPFLAGS_DEBUG) $< -o $@
 
 $(XKLIB_RELEASE): cryptopplib $(XKLIB_OBJ_RELEASE)
 	ar rcs -o $@ $(XKLIB_OBJ_RELEASE)
 
 $(XKLIB_OBJ_RELEASE): %$(XKLIB_OBJ_RELEASE_OUT): %.cpp $(PCH_COMPILED_REL)
-	$(CXX) -c $(CPPFLAGS_RELEASE) $< -o $@
+	$(CXX) -c -fPIC $(CPPFLAGS_RELEASE) $< -o $@
 
 ## TEST
 $(XKLIB_TEST_DEBUG): cryptopplib $(XKLIB_TEST_OBJ_DEBUG) $(XKLIB_OBJ_DEBUG)
-	$(CXX) $(CPPFLAGS_DEBUG) -o $@ $(XKLIB_TEST_OBJ_DEBUG) $(XKLIB_OBJ_DEBUG) $(DLOPEN_LIB) $(DBGHELP_LIB) $(PTHREAD_LIB) $(CRYPTOPP_LIB)
+	$(CXX) -fPIC $(CPPFLAGS_DEBUG) -o $@ $(XKLIB_TEST_OBJ_DEBUG) $(XKLIB_OBJ_DEBUG) $(DLOPEN_LIB) $(DBGHELP_LIB) $(PTHREAD_LIB) $(CRYPTOPP_LIB)
 
 $(XKLIB_TEST_OBJ_DEBUG): %$(XKLIB_OBJ_DEBUG_OUT): %.cpp $(PCH_COMPILED_DBG)
-	$(CXX) -c $(CPPFLAGS_DEBUG) -o $@ $<
+	$(CXX) -c -fPIC $(CPPFLAGS_DEBUG) -o $@ $<
 
 $(XKLIB_TEST_RELEASE): cryptopplib $(XKLIB_TEST_OBJ_RELEASE) $(XKLIB_OBJ_RELEASE)
-	$(CXX) $(CPPFLAGS_RELEASE) -o $@ $(XKLIB_TEST_OBJ_RELEASE) $(XKLIB_OBJ_RELEASE) $(DLOPEN_LIB) $(DBGHELP_LIB) $(PTHREAD_LIB) $(CRYPTOPP_LIB)
+	$(CXX) -fPIC $(CPPFLAGS_RELEASE) -o $@ $(XKLIB_TEST_OBJ_RELEASE) $(XKLIB_OBJ_RELEASE) $(DLOPEN_LIB) $(DBGHELP_LIB) $(PTHREAD_LIB) $(CRYPTOPP_LIB)
 
 $(XKLIB_TEST_OBJ_RELEASE): %$(XKLIB_OBJ_RELEASE_OUT): %.cpp $(PCH_COMPILED_REL)
-	$(CXX) -c $(CPPFLAGS_RELEASE) -o $@ $<
+	$(CXX) -c -fPIC $(CPPFLAGS_RELEASE) -o $@ $<
 
 clean:
 	${RM} $(XKLIB_DEBUG)
