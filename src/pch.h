@@ -73,12 +73,8 @@
 #include <utility>
 #include <vector>
 
-/* C stuff */
-#include <unistd.h>
-
 /* SIMD */
-#include <immintrin.h>
-#include <mmintrin.h>
+#include <x86intrin.h>
 
 /* CryptoPP */
 #include "vendor/cryptopp/aes.h"
