@@ -268,7 +268,7 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
                       mask_value,
                       _mm_load_simd_value(&it_mv->value));
 
-                    const std::size_t match_byte_num = __builtin_ffsll(
+                    const unsigned long long match_byte_num = __builtin_ffsll(
                       cmp);
 
                     /**
