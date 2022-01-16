@@ -320,8 +320,8 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
                   view_as<uintptr_t>(baseAddress)
                   + view_as<uintptr_t>(start_data - data)));
 
-                /* set new data cursor and reset pattern cursor */
-                start_data -= pattern_size;
+                /* set new data cursor at data cursor - 1 */
+                start_data--;
                 current_data = start_data;
                 it_mv        = fast_aligned_mvs.begin();
             }
@@ -401,8 +401,8 @@ auto XKLib::PatternScanning::searchV4(XKLib::PatternByte& pattern,
                   view_as<uintptr_t>(baseAddress)
                   + view_as<uintptr_t>(start_data - data)));
 
-                /* set new data cursor and reset pattern cursor */
-                start_data -= pattern_size;
+                /* set new data cursor at data cursor - 1 */
+                start_data--;
                 current_data = start_data;
                 it_mv        = fast_aligned_mvs.begin();
             }
