@@ -22,24 +22,17 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
      *  Let's do some preprocessing now for different scanning systems
      */
 
-    _unknown_values.reserve(_bytes.size());
-
     /* index of the byte in the pattern */
     std::size_t index = 0;
-    /* count unknown bytes that were contigous inside the pattern */
-    std::size_t ukval_contigous_count = 0;
-    /**
-     * store the last time the unknown bytes were contigous for
-     * pushing into a vector the unknown bytes
-     */
-    std::size_t index_since_contigous_count = 0;
     /* index of the simd value */
     std::size_t byte_simd_index = 0;
     /* count how many unknown bytes we got */
     std::size_t count_unknown_byte = 0;
     /* organized values */
     bool are_known_values = true;
+    /* known bytes for org values */
     std::vector<byte_t> known_bytes;
+    /* mask - values */
     simd_value_t simd_value {}, simd_mask {};
 
     for (auto&& byte : _bytes)
@@ -48,23 +41,6 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
 
         if (byte.value == Value::UNKNOWN)
         {
-            index_since_contigous_count = index;
-            ukval_contigous_count++;
-
-            /* do we got a full simd integer here */
-            if (ukval_contigous_count >= sizeof(simd_value_t))
-            {
-                /**
-                 * store info about what index would be the simd
-                 * value, etc ... */
-                _unknown_values.push_back(
-                  { index_since_contigous_count / sizeof(simd_value_t),
-                    index_since_contigous_count % sizeof(simd_value_t),
-                    index_since_contigous_count,
-                    ukval_contigous_count });
-                ukval_contigous_count = 0;
-            }
-
             if (are_known_values)
             {
                 are_known_values = false;
@@ -86,19 +62,6 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
 
             /* push back known value */
             known_bytes.push_back(view_as<byte_t>(byte.value));
-
-            /* check if previous unknown bytes weren't a full simd
-             * value and push it back */
-            if (ukval_contigous_count > 0)
-            {
-                _unknown_values.push_back(
-                  { index_since_contigous_count / sizeof(simd_value_t),
-                    index_since_contigous_count % sizeof(simd_value_t),
-                    index_since_contigous_count,
-                    ukval_contigous_count });
-                ukval_contigous_count = 0;
-            }
-
             /**
              * copy pattern data to the simd value and create the
              * mask
@@ -139,17 +102,51 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
         _fast_aligned_mvs.push_back(
           { simd_mask, simd_value, byte_simd_index });
     }
+
+    /**
+     * Setup variant of horspool precalculated table,
+     * due to unknown bytes, the skip_table is dependant of the pattern
+     * index
+     */
+
+    for (int i = 0; i < std::numeric_limits<byte_t>::max() + 1; i++)
+    {
+        skip_table[i].resize(_bytes.size());
+
+        for (std::size_t j = 0; j < _bytes.size(); j++)
+        {
+            /* find the wanted byte further in the pattern */
+            auto it = std::find_if(_bytes.begin() + j + 1,
+                                   _bytes.end(),
+                                   [&i](const Value& value)
+                                   {
+                                       if (value.value == i
+                                           || value.value
+                                                == Value::UNKNOWN)
+                                       {
+                                           return true;
+                                       }
+
+                                       return false;
+                                   });
+
+            /* good character skip until matched byte or unknown byte */
+            if (it != _bytes.end())
+            {
+                skip_table[i][j] = it->index - j;
+            }
+            /* bad character, skip the whole pattern */
+            else
+            {
+                skip_table[i][j] = _bytes.size() - j;
+            }
+        }
+    }
 }
 
 auto XKLib::PatternByte::bytes() -> std::vector<Value>&
 {
     return _bytes;
-}
-
-auto XKLib::PatternByte::simd_unknown_values()
-  -> std::vector<simd_unknown_value_t>&
-{
-    return _unknown_values;
 }
 
 auto XKLib::PatternByte::matches() -> std::vector<ptr_t>&

@@ -16,7 +16,7 @@ namespace XKLib
           const std::function<
             auto(PatternByte&, data_t, std::size_t, ptr_t)->bool>&
             searchMethod
-          = searchV3) -> void;
+          = searchV4) -> void;
 
         static auto searchInProcessWithAreaName(
           PatternByte& pattern,
@@ -25,7 +25,7 @@ namespace XKLib
           const std::function<
             auto(PatternByte&, data_t, std::size_t, ptr_t)->bool>&
             searchMethod
-          = searchV3) -> void;
+          = searchV4) -> void;
 
         /**
          * @brief searchV1
@@ -78,10 +78,26 @@ namespace XKLib
          * @param baseAddress
          * @return
          *
-         * TODO:
-         * SIMD Boye Moore's Algorithm.
+         * SIMD Boyer-Moore's Algorithm.
+         * Consums less memory than V4 but it is slower.
          */
         static auto searchV3(PatternByte& pattern,
+                             data_t data,
+                             std::size_t size,
+                             ptr_t baseAddress) -> bool;
+
+        /**
+         * @brief searchV3
+         * @param pattern
+         * @param data
+         * @param size
+         * @param baseAddress
+         * @return
+         *
+         * SIMD Boyer-Moore-Horspool's Algorithm.
+         * Consums a lot more memory but it is faster.
+         */
+        static auto searchV4(PatternByte& pattern,
                              data_t data,
                              std::size_t size,
                              ptr_t baseAddress) -> bool;

@@ -202,10 +202,6 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
 
             std::size_t to_skip = 0;
 
-            /* get the mismatched byte */
-            const auto simd_tmp = _mm_set_pi8_simd_value(
-              *(current_data + mismatch_byte_num - 1));
-
             /**
              * Do no enter if the last character of that part is
              * mismatching
@@ -237,6 +233,10 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
                 }
                 ();
 
+                /* get the mismatched byte */
+                const auto simd_tmp = _mm_set_pi8_simd_value(
+                  *(current_data + mismatch_byte_num - 1));
+
                 const std::size_t match_byte_num = __builtin_ffsll(
                   _mm_cmp_pi8_simd_value(
                     _mm_and_simd_value(simd_tmp,
@@ -262,28 +262,37 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
             it_mv++;
 
             /* then search inside the rest of the pattern */
-            while (it_mv != fast_aligned_mvs.end())
+            if (it_mv != fast_aligned_mvs.end())
             {
-                const std::size_t match_byte_num = __builtin_ffsll(
-                  _mm_cmp_pi8_simd_value(
-                    _mm_and_simd_value(simd_tmp,
-                                       _mm_load_simd_value(&it_mv->mask)),
-                    _mm_load_simd_value(&it_mv->value)));
+                /* get the mismatched byte */
+                const auto simd_tmp = _mm_set_pi8_simd_value(
+                  *(current_data + mismatch_byte_num - 1));
 
-                /**
-                 * Matched, we found the mismatched byte inside
-                 * the rest of the pattern
-                 */
-                if (match_byte_num > 0
-                    && match_byte_num <= it_mv->part_size)
+                do
                 {
-                    to_skip += match_byte_num - 1;
-                    /* exit */
-                    goto good_char;
-                }
+                    const std::size_t match_byte_num = __builtin_ffsll(
+                      _mm_cmp_pi8_simd_value(
+                        _mm_and_simd_value(simd_tmp,
+                                           _mm_load_simd_value(
+                                             &it_mv->mask)),
+                        _mm_load_simd_value(&it_mv->value)));
 
-                to_skip += it_mv->part_size;
-                it_mv++;
+                    /**
+                     * Matched, we found the mismatched byte inside
+                     * the rest of the pattern
+                     */
+                    if (match_byte_num > 0
+                        && match_byte_num <= it_mv->part_size)
+                    {
+                        to_skip += match_byte_num - 1;
+                        /* exit */
+                        goto good_char;
+                    }
+
+                    to_skip += it_mv->part_size;
+                    it_mv++;
+                }
+                while (it_mv != fast_aligned_mvs.end());
             }
 
             /**
@@ -295,6 +304,87 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
         good_char:
             /* otherwise just align pattern to the mismatch char */
             start_data -= to_skip;
+
+            /* start from the beginning */
+            it_mv = fast_aligned_mvs.begin();
+
+            /* apply new cursor position */
+            current_data = start_data;
+        }
+        else
+        {
+            /* did we found our stuff ? */
+            if (it_mv == std::prev(fast_aligned_mvs.end()))
+            {
+                matches.push_back(view_as<ptr_t>(
+                  view_as<uintptr_t>(baseAddress)
+                  + view_as<uintptr_t>(start_data - data)));
+
+                /* set new data cursor and reset pattern cursor */
+                start_data -= pattern_size;
+                current_data = start_data;
+                it_mv        = fast_aligned_mvs.begin();
+            }
+            else
+            {
+                current_data += it_mv->part_size;
+                it_mv++;
+            }
+        }
+    }
+
+    return matches.size() != old_matches_size;
+}
+
+auto XKLib::PatternScanning::searchV4(XKLib::PatternByte& pattern,
+                                      data_t data,
+                                      std::size_t size,
+                                      ptr_t baseAddress) -> bool
+{
+    auto&& matches          = pattern.matches();
+    auto old_matches_size   = matches.size();
+    auto&& pattern_bytes    = pattern.bytes();
+    auto pattern_size       = pattern_bytes.size();
+    auto&& fast_aligned_mvs = pattern.fast_aligned_mvs();
+
+    data_t start_data   = data + size - pattern_size;
+    data_t current_data = start_data;
+
+    /**
+     * Reversed Boyer Moore variant starts from the start of the pattern
+     */
+    auto it_mv = fast_aligned_mvs.begin();
+
+    while (current_data >= data + pattern_size)
+    {
+        /**
+         * Compare with our value (with unknown bytes, the mask)
+         * Invert bits with cmp result and turn them into bits so we can
+         * find the first set, so the mismatched byte.
+         */
+        const std::size_t mismatch_byte_num = __builtin_ffsll(
+          ~_mm_cmp_pi8_simd_value(
+            _mm_and_simd_value(_mm_loadu_simd_value(current_data),
+                               _mm_load_simd_value(&it_mv->mask)),
+            _mm_load_simd_value(&it_mv->value)));
+
+        /* this part of the pattern mismatched ? */
+        if (mismatch_byte_num > 0
+            && mismatch_byte_num <= sizeof(PatternByte::simd_value_t))
+        {
+            /**
+             * We got a mismatch, we need to re-align pattern / adjust
+             * current data ptr
+             */
+
+            const auto pattern_index = (start_data - current_data)
+                                       + mismatch_byte_num - 1;
+
+            /* get the mismatched byte */
+            const auto misbyte = *(start_data + pattern_index);
+
+            /* use skip table instead, takes a lot of memory though */
+            start_data -= pattern.skip_table[misbyte][pattern_index];
 
             /* start from the beginning */
             it_mv = fast_aligned_mvs.begin();

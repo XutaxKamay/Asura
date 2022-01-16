@@ -39,15 +39,6 @@ namespace XKLib
 #else
         using simd_value_t = uint64_t;
 #endif
-
-        struct simd_unknown_value_t
-        {
-            std::size_t simd_index;
-            std::size_t simd_byte_index;
-            std::size_t data_byte_index;
-            std::size_t size_to_copy;
-        };
-
         struct simd_mv_t
         {
             simd_value_t mask;
@@ -67,7 +58,6 @@ namespace XKLib
 
       public:
         auto bytes() -> std::vector<Value>&;
-        auto simd_unknown_values() -> std::vector<simd_unknown_value_t>&;
         auto matches() -> std::vector<ptr_t>&;
         auto isValid() -> bool;
         auto scan(Process& process) -> void;
@@ -75,9 +65,11 @@ namespace XKLib
         auto vec_organized_values() -> std::vector<organized_values_t>&;
         auto fast_aligned_mvs() -> std::vector<simd_mv_t>&;
 
+        std::vector<std::size_t>
+          skip_table[std::numeric_limits<byte_t>::max() + 1];
+
       private:
         std::vector<Value> _bytes;
-        std::vector<simd_unknown_value_t> _unknown_values;
         std::vector<ptr_t> _matches;
         std::string _area_name;
         std::vector<organized_values_t> _vec_organized_values;

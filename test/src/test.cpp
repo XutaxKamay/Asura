@@ -447,20 +447,6 @@ auto XKLib::Test::run() -> void
         random_bytes.push_back(add + 63);
     }
 
-    // random_bytes.push_back(1);
-
-    /*
-    byte_t result;
-
-    for (std::size_t i = 0; i < 0x1000; i++)
-    {
-        result = (rand() % 2) ? 64 : (rand() % 7 + 63);
-
-        // result = rand() % 256;
-        random_bytes.push_back(result);
-    }
-    */
-
     ConsoleOutput("size of orginal: ")
       << random_bytes.size() << std::endl;
 
@@ -491,46 +477,78 @@ auto XKLib::Test::run() -> void
 
         random_bytes.clear();
 
+        const char characters_set[] = { 'X', 'K', 'A', 'M',
+                                        'Y', 'U', 'T', 'Z' };
+
+        const char characters_set2[] = {
+            'X', 'K', 'A', 'M', 'Y', 'U', 'T'
+        };
+
         for (std::size_t i = 0; i < size_of_random; i++)
         {
-            random_bytes.push_back(view_as<byte_t>(rand() % 256));
+            random_bytes.push_back(view_as<byte_t>(
+              characters_set[rand() % sizeof(characters_set)]));
         }
 
-        for (auto&& byte : random_bytes)
+        for (std::size_t i = 0; i < size_of_random / 8; i++)
         {
-            pattern_bytes.push_back(byte);
+            pattern_bytes.push_back(view_as<byte_t>(
+              characters_set2[rand() % sizeof(characters_set2)]));
         }
 
-        for (std::size_t i = 1; i < size_of_random - 1; i++)
+        int count = 0;
+
+        for (auto&& pb : pattern_bytes)
         {
-            if ((rand() % (1 << 16)) == 0)
+            if ((rand() % 256) == 0)
             {
-                for (std::size_t j = 0;
-                     j < (512 + view_as<std::size_t>(rand() % (1 << 10)))
-                     && (j + i < size_of_random);
-                     j++)
+                count++;
+            }
+
+            if (count > 0)
+            {
+                pb.value = PatternByte::Value::UNKNOWN;
+                count++;
+
+                if (count >= 1 + (rand() % 64))
                 {
-                    pattern_bytes[i + j].value = PatternByte::Value::UNKNOWN;
+                    count = 0;
                 }
             }
         }
 
-        pattern_bytes[0] = PatternByte::Value::UNKNOWN;
+        (pattern_bytes.end() - 1)->value = 'X';
 
         PatternByte pattern(pattern_bytes);
 
         auto process = Process::self();
 
-        for (std::size_t i = 0; i < 7; i++)
+        for (std::size_t i = 0; i < 8; i++)
         {
             std::memcpy(&aligned_memory[size_of_random * i],
                         random_bytes.data(),
                         size_of_random - 1);
         }
 
-        std::memcpy(&aligned_memory[size_of_random * 7],
-                    random_bytes.data(),
-                    size_of_random);
+        auto random_start = sizeof(PatternByte::simd_value_t)
+                            + rand()
+                                % ((size_of_random * 8)
+                                   - pattern_bytes.size()
+                                   - sizeof(PatternByte::simd_value_t));
+
+        random_start = MemoryUtils::align(random_start,
+                                          sizeof(
+                                            PatternByte::simd_value_t));
+
+        const auto end = random_start + pattern_bytes.size();
+
+        size_t i = 0;
+        for (; random_start < end; random_start++)
+        {
+            aligned_memory[random_start] = view_as<byte_t>(
+              pattern_bytes[i].value);
+            i++;
+        }
 
         timer.start();
         PatternScanning::searchV1(pattern,
@@ -575,6 +593,20 @@ auto XKLib::Test::run() -> void
           << " of pattern size in bytes" << std::endl;
 
         timer.start();
+        PatternScanning::searchV4(pattern,
+                                  aligned_memory,
+                                  size_of_random * 8,
+                                  nullptr);
+        timer.end();
+
+        ConsoleOutput("v4 scan took: ")
+          << std::dec << timer.difference() << " nanoseconds "
+          << "with: "
+          << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
+          << " page count and " << pattern.bytes().size()
+          << " of pattern size in bytes" << std::endl;
+
+        timer.start();
         PatternScanning::searchAlignedV1(pattern,
                                          aligned_memory,
                                          size_of_random * 8,
@@ -588,8 +620,7 @@ auto XKLib::Test::run() -> void
           << " page count and " << pattern.bytes().size()
           << " of pattern size in bytes" << std::endl;
 
-        /*
-        static PatternByte pattern2({ 'T',
+        /*static PatternByte pattern2({ 'T',
                                       'A',
                                       'T',
                                       'G',
@@ -616,16 +647,15 @@ auto XKLib::Test::run() -> void
         };
 
         timer.start();
-        PatternScanning::searchV3(pattern2, yey, sizeof(yey), nullptr);
+        PatternScanning::searchV4(pattern2, yey, sizeof(yey), nullptr);
         timer.end();
 
-        ConsoleOutput("v3 scan took: ")
+        ConsoleOutput("v4 scan took: ")
           << std::dec << timer.difference() << " nanoseconds "
           << "with: "
           << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
           << " page count and " << pattern2.bytes().size()
-          << " of pattern size in bytes" << std::endl;
-          */
+          << " of pattern size in bytes" << std::endl;*/
 
         if (pattern.matches().size() != 0)
         {
