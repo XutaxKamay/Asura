@@ -218,6 +218,25 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
                  * checked previous values before entering here with the
                  * previous cmp
                  */
+
+                constexpr auto bit_mask = []() constexpr
+                {
+                    static_assert(sizeof(PatternByte::simd_value_t) <= 64,
+                                  "simd_value_t is bigger than 64 bytes");
+
+                    if constexpr (sizeof(PatternByte::simd_value_t) == 64)
+                    {
+                        return std::numeric_limits<uint64_t>::max();
+                    }
+                    else if constexpr (sizeof(PatternByte::simd_value_t)
+                                       < 64)
+                    {
+                        return (1ull << sizeof(PatternByte::simd_value_t))
+                               - 1ull;
+                    }
+                }
+                ();
+
                 const std::size_t match_byte_num = __builtin_ffsll(
                   _mm_cmp_pi8_simd_value(
                     _mm_and_simd_value(simd_tmp,
@@ -225,7 +244,7 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
                     _mm_load_simd_value(&it_mv->value))
                   & (std::numeric_limits<uint64_t>::max()
                      << mismatch_byte_num)
-                  & ((1ull << sizeof(PatternByte::simd_value_t)) - 1ull));
+                  & bit_mask);
 
                 if (match_byte_num > 0
                     && match_byte_num <= it_mv->part_size)
