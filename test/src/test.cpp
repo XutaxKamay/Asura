@@ -551,10 +551,19 @@ auto XKLib::Test::run() -> void
         }
 
         timer.start();
-        PatternScanning::searchV1(pattern,
-                                  aligned_memory,
-                                  random_bytes.size() * 8,
-                                  nullptr);
+
+        for (int i = 0; i < 150; i++)
+        {
+            ConsoleOutput("V1: ") << i + 1 << std::endl;
+
+            PatternScanning::searchV1(pattern,
+                                      aligned_memory,
+                                      random_bytes.size() * 8,
+                                      nullptr);
+
+            pattern.matches().resize(pattern.matches().size() - 1);
+        }
+
         timer.end();
 
         ConsoleOutput("v1 scan took: ")
@@ -565,10 +574,19 @@ auto XKLib::Test::run() -> void
           << " of pattern size in bytes" << std::endl;
 
         timer.start();
-        PatternScanning::searchV2(pattern,
-                                  aligned_memory,
-                                  size_of_random * 8,
-                                  nullptr);
+
+        for (int i = 0; i < 150; i++)
+        {
+            ConsoleOutput("V2: ") << i + 1 << std::endl;
+
+            PatternScanning::searchV2(pattern,
+                                      aligned_memory,
+                                      random_bytes.size() * 8,
+                                      nullptr);
+
+            pattern.matches().resize(pattern.matches().size() - 1);
+        }
+
         timer.end();
 
         ConsoleOutput("v2 scan took: ")
@@ -579,10 +597,19 @@ auto XKLib::Test::run() -> void
           << " of pattern size in bytes" << std::endl;
 
         timer.start();
-        PatternScanning::searchV3(pattern,
-                                  aligned_memory,
-                                  size_of_random * 8,
-                                  nullptr);
+
+        for (int i = 0; i < 150; i++)
+        {
+            ConsoleOutput("V3: ") << i + 1 << std::endl;
+
+            PatternScanning::searchV3(pattern,
+                                      aligned_memory,
+                                      random_bytes.size() * 8,
+                                      nullptr);
+
+            pattern.matches().resize(pattern.matches().size() - 1);
+        }
+
         timer.end();
 
         ConsoleOutput("v3 scan took: ")
@@ -593,10 +620,19 @@ auto XKLib::Test::run() -> void
           << " of pattern size in bytes" << std::endl;
 
         timer.start();
-        PatternScanning::searchV4(pattern,
-                                  aligned_memory,
-                                  size_of_random * 8,
-                                  nullptr);
+
+        for (int i = 0; i < 150; i++)
+        {
+            ConsoleOutput("V4: ") << i + 1 << std::endl;
+
+            PatternScanning::searchV4(pattern,
+                                      aligned_memory,
+                                      random_bytes.size() * 8,
+                                      nullptr);
+
+            pattern.matches().resize(pattern.matches().size() - 1);
+        }
+
         timer.end();
 
         ConsoleOutput("v4 scan took: ")
@@ -607,13 +643,22 @@ auto XKLib::Test::run() -> void
           << " of pattern size in bytes" << std::endl;
 
         timer.start();
-        PatternScanning::searchAlignedV1(pattern,
-                                         aligned_memory,
-                                         size_of_random * 8,
-                                         nullptr);
+
+        for (int i = 0; i < 150; i++)
+        {
+            ConsoleOutput("aligned V1: ") << i + 1 << std::endl;
+
+            PatternScanning::searchAlignedV1(pattern,
+                                             aligned_memory,
+                                             random_bytes.size() * 8,
+                                             nullptr);
+
+            pattern.matches().resize(pattern.matches().size() - 1);
+        }
+
         timer.end();
 
-        ConsoleOutput("aligned v1 scan took: ")
+        ConsoleOutput("v1 aligned scan took: ")
           << std::dec << timer.difference() << " nanoseconds "
           << "with: "
           << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
