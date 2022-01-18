@@ -1,6 +1,20 @@
 #ifndef SIMD_H
 #define SIMD_H
 
+/* no movemask for avx512, Intel u fkr. */
+#if defined(__AVX512F__)
+__m512i tmp_avx512_zeros;
+#endif
+
+#if defined(__AVX512F__)
+    #define _mm_movemask_simd_value(mm1)                                 \
+        _mm512_cmpeq_epi8_mask(mm1, tmp_avx512_zeros)
+#elif defined(__AVX2__)
+    #define _mm_movemask_simd_value(mm1) _mm256_movemask_epi8(mm1)
+#else
+    #define _mm_movemask_simd_value(mm1) _mm_movemask_pi8(mm1)
+#endif
+
 #if defined(__AVX512F__)
     #define _mm_cmp_pi8_simd_value(mm1, mm2)                             \
         _mm512_cmpeq_epi8_mask(mm1, mm2)

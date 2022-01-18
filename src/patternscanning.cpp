@@ -25,13 +25,31 @@ auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
     {
         for (auto&& mv : fast_aligned_mvs)
         {
+            const auto mask = _mm_load_simd_value(&mv.mask);
+
+            /**
+             * Fast check if they are all unknown bytes
+             * We have the guarantee that patterns always have known bytes
+             * at the end
+             */
+            if (_mm_movemask_simd_value(mask) == 0)
+            {
+                /**
+                 * We know that it is always the same amount of bytes in
+                 * all cases due to pre-processing
+                 */
+                current_data += sizeof(PatternByte::simd_value_t);
+
+                continue;
+            }
+
             /* if ((value & mask) == pattern_value) */
 #if defined(__AVX512F__)
             if (!_mm512_cmpeq_epi64_mask(
                   _mm512_and_si512(_mm512_loadu_si512(
                                      view_as<PatternByte::simd_value_t*>(
                                        current_data)),
-                                   _mm512_load_si512(&mv.mask)),
+                                   mask),
                   _mm512_load_si512(&mv.value)))
             {
                 goto skip;
@@ -41,15 +59,14 @@ auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
                   _mm256_and_si256(_mm256_loadu_si256(
                                      view_as<PatternByte::simd_value_t*>(
                                        current_data)),
-                                   _mm256_load_si256(&mv.mask)),
+                                   mask),
                   _mm256_load_si256(&mv.value)))
                 != -1)
             {
                 goto skip;
             }
 #else
-            if ((*view_as<PatternByte::simd_value_t*>(current_data)
-                 & mv.mask)
+            if ((*view_as<PatternByte::simd_value_t*>(current_data) & mask)
                 != mv.value)
             {
                 goto skip;
@@ -138,10 +155,29 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
          * Invert bits with cmp result and turn them into bits so we can
          * find the first set, so the mismatched byte.
          */
+
+        const auto mask = _mm_load_simd_value(&it_mv->mask);
+
+        /**
+         * Fast check if they are all unknown bytes
+         * We have the guarantee that patterns always have known bytes
+         * at the end
+         */
+        if (_mm_movemask_simd_value(mask) == 0)
+        {
+            /**
+             * We know that it is always the same amount of bytes in
+             * all cases due to pre-processing
+             */
+            current_data += sizeof(PatternByte::simd_value_t);
+            it_mv++;
+
+            continue;
+        }
+
         const std::size_t mismatch_byte_num = __builtin_ffsll(
           ~_mm_cmp_pi8_simd_value(
-            _mm_and_simd_value(_mm_loadu_simd_value(current_data),
-                               _mm_load_simd_value(&it_mv->mask)),
+            _mm_and_simd_value(_mm_loadu_simd_value(current_data), mask),
             _mm_load_simd_value(&it_mv->value)));
 
         /* this part of the pattern mismatched ? */
@@ -192,8 +228,7 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
 
                 const std::size_t match_byte_num = __builtin_ffsll(
                   _mm_cmp_pi8_simd_value(
-                    _mm_and_simd_value(simd_tmp,
-                                       _mm_load_simd_value(&it_mv->mask)),
+                    _mm_and_simd_value(simd_tmp, mask),
                     _mm_load_simd_value(&it_mv->value))
                   & (std::numeric_limits<uint64_t>::max()
                      << mismatch_byte_num)
@@ -311,10 +346,29 @@ auto XKLib::PatternScanning::searchV4(XKLib::PatternByte& pattern,
          * Invert bits with cmp result and turn them into bits so we can
          * find the first set, so the mismatched byte.
          */
+
+        const auto mask = _mm_load_simd_value(&it_mv->mask);
+
+        /**
+         * Fast check if they are all unknown bytes
+         * We have the guarantee that patterns always have known bytes
+         * at the end
+         */
+        if (_mm_movemask_simd_value(mask) == 0)
+        {
+            /**
+             * We know that it is always the same amount of bytes in
+             * all cases due to pre-processing
+             */
+            current_data += sizeof(PatternByte::simd_value_t);
+            it_mv++;
+
+            continue;
+        }
+
         const std::size_t mismatch_byte_num = __builtin_ffsll(
           ~_mm_cmp_pi8_simd_value(
-            _mm_and_simd_value(_mm_loadu_simd_value(current_data),
-                               _mm_load_simd_value(&it_mv->mask)),
+            _mm_and_simd_value(_mm_loadu_simd_value(current_data), mask),
             _mm_load_simd_value(&it_mv->value)));
 
         /* this part of the pattern mismatched ? */
@@ -396,13 +450,31 @@ auto XKLib::PatternScanning::searchAlignedV1(XKLib::PatternByte& pattern,
     {
         for (auto&& mv : fast_aligned_mvs)
         {
+            const auto mask = _mm_load_simd_value(&mv.mask);
+
+            /**
+             * Fast check if they are all unknown bytes
+             * We have the guarantee that patterns always have known bytes
+             * at the end
+             */
+            if (_mm_movemask_simd_value(mask) == 0)
+            {
+                /**
+                 * We know that it is always the same amount of bytes in
+                 * all cases due to pre-processing
+                 */
+                current_data += sizeof(PatternByte::simd_value_t);
+
+                continue;
+            }
+
 /* if ((value & mask) == pattern_value) */
 #if defined(__AVX512F__)
             if (!_mm512_cmpeq_epi64_mask(
                   _mm512_and_si512(_mm512_load_si512(
                                      view_as<PatternByte::simd_value_t*>(
                                        current_data)),
-                                   _mm512_load_si512(&mv.mask)),
+                                   mask),
                   _mm512_load_si512(&mv.value)))
             {
                 goto skip;
@@ -412,15 +484,14 @@ auto XKLib::PatternScanning::searchAlignedV1(XKLib::PatternByte& pattern,
                   _mm256_and_si256(_mm256_load_si256(
                                      view_as<PatternByte::simd_value_t*>(
                                        current_data)),
-                                   _mm256_load_si256(&mv.mask)),
+                                   mask),
                   _mm256_load_si256(&mv.value)))
                 != -1)
             {
                 goto skip;
             }
 #else
-            if ((*view_as<PatternByte::simd_value_t*>(current_data)
-                 & mv.mask)
+            if ((*view_as<PatternByte::simd_value_t*>(current_data) & mask)
                 != mv.value)
             {
                 goto skip;
