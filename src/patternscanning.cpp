@@ -1,57 +1,10 @@
 #include "pch.h"
 
+#include "simd.h"
+
 #include "patternscanning.h"
 
 #include "patternbyte.h"
-
-#if defined(__AVX512F__)
-    #define _mm_cmp_pi8_simd_value(mm1, mm2)                             \
-        _mm512_cmpeq_epi8_mask(mm1, mm2)
-#elif defined(__AVX2__)
-    #define _mm_cmp_pi8_simd_value(mm1, mm2)                             \
-        _mm256_movemask_epi8(_mm256_cmpeq_epi8(mm1, mm2))
-#else
-    #define _mm_cmp_pi8_simd_value(mm1, mm2)                             \
-        _mm_movemask_pi8(_mm_cmpeq_pi8(mm1, mm2))
-#endif
-
-#if defined(__AVX512F__)
-    #define _mm_and_simd_value(mm1, mm2) _mm512_and_si512(mm1, mm2)
-#elif defined(__AVX2__)
-    #define _mm_and_simd_value(mm1, mm2) _mm256_and_si256(mm1, mm2)
-#else
-    #define _mm_and_simd_value(mm1, mm2) _mm_and_si64(mm1, mm2)
-#endif
-
-#if defined(__AVX512F__)
-    #define _mm_load_simd_value(mm1)                                     \
-        _mm512_load_si512(view_as<PatternByte::simd_value_t*>(mm1))
-#elif defined(__AVX2__)
-    #define _mm_load_simd_value(mm1)                                     \
-        _mm256_load_si256(view_as<PatternByte::simd_value_t*>(mm1))
-#else
-    #define _mm_load_simd_value(mm1)                                     \
-        _mm_cvtsi64_m64(*view_as<uint64_t*>(mm1))
-#endif
-
-#if defined(__AVX512F__)
-    #define _mm_loadu_simd_value(mm1)                                    \
-        _mm512_loadu_si512(view_as<PatternByte::simd_value_t*>(mm1))
-#elif defined(__AVX2__)
-    #define _mm_loadu_simd_value(mm1)                                    \
-        _mm256_loadu_si256(view_as<PatternByte::simd_value_t*>(mm1))
-#else
-    #define _mm_loadu_simd_value(mm1)                                    \
-        _mm_cvtsi64_m64(*view_as<uint64_t*>(mm1))
-#endif
-
-#if defined(__AVX512F__)
-    #define _mm_set_pi8_simd_value(xx) _mm512_set1_epi8(xx)
-#elif defined(__AVX2__)
-    #define _mm_set_pi8_simd_value(xx) _mm256_set1_epi8(xx)
-#else
-    #define _mm_set_pi8_simd_value(xx) _mm_set1_pi8(xx)
-#endif
 
 auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
                                       data_t data,
@@ -200,7 +153,11 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
              * current data ptr
              */
 
-            std::size_t to_skip = 0;
+            /* get the mismatched byte */
+            const auto simd_tmp = _mm_set_pi8_simd_value(
+              *(current_data + mismatch_byte_num - 1));
+
+            std::size_t to_skip;
 
             /**
              * Do no enter if the last character of that part is
@@ -233,10 +190,6 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
                 }
                 ();
 
-                /* get the mismatched byte */
-                const auto simd_tmp = _mm_set_pi8_simd_value(
-                  *(current_data + mismatch_byte_num - 1));
-
                 const std::size_t match_byte_num = __builtin_ffsll(
                   _mm_cmp_pi8_simd_value(
                     _mm_and_simd_value(simd_tmp,
@@ -257,42 +210,38 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
                     to_skip = it_mv->part_size - mismatch_byte_num;
                 }
             }
+            else
+            {
+                /* nothing to skip here */
+                to_skip = 0;
+            }
 
             /* pass on the next part */
             it_mv++;
 
             /* then search inside the rest of the pattern */
-            if (it_mv != fast_aligned_mvs.end())
+            while (it_mv != fast_aligned_mvs.end())
             {
-                /* get the mismatched byte */
-                const auto simd_tmp = _mm_set_pi8_simd_value(
-                  *(current_data + mismatch_byte_num - 1));
+                const std::size_t match_byte_num = __builtin_ffsll(
+                  _mm_cmp_pi8_simd_value(
+                    _mm_and_simd_value(simd_tmp,
+                                       _mm_load_simd_value(&it_mv->mask)),
+                    _mm_load_simd_value(&it_mv->value)));
 
-                do
+                /**
+                 * Matched, we found the mismatched byte inside
+                 * the rest of the pattern
+                 */
+                if (match_byte_num > 0
+                    && match_byte_num <= it_mv->part_size)
                 {
-                    const std::size_t match_byte_num = __builtin_ffsll(
-                      _mm_cmp_pi8_simd_value(
-                        _mm_and_simd_value(simd_tmp,
-                                           _mm_load_simd_value(
-                                             &it_mv->mask)),
-                        _mm_load_simd_value(&it_mv->value)));
-
-                    /**
-                     * Matched, we found the mismatched byte inside
-                     * the rest of the pattern
-                     */
-                    if (match_byte_num > 0
-                        && match_byte_num <= it_mv->part_size)
-                    {
-                        to_skip += match_byte_num - 1;
-                        /* exit */
-                        goto good_char;
-                    }
-
-                    to_skip += it_mv->part_size;
-                    it_mv++;
+                    to_skip += match_byte_num - 1;
+                    /* exit */
+                    goto good_char;
                 }
-                while (it_mv != fast_aligned_mvs.end());
+
+                to_skip += it_mv->part_size;
+                it_mv++;
             }
 
             /**

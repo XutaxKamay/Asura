@@ -2,6 +2,7 @@
 
 #include "patternscanning.h"
 #include "process.h"
+#include "simd.h"
 
 XKLib::PatternByte::Value::Value(int value) : value(value)
 {
@@ -113,33 +114,134 @@ XKLib::PatternByte::PatternByte(std::vector<Value> values,
     {
         skip_table[i].resize(_bytes.size());
 
+        /**
+         * NOTE:
+         * Essentially it does that faster:
+         */
+
+#if false
+        /*  Find the wanted byte further in the pattern */
+        auto it = std::find_if(_bytes.begin() + j + 1,
+                               _bytes.end(),
+                               [&i](const Value& value)
+                               {
+                                   if (value.value == i
+                                       || value.value == Value::UNKNOWN)
+                                   {
+                                       return true;
+                                   }
+
+                                   return false;
+                               });
+
+        /**
+         * Good character skip until matched byte or
+         * unknown byte
+         */
+        if (it != _bytes.end())
+        {
+            skip_table[i][j] = it->index - j;
+        }
+        /* Bad character, skip the whole pattern */
+        else
+        {
+            skip_table[i][j] = _bytes.size() - j;
+        }
+#endif
+
+        /* Get the asked byte */
+        const auto simd_tmp = _mm_set_pi8_simd_value(view_as<char>(i));
+
         for (std::size_t j = 0; j < _bytes.size(); j++)
         {
-            /* find the wanted byte further in the pattern */
-            auto it = std::find_if(_bytes.begin() + j + 1,
-                                   _bytes.end(),
-                                   [&i](const Value& value)
-                                   {
-                                       if (value.value == i
-                                           || value.value
-                                                == Value::UNKNOWN)
-                                       {
-                                           return true;
-                                       }
+            const auto part      = (j + 1) / sizeof(simd_value_t);
+            const auto prev_part = j / sizeof(simd_value_t);
+            const auto slot      = (j + 1) % sizeof(simd_value_t);
+            const auto prev_slot = j % sizeof(simd_value_t);
+            auto ptr_cur_skip    = &skip_table[i][j];
 
-                                       return false;
-                                   });
+            auto it_mv = _fast_aligned_mvs.begin() + part;
 
-            /* good character skip until matched byte or unknown byte */
-            if (it != _bytes.end())
+            /**
+             * Do no enter if we entered in a new part
+             */
+            if (prev_part == part)
             {
-                skip_table[i][j] = it->index - j;
+                /**
+                 * Don't check previous values of <= j.
+                 */
+                constexpr auto bit_mask = []() constexpr
+                {
+                    static_assert(sizeof(PatternByte::simd_value_t) <= 64,
+                                  "simd_value_t is bigger than 64 "
+                                  "bytes");
+
+                    if constexpr (sizeof(PatternByte::simd_value_t) == 64)
+                    {
+                        return std::numeric_limits<uint64_t>::max();
+                    }
+                    else if constexpr (sizeof(PatternByte::simd_value_t)
+                                       < 64)
+                    {
+                        return (1ull << sizeof(PatternByte::simd_value_t))
+                               - 1ull;
+                    }
+                }
+                ();
+
+                const std::size_t match_byte_num = __builtin_ffsll(
+                  _mm_cmp_pi8_simd_value(
+                    _mm_and_simd_value(simd_tmp,
+                                       _mm_load_simd_value(&it_mv->mask)),
+                    _mm_load_simd_value(&it_mv->value))
+                  & (std::numeric_limits<uint64_t>::max() << slot)
+                  & bit_mask);
+
+                if (match_byte_num > 0
+                    && match_byte_num <= it_mv->part_size)
+                {
+                    *ptr_cur_skip = (match_byte_num - 1) - prev_slot;
+                    goto good_char;
+                }
+                else
+                {
+                    *ptr_cur_skip = it_mv->part_size - prev_slot;
+                }
+
+                /* Pass on the next part */
+                it_mv++;
             }
-            /* bad character, skip the whole pattern */
             else
             {
-                skip_table[i][j] = _bytes.size() - j;
+                *ptr_cur_skip = 1;
             }
+
+            /* Then search inside the rest of the pattern */
+            while (it_mv != _fast_aligned_mvs.end())
+            {
+                const std::size_t match_byte_num = __builtin_ffsll(
+                  _mm_cmp_pi8_simd_value(
+                    _mm_and_simd_value(simd_tmp,
+                                       _mm_load_simd_value(&it_mv->mask)),
+                    _mm_load_simd_value(&it_mv->value)));
+
+                /**
+                 * Matched, we found the (unknown ?) byte
+                 * inside the rest of the pattern.
+                 */
+                if (match_byte_num > 0
+                    && match_byte_num <= it_mv->part_size)
+                {
+                    *ptr_cur_skip += match_byte_num - 1;
+                    /* exit */
+                    goto good_char;
+                }
+
+                *ptr_cur_skip += it_mv->part_size;
+                it_mv++;
+            }
+
+        good_char:;
         }
     }
 }
