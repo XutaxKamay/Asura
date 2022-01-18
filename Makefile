@@ -52,8 +52,8 @@ XKLIB_DEBUG:=$(XKLIB_DEBUG).a
 XKLIB_RELEASE:=$(XKLIB_RELEASE).a
 
 ## FLAGS
-CPPFLAGS_DEBUG:=$(MOREFLAGS) -O0 -g $(ERRORS) $(INCLUDES)
-CPPFLAGS_RELEASE:=$(MOREFLAGS) -O3 -pipe $(DATARACES) -fvisibility=hidden -fvisibility-inlines-hidden -frename-registers -fomit-frame-pointer -s $(ERRORS) $(INCLUDES)
+CPPFLAGS_DEBUG:=$(CXXFLAGS) $(MOREFLAGS) -O0 -g $(ERRORS) $(INCLUDES)
+CPPFLAGS_RELEASE:=$(CXXFLAGS) $(MOREFLAGS) -O3 -pipe $(DATARACES) -fvisibility=hidden -fvisibility-inlines-hidden -frename-registers -fomit-frame-pointer -s $(ERRORS) $(INCLUDES)
 
 ## RULES
 all: xklib xklib_test
