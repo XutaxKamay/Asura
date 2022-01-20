@@ -437,8 +437,7 @@ auto XKLib::XKC<T>::encode(XKLib::data_t data, std::size_t size)
 
     auto values             = view_as<T*>(data);
     std::size_t value_index = 0;
-
-    auto max_values = size / sizeof(T);
+    auto max_values         = size / sizeof(T);
 
     /**
      * Store contiguous values
@@ -446,8 +445,8 @@ auto XKLib::XKC<T>::encode(XKLib::data_t data, std::size_t size)
     while (value_index < max_values)
     {
         std::size_t start_occurrence_index = value_index++;
-
         Occurrence occurrence;
+
         occurrence.letter_value = values[start_occurrence_index];
         occurrence.count        = 1;
 

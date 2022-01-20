@@ -428,7 +428,7 @@ auto XKLib::Test::run() -> void
     ConsoleOutput(intBits) << std::endl;
 
     bytes_t random_bytes;
-    constexpr auto size_of_random = 0x2000000ull;
+    constexpr auto size_of_random = 0x500000ull;
 
     for (std::size_t i = 0; i < size_of_random; i++)
     {
@@ -552,7 +552,7 @@ auto XKLib::Test::run() -> void
 
         timer.start();
 
-        for (int i = 0; i < 150; i++)
+        for (int i = 0; i < 2333; i++)
         {
             ConsoleOutput("V1: ") << i + 1 << std::endl;
 
@@ -560,9 +560,9 @@ auto XKLib::Test::run() -> void
                                       aligned_memory,
                                       random_bytes.size() * 8,
                                       nullptr);
-
-            pattern.matches().resize(pattern.matches().size() - 1);
         }
+
+        pattern.matches().resize(pattern.matches().size() - 2332);
 
         timer.end();
 
@@ -575,7 +575,7 @@ auto XKLib::Test::run() -> void
 
         timer.start();
 
-        for (int i = 0; i < 150; i++)
+        for (int i = 0; i < 2333; i++)
         {
             ConsoleOutput("V2: ") << i + 1 << std::endl;
 
@@ -583,9 +583,9 @@ auto XKLib::Test::run() -> void
                                       aligned_memory,
                                       random_bytes.size() * 8,
                                       nullptr);
-
-            pattern.matches().resize(pattern.matches().size() - 1);
         }
+
+        pattern.matches().resize(pattern.matches().size() - 2332);
 
         timer.end();
 
@@ -598,7 +598,7 @@ auto XKLib::Test::run() -> void
 
         timer.start();
 
-        for (int i = 0; i < 150; i++)
+        for (int i = 0; i < 2333; i++)
         {
             ConsoleOutput("V3: ") << i + 1 << std::endl;
 
@@ -606,9 +606,9 @@ auto XKLib::Test::run() -> void
                                       aligned_memory,
                                       random_bytes.size() * 8,
                                       nullptr);
-
-            pattern.matches().resize(pattern.matches().size() - 1);
         }
+
+        pattern.matches().resize(pattern.matches().size() - 2332);
 
         timer.end();
 
@@ -621,7 +621,7 @@ auto XKLib::Test::run() -> void
 
         timer.start();
 
-        for (int i = 0; i < 150; i++)
+        for (int i = 0; i < 2333; i++)
         {
             ConsoleOutput("V4: ") << i + 1 << std::endl;
 
@@ -629,9 +629,9 @@ auto XKLib::Test::run() -> void
                                       aligned_memory,
                                       random_bytes.size() * 8,
                                       nullptr);
-
-            pattern.matches().resize(pattern.matches().size() - 1);
         }
+
+        pattern.matches().resize(pattern.matches().size() - 2332);
 
         timer.end();
 
@@ -644,7 +644,7 @@ auto XKLib::Test::run() -> void
 
         timer.start();
 
-        for (int i = 0; i < 150; i++)
+        for (int i = 0; i < 2333; i++)
         {
             ConsoleOutput("aligned V1: ") << i + 1 << std::endl;
 
@@ -652,9 +652,9 @@ auto XKLib::Test::run() -> void
                                              aligned_memory,
                                              random_bytes.size() * 8,
                                              nullptr);
-
-            pattern.matches().resize(pattern.matches().size() - 1);
         }
+
+        pattern.matches().resize(pattern.matches().size() - 2332);
 
         timer.end();
 
