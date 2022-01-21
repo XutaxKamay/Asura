@@ -1,6 +1,9 @@
 #ifndef PCH_H
 #define PCH_H
 
+/* ELFIO, must be included early */
+#include <elfio/elfio.hpp>
+
 #if defined(_WIN32) || defined(_WIN64)
     #define WINDOWS
     #if _WIN64

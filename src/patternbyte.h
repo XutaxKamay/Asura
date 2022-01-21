@@ -20,13 +20,13 @@ namespace XKLib
         class Value
         {
           public:
-            Value(int value);
-
             enum
             {
                 INVALID = -1,
                 UNKNOWN = -2
             };
+
+            Value(int value);
 
             int value = INVALID;
             std::size_t index {};

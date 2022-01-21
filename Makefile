@@ -48,7 +48,7 @@ XKLIB_DEBUG:=$(XKLIB_DEBUG).a
 XKLIB_RELEASE:=$(XKLIB_RELEASE).a
 
 ## INCLUDES
-INCLUDES:=-iquote src/ -iquote test/src/ -iquote ./
+INCLUDES:=-I ./vendor/ELFIO -iquote src/ -iquote test/src/ -iquote ./
 
 ## ERRORS
 ERRORS:= -Wextra -W -Wall -Werror

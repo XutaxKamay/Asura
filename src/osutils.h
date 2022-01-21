@@ -10,24 +10,6 @@ namespace XKLib
     {
       public:
 #ifndef WIN32
-        struct iterate_phdr_arg
-        {
-            std::vector<struct dl_phdr_info> infos;
-        };
-
-        static auto retrievePHDRInfos(struct dl_phdr_info* info,
-                                      std::size_t,
-                                      void* param) -> int
-        {
-            auto arg = view_as<iterate_phdr_arg*>(param);
-
-            arg->infos.push_back(*info);
-
-            return 0;
-        }
-#endif
-
-#ifndef WIN32
         template <typename T>
         static auto FindExportedFunctionRunTime(
           const std::string& modName,
@@ -61,13 +43,24 @@ namespace XKLib
         auto FindDebugSymbol(const std::string& modName,
                              const std::string& funcName) -> ptr_t
         {
-            iterate_phdr_arg arg;
-            dl_phdr_info found_info {};
-            struct stat st
+            struct iterate_phdr_arg
             {
-            };
+                std::vector<struct dl_phdr_info> infos;
+            } arg;
 
-            dl_iterate_phdr(retrievePHDRInfos, &arg);
+            dl_phdr_info found_info;
+            struct stat st;
+
+            dl_iterate_phdr(
+              [](struct dl_phdr_info* info, std::size_t, void* param)
+              {
+                  auto arg = view_as<iterate_phdr_arg*>(param);
+
+                  arg->infos.push_back(*info);
+
+                  return 0;
+              },
+              &arg);
 
             for (auto&& info : arg.infos)
             {
@@ -177,7 +170,9 @@ namespace XKLib
             }
 
             munmap(file_header, view_as<std::size_t>(st.st_size));
+
             XKLIB_EXCEPTION("Cannot find function.");
+
             return nullptr;
         }
 #else

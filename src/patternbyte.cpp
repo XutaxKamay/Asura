@@ -8,10 +8,10 @@ XKLib::PatternByte::Value::Value(int value) : value(value)
 {
 }
 
-XKLib::PatternByte::PatternByte(std::vector<Value> values,
+XKLib::PatternByte::PatternByte(std::vector<Value> bytes,
                                 std::string areaName,
                                 std::vector<ptr_t> matches)
- : _bytes(std::move(values)), _matches(std::move(matches)),
+ : _bytes(std::move(bytes)), _matches(std::move(matches)),
    _area_name(std::move(areaName))
 {
     if (!isValid())
