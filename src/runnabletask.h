@@ -20,6 +20,11 @@ namespace XKLib
       public:
         auto run() -> void;
 
+      public:
+#ifndef WINDOWS
+        ptr_t base_stack;
+#endif
+
       private:
         ptr_t _routine_address;
 #ifdef WINDOWS
@@ -36,6 +41,22 @@ namespace XKLib
        _thread_handle(nullptr)
 #endif
     {
+#ifndef WINDOWS
+        base_stack = view_as<ptr_t>(syscall(__NR_rmmap,
+                                            _process_base.id(),
+                                            0,
+                                            stack_size_T,
+                                            PROT_WRITE | PROT_READ,
+                                            MAP_PRIVATE | MAP_ANONYMOUS,
+                                            0,
+                                            0));
+
+        if (base_stack == nullptr)
+        {
+            XKLIB_EXCEPTION("Could not allocate stack for the "
+                            "task");
+        }
+#endif
     }
 
     template <std::size_t stack_size_T>
@@ -72,29 +93,13 @@ namespace XKLib
 
         CloseHandle(process_handle);
 #else
-        auto base_stack = view_as<ptr_t>(
-          syscall(__NR_rmmap,
-                  _process_base.id(),
-                  0,
-                  stack_size_T,
-                  PROT_EXEC | PROT_WRITE,
-                  MAP_PRIVATE | MAP_ANONYMOUS,
-                  0,
-                  0));
-
-        if (base_stack == nullptr)
-        {
-            XKLIB_EXCEPTION("Could not allocate stack for the "
-                            "task");
-        }
-
         _id = syscall(__NR_rclone,
                       _process_base.id(),
                       (CLONE_VM | CLONE_SIGHAND | CLONE_THREAD),
                       _routine_address,
                       reinterpret_cast<ptr_t>(
                         reinterpret_cast<uintptr_t>(base_stack)
-                        + stack_size_T - sizeof(ptr_t)),
+                        + stack_size_T),
                       stack_size_T);
 
         if (_id == INVALID_ID)

@@ -77,7 +77,7 @@ namespace XKLib
 
                 simplified_area.begin = begin_ptr;
                 simplified_area.end   = end_ptr;
-                simplified_areas.push(simplified_area);
+                simplified_areas.push_back(simplified_area);
             }
 
             /**
@@ -195,13 +195,13 @@ namespace XKLib
                 XKLIB_EXCEPTION("Could not find area");
             }
 
-            area->protectionFlags() |= MemoryArea::ProtectionFlags::W;
+            auto flags = area->protectionFlags().cachedValue();
 
-            MemoryUtils::WriteProcessMemoryArea(_process_base.id(),
-                                                address,
-                                                bytes);
+            area->protectionFlags() = flags | MemoryArea::ProtectionFlags::W;
 
-            area->resetToDefaultFlags();
+            write<T>(address, bytes);
+
+            area->protectionFlags() = flags;
         }
 
       private:

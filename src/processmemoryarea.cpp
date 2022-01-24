@@ -39,36 +39,11 @@ auto ProcessMemoryArea::ModifiableProtectionFlags::cachedValue()
     return _flags;
 }
 
-auto ProcessMemoryArea::ModifiableProtectionFlags::operator|(mapf_t flags)
-  -> mapf_t
-{
-    return flags | _flags;
-}
-
-auto ProcessMemoryArea::ModifiableProtectionFlags::operator&(mapf_t flags)
-  -> mapf_t
-{
-    return flags & _flags;
-}
 
 auto ProcessMemoryArea::ModifiableProtectionFlags::operator=(mapf_t flags)
-  -> ModifiableProtectionFlags&
+  -> void
 {
     change(flags);
-
-    return *this;
-}
-
-auto ProcessMemoryArea::ModifiableProtectionFlags::operator|=(mapf_t flags)
-  -> void
-{
-    change(flags | _flags);
-}
-
-auto ProcessMemoryArea::ModifiableProtectionFlags::operator&=(mapf_t flags)
-  -> void
-{
-    change(flags & _flags);
 }
 
 ProcessMemoryArea::ProcessMemoryArea(ProcessBase process)

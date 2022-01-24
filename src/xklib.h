@@ -11,6 +11,7 @@
 #include "detourx86.h"
 #include "encryptrsablocks.h"
 #include "exception.h"
+#include "kokabiel.h"
 #include "memoryarea.h"
 #include "memorymap.h"
 #include "memoryutils.h"

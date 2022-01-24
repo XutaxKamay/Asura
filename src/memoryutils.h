@@ -36,7 +36,7 @@ namespace XKLib
         }
 
         template <typename T = uintptr_t>
-        static auto ProtectMemoryArea(pid_t pid,
+        static auto ProtectMemoryArea(process_id_t pid,
                                       T address,
                                       std::size_t size,
                                       mapf_t flags) -> void
@@ -85,7 +85,7 @@ namespace XKLib
         }
 
         template <typename T = uintptr_t>
-        static auto AllocArea(pid_t pid,
+        static auto AllocArea(process_id_t pid,
                               T address,
                               std::size_t size,
                               mapf_t flags) -> ptr_t
@@ -127,7 +127,7 @@ namespace XKLib
         }
 
         template <typename T = uintptr_t>
-        static auto FreeArea(pid_t pid, T address, std::size_t size)
+        static auto FreeArea(process_id_t pid, T address, std::size_t size)
           -> void
         {
 #ifdef WINDOWS
@@ -164,7 +164,7 @@ namespace XKLib
         }
 
         template <typename T = uintptr_t>
-        static auto ReadProcessMemoryArea(pid_t pid,
+        static auto ReadProcessMemoryArea(process_id_t pid,
                                           T address,
                                           std::size_t size) -> bytes_t
         {
@@ -204,7 +204,7 @@ namespace XKLib
         }
 
         template <typename A, typename T = uintptr_t>
-        static auto ReadProcessMemoryAreaAligned(pid_t pid,
+        static auto ReadProcessMemoryAreaAligned(process_id_t pid,
                                                  T address,
                                                  std::size_t size)
           -> std::vector<A>
@@ -246,7 +246,7 @@ namespace XKLib
         }
 
         template <typename T = uintptr_t>
-        static auto WriteProcessMemoryArea(pid_t pid,
+        static auto WriteProcessMemoryArea(process_id_t pid,
                                            const bytes_t& bytes,
                                            T address) -> void
         {

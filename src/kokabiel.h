@@ -1,6 +1,9 @@
 #ifndef KOKABIEL_H
 #define KOKABIEL_H
 
+#include "process.h"
+#include "processmemoryarea.h"
+
 namespace XKLib
 {
     /**
@@ -10,11 +13,21 @@ namespace XKLib
      */
     class Kokabiel
     {
+        struct ready_segment_t
+        {
+            std::vector<byte_t> data;
+            mapf_t flags;
+            ptr_t start;
+        };
+
       public:
         Kokabiel(const std::string& fileName);
-        auto inject(Process& process);
+        auto inject(Process& process,
+                    const std::vector<std::string>& cmdLine,
+                    const std::vector<std::string>& env) -> void;
 
       private:
+        ELFIO::elfio _elf;
     };
 };
 

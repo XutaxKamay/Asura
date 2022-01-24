@@ -18,13 +18,7 @@ namespace XKLib
             explicit ModifiableProtectionFlags(ProcessMemoryArea* _pma);
 
             auto change(mapf_t flags) -> mapf_t;
-
-            auto operator|(mapf_t flags) -> mapf_t;
-            auto operator&(mapf_t flags) -> mapf_t;
-
-            auto operator=(mapf_t flags) -> ModifiableProtectionFlags&;
-            auto operator|=(mapf_t flags) -> void;
-            auto operator&=(mapf_t flags) -> void;
+            auto operator=(mapf_t flags) -> void;
 
           public:
             auto cachedValue() -> mapf_t&;

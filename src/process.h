@@ -15,16 +15,17 @@ namespace XKLib
     class Process : public ProcessBase
     {
       public:
-        static inline constexpr pid_t INVALID_PID = -1;
+        static inline constexpr process_id_t INVALID_PID    = -1;
+        static inline constexpr std::size_t TASK_STACK_SIZE = 0x10000;
 
       public:
         static auto self() -> Process;
         static auto find(const std::string& name) -> Process;
-        static auto ProcessName(pid_t pid) -> std::string;
+        static auto ProcessName(process_id_t pid) -> std::string;
 
       public:
         Process();
-        explicit Process(pid_t pid);
+        explicit Process(process_id_t pid);
 
       public:
         auto tasks() -> tasks_t;
@@ -32,7 +33,7 @@ namespace XKLib
         auto search(PatternByte& patternByte) -> void;
 
       public:
-        template <std::size_t stack_size_T = 0x10000>
+        template <std::size_t stack_size_T = TASK_STACK_SIZE>
         auto createTask(ptr_t routineAddress)
           -> RunnableTask<stack_size_T>
         {

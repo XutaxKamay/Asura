@@ -40,7 +40,7 @@ auto XKLib::Process::find(const std::string& name) -> XKLib::Process
     {
         if (entry.is_directory())
         {
-            auto pid = view_as<pid_t>(std::stoi(entry.path().filename()));
+            auto pid = view_as<process_id_t>(std::stoi(entry.path().filename()));
 
             if (name.find(ProcessName(pid)) != std::string::npos)
             {
@@ -62,7 +62,7 @@ end:
     return process;
 }
 
-auto XKLib::Process::ProcessName(pid_t pid) -> std::string
+auto XKLib::Process::ProcessName(process_id_t pid) -> std::string
 {
     std::string result("unknown");
 
@@ -120,7 +120,7 @@ Process::Process()
 {
 }
 
-Process::Process(pid_t pid)
+Process::Process(process_id_t pid)
  : ProcessBase(pid), _full_name(ProcessName(pid)),
    _mmap(ProcessMemoryMap(*this))
 {
