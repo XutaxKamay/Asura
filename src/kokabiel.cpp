@@ -41,12 +41,9 @@ auto XKLib::Kokabiel::inject(XKLib::Process& process,
             auto left_over = segment->get_virtual_address()
                              - view_as<uintptr_t>(ready_segment.start);
 
-            auto memory_aligned_size = (((segment->get_memory_size()
-                                          + left_over)
-                                         - 1)
-                                          / MemoryUtils::GetPageSize()
-                                        + 1)
-                                       * MemoryUtils::GetPageSize();
+            auto memory_aligned_size = MemoryUtils::align_to_page_size(
+              segment->get_memory_size() + left_over,
+              MemoryUtils::GetPageSize());
 
             ready_segment.data.resize(memory_aligned_size);
 
@@ -211,7 +208,7 @@ auto XKLib::Kokabiel::inject(XKLib::Process& process,
             /**
              * I don't know why (yet), but it according to ELF, there can
              * be one useless smybol and section SHT_DYNSYM always exists
-             * ...
+             * ... Does not happen with static executables though.
              */
             if (ELFIO::const_symbol_section_accessor(_elf, section)
                   .get_symbols_num()
@@ -277,34 +274,38 @@ auto XKLib::Kokabiel::inject(XKLib::Process& process,
     bytes_t env_data;
     std::size_t total_offset = 0;
 
-    for (auto cmd : cmdLine)
+    /* traverse in reversed way */
+    for (auto cmd = cmdLine.rbegin(); cmd != cmdLine.rend(); cmd++)
     {
         cmd_offset_t co;
         co.offset = total_offset;
-        total_offset += cmd.size() + 1;
+        total_offset += cmd->size() + 1;
 
-        env_data.insert(env_data.end(), cmd.begin(), cmd.end());
+        env_data.insert(env_data.end(), cmd->begin(), cmd->end());
         env_data.push_back(0);
 
         cmds_offsets.push_back(co);
     }
 
     /* cmds ended, now add env */
-    for (auto e : env)
+    for (auto e = env.rbegin(); e != env.rend(); e++)
     {
         env_offset_t eo;
         eo.offset = total_offset;
-        total_offset += e.size() + 1;
+        total_offset += e->size() + 1;
 
-        env_data.insert(env_data.end(), e.begin(), e.end());
+        env_data.insert(env_data.end(), e->begin(), e->end());
         env_data.push_back(0);
 
         envs_offsets.push_back(eo);
     }
 
+    auto stack_start = view_as<uintptr_t>(task.base_stack)
+                       + Process::TASK_STACK_SIZE;
+
     auto allocated_env_data = mmap.allocArea(
       0,
-      env_data.size(),
+      env_data.size() + MemoryUtils::GetPageSize(), /* env + fun */
       MemoryArea::ProtectionFlags::RW);
 
     if (allocated_env_data == nullptr)
@@ -312,22 +313,46 @@ auto XKLib::Kokabiel::inject(XKLib::Process& process,
         XKLIB_EXCEPTION("Couldn't allocate memory for cmd line data");
     }
 
+    /* write argv + envp */
     mmap.write(allocated_env_data, env_data);
 
-    auto stack_start = view_as<uintptr_t>(task.base_stack)
-                       + Process::TASK_STACK_SIZE;
+    auto at_random = view_as<uintptr_t>(allocated_env_data)
+                     + total_offset;
 
-    /* write null address for limiting env */
-    stack_start -= sizeof(ptr_t);
+    /* let's generate some 16 random bytes for AT_RANDOM */
+    static std::vector<byte_t> random_bytes = []{
 
-    static bytes_t null_address = []{
-        bytes_t data(sizeof(ptr_t));
-        std::memset(data.data(), 0, data.size());
+        using random_bytes_engine = std::independent_bits_engine<
+        std::default_random_engine, CHAR_BIT, byte_t>;
+
+        random_bytes_engine rbe;
+        std::vector<byte_t> data(16);
+        std::generate(begin(data), end(data), std::ref(rbe));
+
         return data;
     }();
 
+    mmap.write(at_random, random_bytes);
+
+    /* Setup auxiliary vectors */
+    Elf_auxv_t<uintptr_t> elf_aux[2] {
+        {  AT_NULL,         { 0 }}, /* first because last in the stack */
+        {AT_RANDOM, { at_random }}
+    };
+
+    /* write aux vecs */
+    for (std::size_t i = 0; i < 2; i++)
+    {
+        stack_start -= sizeof(Elf_auxv_t<uintptr_t>);
+        mmap.write(stack_start,
+                   &elf_aux[i],
+                   sizeof(Elf_auxv_t<uintptr_t>));
+    }
+
+    static uintptr_t null_address = 0;
+    /* write null address for limiting enp */
     stack_start -= sizeof(ptr_t);
-    mmap.write(stack_start, null_address);
+    mmap.write(stack_start, &null_address, sizeof(null_address));
 
     /**
      * Env exists ? if yes we write env addresss to stack after the null
@@ -340,15 +365,14 @@ auto XKLib::Kokabiel::inject(XKLib::Process& process,
         auto address_of_string = view_as<uintptr_t>(allocated_env_data)
                                  + env_offset.offset;
 
-        static bytes_t data(sizeof(ptr_t));
-        *view_as<uintptr_t*>(data.data()) = address_of_string;
-
-        mmap.write(stack_start, data);
+        mmap.write(stack_start,
+                   &address_of_string,
+                   sizeof(address_of_string));
     }
 
     /* write null address for limiting argv */
     stack_start -= sizeof(ptr_t);
-    mmap.write(stack_start, null_address);
+    mmap.write(stack_start, &null_address, sizeof(null_address));
 
     for (auto&& cmd_offset : cmds_offsets)
     {
@@ -357,15 +381,12 @@ auto XKLib::Kokabiel::inject(XKLib::Process& process,
         auto address_of_string = view_as<uintptr_t>(allocated_env_data)
                                  + cmd_offset.offset;
 
-        static bytes_t data(sizeof(ptr_t));
-        *view_as<uintptr_t*>(data.data()) = address_of_string;
-
-        mmap.write(stack_start, data);
+        mmap.write(stack_start,
+                   &address_of_string,
+                   sizeof(address_of_string));
     }
 
-    /* setup aux vector */
-
-   *view_as<uintptr_t*>(shellcode.data() + 2) = stack_start;
+    *view_as<uintptr_t*>(shellcode.data() + 2) = stack_start;
 
     mmap.forceWrite(shellcode_address, shellcode);
 

@@ -6,6 +6,16 @@
 
 namespace XKLib
 {
+    template <typename T>
+    struct Elf_auxv_t
+    {
+        T a_type; /* Entry type */
+        union
+        {
+            T a_val; /* Integer value */
+        } a_un;
+    };
+
     /**
      * @brief Manual maps a statically link ELF into a process.
      * TODO:
@@ -22,6 +32,7 @@ namespace XKLib
 
       public:
         Kokabiel(const std::string& fileName);
+
         auto inject(Process& process,
                     const std::vector<std::string>& cmdLine,
                     const std::vector<std::string>& env) -> void;

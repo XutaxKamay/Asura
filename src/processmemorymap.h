@@ -197,11 +197,30 @@ namespace XKLib
 
             auto flags = area->protectionFlags().cachedValue();
 
-            area->protectionFlags() = flags | MemoryArea::ProtectionFlags::W;
+            area->protectionFlags() = flags
+                                      | MemoryArea::ProtectionFlags::W;
 
             write<T>(address, bytes);
 
             area->protectionFlags() = flags;
+        }
+
+        template <typename T = uintptr_t>
+        auto write(T address, auto ptr, std::size_t size) -> void
+        {
+            bytes_t data(view_as<byte_t*>(ptr),
+                         view_as<byte_t*>(ptr) + size);
+
+            write<T>(address, data);
+        }
+
+        template <typename T = uintptr_t>
+        auto forceWrite(T address, auto ptr, std::size_t size) -> void
+        {
+            bytes_t data(view_as<byte_t*>(ptr),
+                         view_as<byte_t*>(ptr) + size);
+
+            forceWrite<T>(address, data);
         }
 
       private:

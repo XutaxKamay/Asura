@@ -209,7 +209,8 @@ namespace XKLib
                                                  std::size_t size)
           -> std::vector<A>
         {
-            std::vector<A> result(align_to_page_size(size, sizeof(A)));
+            std::vector<A> result(
+              align_to_page_size(size, sizeof(A)));
 
 #ifndef WINDOWS
             iovec local  = { .iov_base = result.data(),
@@ -219,11 +220,11 @@ namespace XKLib
 
             auto ret = process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
-            if (ret != view_as<decltype(ret)>(size))
+            if (ret != view_as<decltype(ret)>(size * sizeof(A)))
             {
                 XKLIB_EXCEPTION("process_vm_readv failed with "
-                                + std::to_string(address)
-                                + " and size: " + std::to_string(size));
+                                + std::to_string(address) + " and size: "
+                                + std::to_string(size * sizeof(A)));
             }
 #else
 

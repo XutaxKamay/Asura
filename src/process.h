@@ -77,6 +77,18 @@ namespace XKLib
             mmap().forceWrite(address, bytes);
         }
 
+        template <typename T = uintptr_t>
+        auto write(T address, auto ptr, std::size_t size) -> void
+        {
+            mmap().write(address, ptr, size);
+        }
+
+        template <typename T = uintptr_t>
+        auto forceWrite(T address, auto ptr, std::size_t size) -> void
+        {
+            mmap().forceWrite(address, ptr, size);
+        }
+
       private:
         std::string _full_name {};
         ProcessMemoryMap _mmap;
