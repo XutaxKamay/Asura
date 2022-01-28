@@ -122,6 +122,7 @@ namespace XKLib
                                                       runnableTask,
                                                       injection_info);
         }
+#ifndef ENVIRONMENT32
         else
         {
             relocateSegments<ELFCLASS64>(processMemoryMap,
@@ -138,6 +139,7 @@ namespace XKLib
                                                       runnableTask,
                                                       injection_info);
         }
+#endif
     }
 
     template <unsigned char ELFClass_T>
@@ -494,51 +496,55 @@ namespace XKLib
         }();
 
         using reloc_ptr_t = typename decltype(_reloc_ptr)::type;
+        std::vector<byte_t> shellcode;
 
-#if defined(__x86_64__)
-        /**
-         * "movabs rax, 0; mov rsp, rax; movabs rax, 0; push rax;
-         * movabs rax, 0; jmp rax"
-         */
-        std::vector<byte_t> shellcode = {
-            0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x48, 0x89, 0xc4, 0x48, 0xb8, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x48, 0xb8, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xe0
-        };
-        /* inject shellcode for properly calling _start */
-        *view_as<reloc_ptr_t*>(shellcode.data() + 26) = injection_info
-                                                          .entry_point;
+#if defined(__x86_64__) || defined(__i386__)
+        if constexpr (ELFClass_T == ELFCLASS64)
+        {
+            /**
+             * "movabs rax, 0; mov rsp, rax; movabs rax, 0; push rax;
+             * movabs rax, 0; jmp rax"
+             */
+            shellcode = { 0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                          0x00, 0x00, 0x48, 0x89, 0xc4, 0x48, 0xb8, 0x00,
+                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50,
+                          0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                          0x00, 0x00, 0xff, 0xe0 };
 
-        /* prepare cmd line */
-        *view_as<reloc_ptr_t*>(shellcode.data() + 15) = cmdLine.size();
+            /* inject shellcode for properly calling _start */
+            *view_as<reloc_ptr_t*>(shellcode.data() + 26) = injection_info
+                                                              .entry_point;
 
-        /* setup stack */
-        *view_as<reloc_ptr_t*>(shellcode.data() + 2) = injection_info
-                                                         .stack_start;
+            /* prepare cmd line */
+            *view_as<reloc_ptr_t*>(shellcode.data() + 15) = cmdLine.size();
 
-#elif defined(__i386__)
-        /**
-         * ""mov eax, 0; mov esp, eax; mov eax, 0; push eax; mov eax,
-         * 0; jmp eax"
-         */
-        std::vector<byte_t> shellcode = { 0xb8, 0x00, 0x00, 0x00, 0x00,
-                                          0x89, 0xc4, 0xb8, 0x00, 0x00,
-                                          0x00, 0x00, 0x50, 0xb8, 0x00,
-                                          0x00, 0x00, 0x00, 0xff, 0xe0 };
+            /* setup stack */
+            *view_as<reloc_ptr_t*>(shellcode.data() + 2) = injection_info
+                                                             .stack_start;
+        }
+        else if constexpr (ELFClass_T == ELFCLASS32)
+        {
+            /**
+             * ""mov eax, 0; mov esp, eax; mov eax, 0; push eax; mov eax,
+             * 0; jmp eax"
+             */
+            shellcode = { 0xb8, 0x00, 0x00, 0x00, 0x00, 0x89, 0xc4,
+                          0xb8, 0x00, 0x00, 0x00, 0x00, 0x50, 0xb8,
+                          0x00, 0x00, 0x00, 0x00, 0xff, 0xe0 };
 
-        /* inject shellcode for properly calling _start */
-        *view_as<reloc_ptr_t*>(shellcode.data() + 14) = injection_info
-                                                          .entry_point;
+            /* inject shellcode for properly calling _start */
+            *view_as<reloc_ptr_t*>(shellcode.data() + 14) = injection_info
+                                                              .entry_point;
 
-        /* prepare cmd line */
-        *view_as<reloc_ptr_t*>(shellcode.data() + 8) = cmdLine.size();
+            /* prepare cmd line */
+            *view_as<reloc_ptr_t*>(shellcode.data() + 8) = cmdLine.size();
 
-        /* setup stack */
-        *view_as<reloc_ptr_t*>(shellcode.data() + 1) = injection_info
-                                                         .stack_start;
+            /* setup stack */
+            *view_as<reloc_ptr_t*>(shellcode.data() + 1) = injection_info
+                                                             .stack_start;
+        }
 #else
-    #error "Not supported yet"
+    #error "Architecture not supported"
 #endif
 
         /**
