@@ -48,7 +48,7 @@ namespace XKLib
             if (ProcessBase::self().id() == _process_base.id())
             {
                 std::vector<T> result(
-                  MemoryUtils::align_to_page_size(size(), sizeof(T)));
+                  MemoryUtils::AlignToPageSize(size(), sizeof(T)));
                 std::copy(result.begin(), result.end(), begin<T*>());
                 return result;
             }

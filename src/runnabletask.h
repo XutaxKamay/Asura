@@ -14,15 +14,22 @@ namespace XKLib
         RunnableTask(ProcessBase processBase, ptr_t routineAddress);
 
       public:
+        auto& routineAddress();
+
         auto kill() -> void;
         auto wait() -> void;
 
       public:
         auto run() -> void;
 
+#ifndef WINDOWS
+        auto& baseStack();
+        auto freeStack() -> void;
+#endif
+
       public:
 #ifndef WINDOWS
-        ptr_t base_stack;
+        ptr_t _base_stack;
 #endif
 
       private:
@@ -31,6 +38,12 @@ namespace XKLib
         HANDLE _thread_handle;
 #endif
     };
+
+    template <std::size_t stack_size_T>
+    auto& RunnableTask<stack_size_T>::routineAddress()
+    {
+        return _routine_address;
+    }
 
     template <std::size_t stack_size_T>
     RunnableTask<stack_size_T>::RunnableTask(ProcessBase processBase,
@@ -42,20 +55,11 @@ namespace XKLib
 #endif
     {
 #ifndef WINDOWS
-        base_stack = view_as<ptr_t>(syscall(__NR_rmmap,
-                                            _process_base.id(),
-                                            0,
-                                            stack_size_T,
-                                            PROT_WRITE | PROT_READ,
-                                            MAP_PRIVATE | MAP_ANONYMOUS,
-                                            0,
-                                            0));
-
-        if (base_stack == nullptr)
-        {
-            XKLIB_EXCEPTION("Could not allocate stack for the "
-                            "task");
-        }
+        _base_stack = MemoryUtils::AllocArea(
+          _process_base.id(),
+          nullptr,
+          stack_size_T,
+          MemoryArea::ProtectionFlags::RW);
 #endif
     }
 
@@ -98,7 +102,7 @@ namespace XKLib
                       (CLONE_VM | CLONE_SIGHAND | CLONE_THREAD),
                       _routine_address,
                       reinterpret_cast<ptr_t>(
-                        reinterpret_cast<uintptr_t>(base_stack)
+                        reinterpret_cast<uintptr_t>(_base_stack)
                         + stack_size_T),
                       stack_size_T);
 
@@ -154,6 +158,23 @@ namespace XKLib
         }
 #endif
     }
+
+#ifndef WINDOWS
+
+    template <std::size_t stack_size_T>
+    auto& RunnableTask<stack_size_T>::baseStack()
+    {
+        return _base_stack;
+    }
+
+    template <std::size_t stack_size_T>
+    auto RunnableTask<stack_size_T>::freeStack() -> void
+    {
+        MemoryUtils::FreeArea(_process_base.id(),
+                              _base_stack,
+                              stack_size_T);
+    }
+#endif
 
 };
 

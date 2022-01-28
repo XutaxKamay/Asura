@@ -17,7 +17,7 @@ namespace XKLib
     {
       public:
         template <typename T = uintptr_t>
-        static constexpr inline auto align(T value, std::size_t size)
+        static constexpr inline auto Align(T value, std::size_t size)
         {
             auto original_value = view_as<uintptr_t>(value);
             original_value -= original_value % size;
@@ -25,9 +25,8 @@ namespace XKLib
         }
 
         template <typename T = uintptr_t>
-        static constexpr inline auto align_to_page_size(
-          T sizeToAlign,
-          std::size_t pageSize)
+        static constexpr inline auto AlignToPageSize(T sizeToAlign,
+                                                     std::size_t pageSize)
         {
             return view_as<T>(
               ((view_as<std::size_t>(sizeToAlign) + (pageSize - 1))
@@ -41,9 +40,9 @@ namespace XKLib
                                       std::size_t size,
                                       mapf_t flags) -> void
         {
-            auto aligned_address = align<ptr_t>(view_as<ptr_t>(address),
+            auto aligned_address = Align<ptr_t>(view_as<ptr_t>(address),
                                                 GetPageSize());
-            auto aligned_size = align_to_page_size(size, GetPageSize());
+            auto aligned_size    = AlignToPageSize(size, GetPageSize());
 #ifdef WINDOWS
             auto process_handle = GetCurrentProcessId() == pid ?
                                     GetCurrentProcess() :
@@ -209,8 +208,7 @@ namespace XKLib
                                                  std::size_t size)
           -> std::vector<A>
         {
-            std::vector<A> result(
-              align_to_page_size(size, sizeof(A)));
+            std::vector<A> result(AlignToPageSize(size, sizeof(A)));
 
 #ifndef WINDOWS
             iovec local  = { .iov_base = result.data(),

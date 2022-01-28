@@ -536,7 +536,7 @@ auto XKLib::Test::run() -> void
                                    - pattern_bytes.size()
                                    - sizeof(PatternByte::simd_value_t));
 
-        random_start = MemoryUtils::align(random_start,
+        random_start = MemoryUtils::Align(random_start,
                                           sizeof(
                                             PatternByte::simd_value_t));
 

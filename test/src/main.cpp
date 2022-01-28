@@ -10,7 +10,19 @@ auto main() -> int
 
     auto self = XKLib::Process::self();
 
-    kok.inject(self, { "wow" }, { "HOME=/home/kamay" });
+    XKLib::Kokabiel::injection_info_t injection_info;
+
+    auto task = self.createTask(nullptr);
+    auto mmap = self.mmap();
+
+    kok.inject<XKLib::Process::TASK_STACK_SIZE>(mmap,
+                                                { "wow" },
+                                                { "HOME=/home/kamay" },
+                                                task,
+                                                injection_info);
+
+    task.run();
+    task.wait();
 
     return 0;
 }
