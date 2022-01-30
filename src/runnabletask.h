@@ -22,15 +22,11 @@ namespace XKLib
       public:
         auto run() -> void;
 
-#ifndef WINDOWS
         auto& baseStack();
         auto freeStack() -> void;
-#endif
 
       public:
-#ifndef WINDOWS
         ptr_t _base_stack;
-#endif
 
       private:
         ptr_t _routine_address;
@@ -54,13 +50,11 @@ namespace XKLib
        _thread_handle(nullptr)
 #endif
     {
-#ifndef WINDOWS
         _base_stack = MemoryUtils::AllocArea(
           _process_base.id(),
           nullptr,
           stack_size_T,
           MemoryArea::ProtectionFlags::RW);
-#endif
     }
 
     template <std::size_t stack_size_T>
@@ -159,8 +153,6 @@ namespace XKLib
 #endif
     }
 
-#ifndef WINDOWS
-
     template <std::size_t stack_size_T>
     auto& RunnableTask<stack_size_T>::baseStack()
     {
@@ -174,8 +166,6 @@ namespace XKLib
                               _base_stack,
                               stack_size_T);
     }
-#endif
-
 };
 
 #endif

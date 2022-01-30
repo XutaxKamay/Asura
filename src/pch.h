@@ -55,7 +55,6 @@
 #ifndef WINDOWS
     #include <dlfcn.h>
     #include <fcntl.h>
-    #include <link.h>
 
     #include <sys/file.h>
     #include <sys/ioctl.h>

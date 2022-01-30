@@ -24,7 +24,7 @@ auto XKLib::Kokabiel::loadSegments() -> void
     {
         auto seg_type = segment->get_type();
 
-        if (seg_type == PT_LOAD)
+        if (seg_type == ELFIO::PT_LOAD)
         {
             loadable_segment_t loaded_segment;
 
@@ -47,13 +47,13 @@ auto XKLib::Kokabiel::loadSegments() -> void
 
             auto seg_flags = segment->get_flags();
 
-            loaded_segment.flags = ((seg_flags & PF_R) ?
+            loaded_segment.flags = ((seg_flags & ELFIO::PF_R) ?
                                       MemoryArea::ProtectionFlags::R :
                                       0)
-                                   | ((seg_flags & PF_W) ?
+                                   | ((seg_flags & ELFIO::PF_W) ?
                                         MemoryArea::ProtectionFlags::W :
                                         0)
-                                   | ((seg_flags & PF_X) ?
+                                   | ((seg_flags & ELFIO::PF_X) ?
                                         MemoryArea::ProtectionFlags::X :
                                         0);
 

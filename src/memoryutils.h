@@ -109,8 +109,6 @@ namespace XKLib
               MemoryArea::ProtectionFlags::ToOS(flags));
 
             CloseHandle(process_handle);
-
-            return view_as<ptr_t>(area_start);
 #else
             auto area_start = syscall(__NR_rmmap,
                                       pid,
@@ -121,8 +119,8 @@ namespace XKLib
                                       MAP_PRIVATE | MAP_ANONYMOUS,
                                       0,
                                       0);
-            return view_as<ptr_t>(area_start);
 #endif
+            return view_as<ptr_t>(area_start);
         }
 
         template <typename T = uintptr_t>
@@ -153,7 +151,7 @@ namespace XKLib
 
             CloseHandle(process_handle);
 #else
-            auto ret = syscall(__NR_rmunmap, pid, address, size);
+            auto ret        = syscall(__NR_rmunmap, pid, address, size);
 
             if (ret < 0)
             {

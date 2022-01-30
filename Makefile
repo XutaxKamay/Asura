@@ -26,7 +26,7 @@ ifneq (,$(findstring mingw, $(CXX)))
   XKLIB_TEST_DEBUG:=$(XKLIB_TEST_DEBUG).exe
   XKLIB_TEST_RELEASE:=$(XKLIB_TEST_RELEASE).exe
   DBGHELP_LIB:=-ldbghelp -lpsapi
-  MOREFLAGS:=-static-libgcc -static-libstdc++
+  MOREFLAGS:=$(MOREFLAGS) -static-libgcc -static-libstdc++ -Wno-error=maybe-uninitialized
 else
   DLOPEN_LIB:=-ldl
   PTHREAD_LIB:=-lpthread

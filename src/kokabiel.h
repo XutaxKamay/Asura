@@ -1,15 +1,23 @@
 #ifndef KOKABIEL_H
 #define KOKABIEL_H
 
+#include "memoryarea.h"
 #include "process.h"
 #include "processmemoryarea.h"
+
+/* Expand ELFIO */
+namespace ELFIO
+{
+    constexpr auto AT_NULL   = 0;
+    constexpr auto AT_RANDOM = 25;
+};
 
 namespace XKLib
 {
     template <unsigned char ELFClass>
-    concept ELFClassSupported = ELFClass == ELFCLASS32
+    concept ELFClassSupported = ELFClass == ELFIO::ELFCLASS32
 #ifndef ENVIRONMENT32
-                                || ELFClass == ELFCLASS64
+                                || ELFClass == ELFIO::ELFCLASS64
 #endif
       ;
 
@@ -45,12 +53,12 @@ namespace XKLib
             {
                 ptr_t base_image;
                 ptr_t shellcode_address;
+                uintptr_t env_data;
             } allocated_mem;
 
             uintptr_t offset_image;
             uintptr_t entry_point;
             uintptr_t stack_start;
-            uintptr_t env_data;
             std::vector<loadable_segment_t> ready_segments;
         };
 
@@ -98,7 +106,8 @@ namespace XKLib
                           RunnableTask<stack_size_T>& runnableTask,
                           injection_info_t& injectionInfo) -> void
     {
-        if (_elf.get_type() != ET_DYN && _elf.get_type() != ET_EXEC)
+        if (_elf.get_type() != ELFIO::ET_DYN
+            && _elf.get_type() != ELFIO::ET_EXEC)
         {
             XKLIB_EXCEPTION("Elf must be dynamic library or "
                             "executable");
@@ -106,36 +115,40 @@ namespace XKLib
 
         loadSegments();
 
-        if (_elf.get_class() == ELFCLASS32)
+        if (_elf.get_class() == ELFIO::ELFCLASS32)
         {
-            relocateSegments<ELFCLASS32>(processMemoryMap, injectionInfo);
-
-            createEnv<ELFCLASS32, stack_size_T>(processMemoryMap,
-                                                cmdLine,
-                                                env,
-                                                runnableTask,
+            relocateSegments<ELFIO::ELFCLASS32>(processMemoryMap,
                                                 injectionInfo);
 
-            createShellCode<ELFCLASS32, stack_size_T>(processMemoryMap,
-                                                      cmdLine,
-                                                      runnableTask,
-                                                      injectionInfo);
+            createEnv<ELFIO::ELFCLASS32, stack_size_T>(processMemoryMap,
+                                                       cmdLine,
+                                                       env,
+                                                       runnableTask,
+                                                       injectionInfo);
+
+            createShellCode<ELFIO::ELFCLASS32, stack_size_T>(
+              processMemoryMap,
+              cmdLine,
+              runnableTask,
+              injectionInfo);
         }
 #ifndef ENVIRONMENT32
         else
         {
-            relocateSegments<ELFCLASS64>(processMemoryMap, injectionInfo);
-
-            createEnv<ELFCLASS64, stack_size_T>(processMemoryMap,
-                                                cmdLine,
-                                                env,
-                                                runnableTask,
+            relocateSegments<ELFIO::ELFCLASS64>(processMemoryMap,
                                                 injectionInfo);
 
-            createShellCode<ELFCLASS64, stack_size_T>(processMemoryMap,
-                                                      cmdLine,
-                                                      runnableTask,
-                                                      injectionInfo);
+            createEnv<ELFIO::ELFCLASS64, stack_size_T>(processMemoryMap,
+                                                       cmdLine,
+                                                       env,
+                                                       runnableTask,
+                                                       injectionInfo);
+
+            createShellCode<ELFIO::ELFCLASS64, stack_size_T>(
+              processMemoryMap,
+              cmdLine,
+              runnableTask,
+              injectionInfo);
         }
 #endif
     }
@@ -147,11 +160,11 @@ namespace XKLib
     {
         constexpr auto _reloc_ptr = []()
         {
-            if constexpr (ELFClass_T == ELFCLASS32)
+            if constexpr (ELFClass_T == ELFIO::ELFCLASS32)
             {
                 return type_wrapper<uint32_t>;
             }
-            else if constexpr (ELFClass_T == ELFCLASS64)
+            else if constexpr (ELFClass_T == ELFIO::ELFCLASS64)
             {
                 return type_wrapper<uint64_t>;
             }
@@ -172,18 +185,14 @@ namespace XKLib
                                   injectionInfo.ready_segments.begin()
                                     ->start);
 
-        injectionInfo.allocated_mem.base_image = view_as<ptr_t>(0l);
+        injectionInfo.allocated_mem.base_image = nullptr;
 
-        if (_elf.get_type() == ET_EXEC)
+        if (_elf.get_type() == ELFIO::ET_EXEC)
         {
-            injectionInfo.allocated_mem.base_image = processMemoryMap
-                                                       .allocArea(
-                                                         injectionInfo
-                                                           .ready_segments
-                                                           .begin()
-                                                           ->start,
-                                                         total_image_size,
-                                                         0);
+            injectionInfo.allocated_mem.base_image = processMemoryMap.allocArea(
+              injectionInfo.ready_segments.begin()->start,
+              total_image_size,
+              MemoryArea::ProtectionFlags::R);
 
             if (injectionInfo.allocated_mem.base_image
                 != injectionInfo.ready_segments.begin()->start)
@@ -193,11 +202,10 @@ namespace XKLib
         }
         else
         {
-            injectionInfo.allocated_mem.base_image = processMemoryMap
-                                                       .allocArea(
-                                                         0,
-                                                         total_image_size,
-                                                         0);
+            injectionInfo.allocated_mem.base_image = processMemoryMap.allocArea(
+              nullptr,
+              total_image_size,
+              MemoryArea::ProtectionFlags::R);
 
             if (injectionInfo.allocated_mem.base_image == nullptr)
             {
@@ -233,7 +241,7 @@ namespace XKLib
             auto sec_type = section->get_type();
 
             /* We care only about dynamic relocs */
-            if (sec_type == SHT_RELA || sec_type == SHT_REL)
+            if (sec_type == ELFIO::SHT_RELA || sec_type == ELFIO::SHT_REL)
             {
                 ELFIO::const_relocation_section_accessor rsa(_elf,
                                                              section);
@@ -288,12 +296,12 @@ namespace XKLib
              * end up loading ourselves at the end, though it is a
              * quite long task.
              */
-            else if (sec_type == SHT_DYNSYM)
+            else if (sec_type == ELFIO::SHT_DYNSYM)
             {
                 /**
                  * I don't know why (yet), but it according to ELF,
                  * there can be one useless smybol and section
-                 * SHT_DYNSYM always exists
+                 * ELFIO::SHT_DYNSYM always exists
                  * ... Does not happen with static executables though.
                  */
                 if (ELFIO::const_symbol_section_accessor(_elf, section)
@@ -328,11 +336,11 @@ namespace XKLib
     {
         constexpr auto _reloc_ptr = []()
         {
-            if constexpr (ELFClass_T == ELFCLASS32)
+            if constexpr (ELFClass_T == ELFIO::ELFCLASS32)
             {
                 return type_wrapper<uint32_t>;
             }
-            else if constexpr (ELFClass_T == ELFCLASS64)
+            else if constexpr (ELFClass_T == ELFIO::ELFCLASS64)
             {
                 return type_wrapper<uint64_t>;
             }
@@ -375,24 +383,26 @@ namespace XKLib
                                       runnableTask.baseStack())
                                     + stack_size_T;
 
-        injectionInfo.env_data = view_as<uintptr_t>(
+        injectionInfo.allocated_mem.env_data = view_as<uintptr_t>(
           processMemoryMap.allocArea(
-            0,
+            nullptr,
             env_data.size() + MemoryUtils::GetPageSize(), /* env + aux
                                                              vecs */
             MemoryArea::ProtectionFlags::RW));
 
-        if (injectionInfo.env_data == 0)
+        if (injectionInfo.allocated_mem.env_data == 0)
         {
             XKLIB_EXCEPTION("Couldn't allocate memory for cmd line "
                             "data");
         }
 
         /* write argv + envp */
-        processMemoryMap.write(view_as<ptr_t>(injectionInfo.env_data),
+        processMemoryMap.write(view_as<ptr_t>(
+                                 injectionInfo.allocated_mem.env_data),
                                env_data);
 
-        auto at_random = injectionInfo.env_data + total_offset;
+        auto at_random = injectionInfo.allocated_mem.env_data
+                         + total_offset;
 
         /* let's generate some 16 random bytes for AT_RANDOM */
         static std::vector<byte_t> random_bytes = []
@@ -414,8 +424,8 @@ namespace XKLib
 
         /* Setup auxiliary vectors */
         Elf_auxv_t<reloc_ptr_t> elf_aux[2] {
-            {  AT_NULL,                                  { 0 }}, /* first because last in the stack */
-            {AT_RANDOM, { *view_as<reloc_ptr_t*>(&at_random) }}
+            {  ELFIO::AT_NULL,                                  { 0 }},
+            {ELFIO::AT_RANDOM, { *view_as<reloc_ptr_t*>(&at_random) }}
         };
 
         /* write aux vecs */
@@ -444,7 +454,7 @@ namespace XKLib
             injectionInfo.stack_start -= sizeof(reloc_ptr_t);
 
             auto address_of_string = view_as<reloc_ptr_t>(
-              injectionInfo.env_data + env_offset);
+              injectionInfo.allocated_mem.env_data + env_offset);
 
             processMemoryMap.write(view_as<ptr_t>(
                                      injectionInfo.stack_start),
@@ -463,7 +473,7 @@ namespace XKLib
             injectionInfo.stack_start -= sizeof(reloc_ptr_t);
 
             auto address_of_string = view_as<reloc_ptr_t>(
-              injectionInfo.env_data + cmd_offset);
+              injectionInfo.allocated_mem.env_data + cmd_offset);
 
             processMemoryMap.write(view_as<ptr_t>(
                                      injectionInfo.stack_start),
@@ -481,11 +491,11 @@ namespace XKLib
     {
         constexpr auto _reloc_ptr = []()
         {
-            if constexpr (ELFClass_T == ELFCLASS32)
+            if constexpr (ELFClass_T == ELFIO::ELFCLASS32)
             {
                 return type_wrapper<uint32_t>;
             }
-            else if constexpr (ELFClass_T == ELFCLASS64)
+            else if constexpr (ELFClass_T == ELFIO::ELFCLASS64)
             {
                 return type_wrapper<uint64_t>;
             }
@@ -495,7 +505,7 @@ namespace XKLib
         std::vector<byte_t> shellcode;
 
 #if defined(__x86_64__) || defined(__i386__)
-        if constexpr (ELFClass_T == ELFCLASS64)
+        if constexpr (ELFClass_T == ELFIO::ELFCLASS64)
         {
             /**
              * "movabs rax, 0; mov rsp, rax; movabs rax, 0; push rax;
@@ -518,7 +528,7 @@ namespace XKLib
             *view_as<reloc_ptr_t*>(shellcode.data() + 2) = injectionInfo
                                                              .stack_start;
         }
-        else if constexpr (ELFClass_T == ELFCLASS32)
+        else if constexpr (ELFClass_T == ELFIO::ELFCLASS32)
         {
             /**
              * ""mov eax, 0; mov esp, eax; mov eax, 0; push eax; mov eax,
@@ -559,7 +569,7 @@ namespace XKLib
          */
 
         injectionInfo.allocated_mem.shellcode_address = processMemoryMap.allocArea(
-          0,
+          nullptr,
           shellcode.size(),
           MemoryArea::ProtectionFlags::RW);
 
