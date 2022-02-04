@@ -39,7 +39,6 @@ auto ProcessMemoryArea::ModifiableProtectionFlags::cachedValue()
     return _flags;
 }
 
-
 auto ProcessMemoryArea::ModifiableProtectionFlags::operator=(mapf_t flags)
   -> void
 {

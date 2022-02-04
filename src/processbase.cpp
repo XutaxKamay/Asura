@@ -17,7 +17,7 @@ ProcessBase::ProcessBase(process_id_t pid) : _pid(pid)
 {
 }
 
-auto ProcessBase::setPID(process_id_t pid)
+auto ProcessBase::setPID(process_id_t pid) -> void
 {
     _pid = pid;
 }

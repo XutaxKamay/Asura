@@ -12,6 +12,7 @@ namespace XKLib
     class ProcessMemoryMap : public MemoryMap<ProcessMemoryArea>
     {
       public:
+        ProcessMemoryMap();
         explicit ProcessMemoryMap(ProcessBase process);
 
       public:

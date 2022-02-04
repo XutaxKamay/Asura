@@ -40,7 +40,8 @@ auto XKLib::Process::find(const std::string& name) -> XKLib::Process
     {
         if (entry.is_directory())
         {
-            auto pid = view_as<process_id_t>(std::stoi(entry.path().filename()));
+            auto pid = view_as<process_id_t>(
+              std::stoi(entry.path().filename()));
 
             if (name.find(ProcessName(pid)) != std::string::npos)
             {

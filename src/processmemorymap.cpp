@@ -1,9 +1,14 @@
 #include "pch.h"
 
 #include "process.h"
+#include "processbase.h"
 #include "processmemorymap.h"
 
 using namespace XKLib;
+
+ProcessMemoryMap::ProcessMemoryMap() : _process_base(-1)
+{
+}
 
 ProcessMemoryMap::ProcessMemoryMap(ProcessBase process)
  : _process_base(process)

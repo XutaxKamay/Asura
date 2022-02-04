@@ -48,7 +48,7 @@ namespace XKLib
         }
 #else
         template <typename T>
-        static auto FindDebugSymbol(const std::string& funcName) -> ptr_t
+        static auto FindDebugSymbol(const std::string& funcName) -> T
         {
             SYMBOL_INFO sym_info;
 
@@ -62,7 +62,7 @@ namespace XKLib
                 return view_as<T>(sym_info.Address);
             }
 
-            return nullptr;
+            return view_as<T>(0);
         }
 #endif
     };

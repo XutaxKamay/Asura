@@ -1,5 +1,7 @@
 #include "pch.h"
 
+#include "kokabiel.h"
+
 #include "test.h"
 
 auto main() -> int
@@ -15,14 +17,18 @@ auto main() -> int
     auto task = self.createTask(nullptr);
     auto mmap = self.mmap();
 
-    kok.inject<XKLib::Process::TASK_STACK_SIZE>(mmap,
-                                                { "wow" },
-                                                { "HOME=/home/kamay" },
-                                                task,
-                                                injection_info);
+    kok.inject<XKLib::Process::TASK_STACK_SIZE,
+               XKLib::Kokabiel::arch_t::X86>(mmap,
+                                             { "wow" },
+                                             { "HOME=/home/kamay" },
+                                             task,
+                                             injection_info);
 
     task.run();
     task.wait();
+
+    kok.freeInjection(injection_info);
+    task.freeStack();
 
     return 0;
 }

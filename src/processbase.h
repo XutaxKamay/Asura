@@ -15,11 +15,11 @@ namespace XKLib
       public:
         static auto self() -> ProcessBase;
 
-      private:
+      public:
         explicit ProcessBase(process_id_t);
 
       public:
-        auto setPID(process_id_t pid);
+        auto setPID(process_id_t pid) -> void;
         auto id() -> process_id_t;
 
       private:

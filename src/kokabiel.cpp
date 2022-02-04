@@ -10,15 +10,12 @@ XKLib::Kokabiel::Kokabiel(const std::string& fileName)
     {
         XKLIB_EXCEPTION("Couldn't load " + fileName);
     }
+
+    loadSegments();
 }
 
 auto XKLib::Kokabiel::loadSegments() -> void
 {
-    if (!_loaded_segments.empty())
-    {
-        return;
-    }
-
     /* copy segments */
     for (auto&& segment : _elf.segments)
     {
@@ -26,53 +23,73 @@ auto XKLib::Kokabiel::loadSegments() -> void
 
         if (seg_type == ELFIO::PT_LOAD)
         {
-            loadable_segment_t loaded_segment;
+            memory_area_t loadable_segment;
 
-            loaded_segment.start = view_as<ptr_t>(
-              MemoryUtils::Align(segment->get_virtual_address(),
-                                 MemoryUtils::GetPageSize()));
+            loadable_segment.start = MemoryUtils::Align(
+              segment->get_virtual_address(),
+              MemoryUtils::GetPageSize());
 
             auto left_over = segment->get_virtual_address()
-                             - view_as<uintptr_t>(loaded_segment.start);
+                             - loadable_segment.start;
 
             auto memory_aligned_size = MemoryUtils::AlignToPageSize(
               segment->get_memory_size() + left_over,
               MemoryUtils::GetPageSize());
 
-            loaded_segment.data.resize(memory_aligned_size);
+            loadable_segment.bytes.resize(memory_aligned_size);
 
             std::copy(segment->get_data(),
                       segment->get_data() + segment->get_file_size(),
-                      loaded_segment.data.begin() + left_over);
+                      view_as<byte_t*>(loadable_segment.bytes.data()
+                                       + left_over));
 
             auto seg_flags = segment->get_flags();
 
-            loaded_segment.flags = ((seg_flags & ELFIO::PF_R) ?
-                                      MemoryArea::ProtectionFlags::R :
-                                      0)
-                                   | ((seg_flags & ELFIO::PF_W) ?
-                                        MemoryArea::ProtectionFlags::W :
+            loadable_segment.flags = ((seg_flags & ELFIO::PF_R) ?
+                                        MemoryArea::ProtectionFlags::R :
                                         0)
-                                   | ((seg_flags & ELFIO::PF_X) ?
-                                        MemoryArea::ProtectionFlags::X :
-                                        0);
+                                     | ((seg_flags & ELFIO::PF_W) ?
+                                          MemoryArea::ProtectionFlags::W :
+                                          0)
+                                     | ((seg_flags & ELFIO::PF_X) ?
+                                          MemoryArea::ProtectionFlags::X :
+                                          0);
 
-            _loaded_segments.push_back(loaded_segment);
+            _loadable_segments.push_back(loadable_segment);
         }
     }
 
-    if (_loaded_segments.empty())
+    if (_loadable_segments.empty())
     {
         XKLIB_EXCEPTION("No loadable segments inside the elf file");
     }
 
     /* sort segments */
-    std::sort(_loaded_segments.begin(),
-              _loaded_segments.end(),
-              [](const loadable_segment_t& rs1,
-                 const loadable_segment_t& rs2)
+    std::sort(_loadable_segments.begin(),
+              _loadable_segments.end(),
+              [](const memory_area_t& ma1, const memory_area_t& ma2)
               {
-                  return view_as<uintptr_t>(rs1.start)
-                         < view_as<uintptr_t>(rs2.start);
+                  return ma1.start < ma2.start;
               });
+
+    auto last = _loadable_segments.end() - 1;
+
+    _image_size = (last->start + last->bytes.size())
+                  - _loadable_segments.begin()->start;
+}
+
+auto XKLib::Kokabiel::freeInjection(injection_info_t& injectionInfo)
+  -> void
+{
+    injectionInfo.processMemoryMap.freeArea(
+      injectionInfo.allocated_mem.shellcode.start,
+      injectionInfo.allocated_mem.shellcode.bytes.size());
+
+    injectionInfo.processMemoryMap.freeArea(
+      injectionInfo.allocated_mem.env_data.start,
+      injectionInfo.allocated_mem.env_data.bytes.size());
+
+    injectionInfo.processMemoryMap.freeArea(
+      injectionInfo.loaded_segments.begin()->start,
+      _image_size);
 }
