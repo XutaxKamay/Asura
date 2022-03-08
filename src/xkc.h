@@ -553,7 +553,7 @@ auto XKLib::XKC<T>::encode(XKLib::data_t data, std::size_t size)
         written_bits_on_result_byte++;
         written_bits++;
 
-        if (written_bits_on_result_byte == 8)
+        if (written_bits_on_result_byte == CHAR_BIT)
         {
             result.push_back(result_byte);
             written_bits_on_result_byte = 0;
@@ -693,7 +693,7 @@ auto XKLib::XKC<T>::decode(XKLib::data_t data, std::size_t size)
             read_bits_on_result_byte++;
             bits_read++;
 
-            if (read_bits_on_result_byte == 8)
+            if (read_bits_on_result_byte == CHAR_BIT)
             {
                 read_bytes++;
                 read_bits_on_result_byte = 0;
