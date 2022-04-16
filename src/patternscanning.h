@@ -34,6 +34,7 @@ namespace XKLib
          * @param size
          * @param baseAddress
          * @return
+         *
          * This works by making the preprocessed pattern into simd
          * values, with its mask. The mask is basically used for
          * unknown bytes, so we don't need to check byte by byte.
@@ -87,7 +88,7 @@ namespace XKLib
                              ptr_t baseAddress) -> bool;
 
         /**
-         * @brief searchV3
+         * @brief searchV4
          * @param pattern
          * @param data
          * @param size

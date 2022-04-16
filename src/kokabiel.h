@@ -59,7 +59,7 @@ namespace XKLib
             uintptr_t entry_point;
             uintptr_t stack_start;
             std::vector<memory_area_t> loaded_segments;
-            ProcessMemoryMap processMemoryMap;
+            ProcessMemoryMap process_memory_map;
         };
 
         enum class arch_t
@@ -120,7 +120,7 @@ namespace XKLib
                             "executable");
         }
 
-        injectionInfo.processMemoryMap = processMemoryMap;
+        injectionInfo.process_memory_map = processMemoryMap;
 
         if (_elf.get_class() == ELFIO::ELFCLASS32)
         {
@@ -180,7 +180,7 @@ namespace XKLib
         if (_elf.get_type() == ELFIO::ET_EXEC)
         {
             image_base = view_as<uintptr_t>(
-              injectionInfo.processMemoryMap.allocArea(
+              injectionInfo.process_memory_map.allocArea(
                 injectionInfo.loaded_segments.begin()->start,
                 _image_size,
                 MemoryArea::ProtectionFlags::RW));
@@ -195,7 +195,7 @@ namespace XKLib
         else
         {
             image_base = view_as<uintptr_t>(
-              injectionInfo.processMemoryMap.allocArea(
+              injectionInfo.process_memory_map.allocArea(
                 0,
                 _image_size,
                 MemoryArea::ProtectionFlags::RW));
@@ -310,9 +310,9 @@ namespace XKLib
 
         for (auto segment : injectionInfo.loaded_segments)
         {
-            injectionInfo.processMemoryMap.write(segment.start,
-                                                 segment.bytes);
-            injectionInfo.processMemoryMap.protectMemoryArea(
+            injectionInfo.process_memory_map.write(segment.start,
+                                                   segment.bytes);
+            injectionInfo.process_memory_map.protectMemoryArea(
               segment.start,
               segment.bytes.size(),
               segment.flags);
@@ -381,7 +381,7 @@ namespace XKLib
                                     + stack_size_T;
 
         injectionInfo.allocated_mem.env_data.start = view_as<uintptr_t>(
-          injectionInfo.processMemoryMap.allocArea(
+          injectionInfo.process_memory_map.allocArea(
             nullptr,
             injectionInfo.allocated_mem.env_data.bytes.size()
               + MemoryUtils::GetPageSize(),
@@ -394,7 +394,7 @@ namespace XKLib
         }
 
         /* write argv + envp */
-        injectionInfo.processMemoryMap.write(
+        injectionInfo.process_memory_map.write(
           view_as<ptr_t>(injectionInfo.allocated_mem.env_data.start),
           injectionInfo.allocated_mem.env_data.bytes);
 
@@ -416,8 +416,9 @@ namespace XKLib
             return data;
         }();
 
-        injectionInfo.processMemoryMap.write(*view_as<ptr_t*>(&at_random),
-                                             random_bytes);
+        injectionInfo.process_memory_map.write(*view_as<ptr_t*>(
+                                                 &at_random),
+                                               random_bytes);
 
         /* Setup auxiliary vectors */
         Elf_auxv_t<reloc_ptr_t> elf_aux[2] {
@@ -429,7 +430,7 @@ namespace XKLib
         for (std::size_t i = 0; i < 2; i++)
         {
             injectionInfo.stack_start -= sizeof(Elf_auxv_t<reloc_ptr_t>);
-            injectionInfo.processMemoryMap.write(
+            injectionInfo.process_memory_map.write(
               view_as<ptr_t>(injectionInfo.stack_start),
               &elf_aux[i],
               sizeof(Elf_auxv_t<reloc_ptr_t>));
@@ -438,10 +439,10 @@ namespace XKLib
         static reloc_ptr_t null_address = 0;
         /* write null address for limiting enp */
         injectionInfo.stack_start -= sizeof(reloc_ptr_t);
-        injectionInfo.processMemoryMap.write(view_as<ptr_t>(
-                                               injectionInfo.stack_start),
-                                             &null_address,
-                                             sizeof(null_address));
+        injectionInfo.process_memory_map.write(
+          view_as<ptr_t>(injectionInfo.stack_start),
+          &null_address,
+          sizeof(null_address));
 
         /**
          * Env exists ? if yes we write env addresss to stack after
@@ -454,7 +455,7 @@ namespace XKLib
             auto address_of_string = view_as<reloc_ptr_t>(
               injectionInfo.allocated_mem.env_data.start + env_offset);
 
-            injectionInfo.processMemoryMap.write(
+            injectionInfo.process_memory_map.write(
               view_as<ptr_t>(injectionInfo.stack_start),
               &address_of_string,
               sizeof(address_of_string));
@@ -462,10 +463,10 @@ namespace XKLib
 
         /* write null address for limiting argv */
         injectionInfo.stack_start -= sizeof(reloc_ptr_t);
-        injectionInfo.processMemoryMap.write(view_as<ptr_t>(
-                                               injectionInfo.stack_start),
-                                             &null_address,
-                                             sizeof(null_address));
+        injectionInfo.process_memory_map.write(
+          view_as<ptr_t>(injectionInfo.stack_start),
+          &null_address,
+          sizeof(null_address));
 
         for (auto&& cmd_offset : cmds_offsets)
         {
@@ -474,7 +475,7 @@ namespace XKLib
             auto address_of_string = view_as<reloc_ptr_t>(
               injectionInfo.allocated_mem.env_data.start + cmd_offset);
 
-            injectionInfo.processMemoryMap.write(
+            injectionInfo.process_memory_map.write(
               view_as<ptr_t>(injectionInfo.stack_start),
               &address_of_string,
               sizeof(address_of_string));
@@ -579,16 +580,16 @@ namespace XKLib
          */
 
         injectionInfo.allocated_mem.shellcode.start = view_as<uintptr_t>(
-          injectionInfo.processMemoryMap.allocArea(
+          injectionInfo.process_memory_map.allocArea(
             nullptr,
             injectionInfo.allocated_mem.shellcode.bytes.size(),
             MemoryArea::ProtectionFlags::RW));
 
-        injectionInfo.processMemoryMap.write(
+        injectionInfo.process_memory_map.write(
           view_as<ptr_t>(injectionInfo.allocated_mem.shellcode.start),
           injectionInfo.allocated_mem.shellcode.bytes);
 
-        injectionInfo.processMemoryMap.protectMemoryArea(
+        injectionInfo.process_memory_map.protectMemoryArea(
           injectionInfo.allocated_mem.shellcode.start,
           injectionInfo.allocated_mem.shellcode.bytes.size(),
           MemoryArea::ProtectionFlags::RX);

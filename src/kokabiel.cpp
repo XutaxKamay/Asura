@@ -81,15 +81,15 @@ auto XKLib::Kokabiel::loadSegments() -> void
 auto XKLib::Kokabiel::freeInjection(injection_info_t& injectionInfo)
   -> void
 {
-    injectionInfo.processMemoryMap.freeArea(
+    injectionInfo.process_memory_map.freeArea(
       injectionInfo.allocated_mem.shellcode.start,
       injectionInfo.allocated_mem.shellcode.bytes.size());
 
-    injectionInfo.processMemoryMap.freeArea(
+    injectionInfo.process_memory_map.freeArea(
       injectionInfo.allocated_mem.env_data.start,
       injectionInfo.allocated_mem.env_data.bytes.size());
 
-    injectionInfo.processMemoryMap.freeArea(
+    injectionInfo.process_memory_map.freeArea(
       injectionInfo.loaded_segments.begin()->start,
       _image_size);
 }
