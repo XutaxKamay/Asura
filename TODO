@@ -4,5 +4,6 @@
 - A cross-platform VM for obfuscation (planning to make a gcc modification to support a custom CPU, or doing own scripting language)
 It will be useful for whitebox cryptography
 - Making a class for using maybe something like libtins to send data over network
-- a ELF/PE header parser ??? and aybe also classes to manual map ELF and PE binaries.
+- maybe also classes to manual map ELF and PE binaries.
 - cross-platform menu
+- Refactor the whole code because it needs to be better
