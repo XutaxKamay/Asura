@@ -118,6 +118,23 @@ namespace XKLib
                                     data_t aligned_data,
                                     std::size_t size,
                                     ptr_t baseAddress) -> bool;
+        /**
+         * @brief searchAlignedV2
+         * @param pattern
+         * @param data
+         * @param size
+         * @param baseAddress
+         * @return
+         *
+         * SIMD Boyer-Moore-Horspool's Algorithm, aligned.
+         * This one must not use loadu but just load instead,
+         * though things can get a bit more complicated, but we can use
+         * memory alignment here, which could be potentially a lot faster.
+         */
+        static auto searchAlignedV2(PatternByte& pattern,
+                                    data_t data,
+                                    std::size_t size,
+                                    ptr_t baseAddress) -> bool;
     };
 };
 
