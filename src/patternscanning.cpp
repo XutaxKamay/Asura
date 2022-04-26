@@ -1,5 +1,6 @@
-#include "exception.h"
 #include "pch.h"
+
+#include "exception.h"
 
 #include "simd.h"
 
@@ -12,8 +13,8 @@ auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
                                       std::size_t size,
                                       ptr_t baseAddress) -> bool
 {
-    if (size >= sizeof(PatternByte::simd_value_t)
-        && (size % sizeof(PatternByte::simd_value_t) == 0))
+    if (size < sizeof(PatternByte::simd_value_t)
+        && (size % sizeof(PatternByte::simd_value_t) != 0))
     {
         XKLIB_EXCEPTION(
           "Size must be aligned to "
@@ -142,8 +143,8 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
                                       std::size_t size,
                                       ptr_t baseAddress) -> bool
 {
-    if (size >= sizeof(PatternByte::simd_value_t)
-        && (size % sizeof(PatternByte::simd_value_t) == 0))
+    if (size < sizeof(PatternByte::simd_value_t)
+        && (size % sizeof(PatternByte::simd_value_t) != 0))
     {
         XKLIB_EXCEPTION(
           "Size must be aligned to "
@@ -340,8 +341,8 @@ auto XKLib::PatternScanning::searchV4(XKLib::PatternByte& pattern,
                                       std::size_t size,
                                       ptr_t baseAddress) -> bool
 {
-    if (size >= sizeof(PatternByte::simd_value_t)
-        && (size % sizeof(PatternByte::simd_value_t) == 0))
+    if (size < sizeof(PatternByte::simd_value_t)
+        && (size % sizeof(PatternByte::simd_value_t) != 0))
     {
         XKLIB_EXCEPTION(
           "Size must be aligned to "
@@ -447,8 +448,8 @@ auto XKLib::PatternScanning::searchAlignedV1(XKLib::PatternByte& pattern,
                                              std::size_t size,
                                              ptr_t baseAddress) -> bool
 {
-    if (size >= sizeof(PatternByte::simd_value_t)
-        && (size % sizeof(PatternByte::simd_value_t) == 0))
+    if (size < sizeof(PatternByte::simd_value_t)
+        && (size % sizeof(PatternByte::simd_value_t) != 0))
     {
         XKLIB_EXCEPTION(
           "Size must be aligned to "
