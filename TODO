@@ -6,4 +6,4 @@ It will be useful for whitebox cryptography
 - Making a class for using maybe something like libtins to send data over network
 - maybe also classes to manual map ELF and PE binaries.
 - cross-platform menu
-- Refactor the whole code because it needs to be better
+- Refactor the whole code because it needs to be better, and moving to headers only

@@ -14,7 +14,7 @@ auto XKLib::PatternScanning::searchV1(XKLib::PatternByte& pattern,
                                       ptr_t baseAddress) -> bool
 {
     if (size < sizeof(PatternByte::simd_value_t)
-        && (size % sizeof(PatternByte::simd_value_t) != 0))
+        || (size % sizeof(PatternByte::simd_value_t) != 0))
     {
         XKLIB_EXCEPTION(
           "Size must be aligned to "
@@ -144,7 +144,7 @@ auto XKLib::PatternScanning::searchV3(XKLib::PatternByte& pattern,
                                       ptr_t baseAddress) -> bool
 {
     if (size < sizeof(PatternByte::simd_value_t)
-        && (size % sizeof(PatternByte::simd_value_t) != 0))
+        || (size % sizeof(PatternByte::simd_value_t) != 0))
     {
         XKLIB_EXCEPTION(
           "Size must be aligned to "
@@ -342,7 +342,7 @@ auto XKLib::PatternScanning::searchV4(XKLib::PatternByte& pattern,
                                       ptr_t baseAddress) -> bool
 {
     if (size < sizeof(PatternByte::simd_value_t)
-        && (size % sizeof(PatternByte::simd_value_t) != 0))
+        || (size % sizeof(PatternByte::simd_value_t) != 0))
     {
         XKLIB_EXCEPTION(
           "Size must be aligned to "
@@ -449,7 +449,7 @@ auto XKLib::PatternScanning::searchAlignedV1(XKLib::PatternByte& pattern,
                                              ptr_t baseAddress) -> bool
 {
     if (size < sizeof(PatternByte::simd_value_t)
-        && (size % sizeof(PatternByte::simd_value_t) != 0))
+        || (size % sizeof(PatternByte::simd_value_t) != 0))
     {
         XKLIB_EXCEPTION(
           "Size must be aligned to "
@@ -538,6 +538,34 @@ auto XKLib::PatternScanning::searchAlignedV1(XKLib::PatternByte& pattern,
     skip:
         start_data += sizeof(PatternByte::simd_value_t);
         current_data = start_data;
+    }
+
+    return matches.size() != old_matches_size;
+}
+
+auto XKLib::PatternScanning::searchAlignedV2(XKLib::PatternByte& pattern,
+                                             data_t aligned_data,
+                                             std::size_t size,
+                                             ptr_t baseAddress) -> bool
+{
+    if (size < sizeof(PatternByte::simd_value_t)
+        || (size % sizeof(PatternByte::simd_value_t) != 0))
+    {
+        XKLIB_EXCEPTION(
+          "Size must be aligned to "
+          + std::to_string(sizeof(PatternByte::simd_value_t)) + " bytes");
+    }
+
+    auto&& matches          = pattern.matches();
+    auto old_matches_size   = matches.size();
+
+    if ((view_as<uintptr_t>(aligned_data)
+         % sizeof(PatternByte::simd_value_t))
+        != 0)
+    {
+        XKLIB_EXCEPTION(
+          "Buffer is not aligned to "
+          + std::to_string(sizeof(PatternByte::simd_value_t)) + " bytes");
     }
 
     return matches.size() != old_matches_size;
