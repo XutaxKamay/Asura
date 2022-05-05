@@ -122,7 +122,7 @@ namespace XKLib
         }
     };
 
-    template <std::size_t index_T, typename T2 = ptr_t>
+    template <std::size_t index_T>
     inline auto hook_vfunc(const ptr_t* const vptr,
                            const auto newFuncPtr,
                            const pre_or_post_hook_vfunc_t pre  = nullptr,

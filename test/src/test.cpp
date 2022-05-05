@@ -550,7 +550,7 @@ auto XKLib::Test::run() -> void
 
         timer.start();
 
-        for (int i = 0; i < 2333; i++)
+        for (int i = 0; i < 337; i++)
         {
             ConsoleOutput("V1: ") << i + 1 << std::endl;
 
@@ -560,7 +560,7 @@ auto XKLib::Test::run() -> void
                                       nullptr);
         }
 
-        pattern.matches().resize(pattern.matches().size() - 2332);
+        pattern.matches().resize(pattern.matches().size() - 336);
 
         timer.end();
 
@@ -573,7 +573,7 @@ auto XKLib::Test::run() -> void
 
         timer.start();
 
-        for (int i = 0; i < 2333; i++)
+        for (int i = 0; i < 337; i++)
         {
             ConsoleOutput("V2: ") << i + 1 << std::endl;
 
@@ -583,7 +583,7 @@ auto XKLib::Test::run() -> void
                                       nullptr);
         }
 
-        pattern.matches().resize(pattern.matches().size() - 2332);
+        pattern.matches().resize(pattern.matches().size() - 336);
 
         timer.end();
 
@@ -596,7 +596,7 @@ auto XKLib::Test::run() -> void
 
         timer.start();
 
-        for (int i = 0; i < 2333; i++)
+        for (int i = 0; i < 337; i++)
         {
             ConsoleOutput("V3: ") << i + 1 << std::endl;
 
@@ -606,7 +606,7 @@ auto XKLib::Test::run() -> void
                                       nullptr);
         }
 
-        pattern.matches().resize(pattern.matches().size() - 2332);
+        pattern.matches().resize(pattern.matches().size() - 336);
 
         timer.end();
 
@@ -619,7 +619,7 @@ auto XKLib::Test::run() -> void
 
         timer.start();
 
-        for (int i = 0; i < 2333; i++)
+        for (int i = 0; i < 337; i++)
         {
             ConsoleOutput("V4: ") << i + 1 << std::endl;
 
@@ -629,7 +629,7 @@ auto XKLib::Test::run() -> void
                                       nullptr);
         }
 
-        pattern.matches().resize(pattern.matches().size() - 2332);
+        pattern.matches().resize(pattern.matches().size() - 336);
 
         timer.end();
 
@@ -642,7 +642,7 @@ auto XKLib::Test::run() -> void
 
         timer.start();
 
-        for (int i = 0; i < 2333; i++)
+        for (int i = 0; i < 337; i++)
         {
             ConsoleOutput("aligned V1: ") << i + 1 << std::endl;
 
@@ -652,7 +652,7 @@ auto XKLib::Test::run() -> void
                                              nullptr);
         }
 
-        pattern.matches().resize(pattern.matches().size() - 2332);
+        pattern.matches().resize(pattern.matches().size() - 336);
 
         timer.end();
 
