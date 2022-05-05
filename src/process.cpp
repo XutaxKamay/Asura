@@ -10,7 +10,8 @@ auto XKLib::Process::find(const std::string& name) -> XKLib::Process
     Process process;
 
 #ifdef WINDOWS
-    auto tool_handle = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    const auto tool_handle = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS,
+                                                      0);
 
     if (!tool_handle)
     {

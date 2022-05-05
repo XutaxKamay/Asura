@@ -69,15 +69,15 @@ namespace XKLib
             {
                 simplified_area_t simplified_area;
 
-                auto first_area = _areas[area_index];
-                auto begin_ptr  = first_area->begin();
-                auto end_ptr    = first_area->end();
+                const auto first_area = _areas[area_index];
+                const auto begin_ptr  = first_area->begin();
+                auto end_ptr          = first_area->end();
 
                 for (area_index = area_index + 1;
                      area_index < _areas.size();
                      area_index++)
                 {
-                    auto next_area = _areas[area_index];
+                    const auto next_area = _areas[area_index];
 
                     /**
                      * If begin ptr is the same as the previous end
@@ -108,7 +108,7 @@ namespace XKLib
              */
             std::uintptr_t start_ptr, end_ptr;
 
-            for (auto&& simplified_area : simplified_areas)
+            for (const auto& simplified_area : simplified_areas)
             {
                 start_ptr = simplified_area.begin;
                 end_ptr   = simplified_area.end;
@@ -120,10 +120,10 @@ namespace XKLib
                 }
             }
 
-            auto relative_address = view_as<std::uintptr_t>(address)
-                                    - start_ptr;
+            const auto relative_address = view_as<std::uintptr_t>(address)
+                                          - start_ptr;
 
-            auto area_size = end_ptr - start_ptr;
+            const auto area_size = end_ptr - start_ptr;
 
             std::uintptr_t closest_area = 0x0;
 
@@ -142,7 +142,7 @@ namespace XKLib
         auto search(const auto address) const
           -> std::shared_ptr<ProcessMemoryArea>
         {
-            for (auto&& area : _areas)
+            for (const auto& area : _areas)
             {
                 const auto start_ptr = area->begin();
                 const auto end_ptr   = area->end();
@@ -195,14 +195,14 @@ namespace XKLib
         {
             refresh();
 
-            auto area = search(address);
+            const auto area = search(address);
 
             if (!area)
             {
                 XKLIB_EXCEPTION("Could not find area");
             }
 
-            auto flags = area->protectionFlags().cachedValue();
+            const auto flags = area->protectionFlags().cachedValue();
 
             area->protectionFlags() = flags
                                       | MemoryArea::ProtectionFlags::W;

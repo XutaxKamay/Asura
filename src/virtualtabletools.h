@@ -17,13 +17,13 @@ namespace XKLib
       void(const ptr_t funcPtr, const ptr_t newFuncPtr)>;
 
     template <std::size_t index_T, typename T = ptr_t>
-    constexpr inline auto view_vfunc_as(ptr_t* vptr)
+    constexpr inline auto view_vfunc_as(const ptr_t* const vptr)
     {
         return view_as<T>(vptr[index_T]);
     }
 
     template <typename T = ptr_t>
-    constexpr inline auto view_vfunc_dyn_index_as(ptr_t* vptr,
+    constexpr inline auto view_vfunc_dyn_index_as(const ptr_t* const vptr,
                                                   const std::size_t index)
     {
         return view_as<T>(vptr[index]);
@@ -32,7 +32,7 @@ namespace XKLib
     template <std::size_t index_T,
               typename ret_type_T = void,
               typename... args_T>
-    constexpr inline auto vfunc(ptr_t* vptr)
+    constexpr inline auto vfunc(const ptr_t* const vptr)
     {
 #ifdef WINDOWS
         return view_vfunc_as<index_T,
@@ -62,13 +62,13 @@ namespace XKLib
      * Used for hooking
      */
     template <std::size_t index_T, typename T = ptr_t>
-    constexpr inline auto vfunc_ptr(ptr_t* vptr)
+    constexpr inline auto vfunc_ptr(const ptr_t* const vptr)
     {
         return view_as<T>(&vptr[index_T]);
     }
 
     template <typename T = ptr_t>
-    constexpr inline auto vfunc_ptr_dyn_index(ptr_t* vptr,
+    constexpr inline auto vfunc_ptr_dyn_index(const ptr_t* const vptr,
                                               const std::size_t index)
     {
         return view_as<T>(&vptr[index]);
@@ -78,7 +78,7 @@ namespace XKLib
               typename ret_type_T = void,
               typename... args_T>
     constexpr inline auto call_vfunc(const ptr_t classPtr,
-                                     ptr_t* vptr,
+                                     const ptr_t* const vptr,
                                      args_T... args)
     {
         return vfunc<index_T, ret_type_T, args_T...>(vptr)(classPtr,
@@ -87,7 +87,7 @@ namespace XKLib
 
     template <typename ret_type_T = void, typename... args_T>
     constexpr inline auto call_vfunc_dyn_index(const ptr_t classPtr,
-                                               ptr_t* vptr,
+                                               const ptr_t* const vptr,
                                                std::size_t index,
                                                args_T... args)
     {
@@ -103,7 +103,8 @@ namespace XKLib
         template <std::size_t index_T,
                   typename ret_type_T = void,
                   typename... args_T>
-        constexpr inline auto callVFunc(ptr_t* vptr, args_T... args)
+        constexpr inline auto callVFunc(const ptr_t* const vptr,
+                                        args_T... args)
         {
             return call_vfunc<index_T, ret_type_T, args_T...>(this,
                                                               vptr,
@@ -111,7 +112,7 @@ namespace XKLib
         }
 
         template <typename ret_type_T = void, typename... args_T>
-        constexpr inline auto callVfuncDynIndex(ptr_t* vptr,
+        constexpr inline auto callVfuncDynIndex(const ptr_t* const vptr,
                                                 const std::size_t index,
                                                 args_T... args)
         {
@@ -122,12 +123,12 @@ namespace XKLib
     };
 
     template <std::size_t index_T, typename T2 = ptr_t>
-    inline auto hook_vfunc(ptr_t* vptr,
+    inline auto hook_vfunc(const ptr_t* const vptr,
                            const auto newFuncPtr,
                            const pre_or_post_hook_vfunc_t pre  = nullptr,
                            const pre_or_post_hook_vfunc_t post = nullptr)
     {
-        auto funcPtr = vfunc_ptr<index_T, ptr_t*>(vptr);
+        const auto funcPtr = vfunc_ptr<index_T, ptr_t*>(vptr);
 
         mapf_t flags;
         std::shared_ptr<ProcessMemoryArea> area;
@@ -140,7 +141,7 @@ namespace XKLib
             }
             else
             {
-                auto mmap = Process::self().mmap();
+                const auto mmap = Process::self().mmap();
 
                 area = mmap.search(funcPtr);
 

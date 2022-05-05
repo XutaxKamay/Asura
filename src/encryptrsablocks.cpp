@@ -48,8 +48,9 @@ auto XKLib::EncryptRSABlocks::encrypt(const bytes_t& bytes) const
     for (std::size_t block_count = 0; block_count < block_count_max;
          block_count++)
     {
-        auto start = view_as<data_t>(view_as<std::uintptr_t>(result.data())
-                                     + block_count * min_size);
+        const auto start = view_as<data_t>(
+          view_as<std::uintptr_t>(result.data())
+          + block_count * min_size);
 
         const Integer encrypt_block(start, min_size);
 

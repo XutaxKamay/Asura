@@ -75,7 +75,7 @@ namespace XKLib
 
         CloseHandle(_thread_handle);
 #else
-        auto ret = ::kill(_id, SIGKILL);
+        const auto ret = ::kill(_id, SIGKILL);
 
         if (ret != 0)
         {

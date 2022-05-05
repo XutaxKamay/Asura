@@ -118,7 +118,7 @@ auto ProcessMemoryMap::refresh() -> void
             name = line.substr(match[0].str().size(), line.size());
         }
 
-        auto is_on = [](char prot)
+        const auto is_on = [](char prot)
         {
             if (prot == '-')
             {
@@ -164,7 +164,8 @@ auto ProcessMemoryMap::refresh() -> void
          == sizeof(info);
          bs += info.RegionSize)
     {
-        auto area = std::make_shared<ProcessMemoryArea>(_process_base);
+        const auto area = std::make_shared<ProcessMemoryArea>(
+          _process_base);
         area->setAddress(bs);
         area->setSize(info.RegionSize);
         area->initProtectionFlags(

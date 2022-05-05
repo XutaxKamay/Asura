@@ -12,7 +12,7 @@ auto Task::list(ProcessBase processBase) -> tasks_t
 #ifdef WINDOWS
     THREADENTRY32 te32;
 
-    auto thread_handle_snapshot = CreateToolhelp32Snapshot(
+    const auto thread_handle_snapshot = CreateToolhelp32Snapshot(
       TH32CS_SNAPTHREAD,
       0);
 
@@ -42,11 +42,11 @@ auto Task::list(ProcessBase processBase) -> tasks_t
     std::filesystem::path filepath_tasks(
       "/proc/" + std::to_string(processBase.id()) + "/task/");
 
-    for (auto&& task_id_path : filepath_tasks)
+    for (const auto& task_id_path : filepath_tasks)
     {
-        auto task_id = task_id_path.generic_string();
+        const auto task_id = task_id_path.generic_string();
 
-        Task task(processBase, std::stoi(task_id));
+        const Task task(processBase, std::stoi(task_id));
 
         tasks.push_back(task);
     }
@@ -65,7 +65,7 @@ auto Task::list(ProcessBase processBase) -> tasks_t
             break;
         }
 
-        Task task(processBase, std::stoi(line));
+        const Task task(processBase, std::stoi(line));
 
         tasks.push_back(task);
     }
@@ -92,9 +92,9 @@ Task::Task(ProcessBase processBase)
 auto Task::wait() const -> void
 {
 #ifdef WINDOWS
-    auto thread_handle = OpenThread(THREAD_QUERY_INFORMATION,
-                                    false,
-                                    view_as<DWORD>(_id));
+    const auto thread_handle = OpenThread(THREAD_QUERY_INFORMATION,
+                                          false,
+                                          view_as<DWORD>(_id));
 
     if (!thread_handle)
     {
@@ -116,9 +116,9 @@ auto Task::wait() const -> void
 auto Task::kill() const -> void
 {
 #ifdef WINDOWS
-    auto thread_handle = OpenThread(THREAD_TERMINATE,
-                                    false,
-                                    view_as<DWORD>(_id));
+    const auto thread_handle = OpenThread(THREAD_TERMINATE,
+                                          false,
+                                          view_as<DWORD>(_id));
 
     if (!thread_handle)
     {
@@ -133,7 +133,7 @@ auto Task::kill() const -> void
 
     CloseHandle(thread_handle);
 #else
-    auto ret = ::kill(_id, SIGKILL);
+    const auto ret = ::kill(_id, SIGKILL);
 
     if (ret != 0)
     {
