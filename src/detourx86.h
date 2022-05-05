@@ -49,9 +49,13 @@ namespace XKLib
                 area->protectionFlags() = MemoryArea::ProtectionFlags::RWX;
             }
 
-            *view_as<int32_t*>(fromPtr + 1) = view_as<int32_t>(to)
-                                              - (view_as<int32_t>(fromPtr)
-                                                 + 5);
+            *view_as<int32_t*>(view_as<std::uintptr_t>(fromPtr) + 1) = view_as<
+                                                                         int32_t>(
+                                                                         to)
+                                                                       - (view_as<
+                                                                            int32_t>(
+                                                                            fromPtr)
+                                                                          + 5);
 
             if (afterOverride)
             {
