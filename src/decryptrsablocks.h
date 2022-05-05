@@ -14,8 +14,11 @@ namespace XKLib
         explicit DecryptRSABlocks(CryptoPP::RSA::PrivateKey privateKey);
 
       public:
+        auto decrypt(const bytes_t& bytes) const -> bytes_t;
+        auto privateKey() const -> const auto&;
+
+      private:
         auto privateKey() -> auto&;
-        auto decrypt(const bytes_t& bytes) -> bytes_t;
 
       private:
         CryptoPP::RSA::PrivateKey _private_key {};

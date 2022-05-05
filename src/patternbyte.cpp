@@ -8,9 +8,9 @@ XKLib::PatternByte::Value::Value(int value) : value(value)
 {
 }
 
-XKLib::PatternByte::PatternByte(std::vector<Value> bytes,
-                                std::string areaName,
-                                std::vector<ptr_t> matches)
+XKLib::PatternByte::PatternByte(const std::vector<Value> bytes,
+                                const std::string areaName,
+                                const std::vector<ptr_t> matches)
  : _bytes(std::move(bytes)), _matches(std::move(matches)),
    _area_name(std::move(areaName))
 {
@@ -106,7 +106,7 @@ XKLib::PatternByte::PatternByte(std::vector<Value> bytes,
 
     for (auto&& mv : _fast_aligned_mvs)
     {
-        if (_mm_movemask_simd_value(_mm_load_simd_value(&mv.mask)) == 0)
+        if (mm_movemask_epi8(mm_load_simd(&mv.mask)) == 0)
         {
             mv.can_skip = true;
         }
@@ -158,7 +158,7 @@ XKLib::PatternByte::PatternByte(std::vector<Value> bytes,
 #endif
 
         /* Get the asked byte */
-        const auto simd_tmp = _mm_set_pi8_simd_value(view_as<char>(i));
+        const auto simd_tmp = mm_set_epi8_simd(view_as<char>(i));
 
         for (std::size_t j = 0; j < _bytes.size(); j++)
         {
@@ -180,30 +180,27 @@ XKLib::PatternByte::PatternByte(std::vector<Value> bytes,
                  */
                 constexpr auto bit_mask = []() constexpr
                 {
-                    static_assert(sizeof(PatternByte::simd_value_t) <= 64,
+                    static_assert(sizeof(simd_value_t) <= 64,
                                   "simd_value_t is bigger than 64 "
                                   "bytes");
 
-                    if constexpr (sizeof(PatternByte::simd_value_t) == 64)
+                    if constexpr (sizeof(simd_value_t) == 64)
                     {
-                        return std::numeric_limits<uint64_t>::max();
+                        return std::numeric_limits<std::uint64_t>::max();
                     }
-                    else if constexpr (sizeof(PatternByte::simd_value_t)
-                                       < 64)
+                    else if constexpr (sizeof(simd_value_t) < 64)
                     {
-                        return (1ull << sizeof(PatternByte::simd_value_t))
-                               - 1ull;
+                        return (1ull << sizeof(simd_value_t)) - 1ull;
                     }
                 }
                 ();
 
-                const std::size_t match_byte_num = __builtin_ffsll(
-                  _mm_cmp_pi8_simd_value(
-                    _mm_and_simd_value(simd_tmp,
-                                       _mm_load_simd_value(&it_mv->mask)),
-                    _mm_load_simd_value(&it_mv->value))
-                  & (std::numeric_limits<uint64_t>::max() << slot)
-                  & bit_mask);
+                const auto match_byte_num = view_as<std::size_t>(
+                  __builtin_ffsll(
+                    mm_cmp_epi8_simd(mm_and_simd(simd_tmp, it_mv->mask),
+                                     it_mv->value)
+                    & (std::numeric_limits<std::uint64_t>::max() << slot)
+                    & bit_mask));
 
                 if (match_byte_num > 0
                     && match_byte_num <= it_mv->part_size)
@@ -227,11 +224,10 @@ XKLib::PatternByte::PatternByte(std::vector<Value> bytes,
             /* Then search inside the rest of the pattern */
             while (it_mv != _fast_aligned_mvs.end())
             {
-                const std::size_t match_byte_num = __builtin_ffsll(
-                  _mm_cmp_pi8_simd_value(
-                    _mm_and_simd_value(simd_tmp,
-                                       _mm_load_simd_value(&it_mv->mask)),
-                    _mm_load_simd_value(&it_mv->value)));
+                const std::size_t match_byte_num = view_as<std::size_t>(
+                  __builtin_ffsll(
+                    mm_cmp_epi8_simd(mm_and_simd(simd_tmp, it_mv->mask),
+                                     it_mv->value)));
 
                 /**
                  * Matched, we found the (unknown ?) byte
@@ -254,17 +250,12 @@ XKLib::PatternByte::PatternByte(std::vector<Value> bytes,
     }
 }
 
-auto XKLib::PatternByte::bytes() -> std::vector<Value>&
+auto XKLib::PatternByte::bytes() const -> const std::vector<Value>&
 {
     return _bytes;
 }
 
-auto XKLib::PatternByte::matches() -> std::vector<ptr_t>&
-{
-    return _matches;
-}
-
-auto XKLib::PatternByte::isValid() -> bool
+auto XKLib::PatternByte::isValid() const -> bool
 {
     if (_bytes.size() == 0)
     {
@@ -288,23 +279,29 @@ auto XKLib::PatternByte::isValid() -> bool
     return true;
 }
 
-auto XKLib::PatternByte::scan(Process& process) -> void
-{
-    PatternScanning::searchInProcess(*this, process);
-}
-
-auto XKLib::PatternByte::areaName() -> std::string
+auto XKLib::PatternByte::areaName() const -> const std::string&
 {
     return _area_name;
 }
 
-auto XKLib::PatternByte::vec_organized_values()
-  -> std::vector<organized_values_t>&
+auto XKLib::PatternByte::vecOrganizedValues() const
+  -> const std::vector<organized_values_t>&
 {
     return _vec_organized_values;
 }
 
-auto XKLib::PatternByte::fast_aligned_mvs() -> std::vector<simd_mv_t>&
+auto XKLib::PatternByte::fastAlignedMVs() const
+  -> const std::vector<simd_mv_t>&
 {
     return _fast_aligned_mvs;
+}
+
+auto XKLib::PatternByte::matches() -> std::vector<ptr_t>&
+{
+    return _matches;
+}
+
+auto XKLib::PatternByte::scan(const Process& process) -> void
+{
+    PatternScanning::searchInProcess(*this, process);
 }

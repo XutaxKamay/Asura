@@ -4,20 +4,21 @@
 
 using namespace XKLib;
 
-auto XKLib::get_variable_type_str(typesize_t typeSize) -> std::string
+auto XKLib::get_variable_type_str(const typesize_t typeSize)
+  -> std::string
 {
-    static std::string strings[] = { "safesize (32 bits)",
-                                     "8 bits signed",
-                                     "16 bits signed",
-                                     "32 bits signed",
-                                     "64 bits signed",
-                                     "8 bits unsigned",
-                                     "16 bits unsigned",
-                                     "32 bits unsigned",
-                                     "64 bits unsigned",
-                                     "array",
-                                     "float",
-                                     "double" };
+    static const std::string strings[] = { "safesize (32 bits)",
+                                           "8 bits signed",
+                                           "16 bits signed",
+                                           "32 bits signed",
+                                           "64 bits signed",
+                                           "8 bits unsigned",
+                                           "16 bits unsigned",
+                                           "32 bits unsigned",
+                                           "64 bits unsigned",
+                                           "array",
+                                           "float",
+                                           "double" };
 
     if (typeSize < strings->size())
     {
@@ -27,16 +28,19 @@ auto XKLib::get_variable_type_str(typesize_t typeSize) -> std::string
     return strings[typeSize];
 }
 
-Buffer::Buffer(std::size_t maxSize) : _max_size(maxSize), _allocated(true)
+Buffer::Buffer(const std::size_t maxSize)
+ : _max_size(maxSize), _allocated(true)
 {
     _data = alloc<data_t>(_max_size);
 }
 
-Buffer::Buffer(data_t data, std::size_t maxSize) : _max_size(maxSize)
+Buffer::Buffer(const data_t data, const std::size_t maxSize)
+ : _max_size(maxSize)
 {
     if (data)
     {
-        _data = data;
+        _data      = data;
+        _allocated = false;
     }
     else if (_max_size)
     {
@@ -45,6 +49,7 @@ Buffer::Buffer(data_t data, std::size_t maxSize) : _max_size(maxSize)
     }
     else
     {
+        _allocated = false;
         /* vector maybe */
     }
 }
@@ -53,10 +58,12 @@ Buffer::~Buffer()
 {
     // Free data.
     if (_allocated)
+    {
         free(_data);
+    }
 }
 
-auto Buffer::operator[](std::size_t size) -> auto&
+auto Buffer::operator[](const std::size_t size) const -> const auto&
 {
     if (!_data && size >= _max_size)
     {
@@ -66,30 +73,30 @@ auto Buffer::operator[](std::size_t size) -> auto&
     return *shift<data_t>(size);
 }
 
-auto Buffer::data() -> data_t
+auto Buffer::data() const -> data_t
 {
     return _data;
 }
 
-auto Buffer::setData(XKLib::data_t data)
-{
-    _data = data;
-}
-
-auto Buffer::maxSize() -> std::size_t
+auto Buffer::maxSize() const -> std::size_t
 {
     return _max_size;
 }
 
-auto Buffer::setMaxSize(std::size_t maxSize)
-{
-    _max_size = maxSize;
-}
-
-auto Buffer::toBytes() -> bytes_t
+auto Buffer::toBytes() const -> bytes_t
 {
     bytes_t bs(_max_size);
     std::copy(this->_data, this->_data + _max_size, bs.begin());
 
     return bs;
+}
+
+auto Buffer::operator[](const std::size_t size) -> auto&
+{
+    if (!_data && size >= _max_size)
+    {
+        XKLIB_EXCEPTION("Out of bounds.");
+    }
+
+    return *shift<data_t>(size);
 }

@@ -10,21 +10,12 @@ namespace XKLib
     inline std::vector<ptr_t> tracking_memory_allocs;
 #endif
 
-    /**
-     * @brief UDPSize
-     * UDPSize is the maximum size theorically that we can send over
-     * network on UDP protocol without fragmentation
-     */
     constexpr auto UDPSize = 508;
 
     template <typename T = ptr_t>
-    /**
-     * @brief alloc
-     * @param size
-     */
-    constexpr inline auto alloc(std::size_t size)
+    constexpr inline auto alloc(const std::size_t size)
     {
-        auto ptr = view_as<T>(::operator new(view_as<std::size_t>(size)));
+        const auto ptr = view_as<T>(::operator new(size));
 
 #ifdef DEBUG
         tracking_memory_allocs.push_back(view_as<ptr_t>(ptr));
@@ -33,17 +24,12 @@ namespace XKLib
         return ptr;
     }
 
-    template <typename T = ptr_t>
-    /**
-     * @brief free
-     * @param pBuf
-     */
-    constexpr inline auto free(T& pBuf)
+    constexpr inline auto free(auto& pBuf)
     {
 #ifdef DEBUG
-        auto it = std::find(tracking_memory_allocs.begin(),
-                            tracking_memory_allocs.end(),
-                            view_as<ptr_t>(pBuf));
+        const auto it = std::find(tracking_memory_allocs.begin(),
+                                  tracking_memory_allocs.end(),
+                                  view_as<ptr_t>(pBuf));
 
         if (it != tracking_memory_allocs.end())
         {
@@ -64,7 +50,8 @@ namespace XKLib
     }
 
     template <typename T = ptr_t>
-    constexpr inline auto align_alloc(std::size_t size, std::size_t align)
+    constexpr inline auto align_alloc(const std::size_t size,
+                                      const std::size_t align)
     {
 #ifdef WINDOWS
         return view_as<T>(_aligned_malloc(size, align));
@@ -73,8 +60,7 @@ namespace XKLib
 #endif
     }
 
-    template <typename T = ptr_t>
-    constexpr inline auto align_free(T& pBuf)
+    constexpr inline auto align_free(auto& pBuf)
     {
 #ifdef WINDOWS
         _aligned_free(pBuf);
@@ -84,11 +70,6 @@ namespace XKLib
         pBuf = nullptr;
     }
 
-    /**
-     * @brief The typesize_t enum
-     * Enumerate all kind of primitive types that could be possibly used
-     * in a buffer.
-     */
     enum typesize_t : byte_t
     {
         type_float,
@@ -106,11 +87,6 @@ namespace XKLib
     };
 
     template <typesize_t type>
-    /**
-     * @brief _gvt
-     * _gvt (get variable type) permits to get variable type from
-     * typesize_t.
-     */
     constexpr inline auto _gvt()
     {
         if constexpr (type == type_safesize)
@@ -118,11 +94,11 @@ namespace XKLib
         else if constexpr (type == type_8us)
             return type_wrapper<byte_t>;
         else if constexpr (type == type_16us)
-            return type_wrapper<uint16_t>;
+            return type_wrapper<std::uint16_t>;
         else if constexpr (type == type_32us)
-            return type_wrapper<uint32_t>;
+            return type_wrapper<std::uint32_t>;
         else if constexpr (type == type_64us)
-            return type_wrapper<uint64_t>;
+            return type_wrapper<std::uint64_t>;
         else if constexpr (type == type_8s)
             return type_wrapper<char>;
         else if constexpr (type == type_16s)
@@ -140,12 +116,8 @@ namespace XKLib
         else
             static_assert(type > type_array, "Not implemented");
     }
-    /**
-     * @brief get_variable_type_str
-     * @param typeSize
-     * @return Returns the string of the variable type.
-     */
-    auto get_variable_type_str(typesize_t typeSize) -> std::string;
+
+    auto get_variable_type_str(const typesize_t typeSize) -> std::string;
 
     template <typesize_t typesize_T>
     using get_variable_t = typename decltype(_gvt<typesize_T>())::type;
@@ -155,75 +127,37 @@ namespace XKLib
     class Buffer
     {
       public:
-        explicit Buffer(std::size_t maxSize);
-        explicit Buffer(data_t data = nullptr, std::size_t maxSize = 0);
+        explicit Buffer(const std::size_t maxSize);
+        explicit Buffer(const data_t data         = nullptr,
+                        const std::size_t maxSize = 0);
         ~Buffer();
 
       public:
-        /**
-         * @brief operator []
-         * @param size
-         * @return
-         */
-        auto operator[](std::size_t size) -> auto&;
-        /**
-         * @brief data
-         * @return
-         */
-        auto data() -> data_t;
-        /**
-         * @brief setData
-         * @param data
-         */
-        auto setData(XKLib::data_t data);
-        /**
-         * @brief maxSize
-         * @return
-         */
-        auto maxSize() -> std::size_t;
-        /**
-         * @brief setMaxSize
-         * @param maxSize
-         */
-        auto setMaxSize(std::size_t maxSize);
-        /**
-         * @brief toBytes
-         * @return bytes_t
-         */
-        auto toBytes() -> bytes_t;
+        auto operator[](const std::size_t size) const -> const auto&;
+        auto data() const -> data_t;
+        auto maxSize() const -> std::size_t;
+        auto toBytes() const -> bytes_t;
 
       public:
-        template <typename cast_T = ptr_t>
-        /**
-         * @brief shift
-         * @param size
-         * Gets a pointer from data + size.
-         */
-        constexpr inline auto shift(std::size_t size = 0)
+        auto operator[](const std::size_t size) -> auto&;
+
+      public:
+        template <typename T = ptr_t>
+        constexpr inline auto shift(const std::size_t size = 0) const
         {
             if (!_data && size >= _max_size)
             {
                 XKLIB_EXCEPTION("Out of bounds.");
             }
 
-            return view_as<cast_T>(view_as<uintptr_t>(_data) + size);
+            return view_as<T>(view_as<std::uintptr_t>(_data) + size);
         }
 
       private:
-        /**
-         * @brief _data
-         */
-        data_t _data {};
-        /**
-         * @brief _max_size
-         */
-        std::size_t _max_size {};
-        /**
-         * @brief _allocated
-         */
-        bool _allocated {};
+        data_t _data;
+        std::size_t _max_size;
+        bool _allocated;
     };
+}
 
-} // namespace XKLib
-
-#endif // BUFFER_H
+#endif

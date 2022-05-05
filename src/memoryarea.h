@@ -5,27 +5,21 @@
 
 namespace XKLib
 {
-    /**
-     * memory area protection flags
-     */
+    /* memory area protection flags */
 #ifdef WINDOWS
     using mapf_t = DWORD;
 #else
-    using mapf_t = uint32_t;
+    using mapf_t = std::uint32_t;
 #endif
 
-    /**
-     * @brief MemoryArea
-     * Class that permits to handle the memory area.
-     */
     class MemoryArea
     {
       public:
         class ProtectionFlags
         {
           public:
-            static auto ToOwn(mapf_t flags) -> mapf_t;
-            static auto ToOS(mapf_t flags) -> mapf_t;
+            static auto ToOwn(const mapf_t flags) -> mapf_t;
+            static auto ToOS(const mapf_t flags) -> mapf_t;
 
             const inline static mapf_t NONE    = 0u;
             const inline static mapf_t READ    = (1u << 0u);
@@ -41,57 +35,37 @@ namespace XKLib
         };
 
       public:
-        /**
-         * @brief setAddress
-         *
-         * @param address
-         */
-        auto setAddress(ptr_t address) -> void;
-        /**
-         * @brief setSize
-         *
-         * @param size
-         */
-        auto setSize(std::size_t size) -> void;
-        auto setName(const std::string& name) -> void;
-        auto operator==(MemoryArea& area) -> bool;
+        auto operator==(const MemoryArea& area) const -> bool;
+        auto name() const -> const std::string&;
 
       public:
-        template <typename T = uintptr_t>
-        auto begin() -> T
+        auto setAddress(const ptr_t address) -> void;
+        auto setSize(const std::size_t size) -> void;
+        auto setName(const std::string& name) -> void;
+
+      public:
+        template <typename T = std::uintptr_t>
+        auto begin() const -> T
         {
             return view_as<T>(_address);
         }
 
-        template <typename T = uintptr_t>
-        auto end() -> T
+        template <typename T = std::uintptr_t>
+        auto end() const -> T
         {
-            return view_as<T>(view_as<uintptr_t>(_address) + _size);
+            return view_as<T>(view_as<std::uintptr_t>(_address) + _size);
         }
 
-        template <typename T = uintptr_t>
-        auto size() -> T
+        template <typename T = std::uintptr_t>
+        auto size() const -> T
         {
-            return view_as<T>(end<std::size_t>() - begin<std::size_t>());
+            return view_as<T>(end<std::uintptr_t>()
+                              - begin<std::uintptr_t>());
         }
-
-        auto name() -> const std::string&;
 
       private:
-        /**
-         * @brief _address
-         * Address of the memory area
-         */
         ptr_t _address {};
-        /**
-         * @brief _size
-         * Size of the memory area
-         */
         std::size_t _size {};
-        /**
-         * @brief _name
-         * Name of the memory area
-         */
         std::string _name {};
     };
 }

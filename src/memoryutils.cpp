@@ -8,7 +8,7 @@ std::size_t MemoryUtils::_page_size;
 std::once_flag MemoryUtils::_get_page_size_once_flag;
 
 #ifdef WINDOWS
-static auto _GetPageSize()
+static auto GetPageSize()
 {
     SYSTEM_INFO sys_info;
 
@@ -17,7 +17,7 @@ static auto _GetPageSize()
     return sys_info.dwPageSize;
 }
 #else
-static auto _GetPageSize()
+static auto GetPageSize()
 {
     return view_as<std::size_t>(sysconf(_SC_PAGESIZE));
 }
@@ -28,7 +28,7 @@ auto MemoryUtils::GetPageSize() -> std::size_t
     std::call_once(_get_page_size_once_flag,
                    []()
                    {
-                       _page_size = _GetPageSize();
+                       _page_size = ::GetPageSize();
                    });
 
     return _page_size;

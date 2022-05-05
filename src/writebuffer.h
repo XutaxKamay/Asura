@@ -6,7 +6,6 @@
 namespace XKLib
 {
     /**
-     * @brief The WriteBuffer class
      * Write types and data to the buffer.
      */
     class WriteBuffer : public Buffer
@@ -14,56 +13,25 @@ namespace XKLib
       public:
         constexpr static auto DEFAULT_MAX_SIZE = 0x100000;
 
-        explicit WriteBuffer(data_t data           = nullptr,
-                             std::size_t maxSize   = DEFAULT_MAX_SIZE,
-                             std::size_t writeSize = 0);
+        explicit WriteBuffer(const data_t data         = nullptr,
+                             const std::size_t maxSize = DEFAULT_MAX_SIZE,
+                             const std::size_t writeSize = 0);
 
         ~WriteBuffer() = default;
 
       public:
-        /**
-         * @brief addType
-         * @param typesize_T
-         */
-        auto addType(typesize_t typesize_T) -> void;
-        /**
-         * @brief reset
-         */
-        auto reset() -> void;
-        /**
-         * @brief addData
-         * @param data
-         * @param size
-         */
-        auto addData(ptr_t data, std::size_t size) -> void;
-        /**
-         * @brief advance
-         * @param size
-         */
-        auto advance(std::size_t size) -> void;
-        /**
-         * @brief writeSize
-         * @return
-         */
-        auto writeSize() -> std::size_t;
-        /**
-         * @brief setWriteSize
-         * @param writeSize
-         */
-        auto setWriteSize(std::size_t writeSize) -> void;
-        /**
-         * @brief toBytes
-         */
-        auto toBytes() -> bytes_t;
+        auto writeSize() const -> const std::size_t&;
+        auto toBytes() const -> bytes_t;
 
-        /** templates */
+      public:
+        auto writeSize() -> std::size_t&;
+        auto addType(const typesize_t typesize_T) -> void;
+        auto reset() -> void;
+        auto addData(const ptr_t data, const std::size_t size) -> void;
+        auto advance(const std::size_t size) -> void;
+
       public:
         template <typesize_t typesize_T = type_32s>
-        /**
-         * @brief addVar
-         * @param value
-         * @param size
-         */
         constexpr inline auto addVar(get_variable_t<typesize_T> value,
                                      std::size_t size = 0)
         {
@@ -82,31 +50,24 @@ namespace XKLib
             }
         }
 
-        template <typename cast_T = ptr_t>
-        /**
-         * @brief shift
-         * @param size
-         */
-        constexpr inline auto shift(std::size_t size = 0)
+        template <typename T = ptr_t>
+        constexpr inline auto shift(const std::size_t size = 0)
         {
             if (size == 0)
             {
-                return view_as<cast_T>(this->data());
+                return view_as<T>(this->data());
             }
             else
             {
-                return view_as<cast_T>(view_as<uintptr_t>(this->data())
-                                       + view_as<uintptr_t>(size));
+                return view_as<T>(view_as<std::uintptr_t>(this->data())
+                                  + view_as<std::uintptr_t>(size));
             }
         }
 
       private:
-        /**
-         * @brief m_written_size
-         */
         std::size_t _written_size {};
     };
 
-} // namespace XKLib
+}
 
-#endif // WRITEBUFFER_H
+#endif

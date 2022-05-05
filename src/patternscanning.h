@@ -12,29 +12,22 @@ namespace XKLib
       public:
         static auto searchInProcess(
           PatternByte& pattern,
-          Process& process,
+          const Process& process,
           const std::function<
-            auto(PatternByte&, data_t, std::size_t, ptr_t)->bool>&
-            searchMethod
+            auto(PatternByte&, const data_t, const std::size_t, const ptr_t)
+              ->bool>& searchMethod
           = searchV4) -> void;
 
         static auto searchInProcessWithAreaName(
           PatternByte& pattern,
-          Process& process,
+          const Process& process,
           const std::string& areaName,
           const std::function<
-            auto(PatternByte&, data_t, std::size_t, ptr_t)->bool>&
-            searchMethod
+            auto(PatternByte&, const data_t, const std::size_t, const ptr_t)
+              ->bool>& searchMethod
           = searchV4) -> void;
 
         /**
-         * @brief searchV1
-         * @param pattern
-         * @param data
-         * @param size
-         * @param baseAddress
-         * @return
-         *
          * This works by making the preprocessed pattern into simd
          * values, with its mask. The mask is basically used for
          * unknown bytes, so we don't need to check byte by byte.
@@ -51,91 +44,57 @@ namespace XKLib
          * instruction aka (data & 0xFF00FF00) == 0xDE00CO00.
          */
         static auto searchV1(PatternByte& pattern,
-                             data_t data,
-                             std::size_t size,
-                             ptr_t baseAddress) -> bool;
+                             const data_t data,
+                             const std::size_t size,
+                             const ptr_t baseAddress) -> bool;
 
         /**
-         * @brief searchV2
-         * @param pattern
-         * @param data
-         * @param size
-         * @param baseAddress
-         * @return
-         *
          * This one is a byte by byte check, skipping the unknown
          * bytes when it can. This is traditional.
          */
         static auto searchV2(PatternByte& pattern,
-                             data_t data,
-                             std::size_t size,
-                             ptr_t baseAddress) -> bool;
+                             const data_t data,
+                             const std::size_t size,
+                             const ptr_t baseAddress) -> bool;
 
         /**
-         * @brief searchV3
-         * @param pattern
-         * @param data
-         * @param size
-         * @param baseAddress
-         * @return
-         *
          * SIMD Boyer-Moore's Algorithm.
          * Consums less memory than V4 but it is slower.
          */
         static auto searchV3(PatternByte& pattern,
-                             data_t data,
-                             std::size_t size,
-                             ptr_t baseAddress) -> bool;
+                             const data_t data,
+                             const std::size_t size,
+                             const ptr_t baseAddress) -> bool;
 
         /**
-         * @brief searchV4
-         * @param pattern
-         * @param data
-         * @param size
-         * @param baseAddress
-         * @return
-         *
          * SIMD Boyer-Moore-Horspool's Algorithm.
          * Consums a lot more memory but it is faster.
          */
         static auto searchV4(PatternByte& pattern,
-                             data_t data,
-                             std::size_t size,
-                             ptr_t baseAddress) -> bool;
+                             const data_t data,
+                             const std::size_t size,
+                             const ptr_t baseAddress) -> bool;
 
         /**
-         * @brief searchAlignedV1
-         * @param pattern
-         * @param aligned_data
-         * @param size
-         * @param baseAddress
-         * @return
-         *
          * This one is the same as V1, but works on pattern that was
          * previously taken on aligned code. This is extremely fast.
          */
         static auto searchAlignedV1(PatternByte& pattern,
-                                    data_t aligned_data,
-                                    std::size_t size,
-                                    ptr_t baseAddress) -> bool;
+                                    const data_t aligned_data,
+                                    const std::size_t size,
+                                    const ptr_t baseAddress) -> bool;
+
         /**
-         * @brief searchAlignedV2
-         * @param pattern
-         * @param data
-         * @param size
-         * @param baseAddress
-         * @return
-         *
          * SIMD Boyer-Moore-Horspool's Algorithm, aligned.
          * This one must not use loadu but just load instead,
          * though things can get a bit more complicated, but we can use
          * memory alignment here, which could be potentially a lot faster.
          */
         static auto searchAlignedV2(PatternByte& pattern,
-                                    data_t data,
-                                    std::size_t size,
-                                    ptr_t baseAddress) -> bool;
+                                    const data_t aligned_data,
+                                    const std::size_t size,
+                                    const ptr_t baseAddress) -> bool;
     };
-};
+}
 
 #endif

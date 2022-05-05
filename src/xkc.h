@@ -11,8 +11,9 @@
 namespace XKLib
 {
     template <typename T = byte_t>
-    concept XKCAlphabetType = std::is_same<T, byte_t>::value || std::
-      is_same<T, uint16_t>::value || std::is_same<T, uint32_t>::value;
+    concept XKCAlphabetType = std::is_same<T, byte_t>::value || std::is_same<
+      T,
+      std::uint16_t>::value || std::is_same<T, std::uint32_t>::value;
 
     template <XKCAlphabetType T>
     class XKC
@@ -27,19 +28,19 @@ namespace XKLib
         {
             T letter_value;
             /* let's limit the occurences to 256 times */
-            byte_t count = 0;
+            byte_t count {};
         };
 
         struct Letter
         {
             T value;
-            std::size_t freq = 0;
+            std::size_t freq {};
         };
 
         struct PathInfo
         {
-            bit_path_t bit_path = 0;
-            std::size_t depth   = 0;
+            bit_path_t bit_path {};
+            std::size_t depth {};
         };
 
         struct PathInfoResult : PathInfo
@@ -56,9 +57,9 @@ namespace XKLib
                     INVALID = -1
                 };
 
-                auto height() -> std::size_t;
-                auto depth() -> std::size_t;
-                auto count_subnodes() -> std::size_t;
+                auto height() const -> std::size_t;
+                auto depth() const -> std::size_t;
+                auto count_subnodes() const -> std::size_t;
 
                 std::shared_ptr<Node> root   = nullptr;
                 std::shared_ptr<Node> parent = nullptr;
@@ -69,19 +70,21 @@ namespace XKLib
 
             BinaryTree();
 
-            void insert(std::shared_ptr<Node> parent, T value);
-            void insert(T value);
-
             auto path_info(PathInfo& pathInfo,
-                           std::shared_ptr<Node> parent,
-                           T value) -> bool;
+                           const std::shared_ptr<Node> parent,
+                           const T value) const -> bool;
+            auto path_info(PathInfo& pathInfo, const T value) const
+              -> bool;
 
-            auto path_info(PathInfo& pathInfo, T value) -> bool;
+            auto find_value(PathInfoResult& pathInfo) const -> void;
 
-            void find_value(PathInfoResult& pathInfo);
+            auto dot_format(const std::shared_ptr<Node> parent) const
+              -> std::string;
+            auto dot_format() const -> std::string;
 
-            auto dot_format(std::shared_ptr<Node> parent) -> std::string;
-            auto dot_format() -> std::string;
+            auto insert(const std::shared_ptr<Node> parent, const T value)
+              -> void;
+            auto insert(const T value) -> void;
 
             std::shared_ptr<Node> root;
         };
@@ -90,51 +93,18 @@ namespace XKLib
         using occurrences_t = std::vector<Occurrence>;
 
       public:
-        static auto encode(data_t data, std::size_t size) -> bytes_t;
+        static auto encode(const data_t data, const std::size_t size)
+          -> bytes_t;
         static auto encode(const bytes_t& bytes) -> bytes_t;
 
-        static auto decode(data_t data, std::size_t size) -> bytes_t;
+        static auto decode(const data_t data, const std::size_t size)
+          -> bytes_t;
         static auto decode(const bytes_t& bytes) -> bytes_t;
     };
 };
 
 template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::Node::count_subnodes() -> std::size_t
-{
-    std::size_t result = 0;
-
-    if (left)
-    {
-        result += left->count_subnodes();
-        result++;
-    }
-
-    if (right)
-    {
-        result += right->count_subnodes();
-        result++;
-    }
-
-    return result;
-}
-
-template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::Node::depth() -> std::size_t
-{
-    std::size_t result = 0;
-    auto node          = parent;
-
-    while (node)
-    {
-        result++;
-        node = node->parent;
-    }
-
-    return result;
-}
-
-template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::Node::height() -> std::size_t
+auto XKLib::XKC<T>::BinaryTree::Node::height() const -> std::size_t
 {
     std::size_t height_left = 0, height_right = 0;
 
@@ -154,6 +124,42 @@ auto XKLib::XKC<T>::BinaryTree::Node::height() -> std::size_t
 }
 
 template <XKLib::XKCAlphabetType T>
+auto XKLib::XKC<T>::BinaryTree::Node::depth() const -> std::size_t
+{
+    std::size_t result = 0;
+    auto node          = parent;
+
+    while (node)
+    {
+        result++;
+        node = node->parent;
+    }
+
+    return result;
+}
+
+template <XKLib::XKCAlphabetType T>
+auto XKLib::XKC<T>::BinaryTree::Node::count_subnodes() const
+  -> std::size_t
+{
+    std::size_t result = 0;
+
+    if (left)
+    {
+        result += left->count_subnodes();
+        result++;
+    }
+
+    if (right)
+    {
+        result += right->count_subnodes();
+        result++;
+    }
+
+    return result;
+}
+
+template <XKLib::XKCAlphabetType T>
 XKLib::XKC<T>::BinaryTree::BinaryTree() : root(std::make_shared<Node>())
 {
     root->root = root;
@@ -165,8 +171,8 @@ XKLib::XKC<T>::BinaryTree::BinaryTree() : root(std::make_shared<Node>())
  * in the tree
  */
 template <XKLib::XKCAlphabetType T>
-void XKLib::XKC<T>::BinaryTree::insert(std::shared_ptr<Node> parent,
-                                       T value)
+auto XKLib::XKC<T>::BinaryTree::insert(const std::shared_ptr<Node> parent,
+                                       const T value) -> void
 {
     if (!parent->left)
     {
@@ -192,7 +198,7 @@ void XKLib::XKC<T>::BinaryTree::insert(std::shared_ptr<Node> parent,
 }
 
 template <XKLib::XKCAlphabetType T>
-void XKLib::XKC<T>::BinaryTree::insert(T value)
+auto XKLib::XKC<T>::BinaryTree::insert(const T value) -> void
 {
     if (root->value == Node::Value::INVALID)
     {
@@ -211,16 +217,17 @@ auto XKLib::XKC<T>::encode(const bytes_t& bytes) -> XKLib::bytes_t
 }
 
 template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::path_info(PathInfo& pathInfo,
-                                          std::shared_ptr<Node> parent,
-                                          T value) -> bool
+auto XKLib::XKC<T>::BinaryTree::path_info(
+  PathInfo& pathInfo,
+  const std::shared_ptr<Node> parent,
+  const T value) const -> bool
 {
     if (parent == nullptr)
     {
         return false;
     }
 
-    auto depth = parent->depth();
+    const auto depth = parent->depth();
 
     if (parent->value == value)
     {
@@ -229,7 +236,7 @@ auto XKLib::XKC<T>::BinaryTree::path_info(PathInfo& pathInfo,
     }
 
     /* We've entered in one layer of the tree */
-    auto found_left = path_info(pathInfo, parent->left, value);
+    const auto found_left = path_info(pathInfo, parent->left, value);
 
     if (found_left)
     {
@@ -237,7 +244,7 @@ auto XKLib::XKC<T>::BinaryTree::path_info(PathInfo& pathInfo,
     }
 
     /* reset depth */
-    auto found_right = path_info(pathInfo, parent->right, value);
+    const auto found_right = path_info(pathInfo, parent->right, value);
 
     if (found_right)
     {
@@ -249,14 +256,15 @@ auto XKLib::XKC<T>::BinaryTree::path_info(PathInfo& pathInfo,
 }
 
 template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::path_info(PathInfo& pathInfo, T value)
-  -> bool
+auto XKLib::XKC<T>::BinaryTree::path_info(PathInfo& pathInfo,
+                                          const T value) const -> bool
 {
     return path_info(pathInfo, root, value);
 }
 
 template <XKLib::XKCAlphabetType T>
-void XKLib::XKC<T>::BinaryTree::find_value(PathInfoResult& pathInfo)
+auto XKLib::XKC<T>::BinaryTree::find_value(PathInfoResult& pathInfo) const
+  -> void
 {
     if (root->height() < pathInfo.depth)
     {
@@ -287,12 +295,12 @@ void XKLib::XKC<T>::BinaryTree::find_value(PathInfoResult& pathInfo)
 }
 
 template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::dot_format(std::shared_ptr<Node> parent)
-  -> std::string
+auto XKLib::XKC<T>::BinaryTree::dot_format(
+  const std::shared_ptr<Node> parent) const -> std::string
 {
     std::string result;
 
-    auto max_depth_bits = bits_needed(parent->root->height());
+    const auto max_depth_bits = bits_needed(parent->root->height());
 
     if (parent->left)
     {
@@ -416,7 +424,7 @@ auto XKLib::XKC<T>::BinaryTree::dot_format(std::shared_ptr<Node> parent)
 }
 
 template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::dot_format() -> std::string
+auto XKLib::XKC<T>::BinaryTree::dot_format() const -> std::string
 {
     std::string result = "strict graph {";
 
@@ -428,16 +436,16 @@ auto XKLib::XKC<T>::BinaryTree::dot_format() -> std::string
 }
 
 template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::encode(XKLib::data_t data, std::size_t size)
-  -> XKLib::bytes_t
+auto XKLib::XKC<T>::encode(const data_t data, const std::size_t size)
+  -> bytes_t
 {
     bytes_t result;
     alphabet_t alphabet;
     occurrences_t occurrences;
 
-    auto values             = view_as<T*>(data);
+    const auto values       = view_as<T*>(data);
     std::size_t value_index = 0;
-    auto max_values         = size / sizeof(T);
+    const auto max_values   = size / sizeof(T);
 
     /**
      * Store contiguous values
@@ -470,15 +478,15 @@ auto XKLib::XKC<T>::encode(XKLib::data_t data, std::size_t size)
     }
 
     /* Construct the alphabet */
-    for (auto&& occurrence : occurrences)
+    for (const auto& occurrence : occurrences)
     {
-        auto it = std::find_if(alphabet.begin(),
-                               alphabet.end(),
-                               [&occurrence](Letter& a)
-                               {
-                                   return (occurrence.letter_value
-                                           == a.value);
-                               });
+        const auto it = std::find_if(alphabet.begin(),
+                                     alphabet.end(),
+                                     [&occurrence](Letter& a)
+                                     {
+                                         return (occurrence.letter_value
+                                                 == a.value);
+                                     });
 
         if (it != alphabet.end())
         {
@@ -501,16 +509,17 @@ auto XKLib::XKC<T>::encode(XKLib::data_t data, std::size_t size)
 
     BinaryTree binary_tree;
 
-    for (auto&& letter : alphabet)
+    for (const auto& letter : alphabet)
     {
         binary_tree.insert(letter.value);
     }
 
-    auto max_tree_depth = binary_tree.root->height();
+    const auto max_tree_depth = binary_tree.root->height();
 
-    auto max_depth_bits = view_as<uint32_t>(bits_needed(max_tree_depth));
+    const auto max_depth_bits = view_as<std::uint32_t>(
+      bits_needed(max_tree_depth));
 
-    auto max_count_occurs = std::max_element(
+    const auto max_count_occurs = std::max_element(
       occurrences.begin(),
       occurrences.end(),
       [](Occurrence& a, Occurrence& b)
@@ -518,20 +527,20 @@ auto XKLib::XKC<T>::encode(XKLib::data_t data, std::size_t size)
           return (a.count < b.count);
       });
 
-    auto max_count_occurs_bits = view_as<byte_t>(
+    const auto max_count_occurs_bits = view_as<byte_t>(
       bits_needed(max_count_occurs->count));
 
     result.push_back(max_count_occurs_bits);
 
-    auto tmp                     = view_as<uint32_t>(alphabet.size());
-    auto bytes_max_alphabet_size = view_as<byte_t*>(&tmp);
+    const auto tmp = view_as<std::uint32_t>(alphabet.size());
+    const auto bytes_max_alphabet_size = view_as<byte_t*>(&tmp);
 
     for (std::size_t i = 0; i < sizeof(uint32_t); i++)
     {
         result.push_back(bytes_max_alphabet_size[i]);
     }
 
-    for (auto&& letter : alphabet)
+    for (const auto& letter : alphabet)
     {
         auto letter_value = view_as<T*>(&letter.value);
 
@@ -543,12 +552,12 @@ auto XKLib::XKC<T>::encode(XKLib::data_t data, std::size_t size)
 
     byte_t result_byte                      = 0;
     std::size_t written_bits_on_result_byte = 0;
-    uint32_t written_bits                   = 0;
+    std::uint32_t written_bits              = 0;
 
-    auto check_bit = [&written_bits_on_result_byte,
-                      &result,
-                      &result_byte,
-                      &written_bits]()
+    const auto check_bit = [&written_bits_on_result_byte,
+                            &result,
+                            &result_byte,
+                            &written_bits]()
     {
         written_bits_on_result_byte++;
         written_bits++;
@@ -561,12 +570,12 @@ auto XKLib::XKC<T>::encode(XKLib::data_t data, std::size_t size)
         }
     };
 
-    auto write_bit = [&result_byte, &written_bits_on_result_byte]()
+    const auto write_bit = [&result_byte, &written_bits_on_result_byte]()
     {
         result_byte |= (1u << written_bits_on_result_byte);
     };
 
-    for (auto&& occurrence : occurrences)
+    for (const auto& occurrence : occurrences)
     {
         PathInfo path_info;
         binary_tree.path_info(path_info, occurrence.letter_value);
@@ -612,7 +621,7 @@ auto XKLib::XKC<T>::encode(XKLib::data_t data, std::size_t size)
         result.push_back(result_byte);
     }
 
-    auto bytes_written_bits = view_as<byte_t*>(&written_bits);
+    const auto bytes_written_bits = view_as<byte_t*>(&written_bits);
 
     for (std::size_t i = 0; i < sizeof(uint32_t); i++)
     {
@@ -623,31 +632,31 @@ auto XKLib::XKC<T>::encode(XKLib::data_t data, std::size_t size)
 }
 
 template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::decode(const bytes_t& bytes) -> XKLib::bytes_t
+auto XKLib::XKC<T>::decode(const bytes_t& bytes) -> bytes_t
 {
     return decode(view_as<data_t>(bytes.data()), bytes.size());
 }
 
 template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::decode(XKLib::data_t data, std::size_t size)
+auto XKLib::XKC<T>::decode(const data_t data, const std::size_t size)
   -> XKLib::bytes_t
 {
     bytes_t result;
 
     std::size_t read_bytes = 0;
 
-    auto written_bits = *view_as<uint32_t*>(view_as<uintptr_t>(data)
-                                            + size - sizeof(uint32_t));
+    auto written_bits = *view_as<std::uint32_t*>(
+      view_as<std::uintptr_t>(data) + size - sizeof(uint32_t));
 
     if (written_bits / CHAR_BIT >= size)
     {
         XKLIB_EXCEPTION("there's too much bits to decode.");
     }
 
-    auto max_count_occurs_bits = data[read_bytes];
+    const auto max_count_occurs_bits = data[read_bytes];
     read_bytes += sizeof(byte_t);
 
-    auto alphabet_size = *view_as<uint32_t*>(&data[read_bytes]);
+    const auto alphabet_size = *view_as<std::uint32_t*>(&data[read_bytes]);
     read_bytes += sizeof(uint32_t);
 
     alphabet_t alphabet;
@@ -664,14 +673,15 @@ auto XKLib::XKC<T>::decode(XKLib::data_t data, std::size_t size)
     BinaryTree binary_tree;
 
     /* Construct the tree */
-    for (auto&& letter : alphabet)
+    for (const auto& letter : alphabet)
     {
         binary_tree.insert(letter.value);
     }
 
-    auto max_tree_depth = binary_tree.root->height();
+    const auto max_tree_depth = binary_tree.root->height();
 
-    auto max_depth_bits = view_as<uint32_t>(bits_needed(max_tree_depth));
+    const auto max_depth_bits = view_as<std::uint32_t>(
+      bits_needed(max_tree_depth));
 
     std::size_t read_bits_on_result_byte = 0;
     std::size_t bits_read                = 0;
@@ -679,16 +689,16 @@ auto XKLib::XKC<T>::decode(XKLib::data_t data, std::size_t size)
 
     while (bits_read < written_bits)
     {
-        auto read_bit = [&read_bytes,
-                         &read_bits_on_result_byte,
-                         &bits_read,
-                         &data,
-                         &size]()
+        const auto read_bit = [&read_bytes,
+                               &read_bits_on_result_byte,
+                               &bits_read,
+                               &data,
+                               &size]()
         {
-            auto value = (data[read_bytes]
-                          & (1u << read_bits_on_result_byte)) ?
-                           1u :
-                           0;
+            const auto value = (data[read_bytes]
+                                & (1u << read_bits_on_result_byte)) ?
+                                 1u :
+                                 0;
 
             read_bits_on_result_byte++;
             bits_read++;
@@ -733,7 +743,7 @@ auto XKLib::XKC<T>::decode(XKLib::data_t data, std::size_t size)
         occurrences.push_back({ path_info.letter_value, count });
     }
 
-    for (auto&& occurrence : occurrences)
+    for (const auto& occurrence : occurrences)
     {
         for (std::size_t count = 0; count < occurrence.count; count++)
         {

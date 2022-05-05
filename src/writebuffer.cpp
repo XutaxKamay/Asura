@@ -11,6 +11,19 @@ WriteBuffer::WriteBuffer(data_t data,
 {
 }
 
+auto WriteBuffer::writeSize() const -> const std::size_t&
+{
+    return _written_size;
+}
+
+auto WriteBuffer::toBytes() const -> bytes_t
+{
+    bytes_t bs(_written_size);
+    std::copy(this->data(), this->data() + _written_size, bs.begin());
+
+    return bs;
+}
+
 auto WriteBuffer::addType(typesize_t typeSize) -> void
 {
     addData(&typeSize, view_as<std::size_t>(sizeof(typeSize)));
@@ -29,7 +42,7 @@ auto WriteBuffer::addData(ptr_t data, std::size_t size) -> void
     }
 
     std::copy(view_as<data_t>(data),
-              view_as<data_t>(view_as<uintptr_t>(data)
+              view_as<data_t>(view_as<std::uintptr_t>(data)
                               + view_as<std::size_t>(size)),
               view_as<data_t>(shift(_written_size)));
 
@@ -41,20 +54,7 @@ auto WriteBuffer::advance(std::size_t size) -> void
     _written_size += size;
 }
 
-auto WriteBuffer::writeSize() -> std::size_t
+auto WriteBuffer::writeSize() -> std::size_t&
 {
     return _written_size;
-}
-
-auto WriteBuffer::setWriteSize(std::size_t writeSize) -> void
-{
-    _written_size = writeSize;
-}
-
-auto WriteBuffer::toBytes() -> bytes_t
-{
-    bytes_t bs(_written_size);
-    std::copy(this->data(), this->data() + _written_size, bs.begin());
-
-    return bs;
 }

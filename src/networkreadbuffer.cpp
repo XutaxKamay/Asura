@@ -2,9 +2,9 @@
 
 #include "networkreadbuffer.h"
 
-XKLib::NetworkReadBuffer::NetworkReadBuffer(XKLib::data_t data,
-                                            std::size_t maxSize,
-                                            std::size_t readBits)
+XKLib::NetworkReadBuffer::NetworkReadBuffer(const data_t data,
+                                            const std::size_t maxSize,
+                                            const std::size_t readBits)
  : Buffer(data, maxSize), _read_bits(readBits)
 {
 }
@@ -19,7 +19,7 @@ auto XKLib::NetworkReadBuffer::readBit() -> bool
     return read_bit(data(), _read_bits++);
 }
 
-void XKLib::NetworkReadBuffer::pos(std::size_t toBit)
+void XKLib::NetworkReadBuffer::pos(const std::size_t toBit)
 {
     _read_bits = toBit;
 }

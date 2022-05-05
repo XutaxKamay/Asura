@@ -10,7 +10,7 @@ namespace XKLib
       public:
         explicit Exception(std::string msg);
 
-        auto msg() -> const std::string&;
+        auto msg() const -> const std::string&;
 
       private:
         std::string _msg {};

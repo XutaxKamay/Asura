@@ -7,6 +7,7 @@ namespace XKLib
 {
     class Process;
     class Task;
+
     class ProcessBase
     {
         friend Process;
@@ -16,15 +17,17 @@ namespace XKLib
         static auto self() -> ProcessBase;
 
       public:
-        explicit ProcessBase(process_id_t);
+        explicit ProcessBase(const process_id_t);
 
       public:
-        auto setPID(process_id_t pid) -> void;
-        auto id() -> process_id_t;
+        auto id() const -> process_id_t;
+
+      public:
+        auto setPID(const process_id_t pid) -> void;
 
       private:
-        process_id_t _pid {};
+        process_id_t _pid;
     };
-};
+}
 
 #endif

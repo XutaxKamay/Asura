@@ -17,9 +17,9 @@ XKLib::Kokabiel::Kokabiel(const std::string& fileName)
 auto XKLib::Kokabiel::loadSegments() -> void
 {
     /* copy segments */
-    for (auto&& segment : _elf.segments)
+    for (const auto& segment : _elf.segments)
     {
-        auto seg_type = segment->get_type();
+        const auto seg_type = segment->get_type();
 
         if (seg_type == ELFIO::PT_LOAD)
         {
@@ -29,10 +29,10 @@ auto XKLib::Kokabiel::loadSegments() -> void
               segment->get_virtual_address(),
               MemoryUtils::GetPageSize());
 
-            auto left_over = segment->get_virtual_address()
-                             - loadable_segment.start;
+            const auto left_over = segment->get_virtual_address()
+                                   - loadable_segment.start;
 
-            auto memory_aligned_size = MemoryUtils::AlignToPageSize(
+            const auto memory_aligned_size = MemoryUtils::AlignToPageSize(
               segment->get_memory_size() + left_over,
               MemoryUtils::GetPageSize());
 
@@ -43,7 +43,7 @@ auto XKLib::Kokabiel::loadSegments() -> void
                       view_as<byte_t*>(loadable_segment.bytes.data()
                                        + left_over));
 
-            auto seg_flags = segment->get_flags();
+            const auto seg_flags = segment->get_flags();
 
             loadable_segment.flags = ((seg_flags & ELFIO::PF_R) ?
                                         MemoryArea::ProtectionFlags::R :
@@ -72,13 +72,13 @@ auto XKLib::Kokabiel::loadSegments() -> void
                   return ma1.start < ma2.start;
               });
 
-    auto last = _loadable_segments.end() - 1;
+    const auto last = _loadable_segments.end() - 1;
 
     _image_size = (last->start + last->bytes.size())
                   - _loadable_segments.begin()->start;
 }
 
-auto XKLib::Kokabiel::freeInjection(injection_info_t& injectionInfo)
+auto XKLib::Kokabiel::freeInjection(injection_info_t& injectionInfo) const
   -> void
 {
     injectionInfo.process_memory_map.freeArea(

@@ -21,76 +21,82 @@ namespace XKLib
       public:
         static auto self() -> Process;
         static auto find(const std::string& name) -> Process;
-        static auto ProcessName(process_id_t pid) -> std::string;
+        static auto ProcessName(const process_id_t pid) -> std::string;
 
       public:
         Process();
-        explicit Process(process_id_t pid);
+        explicit Process(const process_id_t pid);
 
       public:
-        auto tasks() -> tasks_t;
-        auto mmap() -> ProcessMemoryMap;
-        auto search(PatternByte& patternByte) -> void;
+        auto tasks() const -> tasks_t;
+        auto mmap() const -> const ProcessMemoryMap&;
+        auto search(PatternByte& patternByte) const -> void;
+
+      public:
+        auto mmap() -> ProcessMemoryMap&;
 
       public:
         template <std::size_t stack_size_T = TASK_STACK_SIZE>
-        auto createTask(ptr_t routineAddress)
+        auto createTask(const ptr_t routineAddress)
           -> RunnableTask<stack_size_T>
         {
             return RunnableTask<stack_size_T>(*this, routineAddress);
         }
 
-        template <typename T = uintptr_t>
-        auto allocArea(T address, std::size_t size, mapf_t flags) -> ptr_t
+        auto read(const auto address, const std::size_t size) const
+          -> bytes_t
         {
-            return mmap().allocArea<T>(address, size, flags);
+            return _mmap.read(address, size);
         }
 
-        template <typename T = uintptr_t>
-        auto freeArea(T address, std::size_t size) -> void
+        auto write(const auto address, const bytes_t& bytes) const -> void
         {
-            mmap().freeArea<T>(address, size);
+            _mmap.write(address, bytes);
         }
 
-        template <typename T = uintptr_t>
-        auto protectMemoryArea(T address, std::size_t size, mapf_t flags)
-          -> void
+        auto write(const auto address,
+                   const auto ptr,
+                   const std::size_t size) const -> void
         {
-            mmap().protectMemoryArea(address, size, flags);
+            _mmap.write(address, ptr, size);
         }
 
-        template <typename T = uintptr_t>
-        auto read(T address, std::size_t size) -> bytes_t
+      public:
+        auto allocArea(const auto address,
+                       const std::size_t size,
+                       const mapf_t flags) -> ptr_t
         {
-            return mmap().read(address, size);
+            return _mmap.allocArea<decltype(address)>(address,
+                                                      size,
+                                                      flags);
         }
 
-        template <typename T = uintptr_t>
-        auto write(T address, const bytes_t& bytes) -> void
+        auto freeArea(const auto address, const std::size_t size) -> void
         {
-            mmap().write(address, bytes);
+            _mmap.freeArea<decltype(address)>(address, size);
         }
 
-        template <typename T = uintptr_t>
-        auto forceWrite(T address, const bytes_t& bytes) -> void
+        auto protectMemoryArea(const auto address,
+                               const std::size_t size,
+                               const mapf_t flags) -> void
         {
-            mmap().forceWrite(address, bytes);
+            _mmap.protectMemoryArea(address, size, flags);
         }
 
-        template <typename T = uintptr_t>
-        auto write(T address, auto ptr, std::size_t size) -> void
+        auto forceWrite(const auto address, const bytes_t& bytes) -> void
         {
-            mmap().write(address, ptr, size);
+            _mmap.forceWrite(address, bytes);
         }
 
-        template <typename T = uintptr_t>
-        auto forceWrite(T address, auto ptr, std::size_t size) -> void
+        auto forceWrite(const auto address,
+                        const auto ptr,
+                        const std::size_t size) -> void
         {
-            mmap().forceWrite(address, ptr, size);
+            _mmap.forceWrite(address, ptr, size);
         }
 
       private:
-        std::string _full_name {};
+        std::string _full_name;
         ProcessMemoryMap _mmap;
     };
 }

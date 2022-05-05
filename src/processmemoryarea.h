@@ -15,13 +15,16 @@ namespace XKLib
             friend class ProcessMemoryArea;
 
           public:
-            explicit ModifiableProtectionFlags(ProcessMemoryArea* _pma);
+            explicit ModifiableProtectionFlags(
+              ProcessMemoryArea* const _pma);
 
-            auto change(mapf_t flags) -> mapf_t;
-            auto operator=(mapf_t flags) -> void;
+          public:
+            auto cachedValue() const -> const mapf_t&;
 
           public:
             auto cachedValue() -> mapf_t&;
+            auto change(const mapf_t flags) -> mapf_t;
+            auto operator=(const mapf_t flags) -> void;
 
           private:
             mapf_t _flags {};
@@ -30,24 +33,29 @@ namespace XKLib
         };
 
       public:
-        explicit ProcessMemoryArea(ProcessBase process);
+        explicit ProcessMemoryArea(ProcessBase processBase);
 
+        auto protectionFlags() const -> const ModifiableProtectionFlags&;
+        auto processBase() const -> const ProcessBase&;
+        auto read(const std::size_t size,
+                  const std::size_t shift = 0) const -> bytes_t;
+        auto write(const bytes_t& bytes,
+                   const std::size_t shift = 0) const -> void;
+        auto isDeniedByOS() const -> bool;
+        auto isReadable() const -> bool;
+        auto isWritable() const -> bool;
+
+      public:
         auto protectionFlags() -> ModifiableProtectionFlags&;
-        auto initProtectionFlags(mapf_t flags) -> void;
-        auto processBase() -> ProcessBase;
-        auto read(std::size_t size, std::size_t shift = 0) -> bytes_t;
-        auto write(const bytes_t& bytes, std::size_t shift = 0) -> void;
-        auto isDeniedByOS() -> bool;
-        auto isReadable() -> bool;
-        auto isWritable() -> bool;
+        auto initProtectionFlags(const mapf_t flags) -> void;
 
       public:
         template <typename T = byte_t>
-        auto read() -> std::vector<T>
+        auto read() const -> std::vector<T>
         {
             if (ProcessBase::self().id() == _process_base.id())
             {
-                std::vector<T> result(
+                const std::vector<T> result(
                   MemoryUtils::AlignToPageSize(size(), sizeof(T)));
                 std::copy(result.begin(), result.end(), begin<T*>());
                 return result;

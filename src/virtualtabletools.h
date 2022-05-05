@@ -13,8 +13,8 @@ namespace XKLib
 
     using vfunc_t                  = ptr_t;
     using vfuncs_t                 = std::vector<vfunc_t>;
-    using pre_or_post_hook_vfunc_t = std::function<void(ptr_t funcPtr,
-                                                        ptr_t newFuncPtr)>;
+    using pre_or_post_hook_vfunc_t = std::function<
+      void(const ptr_t funcPtr, const ptr_t newFuncPtr)>;
 
     template <std::size_t index_T, typename T = ptr_t>
     constexpr inline auto view_vfunc_as(ptr_t* vptr)
@@ -24,7 +24,7 @@ namespace XKLib
 
     template <typename T = ptr_t>
     constexpr inline auto view_vfunc_dyn_index_as(ptr_t* vptr,
-                                                  std::size_t index)
+                                                  const std::size_t index)
     {
         return view_as<T>(vptr[index]);
     }
@@ -45,7 +45,8 @@ namespace XKLib
     }
 
     template <typename ret_type_T = void, typename... args_T>
-    constexpr inline auto vfunc_dyn_index(ptr_t vptr, std::size_t index)
+    constexpr inline auto vfunc_dyn_index(ptr_t vptr,
+                                          const std::size_t index)
     {
 #ifdef WINDOWS
         return view_vfunc_dyn_index_as<ret_type_T(
@@ -68,7 +69,7 @@ namespace XKLib
 
     template <typename T = ptr_t>
     constexpr inline auto vfunc_ptr_dyn_index(ptr_t* vptr,
-                                              std::size_t index)
+                                              const std::size_t index)
     {
         return view_as<T>(&vptr[index]);
     }
@@ -76,7 +77,7 @@ namespace XKLib
     template <std::size_t index_T,
               typename ret_type_T = void,
               typename... args_T>
-    constexpr inline auto call_vfunc(ptr_t classPtr,
+    constexpr inline auto call_vfunc(const ptr_t classPtr,
                                      ptr_t* vptr,
                                      args_T... args)
     {
@@ -85,7 +86,7 @@ namespace XKLib
     }
 
     template <typename ret_type_T = void, typename... args_T>
-    constexpr inline auto call_vfunc_dyn_index(ptr_t classPtr,
+    constexpr inline auto call_vfunc_dyn_index(const ptr_t classPtr,
                                                ptr_t* vptr,
                                                std::size_t index,
                                                args_T... args)
@@ -111,7 +112,7 @@ namespace XKLib
 
         template <typename ret_type_T = void, typename... args_T>
         constexpr inline auto callVfuncDynIndex(ptr_t* vptr,
-                                                std::size_t index,
+                                                const std::size_t index,
                                                 args_T... args)
         {
             return call_vfunc_dyn_index<ret_type_T, args_T...>(
@@ -122,11 +123,11 @@ namespace XKLib
 
     template <std::size_t index_T, typename T2 = ptr_t>
     inline auto hook_vfunc(ptr_t* vptr,
-                           T2 newFuncPtr,
-                           pre_or_post_hook_vfunc_t pre  = nullptr,
-                           pre_or_post_hook_vfunc_t post = nullptr)
+                           const auto newFuncPtr,
+                           const pre_or_post_hook_vfunc_t pre  = nullptr,
+                           const pre_or_post_hook_vfunc_t post = nullptr)
     {
-        auto funcPtr = vfunc_ptr<index_T, T2*>(vptr);
+        auto funcPtr = vfunc_ptr<index_T, ptr_t*>(vptr);
 
         mapf_t flags;
         std::shared_ptr<ProcessMemoryArea> area;
@@ -150,7 +151,7 @@ namespace XKLib
 
             /* __builtin_trap(); */
 
-            *funcPtr = newFuncPtr;
+            *funcPtr = view_as<ptr_t>(newFuncPtr);
 
             if (post)
             {
@@ -167,6 +168,6 @@ namespace XKLib
         return false;
     }
 
-} // namespace XKLib
+}
 
-#endif // VIRTUALTABLETOOLS_H
+#endif

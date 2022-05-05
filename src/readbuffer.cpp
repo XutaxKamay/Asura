@@ -11,6 +11,11 @@ ReadBuffer::ReadBuffer(data_t data,
 {
 }
 
+auto ReadBuffer::readSize() const -> const std::size_t&
+{
+    return _read_size;
+}
+
 auto ReadBuffer::reset() -> void
 {
     _read_size = 0;
@@ -21,12 +26,7 @@ auto ReadBuffer::advance(std::size_t size) -> void
     _read_size += size;
 }
 
-auto ReadBuffer::readSize() -> std::size_t
+auto ReadBuffer::readSize() -> std::size_t&
 {
     return _read_size;
-}
-
-auto ReadBuffer::setReadSize(std::size_t readSize)
-{
-    _read_size = readSize;
 }

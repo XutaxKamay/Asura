@@ -4,6 +4,7 @@
 /* std */
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <bitset>
 #include <cassert>
 #include <cerrno>

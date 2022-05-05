@@ -7,8 +7,15 @@ namespace XKLib
 {
     class Process;
 
+#ifdef __AVX512F__
+    using simd_value_t = __m512i;
+#elif defined(__AVX2__)
+    using simd_value_t = __m256i;
+#else
+    using simd_value_t = std::uint64_t;
+#endif
+
     /**
-     * @brief The PatternByte class
      * Invalid forms:
      * UNKNOWN, byte, byte, byte, ...
      * byte, byte, byte, ..., UNKNOWN
@@ -32,13 +39,6 @@ namespace XKLib
             std::size_t index {};
         };
 
-#ifdef __AVX512F__
-        using simd_value_t = __m512i;
-#elif defined(__AVX2__)
-        using simd_value_t = __m256i;
-#else
-        using simd_value_t = uint64_t;
-#endif
         struct simd_mv_t
         {
             simd_value_t mask;
@@ -53,18 +53,21 @@ namespace XKLib
             std::size_t skip_bytes;
         };
 
-        PatternByte(std::vector<Value> values,
-                    std::string _area_name     = "",
-                    std::vector<ptr_t> matches = {});
+        PatternByte(const std::vector<Value> values,
+                    const std::string _area_name     = "",
+                    const std::vector<ptr_t> matches = {});
 
       public:
-        auto bytes() -> std::vector<Value>&;
+        auto bytes() const -> const std::vector<Value>&;
+        auto isValid() const -> bool;
+        auto areaName() const -> const std::string&;
+        auto vecOrganizedValues() const
+          -> const std::vector<organized_values_t>&;
+        auto fastAlignedMVs() const -> const std::vector<simd_mv_t>&;
+
+      public:
         auto matches() -> std::vector<ptr_t>&;
-        auto isValid() -> bool;
-        auto scan(Process& process) -> void;
-        auto areaName() -> std::string;
-        auto vec_organized_values() -> std::vector<organized_values_t>&;
-        auto fast_aligned_mvs() -> std::vector<simd_mv_t>&;
+        auto scan(const Process& process) -> void;
 
         std::vector<std::size_t>
           skip_table[std::numeric_limits<byte_t>::max() + 1];
@@ -78,6 +81,6 @@ namespace XKLib
     };
 
     using patterns_bytes_t = std::vector<PatternByte>;
-};
+}
 
 #endif

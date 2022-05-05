@@ -6,28 +6,28 @@
 
 namespace XKLib
 {
-    template <std::size_t pos, typename T = data_t>
-    constexpr auto read_bit(T data)
+    template <const std::size_t pos>
+    constexpr auto read_bit(const auto data)
     {
         constexpr auto read_byte_pos = pos / CHAR_BIT;
 
         constexpr auto wanted_bit_value = (1u << (pos % CHAR_BIT));
 
-        auto byte_value = *view_as<byte_t*>(view_as<uintptr_t>(data)
-                                            + read_byte_pos);
+        const auto byte_value = *view_as<byte_t*>(
+          view_as<std::uintptr_t>(data) + read_byte_pos);
 
         return view_as<bool>(byte_value & wanted_bit_value);
     }
 
-    template <std::size_t pos, bool val, typename T = data_t>
-    constexpr auto write_bit(T data)
+    template <std::size_t pos, bool val>
+    constexpr auto write_bit(const auto data)
     {
         constexpr auto read_byte_pos = pos / CHAR_BIT;
 
         constexpr auto wanted_bit_value = (1u << (pos % CHAR_BIT));
 
-        auto byte_value = view_as<byte_t*>(view_as<uintptr_t>(data)
-                                           + read_byte_pos);
+        const auto byte_value = view_as<byte_t*>(
+          view_as<std::uintptr_t>(data) + read_byte_pos);
 
         if constexpr (val)
         {
@@ -39,28 +39,27 @@ namespace XKLib
         }
     }
 
-    template <typename T = data_t>
-    constexpr auto read_bit(T data, std::size_t pos)
+    constexpr auto read_bit(const auto data, const std::size_t pos)
     {
-        auto read_byte_pos = pos / CHAR_BIT;
+        const auto read_byte_pos = pos / CHAR_BIT;
 
-        auto wanted_bit_value = (1u << (pos % CHAR_BIT));
+        const auto wanted_bit_value = (1u << (pos % CHAR_BIT));
 
-        auto byte_value = *view_as<byte_t*>(view_as<uintptr_t>(data)
-                                            + read_byte_pos);
+        const auto byte_value = *view_as<byte_t*>(
+          view_as<std::uintptr_t>(data) + read_byte_pos);
 
         return view_as<bool>(byte_value & wanted_bit_value);
     }
 
-    template <bool val, typename T = data_t>
-    constexpr auto write_bit(T data, std::size_t pos)
+    template <bool val>
+    constexpr auto write_bit(const auto data, const std::size_t pos)
     {
-        auto read_byte_pos = pos / CHAR_BIT;
+        const auto read_byte_pos = pos / CHAR_BIT;
 
-        auto wanted_bit_value = (1u << (pos % CHAR_BIT));
+        const auto wanted_bit_value = (1u << (pos % CHAR_BIT));
 
-        auto byte_value = view_as<byte_t*>(view_as<uintptr_t>(data)
-                                           + read_byte_pos);
+        const auto byte_value = view_as<byte_t*>(
+          view_as<std::uintptr_t>(data) + read_byte_pos);
 
         if constexpr (val)
         {
@@ -72,15 +71,16 @@ namespace XKLib
         }
     }
 
-    template <typename T = data_t>
-    constexpr auto write_bit(T data, std::size_t pos, bool val)
+    constexpr auto write_bit(const auto data,
+                             const std::size_t pos,
+                             const bool val)
     {
-        auto read_byte_pos = pos / CHAR_BIT;
+        const auto read_byte_pos = pos / CHAR_BIT;
 
-        auto wanted_bit_value = (1u << (pos % CHAR_BIT));
+        const auto wanted_bit_value = (1u << (pos % CHAR_BIT));
 
-        auto byte_value = view_as<byte_t*>(view_as<uintptr_t>(data)
-                                           + read_byte_pos);
+        const auto byte_value = view_as<byte_t*>(
+          view_as<std::uintptr_t>(data) + read_byte_pos);
 
         if (val)
         {
@@ -93,7 +93,7 @@ namespace XKLib
     }
 
     template <typename T>
-    auto bits_to_int(std::vector<bool> bits)
+    auto bits_to_int(const std::vector<bool>& bits)
     {
         T var {};
 
@@ -109,7 +109,7 @@ namespace XKLib
     }
 
     template <typename T>
-    auto bits_to_int(data_t data, std::size_t nbBits = 1)
+    auto bits_to_int(const data_t data, const std::size_t nbBits = 1)
     {
         T var {};
 
@@ -124,12 +124,11 @@ namespace XKLib
         return var;
     }
 
-    template <typename T>
-    auto int_to_bits(T val)
+    auto int_to_bits(const auto val)
     {
         std::vector<bool> bits;
 
-        for (std::size_t i = 0; i < sizeof(T) * CHAR_BIT; i++)
+        for (std::size_t i = 0; i < sizeof(val) * CHAR_BIT; i++)
         {
             bits.push_back(read_bit(&val, i));
         }
@@ -137,17 +136,15 @@ namespace XKLib
         return bits;
     }
 
-    template <typename T>
-    auto bits_needed(T max_val) -> T
+    auto bits_needed(const auto max_val) -> decltype(max_val)
     {
         if (max_val > 0)
         {
-            return view_as<T>(std::log2(max_val)) + 1;
+            return view_as<decltype(max_val)>(std::log2(max_val)) + 1;
         }
 
         return {};
-    };
-
-};
+    }
+}
 
 #endif

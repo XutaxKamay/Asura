@@ -41,6 +41,6 @@ namespace XKLib
       private:
         std::size_t _written_bits {};
     };
-};
+}
 
 #endif

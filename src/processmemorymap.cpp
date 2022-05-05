@@ -38,7 +38,7 @@ auto ProcessMemoryMap::refresh() -> void
 
     while (std::getline(file_memory_map, line))
     {
-        uintptr_t start {}, end {};
+        std::uintptr_t start {}, end {};
         std::string prot = "????";
         std::string name = "unknown";
 
@@ -69,7 +69,7 @@ auto ProcessMemoryMap::refresh() -> void
                                     "[0-9]+[ ]+";
 
         std::smatch match;
-        std::regex regex_hex_number(REGEX_HEX_NUMBER);
+        const std::regex regex_hex_number(REGEX_HEX_NUMBER);
 
         if (std::regex_search(line, match, regex_hex_number))
         {
@@ -83,7 +83,7 @@ auto ProcessMemoryMap::refresh() -> void
 
                 suffix = match.suffix().str();
 
-                std::regex regex_prot(REGEX_PROT);
+                const std::regex regex_prot(REGEX_PROT);
 
                 if (std::regex_search(suffix, match, regex_prot))
                 {
@@ -110,7 +110,7 @@ auto ProcessMemoryMap::refresh() -> void
                             "characters");
         }
 
-        std::regex regex_name(REGEX_NAME);
+        const std::regex regex_name(REGEX_NAME);
 
         /* Sometimes there's no name */
         if (std::regex_search(line, match, regex_name))
@@ -128,7 +128,8 @@ auto ProcessMemoryMap::refresh() -> void
             return true;
         };
 
-        auto area = std::make_shared<ProcessMemoryArea>(_process_base);
+        const auto area = std::make_shared<ProcessMemoryArea>(
+          _process_base);
         area->initProtectionFlags(
           (is_on(prot[0]) ? MemoryArea::ProtectionFlags::READ : 0)
           | (is_on(prot[1]) ? MemoryArea::ProtectionFlags::WRITE : 0)
@@ -143,9 +144,10 @@ auto ProcessMemoryMap::refresh() -> void
     file_memory_map.close();
 
 #else
-    auto process_handle = OpenProcess(PROCESS_QUERY_INFORMATION,
-                                      false,
-                                      view_as<DWORD>(_process_base.id()));
+    const auto process_handle = OpenProcess(PROCESS_QUERY_INFORMATION,
+                                            false,
+                                            view_as<DWORD>(
+                                              _process_base.id()));
 
     if (process_handle == nullptr)
     {

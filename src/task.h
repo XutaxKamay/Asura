@@ -10,8 +10,8 @@ namespace XKLib
     template <std::size_t stack_size_T>
     class RunnableTask;
 
-    using tasks_t = std::list<Task>;
-    using tid_t   = int64_t;
+    using tasks_t     = std::list<Task>;
+    using thread_id_t = int64_t;
 
     class Task
     {
@@ -19,26 +19,26 @@ namespace XKLib
         friend class RunnableTask;
 
       public:
-        static inline auto EXIT_CODE   = 0x1338;
-        static inline tid_t INVALID_ID = -1;
+        static inline auto EXIT_CODE         = 0x1338;
+        static inline thread_id_t INVALID_ID = -1;
 
       public:
         static auto list(ProcessBase processBase) -> tasks_t;
 
       public:
-        Task(ProcessBase processBase, tid_t id);
+        Task(ProcessBase processBase, const thread_id_t thread_id_t);
 
       private:
         explicit Task(ProcessBase processBase);
 
       public:
-        auto wait() -> void;
-        auto kill() -> void;
-        auto id() -> tid_t&;
+        auto wait() const -> void;
+        auto kill() const -> void;
+        auto id() const -> const thread_id_t&;
 
       private:
         ProcessBase _process_base;
-        tid_t _id;
+        thread_id_t _id;
     };
 };
 

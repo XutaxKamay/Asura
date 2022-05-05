@@ -6,13 +6,13 @@
 using namespace XKLib;
 
 ProcessMemoryArea::ModifiableProtectionFlags::ModifiableProtectionFlags(
-  ProcessMemoryArea* pma)
+  ProcessMemoryArea* const pma)
  : _pma(pma)
 {
 }
 
-auto ProcessMemoryArea::ModifiableProtectionFlags::change(mapf_t flags)
-  -> mapf_t
+auto ProcessMemoryArea::ModifiableProtectionFlags::change(
+  const mapf_t flags) -> mapf_t
 {
     mapf_t old_flags = _flags;
 
@@ -33,6 +33,12 @@ auto ProcessMemoryArea::ModifiableProtectionFlags::change(mapf_t flags)
     return old_flags;
 }
 
+auto ProcessMemoryArea::ModifiableProtectionFlags::cachedValue() const
+  -> const mapf_t&
+{
+    return _flags;
+}
+
 auto ProcessMemoryArea::ModifiableProtectionFlags::cachedValue()
   -> mapf_t&
 {
@@ -45,28 +51,24 @@ auto ProcessMemoryArea::ModifiableProtectionFlags::operator=(mapf_t flags)
     change(flags);
 }
 
-ProcessMemoryArea::ProcessMemoryArea(ProcessBase process)
+ProcessMemoryArea::ProcessMemoryArea(ProcessBase processBase)
  : _protection_flags(ModifiableProtectionFlags(this)),
-   _process_base(process)
+   _process_base(std::move(processBase))
 {
 }
 
-auto ProcessMemoryArea::protectionFlags() -> ModifiableProtectionFlags&
+auto ProcessMemoryArea::protectionFlags() const
+  -> const ModifiableProtectionFlags&
 {
     return _protection_flags;
 }
 
-auto ProcessMemoryArea::initProtectionFlags(mapf_t flags) -> void
-{
-    _protection_flags.cachedValue() = flags;
-}
-
-auto ProcessMemoryArea::processBase() -> ProcessBase
+auto ProcessMemoryArea::processBase() const -> const ProcessBase&
 {
     return _process_base;
 }
 
-auto ProcessMemoryArea::read(std::size_t size, std::size_t shift)
+auto ProcessMemoryArea::read(std::size_t size, std::size_t shift) const
   -> bytes_t
 {
     if (ProcessBase::self().id() == _process_base.id())
@@ -81,8 +83,8 @@ auto ProcessMemoryArea::read(std::size_t size, std::size_t shift)
                                               size);
 }
 
-auto ProcessMemoryArea::write(const bytes_t& bytes, std::size_t shift)
-  -> void
+auto ProcessMemoryArea::write(const bytes_t& bytes,
+                              std::size_t shift) const -> void
 {
     if (ProcessBase::self().id() == _process_base.id())
     {
@@ -95,7 +97,7 @@ auto ProcessMemoryArea::write(const bytes_t& bytes, std::size_t shift)
                                         begin<std::size_t>() + shift);
 }
 
-auto XKLib::ProcessMemoryArea::isDeniedByOS() -> bool
+auto XKLib::ProcessMemoryArea::isDeniedByOS() const -> bool
 {
     return _protection_flags.cachedValue() == 0
 #ifndef WIN32
@@ -104,14 +106,24 @@ auto XKLib::ProcessMemoryArea::isDeniedByOS() -> bool
       ;
 }
 
-auto XKLib::ProcessMemoryArea::isReadable() -> bool
+auto XKLib::ProcessMemoryArea::isReadable() const -> bool
 {
     return (_protection_flags.cachedValue() & ProtectionFlags::R)
            && !isDeniedByOS();
 }
 
-auto XKLib::ProcessMemoryArea::isWritable() -> bool
+auto XKLib::ProcessMemoryArea::isWritable() const -> bool
 {
     return (_protection_flags.cachedValue() & ProtectionFlags::W)
            && !isDeniedByOS();
+}
+
+auto ProcessMemoryArea::protectionFlags() -> ModifiableProtectionFlags&
+{
+    return _protection_flags;
+}
+
+auto ProcessMemoryArea::initProtectionFlags(mapf_t flags) -> void
+{
+    _protection_flags.cachedValue() = flags;
 }

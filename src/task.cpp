@@ -79,7 +79,7 @@ auto Task::list(ProcessBase processBase) -> tasks_t
     return tasks;
 }
 
-Task::Task(ProcessBase processBase, tid_t id)
+Task::Task(ProcessBase processBase, thread_id_t id)
  : _process_base(processBase), _id(id)
 {
 }
@@ -89,12 +89,31 @@ Task::Task(ProcessBase processBase)
 {
 }
 
-auto Task::id() -> tid_t&
+auto Task::wait() const -> void
 {
-    return _id;
+#ifdef WINDOWS
+    auto thread_handle = OpenThread(THREAD_QUERY_INFORMATION,
+                                    false,
+                                    view_as<DWORD>(_id));
+
+    if (!thread_handle)
+    {
+        XKLIB_EXCEPTION("Don't have permissions to wait "
+                        "for task termination");
+    }
+
+    WaitForSingleObject(thread_handle, INFINITE);
+
+    CloseHandle(thread_handle);
+#else
+    while (::kill(_id, 0) != -1)
+    {
+        usleep(100);
+    }
+#endif
 }
 
-auto Task::kill() -> void
+auto Task::kill() const -> void
 {
 #ifdef WINDOWS
     auto thread_handle = OpenThread(THREAD_TERMINATE,
@@ -123,26 +142,7 @@ auto Task::kill() -> void
 #endif
 }
 
-auto Task::wait() -> void
+auto Task::id() const -> const thread_id_t&
 {
-#ifdef WINDOWS
-    auto thread_handle = OpenThread(THREAD_QUERY_INFORMATION,
-                                    false,
-                                    view_as<DWORD>(_id));
-
-    if (!thread_handle)
-    {
-        XKLIB_EXCEPTION("Don't have permissions to wait "
-                        "for task termination");
-    }
-
-    WaitForSingleObject(thread_handle, INFINITE);
-
-    CloseHandle(thread_handle);
-#else
-    while (::kill(_id, 0) != -1)
-    {
-        usleep(100);
-    }
-#endif
+    return _id;
 }

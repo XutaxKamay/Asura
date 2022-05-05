@@ -467,9 +467,8 @@ auto XKLib::Test::run() -> void
 
     Timer timer {};
 
-    auto aligned_memory = align_alloc<data_t>(
-      size_of_random * 8,
-      sizeof(PatternByte::simd_value_t));
+    auto aligned_memory = align_alloc<data_t>(size_of_random * 8,
+                                              sizeof(simd_value_t));
 
     try
     {
@@ -530,15 +529,14 @@ auto XKLib::Test::run() -> void
                         size_of_random - 1);
         }
 
-        auto random_start = sizeof(PatternByte::simd_value_t)
+        auto random_start = sizeof(simd_value_t)
                             + rand()
                                 % ((size_of_random * 8)
                                    - pattern_bytes.size()
-                                   - sizeof(PatternByte::simd_value_t));
+                                   - sizeof(simd_value_t));
 
         random_start = MemoryUtils::Align(random_start,
-                                          sizeof(
-                                            PatternByte::simd_value_t));
+                                          sizeof(simd_value_t));
 
         const auto end = random_start + pattern_bytes.size();
 
@@ -708,10 +706,10 @@ auto XKLib::Test::run() -> void
 
             for (auto&& match : pattern.matches())
             {
-                std::cout
-                  << "   " << match << " at pos: "
-                  << view_as<ptr_t>(view_as<uintptr_t>(match) - 0x1337)
-                  << std::endl;
+                std::cout << "   " << match << " at pos: "
+                          << view_as<ptr_t>(view_as<std::uintptr_t>(match)
+                                            - 0x1337)
+                          << std::endl;
             }
         }
         else

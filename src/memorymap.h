@@ -14,15 +14,20 @@ namespace XKLib
         friend ProcessMemoryMap;
 
       public:
-        auto areas() -> std::vector<std::shared_ptr<MemoryArea_T>>&
+        auto areas() const -> const auto&
+        {
+            return _areas;
+        }
+
+        auto areas() -> auto&
         {
             return _areas;
         }
 
       private:
-        std::vector<std::shared_ptr<MemoryArea_T>> _areas {};
+        std::vector<std::shared_ptr<MemoryArea_T>> _areas;
     };
 
-} // namespace XKLib
+}
 
-#endif // MEMORYMAP_H
+#endif

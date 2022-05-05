@@ -9,46 +9,47 @@
 namespace XKLib
 {
     /**
-     * @brief MemoryUtils
      * Memory utils, mainly used for making compabilities between Linux
      * and Windows API.
      */
     class MemoryUtils
     {
       public:
-        template <typename T = uintptr_t>
-        static constexpr inline auto Align(T value, std::size_t size)
+        static constexpr inline auto Align(const auto value,
+                                           const std::size_t size)
         {
-            auto original_value = view_as<uintptr_t>(value);
+            auto original_value = view_as<std::uintptr_t>(value);
             original_value -= original_value % size;
-            return view_as<T>(original_value);
+            return view_as<decltype(value)>(original_value);
         }
 
-        template <typename T = uintptr_t>
-        static constexpr inline auto AlignToPageSize(T sizeToAlign,
-                                                     std::size_t pageSize)
+        static constexpr inline auto AlignToPageSize(
+          const auto sizeToAlign,
+          const std::size_t pageSize)
         {
-            return view_as<T>(
+            return view_as<decltype(sizeToAlign)>(
               ((view_as<std::size_t>(sizeToAlign) + (pageSize - 1))
                / pageSize)
               * pageSize);
         }
 
-        template <typename T = uintptr_t>
-        static auto ProtectMemoryArea(process_id_t pid,
-                                      T address,
-                                      std::size_t size,
-                                      mapf_t flags) -> void
+        static auto ProtectMemoryArea(const process_id_t pid,
+                                      const auto address,
+                                      const std::size_t size,
+                                      const mapf_t flags) -> void
         {
-            auto aligned_address = Align<ptr_t>(view_as<ptr_t>(address),
-                                                GetPageSize());
-            auto aligned_size    = AlignToPageSize(size, GetPageSize());
+            const auto aligned_address = Align<ptr_t>(view_as<ptr_t>(
+                                                        address),
+                                                      GetPageSize());
+            const auto aligned_size    = AlignToPageSize(size,
+                                                      GetPageSize());
 #ifdef WINDOWS
-            auto process_handle = GetCurrentProcessId() == pid ?
-                                    GetCurrentProcess() :
-                                    OpenProcess(PROCESS_VM_OPERATION,
-                                                false,
-                                                view_as<DWORD>(pid));
+            const auto process_handle = GetCurrentProcessId() == pid ?
+                                          GetCurrentProcess() :
+                                          OpenProcess(
+                                            PROCESS_VM_OPERATION,
+                                            false,
+                                            view_as<DWORD>(pid));
 
             if (process_handle == nullptr)
             {
@@ -56,12 +57,12 @@ namespace XKLib
             }
 
             DWORD dwOldFlags;
-            auto ret = VirtualProtectEx(process_handle,
-                                        aligned_address,
-                                        aligned_size,
-                                        MemoryArea::ProtectionFlags::ToOS(
-                                          flags),
-                                        &dwOldFlags);
+            const auto ret = VirtualProtectEx(
+              process_handle,
+              aligned_address,
+              aligned_size,
+              MemoryArea::ProtectionFlags::ToOS(flags),
+              &dwOldFlags);
 
             if (!ret)
             {
@@ -70,11 +71,12 @@ namespace XKLib
 
             CloseHandle(process_handle);
 #else
-            auto ret = syscall(__NR_rmprotect,
-                               pid,
-                               aligned_address,
-                               aligned_size,
-                               MemoryArea::ProtectionFlags::ToOS(flags));
+            const auto ret = syscall(__NR_rmprotect,
+                                     pid,
+                                     aligned_address,
+                                     aligned_size,
+                                     MemoryArea::ProtectionFlags::ToOS(
+                                       flags));
 
             if (ret < 0)
             {
@@ -83,18 +85,18 @@ namespace XKLib
 #endif
         }
 
-        template <typename T = uintptr_t>
-        static auto AllocArea(process_id_t pid,
-                              T address,
-                              std::size_t size,
-                              mapf_t flags) -> ptr_t
+        static auto AllocArea(const process_id_t pid,
+                              const auto address,
+                              const std::size_t size,
+                              const mapf_t flags) -> ptr_t
         {
 #ifdef WINDOWS
-            auto process_handle = GetCurrentProcessId() == pid ?
-                                    GetCurrentProcess() :
-                                    OpenProcess(PROCESS_VM_OPERATION,
-                                                false,
-                                                view_as<DWORD>(pid));
+            const auto process_handle = GetCurrentProcessId() == pid ?
+                                          GetCurrentProcess() :
+                                          OpenProcess(
+                                            PROCESS_VM_OPERATION,
+                                            false,
+                                            view_as<DWORD>(pid));
 
             if (process_handle == nullptr)
             {
@@ -110,39 +112,40 @@ namespace XKLib
 
             CloseHandle(process_handle);
 #else
-            auto area_start = syscall(__NR_rmmap,
-                                      pid,
-                                      address,
-                                      size,
-                                      MemoryArea::ProtectionFlags::ToOS(
-                                        flags),
-                                      MAP_PRIVATE | MAP_ANONYMOUS,
-                                      0,
-                                      0);
+            const auto area_start = syscall(
+              __NR_rmmap,
+              pid,
+              address,
+              size,
+              MemoryArea::ProtectionFlags::ToOS(flags),
+              MAP_PRIVATE | MAP_ANONYMOUS,
+              0,
+              0);
 #endif
             return view_as<ptr_t>(area_start);
         }
 
-        template <typename T = uintptr_t>
-        static auto FreeArea(process_id_t pid, T address, std::size_t size)
-          -> void
+        static auto FreeArea(const process_id_t pid,
+                             const auto address,
+                             const std::size_t size) -> void
         {
 #ifdef WINDOWS
-            auto process_handle = GetCurrentProcessId() == pid ?
-                                    GetCurrentProcess() :
-                                    OpenProcess(PROCESS_VM_OPERATION,
-                                                false,
-                                                view_as<DWORD>(pid));
+            const auto process_handle = GetCurrentProcessId() == pid ?
+                                          GetCurrentProcess() :
+                                          OpenProcess(
+                                            PROCESS_VM_OPERATION,
+                                            false,
+                                            view_as<DWORD>(pid));
 
             if (process_handle == nullptr)
             {
                 XKLIB_EXCEPTION("Couldn't open process");
             }
 
-            auto ret = VirtualFreeEx(process_handle,
-                                     view_as<ptr_t>(address),
-                                     size,
-                                     MEM_RELEASE);
+            const auto ret = VirtualFreeEx(process_handle,
+                                           view_as<ptr_t>(address),
+                                           size,
+                                           MEM_RELEASE);
 
             if (!ret)
             {
@@ -151,7 +154,7 @@ namespace XKLib
 
             CloseHandle(process_handle);
 #else
-            auto ret        = syscall(__NR_rmunmap, pid, address, size);
+            const auto ret = syscall(__NR_rmunmap, pid, address, size);
 
             if (ret < 0)
             {
@@ -160,20 +163,25 @@ namespace XKLib
 #endif
         }
 
-        template <typename T = uintptr_t>
-        static auto ReadProcessMemoryArea(process_id_t pid,
-                                          T address,
-                                          std::size_t size) -> bytes_t
+        static auto ReadProcessMemoryArea(const process_id_t pid,
+                                          const auto address,
+                                          const std::size_t size)
+          -> bytes_t
         {
             bytes_t result(size);
 
 #ifndef WINDOWS
-            iovec local  = { .iov_base = result.data(),
-                             .iov_len  = result.size() };
-            iovec remote = { .iov_base = view_as<ptr_t>(address),
-                             .iov_len  = result.size() };
+            const iovec local  = { .iov_base = result.data(),
+                                   .iov_len  = result.size() };
+            const iovec remote = { .iov_base = view_as<ptr_t>(address),
+                                   .iov_len  = result.size() };
 
-            auto ret = process_vm_readv(pid, &local, 1, &remote, 1, 0);
+            const auto ret = process_vm_readv(pid,
+                                              &local,
+                                              1,
+                                              &remote,
+                                              1,
+                                              0);
 
             if (ret != view_as<decltype(ret)>(size))
             {
@@ -183,11 +191,12 @@ namespace XKLib
             }
 #else
 
-            auto ret = Toolhelp32ReadProcessMemory(view_as<DWORD>(pid),
-                                                   view_as<ptr_t>(address),
-                                                   result.data(),
-                                                   result.size(),
-                                                   nullptr);
+            const auto ret = Toolhelp32ReadProcessMemory(
+              view_as<DWORD>(pid),
+              view_as<ptr_t>(address),
+              result.data(),
+              result.size(),
+              nullptr);
 
             if (!ret)
             {
@@ -200,21 +209,26 @@ namespace XKLib
             return result;
         }
 
-        template <typename A, typename T = uintptr_t>
-        static auto ReadProcessMemoryAreaAligned(process_id_t pid,
-                                                 T address,
-                                                 std::size_t size)
+        template <typename A>
+        static auto ReadProcessMemoryAreaAligned(const process_id_t pid,
+                                                 const auto address,
+                                                 const std::size_t size)
           -> std::vector<A>
         {
             std::vector<A> result(AlignToPageSize(size, sizeof(A)));
 
 #ifndef WINDOWS
-            iovec local  = { .iov_base = result.data(),
-                             .iov_len  = result.size() * sizeof(A) };
-            iovec remote = { .iov_base = view_as<ptr_t>(address),
-                             .iov_len  = result.size() * sizeof(A) };
+            const iovec local  = { .iov_base = result.data(),
+                                   .iov_len  = result.size() * sizeof(A) };
+            const iovec remote = { .iov_base = view_as<ptr_t>(address),
+                                   .iov_len = result.size() * sizeof(A) };
 
-            auto ret = process_vm_readv(pid, &local, 1, &remote, 1, 0);
+            const auto ret = process_vm_readv(pid,
+                                              &local,
+                                              1,
+                                              &remote,
+                                              1,
+                                              0);
 
             if (ret != view_as<decltype(ret)>(size * sizeof(A)))
             {
@@ -224,7 +238,7 @@ namespace XKLib
             }
 #else
 
-            auto ret = Toolhelp32ReadProcessMemory(
+            const auto ret = Toolhelp32ReadProcessMemory(
               view_as<DWORD>(pid),
               view_as<ptr_t>(address),
               result.data(),
@@ -242,18 +256,24 @@ namespace XKLib
             return result;
         }
 
-        template <typename T = uintptr_t>
-        static auto WriteProcessMemoryArea(process_id_t pid,
+        template <typename T = std::uintptr_t>
+        static auto WriteProcessMemoryArea(const process_id_t pid,
                                            const bytes_t& bytes,
-                                           T address) -> void
+                                           const T address) -> void
         {
 #ifndef WINDOWS
-            iovec local  = { .iov_base = view_as<data_t>(bytes.data()),
-                             .iov_len  = bytes.size() };
-            iovec remote = { .iov_base = view_as<ptr_t>(address),
-                             .iov_len  = bytes.size() };
+            const iovec local  = { .iov_base = view_as<data_t>(
+                                    bytes.data()),
+                                   .iov_len = bytes.size() };
+            const iovec remote = { .iov_base = view_as<ptr_t>(address),
+                                   .iov_len  = bytes.size() };
 
-            auto ret = process_vm_writev(pid, &local, 1, &remote, 1, 0);
+            const auto ret = process_vm_writev(pid,
+                                               &local,
+                                               1,
+                                               &remote,
+                                               1,
+                                               0);
 
             if (ret != view_as<decltype(ret)>(bytes.size()))
             {
@@ -261,23 +281,24 @@ namespace XKLib
             }
 
 #else
-            auto process_handle = GetCurrentProcessId() == pid ?
-                                    GetCurrentProcess() :
-                                    OpenProcess(PROCESS_VM_OPERATION
-                                                  | PROCESS_VM_WRITE,
-                                                false,
-                                                view_as<DWORD>(pid));
+            const auto process_handle = GetCurrentProcessId() == pid ?
+                                          GetCurrentProcess() :
+                                          OpenProcess(
+                                            PROCESS_VM_OPERATION
+                                              | PROCESS_VM_WRITE,
+                                            false,
+                                            view_as<DWORD>(pid));
 
             if (process_handle == nullptr)
             {
                 XKLIB_EXCEPTION("Couldn't open process");
             }
 
-            auto ret = WriteProcessMemory(process_handle,
-                                          view_as<ptr_t>(address),
-                                          bytes.data(),
-                                          bytes.size(),
-                                          nullptr);
+            const auto ret = WriteProcessMemory(process_handle,
+                                                view_as<ptr_t>(address),
+                                                bytes.data(),
+                                                bytes.size(),
+                                                nullptr);
 
             if (!ret)
             {

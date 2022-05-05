@@ -6,7 +6,7 @@ XKLib::Exception::Exception(std::string msg) : _msg(std::move(msg))
 {
 }
 
-auto XKLib::Exception::msg() -> const std::string&
+auto XKLib::Exception::msg() const -> const std::string&
 {
     return _msg;
 }

@@ -9,19 +9,21 @@ namespace XKLib
     class ReadBuffer : public Buffer
     {
       public:
-        explicit ReadBuffer(data_t data,
-                            std::size_t maxSize  = 0,
-                            std::size_t readSize = 0);
+        explicit ReadBuffer(const data_t data,
+                            const std::size_t maxSize  = 0,
+                            const std::size_t readSize = 0);
 
-        ~ReadBuffer() = default;
+      public:
+        auto readSize() const -> const std::size_t&;
+
+      public:
+        auto readSize() -> std::size_t&;
+        auto reset() -> void;
+        auto advance(const std::size_t size) -> void;
 
       public:
         template <typesize_t typesize_T = type_32s>
-        /**
-         * @brief readVar
-         * @param pSize
-         */
-        constexpr inline auto readVar(std::size_t* pSize = nullptr)
+        constexpr inline auto readVar(std::size_t* const pSize = nullptr)
         {
             if (_read_size >= maxSize())
             {
@@ -34,7 +36,7 @@ namespace XKLib
             /* Read type first */
             if (type != typesize_T)
             {
-                /*
+                /**
                  * Blame programmer for not writing the buffer
                  * correctly.
                  */
@@ -55,12 +57,13 @@ namespace XKLib
                 auto dataSize = *this->shift<std::size_t*>(_read_size);
                 advance(sizeof(std::size_t));
 
-                /* Then we give the pointer of where is located data
+                /**
+                 * Then we give the pointer of where is located data
                  */
                 data = this->shift<var_t>(_read_size);
                 advance(dataSize);
 
-                /*
+                /**
                  * If the parameter isn't null we give the array size
                  */
                 if (pSize != nullptr)
@@ -73,7 +76,8 @@ namespace XKLib
                 data = *this->shift<var_t*>(_read_size);
                 advance(sizeof(var_t));
 
-                /* If the parameter isn't null we give the type size
+                /**
+                 * If the parameter isn't null we give the type size
                  */
                 if (pSize != nullptr)
                 {
@@ -84,51 +88,24 @@ namespace XKLib
             return data;
         }
 
-        template <typename cast_T = ptr_t>
-        /**
-         * @brief shift
-         * @param size
-         */
-        constexpr inline auto shift(std::size_t size = 0) -> cast_T
+        template <typename T = ptr_t>
+        constexpr inline auto shift(const std::size_t size = 0) -> T
         {
             if (size == 0)
             {
-                return view_as<cast_T>(this->data());
+                return view_as<T>(this->data());
             }
             else
             {
-                return view_as<cast_T>(view_as<uintptr_t>(this->data())
-                                       + view_as<uintptr_t>(size));
+                return view_as<T>(view_as<std::uintptr_t>(this->data())
+                                  + view_as<std::uintptr_t>(size));
             }
         }
 
-      public:
-        /**
-         * @brief reset
-         */
-        auto reset() -> void;
-        /**
-         * @brief advance
-         * @param size
-         */
-        auto advance(std::size_t size) -> void;
-        /**
-         * @brief readSize
-         */
-        auto readSize() -> std::size_t;
-        /**
-         * @brief setReadSize
-         * @param readSize
-         */
-        auto setReadSize(std::size_t readSize);
-
       private:
-        /**
-         * @brief _read_size
-         */
-        std::size_t _read_size {};
+        std::size_t _read_size;
     };
 
-} // namespace XKLib
+}
 
 #endif

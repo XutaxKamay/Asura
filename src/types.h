@@ -30,10 +30,10 @@ namespace XKLib
     template <typename T>
     constexpr inline type_wrapper_t<T> type_wrapper {};
 
-    template <typename T1, typename T2>
-    auto view_as(T2 var)
+    template <typename T>
+    inline auto view_as(auto var)
     {
-        return (T1)(var);
+        return (T)(var);
     }
 
 } // namespace XKLib

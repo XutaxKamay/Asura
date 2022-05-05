@@ -19,8 +19,30 @@ namespace XKLib
         auto refresh() -> void;
 
       public:
-        template <typename T = uintptr_t>
-        auto searchNearestEmptyArea(T address)
+        auto read(const auto address, const std::size_t size) const
+          -> bytes_t
+        {
+            return MemoryUtils::ReadProcessMemoryArea(_process_base.id(),
+                                                      address,
+                                                      size);
+        }
+
+        auto write(auto address, const bytes_t& bytes) const -> void
+        {
+            MemoryUtils::WriteProcessMemoryArea(_process_base.id(),
+                                                bytes,
+                                                address);
+        }
+
+        auto write(auto address, auto ptr, std::size_t size) const -> void
+        {
+            bytes_t data(view_as<byte_t*>(ptr),
+                         view_as<byte_t*>(ptr) + size);
+
+            write<decltype(address)>(address, data);
+        }
+
+        auto searchNearestEmptyArea(const auto address) const
         {
             if (_areas.size() == 0)
             {
@@ -29,8 +51,8 @@ namespace XKLib
 
             struct simplified_area_t
             {
-                uintptr_t begin;
-                uintptr_t end;
+                std::uintptr_t begin;
+                std::uintptr_t end;
             };
 
             std::vector<simplified_area_t> simplified_areas;
@@ -84,26 +106,26 @@ namespace XKLib
             /**
              * Now find the closest area we can get
              */
-            uintptr_t start_ptr, end_ptr;
+            std::uintptr_t start_ptr, end_ptr;
 
             for (auto&& simplified_area : simplified_areas)
             {
                 start_ptr = simplified_area.begin;
                 end_ptr   = simplified_area.end;
 
-                if (view_as<uintptr_t>(address) >= start_ptr
-                    && view_as<uintptr_t>(address) < end_ptr)
+                if (view_as<std::uintptr_t>(address) >= start_ptr
+                    && view_as<std::uintptr_t>(address) < end_ptr)
                 {
                     break;
                 }
             }
 
-            auto relative_address = view_as<uintptr_t>(address)
+            auto relative_address = view_as<std::uintptr_t>(address)
                                     - start_ptr;
 
             auto area_size = end_ptr - start_ptr;
 
-            uintptr_t closest_area = 0x0;
+            std::uintptr_t closest_area = 0x0;
 
             if (relative_address > (area_size / 2))
             {
@@ -117,16 +139,16 @@ namespace XKLib
             return closest_area;
         }
 
-        template <typename T = uintptr_t>
-        auto search(T address) -> std::shared_ptr<ProcessMemoryArea>
+        auto search(const auto address) const
+          -> std::shared_ptr<ProcessMemoryArea>
         {
             for (auto&& area : _areas)
             {
-                auto start_ptr = area->begin();
-                auto end_ptr   = area->end();
+                const auto start_ptr = area->begin();
+                const auto end_ptr   = area->end();
 
-                if (view_as<uintptr_t>(address) >= start_ptr
-                    && view_as<uintptr_t>(address) < end_ptr)
+                if (view_as<std::uintptr_t>(address) >= start_ptr
+                    && view_as<std::uintptr_t>(address) < end_ptr)
                 {
                     return area;
                 }
@@ -135,30 +157,31 @@ namespace XKLib
             return nullptr;
         }
 
-        template <typename T = uintptr_t>
-        auto allocArea(T address, std::size_t size, mapf_t flags) -> ptr_t
+      public:
+        auto allocArea(const auto address,
+                       const std::size_t size,
+                       const mapf_t flags) -> ptr_t
         {
-            auto ret = MemoryUtils::AllocArea(_process_base.id(),
-                                              address,
-                                              size,
-                                              flags);
+            const auto ret = MemoryUtils::AllocArea(_process_base.id(),
+                                                    address,
+                                                    size,
+                                                    flags);
 
             refresh();
 
             return ret;
         }
 
-        template <typename T = uintptr_t>
-        auto freeArea(T address, std::size_t size) -> void
+        auto freeArea(auto address, std::size_t size) -> void
         {
             MemoryUtils::FreeArea(_process_base.id(), address, size);
 
             refresh();
         }
 
-        template <typename T = uintptr_t>
-        auto protectMemoryArea(T address, std::size_t size, mapf_t flags)
-          -> void
+        auto protectMemoryArea(auto address,
+                               std::size_t size,
+                               mapf_t flags) -> void
         {
             MemoryUtils::ProtectMemoryArea(_process_base.id(),
                                            address,
@@ -168,24 +191,7 @@ namespace XKLib
             refresh();
         }
 
-        template <typename T = uintptr_t>
-        auto read(T address, std::size_t size) -> bytes_t
-        {
-            return MemoryUtils::ReadProcessMemoryArea(_process_base.id(),
-                                                      address,
-                                                      size);
-        }
-
-        template <typename T = uintptr_t>
-        auto write(T address, const bytes_t& bytes) -> void
-        {
-            MemoryUtils::WriteProcessMemoryArea(_process_base.id(),
-                                                bytes,
-                                                address);
-        }
-
-        template <typename T = uintptr_t>
-        auto forceWrite(T address, const bytes_t& bytes) -> void
+        auto forceWrite(auto address, const bytes_t& bytes) -> void
         {
             refresh();
 
@@ -201,32 +207,22 @@ namespace XKLib
             area->protectionFlags() = flags
                                       | MemoryArea::ProtectionFlags::W;
 
-            write<T>(address, bytes);
+            write<decltype(address)>(address, bytes);
 
             area->protectionFlags() = flags;
         }
 
-        template <typename T = uintptr_t>
-        auto write(T address, auto ptr, std::size_t size) -> void
+        auto forceWrite(auto address, auto ptr, std::size_t size) -> void
         {
             bytes_t data(view_as<byte_t*>(ptr),
                          view_as<byte_t*>(ptr) + size);
 
-            write<T>(address, data);
-        }
-
-        template <typename T = uintptr_t>
-        auto forceWrite(T address, auto ptr, std::size_t size) -> void
-        {
-            bytes_t data(view_as<byte_t*>(ptr),
-                         view_as<byte_t*>(ptr) + size);
-
-            forceWrite<T>(address, data);
+            forceWrite<decltype(address)>(address, data);
         }
 
       private:
         ProcessBase _process_base;
     };
-};
+}
 
 #endif

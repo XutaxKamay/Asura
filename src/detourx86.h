@@ -18,16 +18,18 @@ namespace XKLib
     {
         constexpr byte_t REL_INST = 0xE9;
 
-        template <typename T>
         auto override_rel32(
-          T fromPtr,
-          T to,
-          std::function<void(T, T)> beforeOverride = nullptr,
-          std::function<void(T, T)> afterOverride  = nullptr)
+          const auto fromPtr,
+          const auto to,
+          const std::function<void(decltype(fromPtr), decltype(to))> beforeOverride = nullptr,
+          const std::function<void(decltype(fromPtr), decltype(to))> afterOverride = nullptr)
         {
-            auto old_func = view_as<uintptr_t>(*view_as<int32_t*>(
-                              view_as<uintptr_t>(fromPtr) + 1))
-                            + (view_as<uintptr_t>(fromPtr) + 5);
+            const auto old_func = view_as<std::uintptr_t>(
+                                    *view_as<int32_t*>(
+                                      view_as<std::uintptr_t>(fromPtr)
+                                      + 1))
+                                  + (view_as<std::uintptr_t>(fromPtr)
+                                     + 5);
 
             mapf_t flags;
             std::shared_ptr<ProcessMemoryArea> area;
@@ -38,7 +40,7 @@ namespace XKLib
             }
             else
             {
-                auto mmap = Process::self().mmap();
+                const auto mmap = Process::self().mmap();
 
                 area = mmap.search(fromPtr);
 
@@ -68,12 +70,11 @@ namespace XKLib
     {
         constexpr byte_t REL_INST = 0xE8;
 
-        template <typename T>
         auto override_rel32(
-          T fromPtr,
-          T to,
-          std::function<void(T, T)> beforeOverride = nullptr,
-          std::function<void(T, T)> afterOverride  = nullptr)
+          const auto fromPtr,
+          const auto to,
+          const std::function<void(decltype(fromPtr), decltype(to))> beforeOverride = nullptr,
+          const std::function<void(decltype(fromPtr), decltype(to))> afterOverride = nullptr)
         {
             return X86_JMP::override_rel32(fromPtr,
                                            to,
@@ -95,7 +96,6 @@ namespace XKLib
     template <typename ret_type_T, typename... args_T>
 #endif
     /**
-     * @brief TraditionalDetourX86
      * This class permits to hook any functions inside the current
      * process. Detour is a method to hook functions. It works generally
      * by placing a JMP instruction on the start of the function. This
@@ -117,7 +117,7 @@ namespace XKLib
         class Fragment
         {
           public:
-            uintptr_t address;
+            std::uintptr_t address;
             std::size_t size;
         };
 
@@ -147,17 +147,7 @@ namespace XKLib
       private:
         /* This case is only for windows 32 bits program */
 #ifdef _WIN32
-        /**
-         * @brief generateCallBackFuncType
-         *
-         * @return auto
-         */
         static constexpr auto GenerateCallBackFuncType();
-        /**
-         * @brief generateNewFuncType
-         *
-         * @return auto
-         */
         static constexpr auto GenerateNewFuncType();
 
       public:
@@ -172,19 +162,10 @@ namespace XKLib
         TraditionalDetourX86(cbfunc_t originalFunc, ptr_t newFunc);
 
       private:
-        /**
-         * @brief _callback_func
-         * The call back function permits to call the original
-         * function inside the new function.
-         */
-        cbfunc_t _callback_func {};
-        /**
-         * @brief _new_func
-         * Pointer to the new function.
-         */
-        func_t _new_func {};
-        func_t _original_func {};
-        HandleFragment_t _handle_fragment {};
+        cbfunc_t _callback_func;
+        func_t _new_func;
+        func_t _original_func;
+        HandleFragment_t _handle_fragment;
     };
 
 /**
@@ -242,6 +223,6 @@ namespace XKLib
         }
     }
 #endif
-} // namespace XKLib
+}
 
-#endif // DETOUR_H
+#endif

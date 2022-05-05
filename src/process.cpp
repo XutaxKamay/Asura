@@ -36,11 +36,11 @@ auto XKLib::Process::find(const std::string& name) -> XKLib::Process
     CloseHandle(tool_handle);
 
 #else
-    for (auto&& entry : std::filesystem::directory_iterator("/proc"))
+    for (const auto& entry : std::filesystem::directory_iterator("/proc"))
     {
         if (entry.is_directory())
         {
-            auto pid = view_as<process_id_t>(
+            const auto pid = view_as<process_id_t>(
               std::stoi(entry.path().filename()));
 
             if (name.find(ProcessName(pid)) != std::string::npos)
@@ -63,7 +63,7 @@ end:
     return process;
 }
 
-auto XKLib::Process::ProcessName(process_id_t pid) -> std::string
+auto XKLib::Process::ProcessName(const process_id_t pid) -> std::string
 {
     std::string result("unknown");
 
@@ -81,10 +81,10 @@ auto XKLib::Process::ProcessName(process_id_t pid) -> std::string
 #else
     result.reserve(MAX_PATH);
 
-    auto process_handle = OpenProcess(PROCESS_QUERY_INFORMATION
-                                        | PROCESS_VM_READ,
-                                      false,
-                                      view_as<DWORD>(pid));
+    const auto process_handle = OpenProcess(PROCESS_QUERY_INFORMATION
+                                              | PROCESS_VM_READ,
+                                            false,
+                                            view_as<DWORD>(pid));
 
     if (!process_handle)
     {
@@ -121,24 +121,28 @@ Process::Process()
 {
 }
 
-Process::Process(process_id_t pid)
+Process::Process(const process_id_t pid)
  : ProcessBase(pid), _full_name(ProcessName(pid)),
    _mmap(ProcessMemoryMap(*this))
 {
 }
 
-auto Process::tasks() -> tasks_t
+auto Process::tasks() const -> tasks_t
 {
     return Task::list(*this);
 }
 
-auto Process::mmap() -> ProcessMemoryMap
+auto Process::mmap() const -> const ProcessMemoryMap&
 {
-    _mmap.refresh();
     return _mmap;
 }
 
-auto XKLib::Process::search(XKLib::PatternByte& patternByte) -> void
+auto XKLib::Process::search(PatternByte& patternByte) const -> void
 {
     PatternScanning::searchInProcess(patternByte, *this);
+}
+
+auto Process::mmap() -> ProcessMemoryMap&
+{
+    return _mmap;
 }

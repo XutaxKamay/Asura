@@ -12,18 +12,20 @@ namespace XKLib
     class Timer
     {
       public:
+        auto nanos() const -> std::uint16_t;
+        auto micros() const -> std::uint16_t;
+        auto millis() const -> std::uint16_t;
+        auto seconds() const -> std::uint64_t;
+        auto difference() const -> std::uint64_t;
+
+      public:
         auto start() -> void;
         auto end() -> void;
-        auto nanos() -> uint16_t;
-        auto micros() -> uint16_t;
-        auto millis() -> uint16_t;
-        auto seconds() -> uint64_t;
-        auto difference() -> uint64_t;
 
       private:
         std::chrono::high_resolution_clock::time_point _start;
         std::chrono::high_resolution_clock::time_point _end;
-        uint64_t _difference;
+        std::uint64_t _difference;
     };
 };
 

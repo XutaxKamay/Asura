@@ -10,6 +10,17 @@ namespace ELFIO
 {
     constexpr auto AT_NULL   = 0;
     constexpr auto AT_RANDOM = 25;
+
+    template <typename T>
+    struct Elf_auxv_t
+    {
+        T a_type; /* Entry type */
+        union
+        {
+            T a_val; /* Integer value */
+        } a_un;
+    };
+
 };
 
 namespace XKLib
@@ -22,28 +33,18 @@ namespace XKLib
       ;
 
     /**
-     * @brief Manual maps a statically link ELF into a process.
+     * Manual maps a statically link ELF into a process.
      * TODO:
      * Support dynamic libs.
      */
     class Kokabiel
     {
       private:
-        template <typename T>
-        struct Elf_auxv_t
-        {
-            T a_type; /* Entry type */
-            union
-            {
-                T a_val; /* Integer value */
-            } a_un;
-        };
-
         struct memory_area_t
         {
             bytes_t bytes;
             mapf_t flags;
-            uintptr_t start;
+            std::uintptr_t start;
         };
 
       public:
@@ -55,9 +56,9 @@ namespace XKLib
                 memory_area_t env_data;
             } allocated_mem;
 
-            uintptr_t offset_image;
-            uintptr_t entry_point;
-            uintptr_t stack_start;
+            std::uintptr_t offset_image;
+            std::uintptr_t entry_point;
+            std::uintptr_t stack_start;
             std::vector<memory_area_t> loaded_segments;
             ProcessMemoryMap process_memory_map;
         };
@@ -74,23 +75,23 @@ namespace XKLib
                     const std::vector<std::string>& cmdLine,
                     const std::vector<std::string>& env,
                     RunnableTask<stack_size_T>& runnableTask,
-                    injection_info_t& injectionInfo) -> void;
+                    injection_info_t& injectionInfo) const -> void;
 
-        auto freeInjection(injection_info_t& injectionInfo) -> void;
+        auto freeInjection(injection_info_t& injectionInfo) const -> void;
 
       private:
         auto loadSegments() -> void;
 
         template <unsigned char ELFClass_T>
         requires(ELFClassSupported<ELFClass_T>) auto relocateSegments(
-          injection_info_t& injectionInfo) -> void;
+          injection_info_t& injectionInfo) const -> void;
 
         template <unsigned char ELFClass_T, std::size_t stack_size_T>
         requires(ELFClassSupported<ELFClass_T>) auto createEnv(
           const std::vector<std::string>& cmdLine,
           const std::vector<std::string>& env,
           RunnableTask<stack_size_T>& runnableTask,
-          injection_info_t& injectionInfo);
+          injection_info_t& injectionInfo) const;
 
         template <unsigned char ELFClass_T,
                   std::size_t stack_size_T,
@@ -98,7 +99,7 @@ namespace XKLib
         requires(ELFClassSupported<ELFClass_T>) auto createShellCode(
           const std::vector<std::string>& cmdLine,
           RunnableTask<stack_size_T>& runnableTask,
-          injection_info_t& injectionInfo) -> void;
+          injection_info_t& injectionInfo) const -> void;
 
       private:
         ELFIO::elfio _elf;
@@ -111,7 +112,7 @@ namespace XKLib
                           const std::vector<std::string>& cmdLine,
                           const std::vector<std::string>& env,
                           RunnableTask<stack_size_T>& runnableTask,
-                          injection_info_t& injectionInfo) -> void
+                          injection_info_t& injectionInfo) const -> void
     {
         if (_elf.get_type() != ELFIO::ET_DYN
             && _elf.get_type() != ELFIO::ET_EXEC)
@@ -156,17 +157,17 @@ namespace XKLib
 
     template <unsigned char ELFClass_T>
     requires(ELFClassSupported<ELFClass_T>) auto Kokabiel::relocateSegments(
-      injection_info_t& injectionInfo) -> void
+      injection_info_t& injectionInfo) const -> void
     {
         //        constexpr auto _reloc_ptr = []()
         //        {
         //            if constexpr (ELFClass_T == ELFIO::ELFCLASS32)
         //            {
-        //                return type_wrapper<uint32_t>;
+        //                return type_wrapper<std::uint32_t>;
         //            }
         //            else if constexpr (ELFClass_T == ELFIO::ELFCLASS64)
         //            {
-        //                return type_wrapper<uint64_t>;
+        //                return type_wrapper<std::uint64_t>;
         //            }
         //        }();
         //
@@ -175,11 +176,11 @@ namespace XKLib
         /* Only copy previous segments for multi-threading */
         injectionInfo.loaded_segments = _loadable_segments;
 
-        uintptr_t image_base = 0;
+        std::uintptr_t image_base = 0;
 
         if (_elf.get_type() == ELFIO::ET_EXEC)
         {
-            image_base = view_as<uintptr_t>(
+            image_base = view_as<std::uintptr_t>(
               injectionInfo.process_memory_map.allocArea(
                 injectionInfo.loaded_segments.begin()->start,
                 _image_size,
@@ -194,7 +195,7 @@ namespace XKLib
         }
         else
         {
-            image_base = view_as<uintptr_t>(
+            image_base = view_as<std::uintptr_t>(
               injectionInfo.process_memory_map.allocArea(
                 0,
                 _image_size,
@@ -220,67 +221,9 @@ namespace XKLib
                                     + injectionInfo.offset_image;
 
         /* Relocate image if possible */
-        for (auto&& section : _elf.sections)
+        for (const auto& section : _elf.sections)
         {
-            auto sec_type = section->get_type();
-
-            /* We care only about dynamic relocs */
-            //            if (sec_type == ELFIO::SHT_RELA || sec_type ==
-            //            ELFIO::SHT_REL)
-            //            {
-            //                ELFIO::const_relocation_section_accessor
-            //                rsa(_elf,
-            //                                                             section);
-            //
-            //                auto entry_count = rsa.get_entries_num();
-            //
-            //                for (decltype(entry_count) i = 0; i <
-            //                entry_count; i++)
-            //                {
-            //                    ELFIO::Elf64_Addr offset;
-            //                    ELFIO::Elf64_Addr sym_val;
-            //                    std::string sym_name;
-            //                    unsigned char type;
-            //                    ELFIO::Elf_Sxword addend;
-            //                    ELFIO::Elf_Sxword calc_value;
-            //
-            //                    rsa.get_entry(i,
-            //                                  offset,
-            //                                  sym_val,
-            //                                  sym_name,
-            //                                  type,
-            //                                  addend,
-            //                                  calc_value);
-            //
-            //                    /* no reloc or run-time reloc */
-            //                    if (calc_value == 0)
-            //                    {
-            //                        continue;
-            //                    }
-            //
-            //                    for (auto segment :
-            //                    injectionInfo.loaded_segments)
-            //                    {
-            //                        if (offset >=
-            //                        view_as<uintptr_t>(segment.start)
-            //                            && offset <
-            //                            (view_as<uintptr_t>(segment.start)
-            //                                         +
-            //                                         segment.bytes.size()))
-            //                        {
-            //                            auto rel_off = offset
-            //                                           -
-            //                                           view_as<uintptr_t>(
-            //                                             segment.start);
-            //
-            //                            *view_as<reloc_ptr_t*>(&segment.bytes[rel_off])
-            //                            = injectionInfo
-            //                                                                                .offset_image
-            //                                                                              + calc_value;
-            //                        }
-            //                    }
-            //                }
-            //            }
+            const auto sec_type = section->get_type();
 
             /**
              * TODO: ?
@@ -289,7 +232,7 @@ namespace XKLib
              * end up loading ourselves at the end, though it is a
              * quite long task.
              */
-            /* else */ if (sec_type == ELFIO::SHT_DYNSYM)
+            if (sec_type == ELFIO::SHT_DYNSYM)
             {
                 /**
                  * I don't know why (yet), but it according to ELF,
@@ -308,7 +251,7 @@ namespace XKLib
             }
         }
 
-        for (auto segment : injectionInfo.loaded_segments)
+        for (const auto& segment : injectionInfo.loaded_segments)
         {
             injectionInfo.process_memory_map.write(segment.start,
                                                    segment.bytes);
@@ -324,17 +267,17 @@ namespace XKLib
       const std::vector<std::string>& cmdLine,
       const std::vector<std::string>& env,
       RunnableTask<stack_size_T>& runnableTask,
-      injection_info_t& injectionInfo)
+      injection_info_t& injectionInfo) const
     {
         constexpr auto _reloc_ptr = []()
         {
             if constexpr (ELFClass_T == ELFIO::ELFCLASS32)
             {
-                return type_wrapper<uint32_t>;
+                return type_wrapper<std::uint32_t>;
             }
             else if constexpr (ELFClass_T == ELFIO::ELFCLASS64)
             {
-                return type_wrapper<uint64_t>;
+                return type_wrapper<std::uint64_t>;
             }
         }();
 
@@ -347,8 +290,7 @@ namespace XKLib
         /* traverse in reversed way */
         for (auto cmd = cmdLine.rbegin(); cmd != cmdLine.rend(); cmd++)
         {
-            reloc_ptr_t offset;
-            offset = total_offset;
+            reloc_ptr_t offset = total_offset;
             total_offset += cmd->size() + 1;
 
             injectionInfo.allocated_mem.env_data.bytes.insert(
@@ -363,8 +305,7 @@ namespace XKLib
         /* cmds ended, now add env */
         for (auto e = env.rbegin(); e != env.rend(); e++)
         {
-            reloc_ptr_t offset;
-            offset = total_offset;
+            reloc_ptr_t offset = total_offset;
             total_offset += e->size() + 1;
 
             injectionInfo.allocated_mem.env_data.bytes.insert(
@@ -376,16 +317,16 @@ namespace XKLib
             envs_offsets.push_back(offset);
         }
 
-        injectionInfo.stack_start = view_as<uintptr_t>(
+        injectionInfo.stack_start = view_as<std::uintptr_t>(
                                       runnableTask.baseStack())
                                     + stack_size_T;
 
-        injectionInfo.allocated_mem.env_data.start = view_as<uintptr_t>(
-          injectionInfo.process_memory_map.allocArea(
-            nullptr,
-            injectionInfo.allocated_mem.env_data.bytes.size()
-              + MemoryUtils::GetPageSize(),
-            MemoryArea::ProtectionFlags::RW));
+        injectionInfo.allocated_mem.env_data.start = view_as<
+          std::uintptr_t>(injectionInfo.process_memory_map.allocArea(
+          nullptr,
+          injectionInfo.allocated_mem.env_data.bytes.size()
+            + MemoryUtils::GetPageSize(),
+          MemoryArea::ProtectionFlags::RW));
 
         if (injectionInfo.allocated_mem.env_data.start == 0)
         {
@@ -398,11 +339,11 @@ namespace XKLib
           view_as<ptr_t>(injectionInfo.allocated_mem.env_data.start),
           injectionInfo.allocated_mem.env_data.bytes);
 
-        auto at_random = injectionInfo.allocated_mem.env_data.start
-                         + total_offset;
+        const auto at_random = injectionInfo.allocated_mem.env_data.start
+                               + total_offset;
 
         /* let's generate some 16 random bytes for AT_RANDOM */
-        static std::vector<byte_t> random_bytes = []
+        const std::vector<byte_t> random_bytes = []
         {
             using random_bytes_engine = std::independent_bits_engine<
               std::default_random_engine,
@@ -411,7 +352,7 @@ namespace XKLib
 
             random_bytes_engine rbe;
             std::vector<byte_t> data(16);
-            std::generate(begin(data), end(data), std::ref(rbe));
+            std::generate(data.begin(), data.end(), std::ref(rbe));
 
             return data;
         }();
@@ -421,7 +362,7 @@ namespace XKLib
                                                random_bytes);
 
         /* Setup auxiliary vectors */
-        Elf_auxv_t<reloc_ptr_t> elf_aux[2] {
+        ELFIO::Elf_auxv_t<reloc_ptr_t> elf_aux[2] {
             {  ELFIO::AT_NULL,                                  { 0 }},
             {ELFIO::AT_RANDOM, { *view_as<reloc_ptr_t*>(&at_random) }}
         };
@@ -429,16 +370,20 @@ namespace XKLib
         /* write aux vecs */
         for (std::size_t i = 0; i < 2; i++)
         {
-            injectionInfo.stack_start -= sizeof(Elf_auxv_t<reloc_ptr_t>);
+            injectionInfo.stack_start -= sizeof(
+              ELFIO::Elf_auxv_t<reloc_ptr_t>);
+
             injectionInfo.process_memory_map.write(
               view_as<ptr_t>(injectionInfo.stack_start),
               &elf_aux[i],
-              sizeof(Elf_auxv_t<reloc_ptr_t>));
+              sizeof(ELFIO::Elf_auxv_t<reloc_ptr_t>));
         }
 
         static reloc_ptr_t null_address = 0;
+
         /* write null address for limiting enp */
         injectionInfo.stack_start -= sizeof(reloc_ptr_t);
+
         injectionInfo.process_memory_map.write(
           view_as<ptr_t>(injectionInfo.stack_start),
           &null_address,
@@ -448,7 +393,7 @@ namespace XKLib
          * Env exists ? if yes we write env addresss to stack after
          * the null addr
          */
-        for (auto&& env_offset : envs_offsets)
+        for (const auto& env_offset : envs_offsets)
         {
             injectionInfo.stack_start -= sizeof(reloc_ptr_t);
 
@@ -463,12 +408,13 @@ namespace XKLib
 
         /* write null address for limiting argv */
         injectionInfo.stack_start -= sizeof(reloc_ptr_t);
+
         injectionInfo.process_memory_map.write(
           view_as<ptr_t>(injectionInfo.stack_start),
           &null_address,
           sizeof(null_address));
 
-        for (auto&& cmd_offset : cmds_offsets)
+        for (const auto& cmd_offset : cmds_offsets)
         {
             injectionInfo.stack_start -= sizeof(reloc_ptr_t);
 
@@ -488,17 +434,17 @@ namespace XKLib
     requires(ELFClassSupported<ELFClass_T>) auto Kokabiel::createShellCode(
       const std::vector<std::string>& cmdLine,
       RunnableTask<stack_size_T>& runnableTask,
-      injection_info_t& injectionInfo) -> void
+      injection_info_t& injectionInfo) const -> void
     {
         constexpr auto _reloc_ptr = []()
         {
             if constexpr (ELFClass_T == ELFIO::ELFCLASS32)
             {
-                return type_wrapper<uint32_t>;
+                return type_wrapper<std::uint32_t>;
             }
             else if constexpr (ELFClass_T == ELFIO::ELFCLASS64)
             {
-                return type_wrapper<uint64_t>;
+                return type_wrapper<std::uint64_t>;
             }
         }();
 
@@ -569,7 +515,7 @@ namespace XKLib
          * Well 32 bits injectors won't be able to inject in 64 bits
          * processes. process, due to syscalls on linux kernel, but this
          * is not a real limitation on Windows. Technically speaking, we
-         * could use uint64_t for addresses as Windows supports it
+         * could use std::uint64_t for addresses as Windows supports it
          * (ReadProcessMemory64 etc.), but that would require some extra
          * code. On GNU/Linux it is a problem though and it doesn't seem
          * very compatible. To be honest Windows is much more nicely
@@ -579,11 +525,11 @@ namespace XKLib
          * own process is 32 bits.
          */
 
-        injectionInfo.allocated_mem.shellcode.start = view_as<uintptr_t>(
-          injectionInfo.process_memory_map.allocArea(
-            nullptr,
-            injectionInfo.allocated_mem.shellcode.bytes.size(),
-            MemoryArea::ProtectionFlags::RW));
+        injectionInfo.allocated_mem.shellcode.start = view_as<
+          std::uintptr_t>(injectionInfo.process_memory_map.allocArea(
+          nullptr,
+          injectionInfo.allocated_mem.shellcode.bytes.size(),
+          MemoryArea::ProtectionFlags::RW));
 
         injectionInfo.process_memory_map.write(
           view_as<ptr_t>(injectionInfo.allocated_mem.shellcode.start),

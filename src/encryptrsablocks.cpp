@@ -5,24 +5,24 @@
 
 using namespace CryptoPP;
 
-XKLib::EncryptRSABlocks::EncryptRSABlocks(
-  const CryptoPP::Integer& publicExponent,
-  const CryptoPP::Integer& modulus)
+XKLib::EncryptRSABlocks::EncryptRSABlocks(const Integer& publicExponent,
+                                          const Integer& modulus)
 {
     _public_key.Initialize(modulus, publicExponent);
 }
 
-XKLib::EncryptRSABlocks::EncryptRSABlocks(RSA::PublicKey publicKey)
- : _public_key(std::move(publicKey))
+XKLib::EncryptRSABlocks::EncryptRSABlocks(const RSA::PublicKey& publicKey)
+ : _public_key(publicKey)
 {
 }
 
-auto XKLib::EncryptRSABlocks::encrypt(const bytes_t& bytes) -> bytes_t
+auto XKLib::EncryptRSABlocks::encrypt(const bytes_t& bytes) const
+  -> bytes_t
 {
-    auto result        = bytes;
-    auto min_size      = _public_key.GetModulus().MinEncodedSize();
-    auto remainder     = min_size - (result.size() % min_size);
-    auto original_size = view_as<g_v_t<type_64us>>(result.size());
+    auto result              = bytes;
+    const auto min_size      = _public_key.GetModulus().MinEncodedSize();
+    const auto remainder     = min_size - (result.size() % min_size);
+    const auto original_size = view_as<g_v_t<type_64us>>(result.size());
 
     /**
      * Write header
@@ -43,23 +43,28 @@ auto XKLib::EncryptRSABlocks::encrypt(const bytes_t& bytes) -> bytes_t
           (Integer(rng, 0, 255).ConvertToLong()));
     }
 
-    auto block_count_max = result.size() / min_size;
+    const auto block_count_max = result.size() / min_size;
 
-    for (decltype(block_count_max) block_count = 0;
-         block_count < block_count_max;
+    for (std::size_t block_count = 0; block_count < block_count_max;
          block_count++)
     {
-        auto start = view_as<data_t>(view_as<uintptr_t>(result.data())
+        auto start = view_as<data_t>(view_as<std::uintptr_t>(result.data())
                                      + block_count * min_size);
 
-        Integer encrypt_block(start, min_size);
+        const Integer encrypt_block(start, min_size);
 
-        auto encrypted_block = _public_key.ApplyFunction(encrypt_block);
+        const auto encrypted_block = _public_key.ApplyFunction(
+          encrypt_block);
 
         encrypted_block.Encode(start, min_size);
     }
 
     return result;
+}
+
+auto XKLib::EncryptRSABlocks::publicKey() const -> const auto&
+{
+    return _public_key;
 }
 
 auto XKLib::EncryptRSABlocks::publicKey() -> auto&

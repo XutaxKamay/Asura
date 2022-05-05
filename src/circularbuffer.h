@@ -6,10 +6,6 @@
 namespace XKLib
 {
     template <typename T, std::size_t max_history_T>
-    /**
-     * @brief The CircularBuffer class
-     * Simple circular buffer with having in mind the best performance.
-     */
     class CircularBuffer
     {
       public:
@@ -22,51 +18,22 @@ namespace XKLib
         };
 
       public:
-        /**
-         * @brief push
-         * @param element
-         * @return push_type_t
-         * Pushes your element as the first element into the history
-         * buffer.
-         */
-        auto push(T element);
-        /**
-         * @brief get
-         * @param wantedSlot
-         * @return int
-         * Get the desired element from the history buffer from a
-         * index/slot.
-         */
-        auto get(int wantedSlot = 0);
+        auto get(const int wantedSlot = 0) const;
+
+      public:
+        auto push(const T element);
 
       private:
-        /**
-         * @brief _slot
-         * @param wantedSlot
-         * @return int
-         */
-        auto _slot(int wantedSlot = 0);
+        auto _slot(const int wantedSlot = 0) const;
 
       private:
-        /**
-         * @brief _buffer
-         * Buffer to the elements that will construct history.
-         */
         T _buffer[max_history_T] {};
-        /**
-         * @brief _filled_history
-         * Counts the elements filled into history.
-         */
         int _filled_history {};
-        /**
-         * @brief _index
-         * The index/slot of the first element into history.
-         */
         int _index {};
     };
 
     template <typename T, std::size_t max_history_T>
-    auto CircularBuffer<T, max_history_T>::push(T element)
+    auto CircularBuffer<T, max_history_T>::push(const T element)
     {
         /**
          * If it has been filled,
@@ -101,15 +68,15 @@ namespace XKLib
     }
 
     template <typename T, std::size_t max_history_T>
-    auto CircularBuffer<T, max_history_T>::get(int wantedSlot)
+    auto CircularBuffer<T, max_history_T>::get(const int wantedSlot) const
     {
-        auto real_slot = _slot(wantedSlot);
+        const auto real_slot = _slot(wantedSlot);
 
         return (real_slot == -1) ? nullptr : &_buffer[real_slot];
     }
 
     template <typename T, std::size_t max_history_T>
-    auto CircularBuffer<T, max_history_T>::_slot(int wantedSlot)
+    auto CircularBuffer<T, max_history_T>::_slot(const int wantedSlot) const
     {
         if (wantedSlot >= _filled_history || wantedSlot < 0
             || _filled_history <= 0)
@@ -120,7 +87,7 @@ namespace XKLib
         /* Check if the history has been filled yet */
         if (_filled_history >= max_history_T)
         {
-            int calc_slot = (_index - wantedSlot);
+            const int calc_slot = (_index - wantedSlot);
 
             /**
              * If it's under 0 it means that we need to rollback
@@ -138,6 +105,6 @@ namespace XKLib
             return (_filled_history - 1) - wantedSlot;
         }
     }
-} // namespace XKLib
+}
 
 #endif // CIRCULARBUFFER_H

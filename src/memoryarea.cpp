@@ -5,7 +5,7 @@
 
 using namespace XKLib;
 
-auto MemoryArea::ProtectionFlags::ToOwn(mapf_t flags) -> mapf_t
+auto MemoryArea::ProtectionFlags::ToOwn(const mapf_t flags) -> mapf_t
 {
 #ifdef WINDOWS
     mapf_t own_flags;
@@ -69,12 +69,12 @@ auto MemoryArea::ProtectionFlags::ToOwn(mapf_t flags) -> mapf_t
 #endif
 }
 
-auto MemoryArea::ProtectionFlags::ToOS(mapf_t flags) -> mapf_t
+auto MemoryArea::ProtectionFlags::ToOS(const mapf_t flags) -> mapf_t
 {
 #ifdef WINDOWS
     int os_flags;
 
-    switch (view_as<int>(flags))
+    switch (flags)
     {
         case MemoryArea::ProtectionFlags::EXECUTE:
         {
@@ -129,12 +129,22 @@ auto MemoryArea::ProtectionFlags::ToOS(mapf_t flags) -> mapf_t
 #endif
 }
 
-auto MemoryArea::setAddress(ptr_t address) -> void
+auto MemoryArea::operator==(const MemoryArea& area) const -> bool
+{
+    return begin() == area.begin() && end() == area.end();
+}
+
+auto XKLib::MemoryArea::name() const -> const std::string&
+{
+    return _name;
+}
+
+auto MemoryArea::setAddress(const ptr_t address) -> void
 {
     _address = address;
 }
 
-auto MemoryArea::setSize(std::size_t size) -> void
+auto MemoryArea::setSize(const std::size_t size) -> void
 {
     _size = size;
 }
@@ -142,14 +152,4 @@ auto MemoryArea::setSize(std::size_t size) -> void
 auto XKLib::MemoryArea::setName(const std::string& name) -> void
 {
     _name = name;
-}
-
-auto MemoryArea::operator==(MemoryArea& area) -> bool
-{
-    return begin() == area.begin() && end() == area.end();
-}
-
-auto XKLib::MemoryArea::name() -> const std::string&
-{
-    return _name;
 }

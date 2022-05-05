@@ -19,10 +19,11 @@ XKLib::DecryptRSABlocks::DecryptRSABlocks(RSA::PrivateKey privateKey)
 {
 }
 
-auto XKLib::DecryptRSABlocks::decrypt(const bytes_t& bytes) -> bytes_t
+auto XKLib::DecryptRSABlocks::decrypt(const bytes_t& bytes) const
+  -> bytes_t
 {
-    auto result   = bytes;
-    auto min_size = _private_key.GetModulus().MinEncodedSize();
+    auto result         = bytes;
+    const auto min_size = _private_key.GetModulus().MinEncodedSize();
 
     if (result.size() % min_size != 0)
     {
@@ -30,33 +31,38 @@ auto XKLib::DecryptRSABlocks::decrypt(const bytes_t& bytes) -> bytes_t
                         "multiple of the key size\n");
     }
 
-    auto block_count_max = result.size() / min_size;
+    const auto block_count_max = result.size() / min_size;
 
-    for (decltype(block_count_max) block_count = 0;
-         block_count < block_count_max;
+    for (std::size_t block_count = 0; block_count < block_count_max;
          block_count++)
     {
-        auto start = view_as<data_t>(view_as<uintptr_t>(result.data())
-                                     + block_count * min_size);
+        const auto start = view_as<data_t>(
+          view_as<std::uintptr_t>(result.data())
+          + block_count * min_size);
 
-        Integer decrypt_block(start, min_size);
+        const Integer decrypt_block(start, min_size);
 
         AutoSeededRandomPool rng;
-        auto decrypted_block = _private_key.CalculateInverse(
+        const auto decrypted_block = _private_key.CalculateInverse(
           rng,
           decrypt_block);
 
         decrypted_block.Encode(start, min_size);
     }
 
-    auto original_size = ReadBuffer(result.data(),
-                                    result.size(),
-                                    result.size() - min_size)
-                           .readVar<type_64us>();
+    const auto original_size = ReadBuffer(result.data(),
+                                          result.size(),
+                                          result.size() - min_size)
+                                 .readVar<type_64us>();
 
     result.resize(original_size);
 
     return result;
+}
+
+auto XKLib::DecryptRSABlocks::privateKey() const -> const auto&
+{
+    return _private_key;
 }
 
 auto XKLib::DecryptRSABlocks::privateKey() -> auto&

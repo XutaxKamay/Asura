@@ -66,6 +66,6 @@ namespace XKLib
         }
 #endif
     };
-};
+}
 
 #endif

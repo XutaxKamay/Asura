@@ -13,16 +13,16 @@ auto ProcessBase::self() -> ProcessBase
 #endif
 }
 
-ProcessBase::ProcessBase(process_id_t pid) : _pid(pid)
+ProcessBase::ProcessBase(const process_id_t pid) : _pid(pid)
 {
 }
 
-auto ProcessBase::setPID(process_id_t pid) -> void
+auto ProcessBase::setPID(const process_id_t pid) -> void
 {
     _pid = pid;
 }
 
-auto ProcessBase::id() -> process_id_t
+auto ProcessBase::id() const -> process_id_t
 {
     return _pid;
 }
