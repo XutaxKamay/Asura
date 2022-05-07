@@ -138,7 +138,7 @@ auto Process::mmap() const -> const ProcessMemoryMap&
     return _mmap;
 }
 
-auto XKLib::Process::search(PatternByte& patternByte) const -> void
+auto Process::search(PatternByte& patternByte) const -> void
 {
     PatternScanning::searchInProcess(patternByte, *this);
 }

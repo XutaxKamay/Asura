@@ -5,7 +5,7 @@
 
 namespace XKLib
 {
-    template <std::size_t rsa_key_size_T = 0x1000>
+    template <std::size_t N = 0x1000>
     class HybridCrypt
     {
         static constexpr auto AESKeySize = CryptoPP::AES::MAX_KEYLENGTH;

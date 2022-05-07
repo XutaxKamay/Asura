@@ -5,7 +5,7 @@
 
 namespace XKLib
 {
-    template <typename T, std::size_t max_history_T>
+    template <typename T, std::size_t N>
     class CircularBuffer
     {
       public:
@@ -27,23 +27,23 @@ namespace XKLib
         auto _slot(const int wantedSlot = 0) const;
 
       private:
-        T _buffer[max_history_T] {};
+        T _buffer[N] {};
         int _filled_history {};
         int _index {};
     };
 
-    template <typename T, std::size_t max_history_T>
-    auto CircularBuffer<T, max_history_T>::push(const T element)
+    template <typename T, std::size_t N>
+    auto CircularBuffer<T, N>::push(const T element)
     {
         /**
          * If it has been filled,
          * we update the index/slot of the first element.
          */
-        if (_filled_history >= max_history_T)
+        if (_filled_history >= N)
         {
             _buffer[_index] = element;
 
-            if (_index >= (max_history_T - 1))
+            if (_index >= (N - 1))
             {
                 _index = 0;
             }
@@ -67,25 +67,25 @@ namespace XKLib
         return Filling;
     }
 
-    template <typename T, std::size_t max_history_T>
-    auto CircularBuffer<T, max_history_T>::get(const int wantedSlot) const
+    template <typename T, std::size_t N>
+    auto CircularBuffer<T, N>::get(const int wantedSlot) const
     {
         const auto real_slot = _slot(wantedSlot);
 
         return (real_slot == -1) ? nullptr : &_buffer[real_slot];
     }
 
-    template <typename T, std::size_t max_history_T>
-    auto CircularBuffer<T, max_history_T>::_slot(const int wantedSlot) const
+    template <typename T, std::size_t N>
+    auto CircularBuffer<T, N>::_slot(const int wantedSlot) const
     {
-        if (wantedSlot >= _filled_history || wantedSlot < 0
-            || _filled_history <= 0)
+        if (wantedSlot >= _filled_history or wantedSlot < 0
+            or _filled_history <= 0)
         {
             return -1;
         }
 
         /* Check if the history has been filled yet */
-        if (_filled_history >= max_history_T)
+        if (_filled_history >= N)
         {
             const int calc_slot = (_index - wantedSlot);
 
@@ -93,8 +93,7 @@ namespace XKLib
              * If it's under 0 it means that we need to rollback
              * in order to get the real slot
              */
-            return (calc_slot < 0) ? calc_slot + max_history_T :
-                                     calc_slot;
+            return (calc_slot < 0) ? calc_slot + N : calc_slot;
         }
         else
         {

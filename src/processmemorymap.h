@@ -27,14 +27,16 @@ namespace XKLib
                                                       size);
         }
 
-        auto write(auto address, const bytes_t& bytes) const -> void
+        auto write(const auto address, const bytes_t& bytes) const -> void
         {
             MemoryUtils::WriteProcessMemoryArea(_process_base.id(),
                                                 bytes,
                                                 address);
         }
 
-        auto write(auto address, auto ptr, std::size_t size) const -> void
+        auto write(const auto address,
+                   const auto ptr,
+                   const std::size_t size) const -> void
         {
             bytes_t data(view_as<byte_t*>(ptr),
                          view_as<byte_t*>(ptr) + size);
@@ -114,7 +116,7 @@ namespace XKLib
                 end_ptr   = simplified_area.end;
 
                 if (view_as<std::uintptr_t>(address) >= start_ptr
-                    && view_as<std::uintptr_t>(address) < end_ptr)
+                    and view_as<std::uintptr_t>(address) < end_ptr)
                 {
                     break;
                 }
@@ -148,7 +150,7 @@ namespace XKLib
                 const auto end_ptr   = area->end();
 
                 if (view_as<std::uintptr_t>(address) >= start_ptr
-                    && view_as<std::uintptr_t>(address) < end_ptr)
+                    and view_as<std::uintptr_t>(address) < end_ptr)
                 {
                     return area;
                 }
@@ -172,16 +174,16 @@ namespace XKLib
             return ret;
         }
 
-        auto freeArea(auto address, std::size_t size) -> void
+        auto freeArea(const auto address, std::size_t size) -> void
         {
             MemoryUtils::FreeArea(_process_base.id(), address, size);
 
             refresh();
         }
 
-        auto protectMemoryArea(auto address,
-                               std::size_t size,
-                               mapf_t flags) -> void
+        auto protectMemoryArea(const auto address,
+                               const std::size_t size,
+                               const mapf_t flags) -> void
         {
             MemoryUtils::ProtectMemoryArea(_process_base.id(),
                                            address,
@@ -191,7 +193,7 @@ namespace XKLib
             refresh();
         }
 
-        auto forceWrite(auto address, const bytes_t& bytes) -> void
+        auto forceWrite(const auto address, const bytes_t& bytes) -> void
         {
             refresh();
 
@@ -207,17 +209,19 @@ namespace XKLib
             area->protectionFlags() = flags
                                       | MemoryArea::ProtectionFlags::W;
 
-            write<decltype(address)>(address, bytes);
+            write(address, bytes);
 
             area->protectionFlags() = flags;
         }
 
-        auto forceWrite(auto address, auto ptr, std::size_t size) -> void
+        auto forceWrite(const auto address,
+                        const auto ptr,
+                        std::size_t size) -> void
         {
             bytes_t data(view_as<byte_t*>(ptr),
                          view_as<byte_t*>(ptr) + size);
 
-            forceWrite<decltype(address)>(address, data);
+            forceWrite(address, data);
         }
 
       private:

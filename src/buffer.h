@@ -86,43 +86,43 @@ namespace XKLib
         type_array
     };
 
-    template <typesize_t type>
+    template <typesize_t T>
     constexpr inline auto _gvt()
     {
-        if constexpr (type == type_safesize)
+        if constexpr (T == type_safesize)
             return type_wrapper<std::size_t>;
-        else if constexpr (type == type_8us)
+        else if constexpr (T == type_8us)
             return type_wrapper<byte_t>;
-        else if constexpr (type == type_16us)
+        else if constexpr (T == type_16us)
             return type_wrapper<std::uint16_t>;
-        else if constexpr (type == type_32us)
+        else if constexpr (T == type_32us)
             return type_wrapper<std::uint32_t>;
-        else if constexpr (type == type_64us)
+        else if constexpr (T == type_64us)
             return type_wrapper<std::uint64_t>;
-        else if constexpr (type == type_8s)
+        else if constexpr (T == type_8s)
             return type_wrapper<char>;
-        else if constexpr (type == type_16s)
+        else if constexpr (T == type_16s)
             return type_wrapper<int16_t>;
-        else if constexpr (type == type_32s)
+        else if constexpr (T == type_32s)
             return type_wrapper<int32_t>;
-        else if constexpr (type == type_64s)
+        else if constexpr (T == type_64s)
             return type_wrapper<int64_t>;
-        else if constexpr (type == type_array)
+        else if constexpr (T == type_array)
             return type_wrapper<data_t>;
-        else if constexpr (type == type_float)
+        else if constexpr (T == type_float)
             return type_wrapper<float>;
-        else if constexpr (type == type_double)
+        else if constexpr (T == type_double)
             return type_wrapper<double>;
         else
-            static_assert(type > type_array, "Not implemented");
+            static_assert(T > type_array, "Not implemented");
     }
 
     auto get_variable_type_str(const typesize_t typeSize) -> std::string;
 
-    template <typesize_t typesize_T>
-    using get_variable_t = typename decltype(_gvt<typesize_T>())::type;
-    template <typesize_t typesize_T>
-    using g_v_t = get_variable_t<typesize_T>;
+    template <typesize_t T>
+    using get_variable_t = typename decltype(_gvt<T>())::type;
+    template <typesize_t T>
+    using g_v_t = get_variable_t<T>;
 
     class Buffer
     {
@@ -145,7 +145,7 @@ namespace XKLib
         template <typename T = ptr_t>
         constexpr inline auto shift(const std::size_t size = 0) const
         {
-            if (!_data && size >= _max_size)
+            if (!_data and size >= _max_size)
             {
                 XKLIB_EXCEPTION("Out of bounds.");
             }

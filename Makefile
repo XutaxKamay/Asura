@@ -54,8 +54,8 @@ INCLUDES:=-I ./vendor/ELFIO -iquote src/ -iquote test/src/ -iquote ./
 ERRORS:= -Wextra -W -Wall -Werror
 
 ## FLAGS
-CPPFLAGS_DEBUG:=$(CXXFLAGS) $(MOREFLAGS) -O0 -g $(ERRORS) $(INCLUDES)
-CPPFLAGS_RELEASE:=$(CXXFLAGS) $(MOREFLAGS) -O3 -pipe -fvisibility=hidden -fvisibility-inlines-hidden -frename-registers -fomit-frame-pointer -s $(ERRORS) $(INCLUDES)
+CPPFLAGS_DEBUG:=$(CXXFLAGS) $(MOREFLAGS) -O0 -fPIE -g $(ERRORS) $(INCLUDES)
+CPPFLAGS_RELEASE:=$(CXXFLAGS) $(MOREFLAGS) -O3 -fPIE -pipe -fvisibility=hidden -fvisibility-inlines-hidden -frename-registers -fomit-frame-pointer -s $(ERRORS) $(INCLUDES)
 
 ## RULES
 all: xklib xklib_test

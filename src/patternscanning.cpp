@@ -15,18 +15,18 @@ auto XKLib::PatternScanning::searchInProcess(
     auto(PatternByte&, const data_t, const std::size_t, const ptr_t)
       ->bool>& searchMethod) -> void
 {
-    auto mmap     = process.mmap();
-    auto areaName = pattern.areaName();
+    const auto& mmap     = process.mmap();
+    const auto& areaName = pattern.areaName();
 
     if (areaName.empty())
     {
-        for (auto&& area : mmap.areas())
+        for (const auto& area : mmap.areas())
         {
             if (area->isReadable())
             {
-                auto area_read = area->read<simd_value_t>();
+                const auto area_read = area->read<simd_value_t>();
                 searchMethod(pattern,
-                             view_as<data_t>(area_read.data()),
+                             view_as<const data_t>(area_read.data()),
                              area->size(),
                              area->begin<ptr_t>());
             }
@@ -46,12 +46,12 @@ auto XKLib::PatternScanning::searchInProcessWithAreaName(
     auto(PatternByte&, const data_t, const std::size_t, const ptr_t)
       ->bool>& searchMethod) -> void
 {
-    auto mmap = process.mmap();
+    const auto& mmap = process.mmap();
 
-    for (auto&& area : mmap.areas())
+    for (const auto& area : mmap.areas())
     {
         if (area->isReadable()
-            && (area->name().find(areaName) != std::string::npos))
+            and (area->name().find(areaName) != std::string::npos))
         {
             auto area_read = area->read<simd_value_t>();
             searchMethod(pattern,
@@ -67,7 +67,7 @@ auto XKLib::PatternScanning::searchV1(PatternByte& pattern,
                                       const std::size_t size,
                                       const ptr_t baseAddress) -> bool
 {
-    if (size < sizeof(simd_value_t) || (size % sizeof(simd_value_t) != 0))
+    if (size < sizeof(simd_value_t) or (size % sizeof(simd_value_t) != 0))
     {
         XKLIB_EXCEPTION("Size must be aligned to "
                         + std::to_string(sizeof(simd_value_t))
@@ -86,7 +86,7 @@ auto XKLib::PatternScanning::searchV1(PatternByte& pattern,
 
     while (current_data + pattern_size <= data + size)
     {
-        for (auto&& mv : fast_aligned_mvs)
+        for (const auto& mv : fast_aligned_mvs)
         {
             /**
              * Fast check if they are all unknown bytes
@@ -161,9 +161,9 @@ auto XKLib::PatternScanning::searchV2(PatternByte& pattern,
 
     while (current_data + pattern_size <= data + size)
     {
-        for (auto&& organized_values : vec_organized_values)
+        for (const auto& organized_values : vec_organized_values)
         {
-            for (auto&& byte : organized_values.bytes)
+            for (const auto& byte : organized_values.bytes)
             {
                 if (byte != *current_data)
                 {
@@ -193,7 +193,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
                                       const std::size_t size,
                                       const ptr_t baseAddress) -> bool
 {
-    if (size < sizeof(simd_value_t) || (size % sizeof(simd_value_t) != 0))
+    if (size < sizeof(simd_value_t) or (size % sizeof(simd_value_t) != 0))
     {
         XKLIB_EXCEPTION("Size must be aligned to "
                         + std::to_string(sizeof(simd_value_t))
@@ -247,7 +247,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
 
         /* this part of the pattern mismatched ? */
         if (mismatch_byte_num > 0
-            && mismatch_byte_num <= sizeof(simd_value_t))
+            and mismatch_byte_num <= sizeof(simd_value_t))
         {
             /**
              * We got a mismatch, we need to re-align pattern / adjust
@@ -298,7 +298,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
                     & bit_mask));
 
                 if (match_byte_num > 0
-                    && match_byte_num <= it_mv->part_size)
+                    and match_byte_num <= it_mv->part_size)
                 {
                     to_skip = match_byte_num - mismatch_byte_num;
                     goto good_char;
@@ -330,7 +330,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
                  * the rest of the pattern
                  */
                 if (match_byte_num > 0
-                    && match_byte_num <= it_mv->part_size)
+                    and match_byte_num <= it_mv->part_size)
                 {
                     to_skip += match_byte_num - 1;
                     /* exit */
@@ -387,7 +387,7 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
                                       const std::size_t size,
                                       const ptr_t baseAddress) -> bool
 {
-    if (size < sizeof(simd_value_t) || (size % sizeof(simd_value_t) != 0))
+    if (size < sizeof(simd_value_t) or (size % sizeof(simd_value_t) != 0))
     {
         XKLIB_EXCEPTION("Size must be aligned to "
                         + std::to_string(sizeof(simd_value_t))
@@ -440,7 +440,7 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
 
         /* this part of the pattern mismatched ? */
         if (mismatch_byte_num > 0
-            && mismatch_byte_num <= sizeof(simd_value_t))
+            and mismatch_byte_num <= sizeof(simd_value_t))
         {
             /**
              * We got a mismatch, we need to re-align pattern / adjust
@@ -493,7 +493,7 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                                              const ptr_t baseAddress)
   -> bool
 {
-    if (size < sizeof(simd_value_t) || (size % sizeof(simd_value_t) != 0))
+    if (size < sizeof(simd_value_t) or (size % sizeof(simd_value_t) != 0))
     {
         XKLIB_EXCEPTION("Size must be aligned to "
                         + std::to_string(sizeof(simd_value_t))
@@ -524,7 +524,7 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
      */
     while (current_data + pattern_size <= aligned_data + size)
     {
-        for (auto&& mv : fast_aligned_mvs)
+        for (const auto& mv : fast_aligned_mvs)
         {
             /**
              * Fast check if they are all unknown bytes
@@ -589,7 +589,7 @@ auto XKLib::PatternScanning::searchAlignedV2(PatternByte& pattern,
                                              const ptr_t /*baseAddress*/)
   -> bool
 {
-    if (size < sizeof(simd_value_t) || (size % sizeof(simd_value_t) != 0))
+    if (size < sizeof(simd_value_t) or (size % sizeof(simd_value_t) != 0))
     {
         XKLIB_EXCEPTION("Size must be aligned to "
                         + std::to_string(sizeof(simd_value_t))

@@ -65,7 +65,7 @@ Buffer::~Buffer()
 
 auto Buffer::operator[](const std::size_t size) const -> const auto&
 {
-    if (!_data && size >= _max_size)
+    if (!_data and size >= _max_size)
     {
         XKLIB_EXCEPTION("Out of bounds.");
     }
@@ -93,7 +93,7 @@ auto Buffer::toBytes() const -> bytes_t
 
 auto Buffer::operator[](const std::size_t size) -> auto&
 {
-    if (!_data && size >= _max_size)
+    if (!_data and size >= _max_size)
     {
         XKLIB_EXCEPTION("Out of bounds.");
     }

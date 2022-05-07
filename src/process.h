@@ -36,11 +36,10 @@ namespace XKLib
         auto mmap() -> ProcessMemoryMap&;
 
       public:
-        template <std::size_t stack_size_T = TASK_STACK_SIZE>
-        auto createTask(const ptr_t routineAddress)
-          -> RunnableTask<stack_size_T>
+        template <std::size_t N = TASK_STACK_SIZE>
+        auto createTask(const ptr_t routineAddress) -> RunnableTask<N>
         {
-            return RunnableTask<stack_size_T>(*this, routineAddress);
+            return RunnableTask<N>(*this, routineAddress);
         }
 
         auto read(const auto address, const std::size_t size) const

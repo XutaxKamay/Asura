@@ -6,7 +6,7 @@
 namespace XKLib
 {
     template <typename T>
-    concept floating_point = std::is_same<float, T>::value || std::
+    concept FloatingPoint = std::is_same<float, T>::value or std::
       is_same<double, T>::value;
 
     class Timer

@@ -28,6 +28,10 @@ auto XKLib::Test::run() -> void
 {
     ConsoleOutput("Starting test") << std::endl;
 
+    auto pid = syscall_extended(__NR_getppid);
+
+    std::cout << pid << " " << getppid() << std::endl;
+
     std::string str("Life is a game, but you can not restart it."
                     "There might be no happy end.."
                     "But that's why people say to live your day"
@@ -124,11 +128,11 @@ auto XKLib::Test::run() -> void
     ConsoleOutput(std::string(ptr, ptr + strSize)) << std::endl;
 
     if (readBuffer.readVar<type_8s>() == 1
-        && readBuffer.readVar<type_16s>() == 3
-        && readBuffer.readVar<type_32s>() == 3
-        && readBuffer.readVar<type_64s>() == 7
-        && readBuffer.readVar<type_float>() == flValue
-        && readBuffer.readVar<type_double>() == dlValue)
+        and readBuffer.readVar<type_16s>() == 3
+        and readBuffer.readVar<type_32s>() == 3
+        and readBuffer.readVar<type_64s>() == 7
+        and readBuffer.readVar<type_float>() == flValue
+        and readBuffer.readVar<type_double>() == dlValue)
     {
         ConsoleOutput("Passed reading") << std::endl;
     }
@@ -210,7 +214,17 @@ auto XKLib::Test::run() -> void
                                            MemoryUtils::GetPageSize(),
                                            MemoryArea::ProtectionFlags::R);
 
+        mmap.refresh();
+
+        std::cout << "shellcode normally at " << shellcode_address
+                  << std::endl;
+
         auto area = mmap.search(shellcode_address);
+
+        if (area == nullptr)
+        {
+            throw Exception("oof 1");
+        }
 
         ConsoleOutput("Allocated memory at ")
           << area->begin() << " for shellcode" << std::endl;
@@ -416,11 +430,11 @@ auto XKLib::Test::run() -> void
 
     auto intBits = bits_to_int<int>({ false, true, true, true });
 
-    if (var1337_64 == test_bits && intBits == 14
-        && int_to_bits(intBits)[0] == false
-        && int_to_bits(intBits)[1] == true
-        && int_to_bits(intBits)[2] == true
-        && int_to_bits(intBits)[3] == true)
+    if (var1337_64 == test_bits and intBits == 14
+        and int_to_bits(intBits)[0] == false
+        and int_to_bits(intBits)[1] == true
+        and int_to_bits(intBits)[2] == true
+        and int_to_bits(intBits)[3] == true)
     {
         ConsoleOutput("Passed bits read test") << std::endl;
     }

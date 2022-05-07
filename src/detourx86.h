@@ -40,7 +40,8 @@ namespace XKLib
             }
             else
             {
-                const auto mmap = Process::self().mmap();
+                const auto process = Process::self();
+                const auto& mmap   = process.mmap();
 
                 area = mmap.search(fromPtr);
 
@@ -93,11 +94,9 @@ namespace XKLib
          * instead'
          */
 #ifdef _WIN32
-    template <calling_conventions_t calling_convention_T,
-              typename ret_type_T,
-              typename... args_T>
+    template <calling_conventions_t C, typename T, typename... A>
 #else
-    template <typename ret_type_T, typename... args_T>
+    template <typename T, typename... A>
 #endif
     /**
      * This class permits to hook any functions inside the current
@@ -159,7 +158,7 @@ namespace XKLib
         using func_t = typename decltype(GenerateNewFuncType())::type;
 
 #else /* Otherwise it should be always the same convention */
-        using cbfunc_t = ret_type_T (*)(args_T...);
+        using cbfunc_t = T (*)(A...);
         using func_t   = cbfunc_t;
 #endif
       public:
@@ -181,49 +180,40 @@ namespace XKLib
  * always pushed to the stack.
  */
 #ifdef _WIN32
-    template <calling_conventions_t calling_convention_T,
-              typename ret_type_T,
-              typename... args_T>
-    constexpr auto TraditionalDetourX86<
-      calling_convention_T,
-      ret_type_T,
-      args_T...>::GenerateCallBackFuncType()
+    template <calling_conventions_t C, typename T, typename... A>
+    constexpr auto TraditionalDetourX86<C, T, A...>::
+      GenerateCallBackFuncType()
     {
-        if constexpr (calling_convention_T == cc_fastcall)
+        if constexpr (C == cc_fastcall)
         {
             /* thisptr - EDX, stack params */
-            return type_wrapper<ret_type_T(__thiscall*)(ptr_t, args_T...)>;
+            return type_wrapper<T(__thiscall*)(ptr_t, A...)>;
         }
-        else if constexpr (calling_convention_T == cc_stdcall)
+        else if constexpr (C == cc_stdcall)
         {
-            return type_wrapper<ret_type_T(__stdcall*)(args_T...)>;
+            return type_wrapper<T(__stdcall*)(A...)>;
         }
         else
         {
-            return type_wrapper<ret_type_T (*)(args_T...)>;
+            return type_wrapper<T (*)(A...)>;
         }
     }
 
-    template <calling_conventions_t calling_convention_T,
-              typename ret_type_T,
-              typename... args_T>
-    constexpr auto TraditionalDetourX86<calling_convention_T,
-                                        ret_type_T,
-                                        args_T...>::GenerateNewFuncType()
+    template <calling_conventions_t C, typename T, typename... A>
+    constexpr auto TraditionalDetourX86<C, T, A...>::GenerateNewFuncType()
     {
-        if constexpr (calling_convention_T == cc_fastcall)
+        if constexpr (C == cc_fastcall)
         {
             /* EDX, ECX, stack params */
-            return type_wrapper<ret_type_T(
-              __fastcall*)(ptr_t, ptr_t, args_T...)>;
+            return type_wrapper<T(__fastcall*)(ptr_t, ptr_t, A...)>;
         }
-        else if constexpr (calling_convention_T == cc_stdcall)
+        else if constexpr (C == cc_stdcall)
         {
-            return type_wrapper<ret_type_T(__stdcall*)(args_T...)>;
+            return type_wrapper<T(__stdcall*)(A...)>;
         }
         else
         {
-            return type_wrapper<ret_type_T (*)(args_T...)>;
+            return type_wrapper<T (*)(A...)>;
         }
     }
 #endif

@@ -22,7 +22,7 @@ namespace XKLib
         auto advance(const std::size_t size) -> void;
 
       public:
-        template <typesize_t typesize_T = type_32s>
+        template <typesize_t T = type_32s>
         constexpr inline auto readVar(std::size_t* const pSize = nullptr)
         {
             if (_read_size >= maxSize())
@@ -34,24 +34,24 @@ namespace XKLib
             advance(sizeof(typesize_t));
 
             /* Read type first */
-            if (type != typesize_T)
+            if (type != T)
             {
                 /**
                  * Blame programmer for not writing the buffer
                  * correctly.
                  */
-                XKLIB_EXCEPTION(std::string(
-                  "Expected type: " + get_variable_type_str(typesize_T)
-                  + "when type is instead "
-                  + get_variable_type_str(type)));
+                XKLIB_EXCEPTION(
+                  std::string("Expected type: " + get_variable_type_str(T)
+                              + "when type is instead "
+                              + get_variable_type_str(type)));
             }
 
-            using var_t = get_variable_t<typesize_T>;
+            using var_t = get_variable_t<T>;
 
             /* Initialize data type */
             var_t data = {};
 
-            if constexpr (typesize_T == type_array)
+            if constexpr (T == type_array)
             {
                 /* If it's an array we read first its size */
                 auto dataSize = *this->shift<std::size_t*>(_read_size);

@@ -11,9 +11,9 @@
 namespace XKLib
 {
     template <typename T = byte_t>
-    concept XKCAlphabetType = std::is_same<T, byte_t>::value || std::is_same<
+    concept XKCAlphabetType = std::is_same<T, byte_t>::value or std::is_same<
       T,
-      std::uint16_t>::value || std::is_same<T, std::uint32_t>::value;
+      std::uint16_t>::value or std::is_same<T, std::uint32_t>::value;
 
     template <XKCAlphabetType T>
     class XKC

@@ -1,10 +1,11 @@
 #ifndef MEMORYUTILS_H
 #define MEMORYUTILS_H
 
-#include "custom_linux_syscalls.h"
 #include "exception.h"
 #include "memoryarea.h"
 #include "types.h"
+
+#include "custom_linux_syscalls.h"
 
 namespace XKLib
 {
@@ -103,7 +104,7 @@ namespace XKLib
                 XKLIB_EXCEPTION("Couldn't open process");
             }
 
-            auto area_start = VirtualAllocEx(
+            const auto ret = VirtualAllocEx(
               process_handle,
               view_as<ptr_t>(address),
               size,
@@ -112,17 +113,27 @@ namespace XKLib
 
             CloseHandle(process_handle);
 #else
-            const auto area_start = syscall(
-              __NR_rmmap,
-              pid,
-              address,
-              size,
-              MemoryArea::ProtectionFlags::ToOS(flags),
-              MAP_PRIVATE | MAP_ANONYMOUS,
-              0,
-              0);
+            struct
+            {
+                pid_t pid;
+                unsigned long addr;
+                unsigned long len;
+                unsigned long prot;
+                unsigned long flags;
+                unsigned long fd;
+                unsigned long pgoff;
+            } args { pid,
+                     view_as<unsigned long>(address),
+                     view_as<unsigned long>(size),
+                     view_as<unsigned long>(
+                       MemoryArea::ProtectionFlags::ToOS(flags)),
+                     view_as<unsigned long>(MAP_PRIVATE | MAP_ANONYMOUS),
+                     view_as<unsigned long>(-1),
+                     0 };
+
+            const auto ret = syscall(__NR_rmmap, &args, sizeof(args));
 #endif
-            return view_as<ptr_t>(area_start);
+            return view_as<ptr_t>(ret);
         }
 
         static auto FreeArea(const process_id_t pid,

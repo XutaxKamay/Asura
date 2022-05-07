@@ -60,6 +60,13 @@ namespace XKLib
         /**
          * SIMD Boyer-Moore's Algorithm.
          * Consums less memory than V4 but it is slower.
+         * Problem: due to SIMD, if somehow the pattern has arrived
+         * at the start of data, when loading into MD registers,
+         * it could cause a crash if not aligned properly.
+         * TODO:
+         * Align even more memory before processing,
+         * or check when the data left to read is smaller than
+         * simd_value_t.
          */
         static auto searchV3(PatternByte& pattern,
                              const data_t data,
@@ -87,8 +94,9 @@ namespace XKLib
         /**
          * SIMD Boyer-Moore-Horspool's Algorithm, aligned.
          * This one must not use loadu but just load instead,
-         * though things can get a bit more complicated, but we can use
-         * memory alignment here, which could be potentially a lot faster.
+         * though things can get a bit more complicated, but we can
+         * use memory alignment here, which could be potentially a lot
+         * faster.
          */
         static auto searchAlignedV2(PatternByte& pattern,
                                     const data_t aligned_data,

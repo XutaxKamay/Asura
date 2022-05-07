@@ -101,7 +101,7 @@ auto XKLib::ProcessMemoryArea::isDeniedByOS() const -> bool
 {
     return _protection_flags.cachedValue() == 0
 #ifndef WIN32
-           || name() == "[vvar]"
+           or name() == "[vvar]"
 #endif
       ;
 }
@@ -109,13 +109,13 @@ auto XKLib::ProcessMemoryArea::isDeniedByOS() const -> bool
 auto XKLib::ProcessMemoryArea::isReadable() const -> bool
 {
     return (_protection_flags.cachedValue() & ProtectionFlags::R)
-           && !isDeniedByOS();
+           and !isDeniedByOS();
 }
 
 auto XKLib::ProcessMemoryArea::isWritable() const -> bool
 {
     return (_protection_flags.cachedValue() & ProtectionFlags::W)
-           && !isDeniedByOS();
+           and !isDeniedByOS();
 }
 
 auto ProcessMemoryArea::protectionFlags() -> ModifiableProtectionFlags&

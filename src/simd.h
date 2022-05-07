@@ -71,7 +71,7 @@ namespace XKLib
 #elif defined(__AVX2__)
         return _mm256_load_si256(view_as<__m256i*>(mm1));
 #elif defined(__SSE__)
-        return _mm_cvtsi64_m64(*view_as<_int64_t*>(mm1));
+        return _mm_cvtsi64_m64(*view_as<std::int64_t*>(mm1));
 #else
         XKLIB_SIMD_THROW_ERROR
 #endif
@@ -84,7 +84,7 @@ namespace XKLib
 #elif defined(__AVX2__)
         return _mm256_loadu_si256(view_as<__m256i*>(mm1));
 #elif defined(__SSE__)
-        return _mm_cvtsi64_m64(*view_as<_int64_t*>(mm1));
+        return _mm_cvtsi64_m64(*view_as<std::int64_t*>(mm1));
 #else
         XKLIB_SIMD_THROW_ERROR
 #endif

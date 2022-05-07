@@ -134,7 +134,7 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes,
                                [&i](const Value& value)
                                {
                                    if (value.value == i
-                                       || value.value == Value::UNKNOWN)
+                                       or value.value == Value::UNKNOWN)
                                    {
                                        return true;
                                    }
@@ -203,7 +203,7 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes,
                     & bit_mask));
 
                 if (match_byte_num > 0
-                    && match_byte_num <= it_mv->part_size)
+                    and match_byte_num <= it_mv->part_size)
                 {
                     *ptr_cur_skip = (match_byte_num - 1) - prev_slot;
                     goto good_char;
@@ -234,7 +234,7 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes,
                  * inside the rest of the pattern.
                  */
                 if (match_byte_num > 0
-                    && match_byte_num <= it_mv->part_size)
+                    and match_byte_num <= it_mv->part_size)
                 {
                     *ptr_cur_skip += match_byte_num - 1;
                     /* exit */

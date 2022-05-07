@@ -6,12 +6,12 @@
 
 namespace XKLib
 {
-    template <const std::size_t pos>
+    template <const std::size_t P>
     constexpr auto read_bit(const auto data)
     {
-        constexpr auto read_byte_pos = pos / CHAR_BIT;
+        constexpr auto read_byte_pos = P / CHAR_BIT;
 
-        constexpr auto wanted_bit_value = (1u << (pos % CHAR_BIT));
+        constexpr auto wanted_bit_value = (1u << (P % CHAR_BIT));
 
         const auto byte_value = *view_as<byte_t*>(
           view_as<std::uintptr_t>(data) + read_byte_pos);
@@ -19,17 +19,17 @@ namespace XKLib
         return view_as<bool>(byte_value & wanted_bit_value);
     }
 
-    template <std::size_t pos, bool val>
+    template <std::size_t P, bool V>
     constexpr auto write_bit(const auto data)
     {
-        constexpr auto read_byte_pos = pos / CHAR_BIT;
+        constexpr auto read_byte_pos = P / CHAR_BIT;
 
-        constexpr auto wanted_bit_value = (1u << (pos % CHAR_BIT));
+        constexpr auto wanted_bit_value = (1u << (P % CHAR_BIT));
 
         const auto byte_value = view_as<byte_t*>(
           view_as<std::uintptr_t>(data) + read_byte_pos);
 
-        if constexpr (val)
+        if constexpr (V)
         {
             *byte_value |= wanted_bit_value;
         }
@@ -51,17 +51,17 @@ namespace XKLib
         return view_as<bool>(byte_value & wanted_bit_value);
     }
 
-    template <bool val>
-    constexpr auto write_bit(const auto data, const std::size_t pos)
+    template <bool V>
+    constexpr auto write_bit(const auto data, const std::size_t P)
     {
-        const auto read_byte_pos = pos / CHAR_BIT;
+        const auto read_byte_pos = P / CHAR_BIT;
 
-        const auto wanted_bit_value = (1u << (pos % CHAR_BIT));
+        const auto wanted_bit_value = (1u << (P % CHAR_BIT));
 
         const auto byte_value = view_as<byte_t*>(
           view_as<std::uintptr_t>(data) + read_byte_pos);
 
-        if constexpr (val)
+        if constexpr (V)
         {
             *byte_value |= wanted_bit_value;
         }

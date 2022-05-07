@@ -16,10 +16,10 @@ namespace XKLib
     using pre_or_post_hook_vfunc_t = std::function<
       void(const ptr_t funcPtr, const ptr_t newFuncPtr)>;
 
-    template <std::size_t index_T, typename T = ptr_t>
+    template <std::size_t N, typename T = ptr_t>
     constexpr inline auto view_vfunc_as(const ptr_t* const vptr)
     {
-        return view_as<T>(vptr[index_T]);
+        return view_as<T>(vptr[N]);
     }
 
     template <typename T = ptr_t>
@@ -29,42 +29,35 @@ namespace XKLib
         return view_as<T>(vptr[index]);
     }
 
-    template <std::size_t index_T,
-              typename ret_type_T = void,
-              typename... args_T>
+    template <std::size_t N, typename T = void, typename... A>
     constexpr inline auto vfunc(const ptr_t* const vptr)
     {
 #ifdef WINDOWS
-        return view_vfunc_as<index_T,
-                             ret_type_T(__thiscall*)(ptr_t, args_T...)>(
-          vptr);
+        return view_vfunc_as<N, T(__thiscall*)(ptr_t, A...)>(vptr);
 #else
-        return view_vfunc_as<index_T, ret_type_T (*)(ptr_t, args_T...)>(
-          vptr);
+        return view_vfunc_as<N, T (*)(ptr_t, A...)>(vptr);
 #endif
     }
 
-    template <typename ret_type_T = void, typename... args_T>
+    template <typename T = void, typename... A>
     constexpr inline auto vfunc_dyn_index(ptr_t vptr,
                                           const std::size_t index)
     {
 #ifdef WINDOWS
-        return view_vfunc_dyn_index_as<ret_type_T(
-          __thiscall*)(ptr_t, args_T...)>(vptr, index);
+        return view_vfunc_dyn_index_as<T(__thiscall*)(ptr_t, A...)>(vptr,
+                                                                    index);
 #else
-        return view_vfunc_dyn_index_as<ret_type_T (*)(ptr_t, args_T...)>(
-          vptr,
-          index);
+        return view_vfunc_dyn_index_as<T (*)(ptr_t, A...)>(vptr, index);
 #endif
     }
 
     /**
      * Used for hooking
      */
-    template <std::size_t index_T, typename T = ptr_t>
-    constexpr inline auto vfunc_ptr(const ptr_t* const vptr)
+    template <std::size_t N, typename T = ptr_t>
+    constexpr inline auto vfunc_ptr(ptr_t* const vptr)
     {
-        return view_as<T>(&vptr[index_T]);
+        return view_as<T>(&vptr[N]);
     }
 
     template <typename T = ptr_t>
@@ -74,66 +67,58 @@ namespace XKLib
         return view_as<T>(&vptr[index]);
     }
 
-    template <std::size_t index_T,
-              typename ret_type_T = void,
-              typename... args_T>
+    template <std::size_t N, typename T = void, typename... A>
     constexpr inline auto call_vfunc(const ptr_t classPtr,
                                      const ptr_t* const vptr,
-                                     args_T... args)
+                                     A... args)
     {
-        return vfunc<index_T, ret_type_T, args_T...>(vptr)(classPtr,
-                                                           args...);
+        return vfunc<N, T, A...>(vptr)(classPtr, args...);
     }
 
-    template <typename ret_type_T = void, typename... args_T>
+    template <typename T = void, typename... A>
     constexpr inline auto call_vfunc_dyn_index(const ptr_t classPtr,
                                                const ptr_t* const vptr,
                                                std::size_t index,
-                                               args_T... args)
+                                               A... args)
     {
-        return vfunc_dyn_index<ret_type_T, args_T...>(vptr,
-                                                      index)(classPtr,
-                                                             args...);
+        return vfunc_dyn_index<T, A...>(vptr, index)(classPtr, args...);
     }
 
-    template <class T>
-    class VirtualTable : public T
+    template <class C>
+    class VirtualTable : public C
     {
       public:
-        template <std::size_t index_T,
-                  typename ret_type_T = void,
-                  typename... args_T>
+        template <std::size_t N, typename T = void, typename... A>
         constexpr inline auto callVFunc(const ptr_t* const vptr,
-                                        args_T... args)
+                                        A... args)
         {
-            return call_vfunc<index_T, ret_type_T, args_T...>(this,
-                                                              vptr,
-                                                              args...);
+            return call_vfunc<N, T, A...>(this, vptr, args...);
         }
 
-        template <typename ret_type_T = void, typename... args_T>
+        template <typename T = void, typename... A>
         constexpr inline auto callVfuncDynIndex(const ptr_t* const vptr,
                                                 const std::size_t index,
-                                                args_T... args)
+                                                A... args)
         {
-            return call_vfunc_dyn_index<ret_type_T, args_T...>(
-              vptr,
-              index)(this, vptr, index, args...);
+            return call_vfunc_dyn_index<T, A...>(vptr, index)(this,
+                                                              vptr,
+                                                              index,
+                                                              args...);
         }
     };
 
-    template <std::size_t index_T>
-    inline auto hook_vfunc(const ptr_t* const vptr,
+    template <std::size_t N>
+    inline auto hook_vfunc(ptr_t* const vptr,
                            const auto newFuncPtr,
                            const pre_or_post_hook_vfunc_t pre  = nullptr,
                            const pre_or_post_hook_vfunc_t post = nullptr)
     {
-        const auto funcPtr = vfunc_ptr<index_T, ptr_t*>(vptr);
+        const auto funcPtr = vfunc_ptr<N, ptr_t* const>(vptr);
 
         mapf_t flags;
         std::shared_ptr<ProcessMemoryArea> area;
 
-        if (funcPtr && *funcPtr && newFuncPtr)
+        if (funcPtr and *funcPtr and newFuncPtr)
         {
             if (pre)
             {
@@ -141,7 +126,8 @@ namespace XKLib
             }
             else
             {
-                const auto mmap = Process::self().mmap();
+                const auto process = Process::self();
+                const auto& mmap   = process.mmap();
 
                 area = mmap.search(funcPtr);
 

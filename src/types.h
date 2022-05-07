@@ -1,6 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <sys/cdefs.h>
 #define _MAKE_STRING(x) #x
 #define MAKE_STRING(x)  _MAKE_STRING(x)
 
@@ -28,14 +29,13 @@ namespace XKLib
     };
 
     template <typename T>
-    constexpr inline type_wrapper_t<T> type_wrapper {};
+    inline constexpr type_wrapper_t<T> type_wrapper {};
 
     template <typename T>
-    inline auto view_as(auto var)
+    __attribute__((__always_inline__)) constexpr auto view_as(auto var)
     {
         return (T)(var);
     }
-
 } // namespace XKLib
 
 #endif // TYPES_H

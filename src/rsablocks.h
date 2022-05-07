@@ -9,14 +9,14 @@ namespace XKLib
     class RSABlocks
     {
       public:
-        template <std::size_t rsa_key_size_T = 0x1000>
+        template <std::size_t N = 0x1000>
         static auto GenerateRSAPrivateKey()
         {
             using namespace CryptoPP;
             RSA::PrivateKey privateKey;
 
             AutoSeededRandomPool rng;
-            privateKey.GenerateRandomWithKeySize(rng, rsa_key_size_T);
+            privateKey.GenerateRandomWithKeySize(rng, N);
 
             return privateKey;
         }

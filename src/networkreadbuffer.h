@@ -15,26 +15,25 @@ namespace XKLib
         bool readBit();
         void pos(std::size_t toBit = 0);
 
-        template <typesize_t typesize = type_array>
+        template <typesize_t T = type_array>
         auto readVar()
         {
-            if constexpr (typesize == type_array)
+            if constexpr (T == type_array)
             {
-                static_assert(typesize != type_array,
+                static_assert(T != type_array,
                               "Can't read as type_array");
             }
             else
             {
-                g_v_t<typesize> var {};
+                g_v_t<T> var {};
 
-                for (std::size_t i = 0;
-                     i < sizeof(g_v_t<typesize>) * CHAR_BIT;
+                for (std::size_t i = 0; i < sizeof(g_v_t<T>) * CHAR_BIT;
                      i++)
                 {
                     if (readBit())
                     {
-                        var += view_as<g_v_t<typesize>>(1)
-                               << view_as<g_v_t<typesize>>(i);
+                        var += view_as<g_v_t<T>>(1)
+                               << view_as<g_v_t<T>>(i);
                     }
                 }
 

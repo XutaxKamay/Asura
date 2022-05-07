@@ -7,7 +7,8 @@
 namespace XKLib
 {
     class Task;
-    template <std::size_t stack_size_T>
+
+    template <std::size_t>
     class RunnableTask;
 
     using tasks_t     = std::list<Task>;

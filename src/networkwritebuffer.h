@@ -15,23 +15,22 @@ namespace XKLib
         void writeBit(bool value);
         void pos(std::size_t toBit = 0);
 
-        template <typesize_t typesize = type_array>
-        auto writeVar(g_v_t<typesize> var)
+        template <typesize_t T = type_array>
+        auto writeVar(g_v_t<T> var)
         {
-            if constexpr (typesize == type_array)
+            if constexpr (T == type_array)
             {
-                static_assert(typesize != type_array,
+                static_assert(T != type_array,
                               "Can't write as type_array");
             }
             else
             {
-                for (std::size_t i = 0;
-                     i < sizeof(g_v_t<typesize>) * CHAR_BIT;
+                for (std::size_t i = 0; i < sizeof(g_v_t<T>) * CHAR_BIT;
                      i++)
                 {
                     writeBit(var
-                                 & (view_as<g_v_t<typesize>>(1)
-                                    << view_as<g_v_t<typesize>>(i)) ?
+                                 & (view_as<g_v_t<T>>(1)
+                                    << view_as<g_v_t<T>>(i)) ?
                                true :
                                false);
                 }

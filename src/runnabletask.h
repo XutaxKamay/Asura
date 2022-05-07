@@ -7,7 +7,7 @@
 
 namespace XKLib
 {
-    template <std::size_t stack_size_T>
+    template <std::size_t N>
     class RunnableTask : public Task
     {
       public:
@@ -37,9 +37,9 @@ namespace XKLib
 #endif
     };
 
-    template <std::size_t stack_size_T>
-    RunnableTask<stack_size_T>::RunnableTask(ProcessBase processBase,
-                                             ptr_t routineAddress)
+    template <std::size_t N>
+    RunnableTask<N>::RunnableTask(ProcessBase processBase,
+                                  ptr_t routineAddress)
      : Task(processBase), _routine_address(routineAddress)
 #ifdef WINDOWS
        ,
@@ -49,18 +49,18 @@ namespace XKLib
         _base_stack = MemoryUtils::AllocArea(
           _process_base.id(),
           nullptr,
-          stack_size_T,
+          N,
           MemoryArea::ProtectionFlags::RW);
     }
 
-    template <std::size_t stack_size_T>
-    const auto& RunnableTask<stack_size_T>::routineAddress() const
+    template <std::size_t N>
+    const auto& RunnableTask<N>::routineAddress() const
     {
         return _routine_address;
     }
 
-    template <std::size_t stack_size_T>
-    auto RunnableTask<stack_size_T>::kill() const -> void
+    template <std::size_t N>
+    auto RunnableTask<N>::kill() const -> void
     {
 #ifdef WINDOWS
         if (!_thread_handle)
@@ -84,8 +84,8 @@ namespace XKLib
 #endif
     }
 
-    template <std::size_t stack_size_T>
-    auto RunnableTask<stack_size_T>::wait() const -> void
+    template <std::size_t N>
+    auto RunnableTask<N>::wait() const -> void
     {
 #ifdef WINDOWS
         if (!_thread_handle)
@@ -105,22 +105,20 @@ namespace XKLib
 #endif
     }
 
-    template <std::size_t stack_size_T>
-    const auto& RunnableTask<stack_size_T>::baseStack() const
+    template <std::size_t N>
+    const auto& RunnableTask<N>::baseStack() const
     {
         return _base_stack;
     }
 
-    template <std::size_t stack_size_T>
-    auto RunnableTask<stack_size_T>::freeStack() const -> void
+    template <std::size_t N>
+    auto RunnableTask<N>::freeStack() const -> void
     {
-        MemoryUtils::FreeArea(_process_base.id(),
-                              _base_stack,
-                              stack_size_T);
+        MemoryUtils::FreeArea(_process_base.id(), _base_stack, N);
     }
 
-    template <std::size_t stack_size_T>
-    auto RunnableTask<stack_size_T>::run() -> void
+    template <std::size_t N>
+    auto RunnableTask<N>::run() -> void
     {
 #ifdef WINDOWS
         const auto process_handle = OpenProcess(
@@ -139,7 +137,7 @@ namespace XKLib
         _thread_handle = CreateRemoteThread(
           process_handle,
           0,
-          stack_size_T,
+          N,
           view_as<LPTHREAD_START_ROUTINE>(_routine_address),
           0,
           0,
@@ -158,9 +156,8 @@ namespace XKLib
                       (CLONE_VM | CLONE_SIGHAND | CLONE_THREAD),
                       _routine_address,
                       reinterpret_cast<ptr_t>(
-                        reinterpret_cast<std::uintptr_t>(_base_stack)
-                        + stack_size_T),
-                      stack_size_T);
+                        reinterpret_cast<std::uintptr_t>(_base_stack) + N),
+                      N);
 
         if (_id == INVALID_ID)
         {
@@ -169,8 +166,8 @@ namespace XKLib
 #endif
     }
 
-    template <std::size_t stack_size_T>
-    auto& RunnableTask<stack_size_T>::routineAddress()
+    template <std::size_t N>
+    auto& RunnableTask<N>::routineAddress()
     {
         return _routine_address;
     }

@@ -8,7 +8,7 @@ namespace XKLib
 {
     class ProcessMemoryMap;
 
-    template <class MemoryArea_T = MemoryArea>
+    template <class C = MemoryArea>
     class MemoryMap
     {
         friend ProcessMemoryMap;
@@ -25,7 +25,7 @@ namespace XKLib
         }
 
       private:
-        std::vector<std::shared_ptr<MemoryArea_T>> _areas;
+        std::vector<std::shared_ptr<C>> _areas;
     };
 
 }

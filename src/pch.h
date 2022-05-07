@@ -26,6 +26,7 @@
 #include <list>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <random>
 #include <regex>
 #include <sstream>
@@ -37,7 +38,7 @@
 /* ELFIO, must be included early */
 #include <elfio/elfio.hpp>
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32) or defined(_WIN64)
     #define WINDOWS
     #if _WIN64
         #define ENVIRONMENT64
@@ -45,7 +46,7 @@
         #define ENVIRONMENT32
     #endif
 #elif defined(__GNUC__)
-    #if __x86_64__ || __ppc64__
+    #if __x86_64__ or __ppc64__
         #define ENVIRONMENT64
     #else
         #define ENVIRONMENT32

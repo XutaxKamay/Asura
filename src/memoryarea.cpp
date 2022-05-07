@@ -131,7 +131,7 @@ auto MemoryArea::ProtectionFlags::ToOS(const mapf_t flags) -> mapf_t
 
 auto MemoryArea::operator==(const MemoryArea& area) const -> bool
 {
-    return begin() == area.begin() && end() == area.end();
+    return begin() == area.begin() and end() == area.end();
 }
 
 auto XKLib::MemoryArea::name() const -> const std::string&
