@@ -105,32 +105,15 @@ auto XKLib::PatternScanning::searchV1(PatternByte& pattern,
             }
 
             /* if ((value & mask) == pattern_value) */
-#if defined(__AVX512F__)
-            if (!_mm512_cmpeq_epi64_mask(
-                  _mm512_and_si512(_mm512_loadu_si512(
-                                     view_as<simd_value_t*>(current_data)),
-                                   _mm512_load_si512(&mv.mask)),
-                  _mm512_load_si512(&mv.value)))
+            if (!mm_cmp_epi8_mask_simd(
+                  mm_and_simd(mm_loadu_simd(
+                                view_as<simd_value_t*>(current_data)),
+                              mm_load_simd(&mv.mask)),
+                  mm_load_simd(&mv.value)))
             {
                 goto skip;
             }
-#elif defined(__AVX2__)
-            if (_mm256_movemask_epi8(_mm256_cmpeq_epi64(
-                  _mm256_and_si256(_mm256_loadu_si256(
-                                     view_as<simd_value_t*>(current_data)),
-                                   _mm256_load_si256(&mv.mask)),
-                  _mm256_load_si256(&mv.value)))
-                != -1)
-            {
-                goto skip;
-            }
-#else
-            if ((*view_as<simd_value_t*>(current_data) & mv.mask)
-                != mv.value)
-            {
-                goto skip;
-            }
-#endif
+
             current_data += sizeof(simd_value_t);
         }
 
@@ -241,8 +224,10 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
 
         const auto mask              = it_mv->mask;
         const auto mismatch_byte_num = view_as<std::size_t>(
-          __builtin_ffsll(~mm_cmp_epi8_simd(
-            mm_and_simd(mm_loadu_simd(current_data), mask),
+          __builtin_ffsll(~mm_cmp_epi8_mask_simd(
+            mm_and_simd(mm_loadu_simd(
+                          view_as<simd_value_t*>(current_data)),
+                        mask),
             it_mv->value)));
 
         /* this part of the pattern mismatched ? */
@@ -291,8 +276,8 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
 
                 const auto match_byte_num = view_as<std::size_t>(
                   __builtin_ffsll(
-                    mm_cmp_epi8_simd(mm_and_simd(simd_tmp, mask),
-                                     it_mv->value)
+                    mm_cmp_epi8_mask_simd(mm_and_simd(simd_tmp, mask),
+                                          it_mv->value)
                     & (std::numeric_limits<std::uint64_t>::max()
                        << mismatch_byte_num)
                     & bit_mask));
@@ -321,9 +306,9 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
             while (it_mv != fast_aligned_mvs.end())
             {
                 const auto match_byte_num = view_as<std::size_t>(
-                  __builtin_ffsll(
-                    mm_cmp_epi8_simd(mm_and_simd(simd_tmp, it_mv->mask),
-                                     it_mv->value)));
+                  __builtin_ffsll(mm_cmp_epi8_mask_simd(
+                    mm_and_simd(simd_tmp, it_mv->mask),
+                    it_mv->value)));
 
                 /**
                  * Matched, we found the mismatched byte inside
@@ -434,8 +419,10 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
         }
 
         const auto mismatch_byte_num = view_as<std::size_t>(
-          __builtin_ffsll(~mm_cmp_epi8_simd(
-            mm_and_simd(mm_loadu_simd(current_data), it_mv->mask),
+          __builtin_ffsll(~mm_cmp_epi8_mask_simd(
+            mm_and_simd(mm_loadu_simd(
+                          view_as<simd_value_t*>(current_data)),
+                        it_mv->mask),
             it_mv->value)));
 
         /* this part of the pattern mismatched ? */
@@ -541,33 +528,15 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                 continue;
             }
 
-            /* if ((value & mask) == pattern_value) */
-#if defined(__AVX512F__)
-            if (!_mm512_cmpeq_epi64_mask(
-                  _mm512_and_si512(_mm512_load_si512(
-                                     view_as<simd_value_t*>(current_data)),
-                                   _mm512_load_si512(&mv.mask)),
-                  _mm512_load_si512(&mv.value)))
+            if (!mm_cmp_epi8_mask_simd(
+                  mm_and_simd(mm_load_simd(
+                                view_as<simd_value_t*>(current_data)),
+                              mm_load_simd(&mv.mask)),
+                  mm_load_simd(&mv.value)))
             {
                 goto skip;
             }
-#elif defined(__AVX2__)
-            if (_mm256_movemask_epi8(_mm256_cmpeq_epi64(
-                  _mm256_and_si256(_mm256_load_si256(
-                                     view_as<simd_value_t*>(current_data)),
-                                   _mm256_load_si256(&mv.mask)),
-                  _mm256_load_si256(&mv.value)))
-                != -1)
-            {
-                goto skip;
-            }
-#else
-            if ((*view_as<simd_value_t*>(current_data) & mv.mask)
-                != mv.value)
-            {
-                goto skip;
-            }
-#endif
+
             current_data += sizeof(simd_value_t);
         }
 
@@ -606,6 +575,10 @@ auto XKLib::PatternScanning::searchAlignedV2(PatternByte& pattern,
                         + std::to_string(sizeof(simd_value_t))
                         + " bytes");
     }
+
+    /**
+     * TODO:
+     */
 
     return matches.size() != old_matches_size;
 }

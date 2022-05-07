@@ -197,8 +197,9 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes,
 
                 const auto match_byte_num = view_as<std::size_t>(
                   __builtin_ffsll(
-                    mm_cmp_epi8_simd(mm_and_simd(simd_tmp, it_mv->mask),
-                                     it_mv->value)
+                    mm_cmp_epi8_mask_simd(mm_and_simd(simd_tmp,
+                                                      it_mv->mask),
+                                          it_mv->value)
                     & (std::numeric_limits<std::uint64_t>::max() << slot)
                     & bit_mask));
 
@@ -225,9 +226,9 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes,
             while (it_mv != _fast_aligned_mvs.end())
             {
                 const std::size_t match_byte_num = view_as<std::size_t>(
-                  __builtin_ffsll(
-                    mm_cmp_epi8_simd(mm_and_simd(simd_tmp, it_mv->mask),
-                                     it_mv->value)));
+                  __builtin_ffsll(mm_cmp_epi8_mask_simd(
+                    mm_and_simd(simd_tmp, it_mv->mask),
+                    it_mv->value)));
 
                 /**
                  * Matched, we found the (unknown ?) byte

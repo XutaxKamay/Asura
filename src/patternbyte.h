@@ -11,6 +11,8 @@ namespace XKLib
     using simd_value_t = __m512i;
 #elif defined(__AVX2__)
     using simd_value_t = __m256i;
+#elif defined(__SSE__)
+    using simd_value_t = __m64;
 #else
     using simd_value_t = std::uint64_t;
 #endif

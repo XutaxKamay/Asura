@@ -226,10 +226,11 @@ namespace XKLib
                                                  const std::size_t size)
           -> std::vector<A>
         {
-            std::vector<A> result(AlignToPageSize(size, sizeof(A)));
+            std::vector<A> result(
+              AlignToPageSize(size + (sizeof(A) * 2), sizeof(A)));
 
 #ifndef WINDOWS
-            const iovec local  = { .iov_base = result.data(),
+            const iovec local  = { .iov_base = result.data() + 1,
                                    .iov_len  = result.size() * sizeof(A) };
             const iovec remote = { .iov_base = view_as<ptr_t>(address),
                                    .iov_len = result.size() * sizeof(A) };

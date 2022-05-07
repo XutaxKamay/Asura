@@ -20,7 +20,7 @@ namespace XKLib
 #elif defined(__SSE__)
         return _mm_set1_pi8(xx);
 #else
-        XKLIB_SIMD_THROW_ERROR
+        return 0;
 #endif
     }
 
@@ -34,20 +34,31 @@ namespace XKLib
 #elif defined(__SSE__)
         return _mm_movemask_pi8(mm1);
 #else
-        XKLIB_SIMD_THROW_ERROR
+        /* Search cross-platform builtin for this */
+        std::int8_t ret = 0;
+
+        for (std::int8_t i = 0; i < sizeof(mm1); i++)
+        {
+            if (view_as<byte_t*>(mm1)[i] & 0x40)
+            {
+                ret |= 1 << i;
+            }
+        }
+
+        return ret;
 #endif
     }
 
-    inline auto mm_cmp_epi8_simd(const auto mm1, const auto mm2)
+    inline auto mm_cmp_epi8_mask_simd(const auto mm1, const auto mm2)
     {
 #if defined(__AVX512F__)
         return _mm512_cmpeq_epi8_mask(mm1, mm2);
 #elif defined(__AVX2__)
         return mm_movemask_epi8(_mm256_cmpeq_epi8(mm1, mm2));
 #elif defined(__SSE__)
-        return _mm_movemask_pi8(_mm_cmpeq_pi8(mm1, mm2));
+        return mm_movemask_epi8(_mm_cmpeq_pi8(mm1, mm2));
 #else
-        XKLIB_SIMD_THROW_ERROR
+        return mm1 == mm2;
 #endif
     }
 
@@ -60,7 +71,7 @@ namespace XKLib
 #elif defined(__SSE__)
         return _mm_and_si64(mm1, mm2);
 #else
-        XKLIB_SIMD_THROW_ERROR
+        return mm1 & mm2;
 #endif
     }
 
@@ -71,9 +82,9 @@ namespace XKLib
 #elif defined(__AVX2__)
         return _mm256_load_si256(view_as<__m256i*>(mm1));
 #elif defined(__SSE__)
-        return _mm_cvtsi64_m64(*view_as<std::int64_t*>(mm1));
+        return *mm1;
 #else
-        XKLIB_SIMD_THROW_ERROR
+        return *mm1;
 #endif
     }
 
@@ -84,9 +95,9 @@ namespace XKLib
 #elif defined(__AVX2__)
         return _mm256_loadu_si256(view_as<__m256i*>(mm1));
 #elif defined(__SSE__)
-        return _mm_cvtsi64_m64(*view_as<std::int64_t*>(mm1));
+        return *mm1;
 #else
-        XKLIB_SIMD_THROW_ERROR
+        return *mm1;
 #endif
     }
 }

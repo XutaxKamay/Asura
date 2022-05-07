@@ -55,9 +55,16 @@ namespace XKLib
         {
             if (ProcessBase::self().id() == _process_base.id())
             {
+                /**
+                 * Be sure there's enough memory for pattern scanning to
+                 * avoid crashes
+                 */
                 const std::vector<T> result(
-                  MemoryUtils::AlignToPageSize(size(), sizeof(T)));
-                std::copy(result.begin(), result.end(), begin<T*>());
+                  MemoryUtils::AlignToPageSize(size() + (sizeof(T) * 2),
+                                               sizeof(T)));
+                std::copy(result.begin() + 1,
+                          result.end() - 1,
+                          begin<T*>());
                 return result;
             }
 
