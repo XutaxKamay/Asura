@@ -20,7 +20,7 @@ namespace XKLib
 #elif defined(__SSE__)
         return _mm_set1_pi8(xx);
 #else
-        return 0;
+        return xx;
 #endif
     }
 
@@ -35,11 +35,11 @@ namespace XKLib
         return _mm_movemask_pi8(mm1);
 #else
         /* Search cross-platform builtin for this */
-        std::int8_t ret = 0;
+        typename std::remove_cv<decltype(mm1)>::type ret = 0;
 
-        for (std::int8_t i = 0; i < sizeof(mm1); i++)
+        for (std::size_t i = 0; i < sizeof(mm1); i++)
         {
-            if (view_as<byte_t*>(mm1)[i] & 0x40)
+            if (view_as<byte_t*>(&mm1)[i] & 0x40)
             {
                 ret |= 1 << i;
             }
@@ -58,7 +58,23 @@ namespace XKLib
 #elif defined(__SSE__)
         return mm_movemask_epi8(_mm_cmpeq_pi8(mm1, mm2));
 #else
-        return mm1 == mm2;
+        static_assert(sizeof(mm1) == sizeof(mm2), "not same size");
+
+        typename std::remove_cv<decltype(mm1)>::type result;
+
+        for (std::size_t i = 0; i < sizeof(mm1); i++)
+        {
+            if (view_as<byte_t*>(&mm1)[i] == view_as<byte_t*>(&mm2)[i])
+            {
+                view_as<byte_t*>(&result)[i] = 0xFF;
+            }
+            else
+            {
+                view_as<byte_t*>(&result)[i] = 0x00;
+            }
+        }
+
+        return mm_movemask_epi8(result);
 #endif
     }
 

@@ -91,4 +91,6 @@
 #include "vendor/cryptopp/sha.h"
 #include "vendor/cryptopp/zlib.h"
 
+#undef __SSE__
+
 #endif
