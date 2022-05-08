@@ -155,8 +155,8 @@ namespace XKLib
                       _process_base.id(),
                       (CLONE_VM | CLONE_SIGHAND | CLONE_THREAD),
                       _routine_address,
-                      reinterpret_cast<ptr_t>(
-                        reinterpret_cast<std::uintptr_t>(_base_stack) + N),
+                      view_as<ptr_t>(view_as<std::uintptr_t>(_base_stack)
+                                     + N),
                       N);
 
         if (_id == INVALID_ID)

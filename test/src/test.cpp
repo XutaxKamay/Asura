@@ -482,7 +482,7 @@ auto XKLib::Test::run() -> void
     Timer timer {};
 
     auto aligned_memory = align_alloc<data_t>(size_of_random * 8,
-                                              sizeof(simd_value_t));
+                                              sizeof(SIMD::value_t));
 
     try
     {
@@ -543,14 +543,14 @@ auto XKLib::Test::run() -> void
                         size_of_random - 1);
         }
 
-        auto random_start = sizeof(simd_value_t)
+        auto random_start = sizeof(SIMD::value_t)
                             + rand()
                                 % ((size_of_random * 8)
                                    - pattern_bytes.size()
-                                   - sizeof(simd_value_t));
+                                   - sizeof(SIMD::value_t));
 
         random_start = MemoryUtils::Align(random_start,
-                                          sizeof(simd_value_t));
+                                          sizeof(SIMD::value_t));
 
         const auto end = random_start + pattern_bytes.size();
 
@@ -574,6 +574,7 @@ auto XKLib::Test::run() -> void
                                       nullptr);
         }
 
+        ConsoleOutput("size: ") << pattern.matches().size() << "\n";
         pattern.matches().resize(pattern.matches().size() - 20);
 
         timer.end();
@@ -597,6 +598,7 @@ auto XKLib::Test::run() -> void
                                       nullptr);
         }
 
+        ConsoleOutput("size: ") << pattern.matches().size() << "\n";
         pattern.matches().resize(pattern.matches().size() - 20);
 
         timer.end();
@@ -620,6 +622,7 @@ auto XKLib::Test::run() -> void
                                       nullptr);
         }
 
+        ConsoleOutput("size: ") << pattern.matches().size() << "\n";
         pattern.matches().resize(pattern.matches().size() - 20);
 
         timer.end();
@@ -643,6 +646,7 @@ auto XKLib::Test::run() -> void
                                       nullptr);
         }
 
+        ConsoleOutput("size: ") << pattern.matches().size() << "\n";
         pattern.matches().resize(pattern.matches().size() - 20);
 
         timer.end();
@@ -666,6 +670,7 @@ auto XKLib::Test::run() -> void
                                              nullptr);
         }
 
+        ConsoleOutput("size: ") << pattern.matches().size() << "\n";
         pattern.matches().resize(pattern.matches().size() - 20);
 
         timer.end();

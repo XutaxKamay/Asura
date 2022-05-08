@@ -72,7 +72,7 @@ namespace XKLib
          * TODO:
          * 1) Align even more memory before processing (like center around
          * a page size) 2) Or check when the data left to read is smaller
-         * than simd_value_t.
+         * than SIMD::value_t.
          *
          * NOTE:
          * 1) Chosen for performance, check processmemoryarea.h

@@ -15,16 +15,16 @@ auto XKLib::PatternScanning::searchInProcess(
     auto(PatternByte&, const data_t, const std::size_t, const ptr_t)
       ->bool>& searchMethod) -> void
 {
-    const auto& mmap     = process.mmap();
-    const auto& areaName = pattern.areaName();
+    const auto& mmap      = process.mmap();
+    const auto& area_name = pattern.areaName();
 
-    if (areaName.empty())
+    if (area_name.empty())
     {
         for (const auto& area : mmap.areas())
         {
             if (area->isReadable())
             {
-                const auto area_read = area->read<simd_value_t>();
+                const auto area_read = area->read<SIMD::value_t>();
                 searchMethod(pattern,
                              view_as<const data_t>(area_read.data()),
                              area->size(),
@@ -34,7 +34,7 @@ auto XKLib::PatternScanning::searchInProcess(
     }
     else
     {
-        searchInProcessWithAreaName(pattern, process, areaName);
+        searchInProcessWithAreaName(pattern, process, area_name);
     }
 }
 
@@ -53,7 +53,7 @@ auto XKLib::PatternScanning::searchInProcessWithAreaName(
         if (area->isReadable()
             and (area->name().find(areaName) != std::string::npos))
         {
-            auto area_read = area->read<simd_value_t>();
+            auto area_read = area->read<SIMD::value_t>();
             searchMethod(pattern,
                          view_as<data_t>(area_read.data()),
                          area->size(),
@@ -67,10 +67,11 @@ auto XKLib::PatternScanning::searchV1(PatternByte& pattern,
                                       const std::size_t size,
                                       const ptr_t baseAddress) -> bool
 {
-    if (size < sizeof(simd_value_t) or (size % sizeof(simd_value_t) != 0))
+    if (size < sizeof(SIMD::value_t)
+        or (size % sizeof(SIMD::value_t) != 0))
     {
         XKLIB_EXCEPTION("Size must be aligned to "
-                        + std::to_string(sizeof(simd_value_t))
+                        + std::to_string(sizeof(SIMD::value_t))
                         + " bytes");
     }
 
@@ -79,14 +80,14 @@ auto XKLib::PatternScanning::searchV1(PatternByte& pattern,
     const auto old_matches_size  = matches.size();
     const auto& pattern_bytes    = pattern.bytes();
     const auto pattern_size      = pattern_bytes.size();
-    const auto& fast_aligned_mvs = pattern.fastAlignedMVs();
+    const auto& simd_aligned_mvs = pattern.SIMDAlignedMVs();
 
     data_t start_data   = data;
     data_t current_data = data;
 
     while (current_data + pattern_size <= data + size)
     {
-        for (const auto& mv : fast_aligned_mvs)
+        for (const auto& mv : simd_aligned_mvs)
         {
             /**
              * Fast check if they are all unknown bytes
@@ -99,22 +100,22 @@ auto XKLib::PatternScanning::searchV1(PatternByte& pattern,
                  * We know that it is always the same amount of bytes in
                  * all cases due to pre-processing
                  */
-                current_data += sizeof(simd_value_t);
+                current_data += sizeof(SIMD::value_t);
 
                 continue;
             }
 
             /* if ((value & mask) == pattern_value) */
-            if (!mm_cmp_epi8_mask_simd(
-                  mm_and_simd(mm_loadu_simd(
-                                view_as<simd_value_t*>(current_data)),
-                              mm_load_simd(&mv.mask)),
-                  mm_load_simd(&mv.value)))
+            if (!SIMD::CMPMask8bits(
+                  SIMD::And(SIMD::LoadUnaligned(
+                              view_as<SIMD::value_t*>(current_data)),
+                            mv.mask),
+                  mv.value))
             {
                 goto skip;
             }
 
-            current_data += sizeof(simd_value_t);
+            current_data += sizeof(SIMD::value_t);
         }
 
         matches.push_back(
@@ -176,10 +177,11 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
                                       const std::size_t size,
                                       const ptr_t baseAddress) -> bool
 {
-    if (size < sizeof(simd_value_t) or (size % sizeof(simd_value_t) != 0))
+    if (size < sizeof(SIMD::value_t)
+        or (size % sizeof(SIMD::value_t) != 0))
     {
         XKLIB_EXCEPTION("Size must be aligned to "
-                        + std::to_string(sizeof(simd_value_t))
+                        + std::to_string(sizeof(SIMD::value_t))
                         + " bytes");
     }
 
@@ -187,7 +189,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
     const auto old_matches_size  = matches.size();
     const auto& pattern_bytes    = pattern.bytes();
     const auto pattern_size      = pattern_bytes.size();
-    const auto& fast_aligned_mvs = pattern.fastAlignedMVs();
+    const auto& simd_aligned_mvs = pattern.SIMDAlignedMVs();
 
     data_t start_data   = data + size - pattern_size;
     data_t current_data = start_data;
@@ -195,7 +197,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
     /**
      * Reversed Boyer Moore variant starts from the start of the pattern
      */
-    auto it_mv = fast_aligned_mvs.begin();
+    auto it_mv = simd_aligned_mvs.begin();
 
     while (current_data >= data + pattern_size)
     {
@@ -216,7 +218,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
              * We know that it is always the same amount of bytes in
              * all cases due to pre-processing
              */
-            current_data += sizeof(simd_value_t);
+            current_data += sizeof(SIMD::value_t);
             it_mv++;
 
             continue;
@@ -224,15 +226,15 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
 
         const auto mask              = it_mv->mask;
         const auto mismatch_byte_num = view_as<std::size_t>(
-          __builtin_ffsll(~mm_cmp_epi8_mask_simd(
-            mm_and_simd(mm_loadu_simd(
-                          view_as<simd_value_t*>(current_data)),
-                        mask),
+          __builtin_ffsll(~SIMD::CMPMask8bits(
+            SIMD::And(SIMD::LoadUnaligned(
+                        view_as<SIMD::value_t*>(current_data)),
+                      mask),
             it_mv->value)));
 
         /* this part of the pattern mismatched ? */
         if (mismatch_byte_num > 0
-            and mismatch_byte_num <= sizeof(simd_value_t))
+            and mismatch_byte_num <= sizeof(SIMD::value_t))
         {
             /**
              * We got a mismatch, we need to re-align pattern / adjust
@@ -240,7 +242,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
              */
 
             /* get the mismatched byte */
-            const auto simd_tmp = mm_set_epi8_simd(
+            const auto simd_tmp = SIMD::Set8bits(
               view_as<char>(*(current_data + mismatch_byte_num - 1)));
 
             std::size_t to_skip;
@@ -260,24 +262,25 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
 
                 constexpr auto bit_mask = []() constexpr
                 {
-                    static_assert(sizeof(simd_value_t) <= 64,
-                                  "simd_value_t is bigger than 64 bytes");
+                    static_assert(sizeof(SIMD::value_t) <= 64,
+                                  "SIMD::value_t is bigger than 64 "
+                                  "bytes");
 
-                    if constexpr (sizeof(simd_value_t) == 64)
+                    if constexpr (sizeof(SIMD::value_t) == 64)
                     {
                         return std::numeric_limits<std::uint64_t>::max();
                     }
-                    else if constexpr (sizeof(simd_value_t) < 64)
+                    else if constexpr (sizeof(SIMD::value_t) < 64)
                     {
-                        return (1ull << sizeof(simd_value_t)) - 1ull;
+                        return (1ull << sizeof(SIMD::value_t)) - 1ull;
                     }
                 }
                 ();
 
                 const auto match_byte_num = view_as<std::size_t>(
                   __builtin_ffsll(
-                    mm_cmp_epi8_mask_simd(mm_and_simd(simd_tmp, mask),
-                                          it_mv->value)
+                    SIMD::CMPMask8bits(SIMD::And(simd_tmp, mask),
+                                       it_mv->value)
                     & (std::numeric_limits<std::uint64_t>::max()
                        << mismatch_byte_num)
                     & bit_mask));
@@ -303,12 +306,12 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
             it_mv++;
 
             /* then search inside the rest of the pattern */
-            while (it_mv != fast_aligned_mvs.end())
+            while (it_mv != simd_aligned_mvs.end())
             {
                 const auto match_byte_num = view_as<std::size_t>(
-                  __builtin_ffsll(mm_cmp_epi8_mask_simd(
-                    mm_and_simd(simd_tmp, it_mv->mask),
-                    it_mv->value)));
+                  __builtin_ffsll(
+                    SIMD::CMPMask8bits(SIMD::And(simd_tmp, it_mv->mask),
+                                       it_mv->value)));
 
                 /**
                  * Matched, we found the mismatched byte inside
@@ -337,7 +340,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
             start_data -= to_skip;
 
             /* start from the beginning */
-            it_mv = fast_aligned_mvs.begin();
+            it_mv = simd_aligned_mvs.begin();
 
             /* apply new cursor position */
             current_data = start_data;
@@ -345,7 +348,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
         else
         {
             /* did we found our stuff ? */
-            if (it_mv == std::prev(fast_aligned_mvs.end()))
+            if (it_mv == std::prev(simd_aligned_mvs.end()))
             {
                 matches.push_back(view_as<ptr_t>(
                   view_as<std::uintptr_t>(baseAddress)
@@ -354,7 +357,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
                 /* set new data cursor at data cursor - 1 */
                 start_data--;
                 current_data = start_data;
-                it_mv        = fast_aligned_mvs.begin();
+                it_mv        = simd_aligned_mvs.begin();
             }
             else
             {
@@ -372,10 +375,11 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
                                       const std::size_t size,
                                       const ptr_t baseAddress) -> bool
 {
-    if (size < sizeof(simd_value_t) or (size % sizeof(simd_value_t) != 0))
+    if (size < sizeof(SIMD::value_t)
+        or (size % sizeof(SIMD::value_t) != 0))
     {
         XKLIB_EXCEPTION("Size must be aligned to "
-                        + std::to_string(sizeof(simd_value_t))
+                        + std::to_string(sizeof(SIMD::value_t))
                         + " bytes");
     }
 
@@ -383,7 +387,7 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
     const auto old_matches_size  = matches.size();
     const auto& pattern_bytes    = pattern.bytes();
     const auto pattern_size      = pattern_bytes.size();
-    const auto& fast_aligned_mvs = pattern.fastAlignedMVs();
+    const auto& simd_aligned_mvs = pattern.SIMDAlignedMVs();
 
     data_t start_data   = data + size - pattern_size;
     data_t current_data = start_data;
@@ -391,7 +395,7 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
     /**
      * Reversed Boyer Moore variant starts from the start of the pattern
      */
-    auto it_mv = fast_aligned_mvs.begin();
+    auto it_mv = simd_aligned_mvs.begin();
 
     while (current_data >= data + pattern_size)
     {
@@ -412,22 +416,22 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
              * We know that it is always the same amount of bytes in
              * all cases due to pre-processing
              */
-            current_data += sizeof(simd_value_t);
+            current_data += sizeof(SIMD::value_t);
             it_mv++;
 
             continue;
         }
 
         const auto mismatch_byte_num = view_as<std::size_t>(
-          __builtin_ffsll(~mm_cmp_epi8_mask_simd(
-            mm_and_simd(mm_loadu_simd(
-                          view_as<simd_value_t*>(current_data)),
-                        it_mv->mask),
+          __builtin_ffsll(~SIMD::CMPMask8bits(
+            SIMD::And(SIMD::LoadUnaligned(
+                        view_as<SIMD::value_t*>(current_data)),
+                      it_mv->mask),
             it_mv->value)));
 
         /* this part of the pattern mismatched ? */
         if (mismatch_byte_num > 0
-            and mismatch_byte_num <= sizeof(simd_value_t))
+            and mismatch_byte_num <= sizeof(SIMD::value_t))
         {
             /**
              * We got a mismatch, we need to re-align pattern / adjust
@@ -444,7 +448,7 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
             start_data -= pattern.skip_table[misbyte][pattern_index];
 
             /* start from the beginning */
-            it_mv = fast_aligned_mvs.begin();
+            it_mv = simd_aligned_mvs.begin();
 
             /* apply new cursor position */
             current_data = start_data;
@@ -452,7 +456,7 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
         else
         {
             /* did we found our stuff ? */
-            if (it_mv == std::prev(fast_aligned_mvs.end()))
+            if (it_mv == std::prev(simd_aligned_mvs.end()))
             {
                 matches.push_back(view_as<ptr_t>(
                   view_as<std::uintptr_t>(baseAddress)
@@ -461,7 +465,7 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
                 /* set new data cursor at data cursor - 1 */
                 start_data--;
                 current_data = start_data;
-                it_mv        = fast_aligned_mvs.begin();
+                it_mv        = simd_aligned_mvs.begin();
             }
             else
             {
@@ -480,10 +484,11 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                                              const ptr_t baseAddress)
   -> bool
 {
-    if (size < sizeof(simd_value_t) or (size % sizeof(simd_value_t) != 0))
+    if (size < sizeof(SIMD::value_t)
+        or (size % sizeof(SIMD::value_t) != 0))
     {
         XKLIB_EXCEPTION("Size must be aligned to "
-                        + std::to_string(sizeof(simd_value_t))
+                        + std::to_string(sizeof(SIMD::value_t))
                         + " bytes");
     }
 
@@ -491,13 +496,13 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
     auto&& matches               = pattern.matches();
     const auto old_matches_size  = matches.size();
     const auto pattern_size      = pattern_bytes.size();
-    const auto& fast_aligned_mvs = pattern.fastAlignedMVs();
+    const auto& simd_aligned_mvs = pattern.SIMDAlignedMVs();
 
-    if ((view_as<std::uintptr_t>(aligned_data) % sizeof(simd_value_t))
+    if ((view_as<std::uintptr_t>(aligned_data) % sizeof(SIMD::value_t))
         != 0)
     {
         XKLIB_EXCEPTION("Buffer is not aligned to "
-                        + std::to_string(sizeof(simd_value_t))
+                        + std::to_string(sizeof(SIMD::value_t))
                         + " bytes");
     }
 
@@ -511,7 +516,7 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
      */
     while (current_data + pattern_size <= aligned_data + size)
     {
-        for (const auto& mv : fast_aligned_mvs)
+        for (const auto& mv : simd_aligned_mvs)
         {
             /**
              * Fast check if they are all unknown bytes
@@ -524,20 +529,20 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                  * We know that it is always the same amount of bytes in
                  * all cases due to pre-processing
                  */
-                current_data += sizeof(simd_value_t);
+                current_data += sizeof(SIMD::value_t);
                 continue;
             }
 
-            if (!mm_cmp_epi8_mask_simd(
-                  mm_and_simd(mm_load_simd(
-                                view_as<simd_value_t*>(current_data)),
-                              mm_load_simd(&mv.mask)),
-                  mm_load_simd(&mv.value)))
+            if (!SIMD::CMPMask8bits(
+                  SIMD::And(SIMD::Load(
+                              view_as<SIMD::value_t*>(current_data)),
+                            mv.mask),
+                  mv.value))
             {
                 goto skip;
             }
 
-            current_data += sizeof(simd_value_t);
+            current_data += sizeof(SIMD::value_t);
         }
 
         matches.push_back(view_as<ptr_t>(
@@ -545,7 +550,7 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
           + view_as<std::uintptr_t>(start_data - aligned_data)));
 
     skip:
-        start_data += sizeof(simd_value_t);
+        start_data += sizeof(SIMD::value_t);
         current_data = start_data;
     }
 
@@ -558,21 +563,22 @@ auto XKLib::PatternScanning::searchAlignedV2(PatternByte& pattern,
                                              const ptr_t /*baseAddress*/)
   -> bool
 {
-    if (size < sizeof(simd_value_t) or (size % sizeof(simd_value_t) != 0))
+    if (size < sizeof(SIMD::value_t)
+        or (size % sizeof(SIMD::value_t) != 0))
     {
         XKLIB_EXCEPTION("Size must be aligned to "
-                        + std::to_string(sizeof(simd_value_t))
+                        + std::to_string(sizeof(SIMD::value_t))
                         + " bytes");
     }
 
     auto&& matches              = pattern.matches();
     const auto old_matches_size = matches.size();
 
-    if ((view_as<std::uintptr_t>(aligned_data) % sizeof(simd_value_t))
+    if ((view_as<std::uintptr_t>(aligned_data) % sizeof(SIMD::value_t))
         != 0)
     {
         XKLIB_EXCEPTION("Buffer is not aligned to "
-                        + std::to_string(sizeof(simd_value_t))
+                        + std::to_string(sizeof(SIMD::value_t))
                         + " bytes");
     }
 

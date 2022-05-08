@@ -20,7 +20,7 @@ namespace XKLib
     {
       public:
         /* 64 bits because of -1 */
-        using value_t = int64_t;
+        using value_t = std::int64_t;
 
         using bit_path_t = std::bitset<std::numeric_limits<T>::max() + 1>;
 
@@ -535,7 +535,7 @@ auto XKLib::XKC<T>::encode(const data_t data, const std::size_t size)
     const auto tmp = view_as<std::uint32_t>(alphabet.size());
     const auto bytes_max_alphabet_size = view_as<byte_t*>(&tmp);
 
-    for (std::size_t i = 0; i < sizeof(uint32_t); i++)
+    for (std::size_t i = 0; i < sizeof(std::uint32_t); i++)
     {
         result.push_back(bytes_max_alphabet_size[i]);
     }
@@ -623,7 +623,7 @@ auto XKLib::XKC<T>::encode(const data_t data, const std::size_t size)
 
     const auto bytes_written_bits = view_as<byte_t*>(&written_bits);
 
-    for (std::size_t i = 0; i < sizeof(uint32_t); i++)
+    for (std::size_t i = 0; i < sizeof(std::uint32_t); i++)
     {
         result.push_back(bytes_written_bits[i]);
     }
@@ -646,7 +646,7 @@ auto XKLib::XKC<T>::decode(const data_t data, const std::size_t size)
     std::size_t read_bytes = 0;
 
     auto written_bits = *view_as<std::uint32_t*>(
-      view_as<std::uintptr_t>(data) + size - sizeof(uint32_t));
+      view_as<std::uintptr_t>(data) + size - sizeof(std::uint32_t));
 
     if (written_bits / CHAR_BIT >= size)
     {
@@ -657,7 +657,7 @@ auto XKLib::XKC<T>::decode(const data_t data, const std::size_t size)
     read_bytes += sizeof(byte_t);
 
     const auto alphabet_size = *view_as<std::uint32_t*>(&data[read_bytes]);
-    read_bytes += sizeof(uint32_t);
+    read_bytes += sizeof(std::uint32_t);
 
     alphabet_t alphabet;
 
@@ -727,7 +727,7 @@ auto XKLib::XKC<T>::decode(const data_t data, const std::size_t size)
             count |= read_bit() << count_bit;
         }
 
-        for (uint32_t depth_bit = 0; depth_bit < max_depth_bits;
+        for (std::uint32_t depth_bit = 0; depth_bit < max_depth_bits;
              depth_bit++)
         {
             path_info.depth |= read_bit() << depth_bit;

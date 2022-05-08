@@ -12,7 +12,7 @@ namespace XKLib
     class RunnableTask;
 
     using tasks_t     = std::list<Task>;
-    using thread_id_t = int64_t;
+    using thread_id_t = std::int64_t;
 
     class Task
     {

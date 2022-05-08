@@ -3,6 +3,7 @@
 
 #include "bits.h"
 #include "types.h"
+#include <cstdint>
 
 namespace XKLib
 {
@@ -100,13 +101,13 @@ namespace XKLib
         else if constexpr (T == type_64us)
             return type_wrapper<std::uint64_t>;
         else if constexpr (T == type_8s)
-            return type_wrapper<char>;
+            return type_wrapper<std::int8_t>;
         else if constexpr (T == type_16s)
-            return type_wrapper<int16_t>;
+            return type_wrapper<std::int16_t>;
         else if constexpr (T == type_32s)
-            return type_wrapper<int32_t>;
+            return type_wrapper<std::int32_t>;
         else if constexpr (T == type_64s)
-            return type_wrapper<int64_t>;
+            return type_wrapper<std::int64_t>;
         else if constexpr (T == type_array)
             return type_wrapper<data_t>;
         else if constexpr (T == type_float)

@@ -34,7 +34,7 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes,
     /* known bytes for org values */
     std::vector<byte_t> known_bytes;
     /* mask - values */
-    simd_value_t simd_value {}, simd_mask {};
+    SIMD::value_t simd_value {}, simd_mask {};
 
     for (auto&& byte : _bytes)
     {
@@ -76,10 +76,10 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes,
         byte_simd_index++;
 
         /* do wo we got a full simd value here */
-        if (byte_simd_index >= sizeof(simd_value_t))
+        if (byte_simd_index >= sizeof(SIMD::value_t))
         {
-            _fast_aligned_mvs.push_back(
-              { simd_mask, simd_value, sizeof(simd_value_t), false });
+            _simd_aligned_mvs.push_back(
+              { simd_mask, simd_value, sizeof(SIMD::value_t), false });
 
             /* reset values */
             std::memset(&simd_value, 0, sizeof(simd_value));
@@ -100,13 +100,13 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes,
      */
     if (byte_simd_index > 0)
     {
-        _fast_aligned_mvs.push_back(
+        _simd_aligned_mvs.push_back(
           { simd_mask, simd_value, byte_simd_index, false });
     }
 
-    for (auto&& mv : _fast_aligned_mvs)
+    for (auto&& mv : _simd_aligned_mvs)
     {
-        if (mm_movemask_epi8(mm_load_simd(&mv.mask)) == 0)
+        if (SIMD::MoveMask8bits(SIMD::Load(&mv.mask)) == 0)
         {
             mv.can_skip = true;
         }
@@ -158,17 +158,17 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes,
 #endif
 
         /* Get the asked byte */
-        const auto simd_tmp = mm_set_epi8_simd(view_as<char>(i));
+        const auto simd_tmp = SIMD::Set8bits(view_as<char>(i));
 
         for (std::size_t j = 0; j < _bytes.size(); j++)
         {
-            const auto part      = (j + 1) / sizeof(simd_value_t);
-            const auto prev_part = j / sizeof(simd_value_t);
-            const auto slot      = (j + 1) % sizeof(simd_value_t);
-            const auto prev_slot = j % sizeof(simd_value_t);
+            const auto part      = (j + 1) / sizeof(SIMD::value_t);
+            const auto prev_part = j / sizeof(SIMD::value_t);
+            const auto slot      = (j + 1) % sizeof(SIMD::value_t);
+            const auto prev_slot = j % sizeof(SIMD::value_t);
             auto ptr_cur_skip    = &skip_table[i][j];
 
-            auto it_mv = _fast_aligned_mvs.begin() + part;
+            auto it_mv = _simd_aligned_mvs.begin() + part;
 
             /**
              * Do no enter if we entered in a new part
@@ -180,26 +180,25 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes,
                  */
                 constexpr auto bit_mask = []() constexpr
                 {
-                    static_assert(sizeof(simd_value_t) <= 64,
-                                  "simd_value_t is bigger than 64 "
+                    static_assert(sizeof(SIMD::value_t) <= 64,
+                                  "SIMD::value_t is bigger than 64 "
                                   "bytes");
 
-                    if constexpr (sizeof(simd_value_t) == 64)
+                    if constexpr (sizeof(SIMD::value_t) == 64)
                     {
                         return std::numeric_limits<std::uint64_t>::max();
                     }
-                    else if constexpr (sizeof(simd_value_t) < 64)
+                    else if constexpr (sizeof(SIMD::value_t) < 64)
                     {
-                        return (1ull << sizeof(simd_value_t)) - 1ull;
+                        return (1ull << sizeof(SIMD::value_t)) - 1ull;
                     }
                 }
                 ();
 
                 const auto match_byte_num = view_as<std::size_t>(
                   __builtin_ffsll(
-                    mm_cmp_epi8_mask_simd(mm_and_simd(simd_tmp,
-                                                      it_mv->mask),
-                                          it_mv->value)
+                    SIMD::CMPMask8bits(SIMD::And(simd_tmp, it_mv->mask),
+                                       it_mv->value)
                     & (std::numeric_limits<std::uint64_t>::max() << slot)
                     & bit_mask));
 
@@ -223,12 +222,12 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes,
             }
 
             /* Then search inside the rest of the pattern */
-            while (it_mv != _fast_aligned_mvs.end())
+            while (it_mv != _simd_aligned_mvs.end())
             {
                 const std::size_t match_byte_num = view_as<std::size_t>(
-                  __builtin_ffsll(mm_cmp_epi8_mask_simd(
-                    mm_and_simd(simd_tmp, it_mv->mask),
-                    it_mv->value)));
+                  __builtin_ffsll(
+                    SIMD::CMPMask8bits(SIMD::And(simd_tmp, it_mv->mask),
+                                       it_mv->value)));
 
                 /**
                  * Matched, we found the (unknown ?) byte
@@ -291,10 +290,10 @@ auto XKLib::PatternByte::vecOrganizedValues() const
     return _vec_organized_values;
 }
 
-auto XKLib::PatternByte::fastAlignedMVs() const
+auto XKLib::PatternByte::SIMDAlignedMVs() const
   -> const std::vector<simd_mv_t>&
 {
-    return _fast_aligned_mvs;
+    return _simd_aligned_mvs;
 }
 
 auto XKLib::PatternByte::matches() -> std::vector<ptr_t>&

@@ -2,20 +2,11 @@
 #define PATTERNBYTE_H
 
 #include "process.h"
+#include "simd.h"
 
 namespace XKLib
 {
     class Process;
-
-#ifdef __AVX512F__
-    using simd_value_t = __m512i;
-#elif defined(__AVX2__)
-    using simd_value_t = __m256i;
-#elif defined(__SSE__)
-    using simd_value_t = __m64;
-#else
-    using simd_value_t = std::uint64_t;
-#endif
 
     /**
      * Invalid forms:
@@ -43,8 +34,8 @@ namespace XKLib
 
         struct simd_mv_t
         {
-            simd_value_t mask;
-            simd_value_t value;
+            SIMD::value_t mask;
+            SIMD::value_t value;
             std::size_t part_size;
             bool can_skip;
         };
@@ -65,7 +56,7 @@ namespace XKLib
         auto areaName() const -> const std::string&;
         auto vecOrganizedValues() const
           -> const std::vector<organized_values_t>&;
-        auto fastAlignedMVs() const -> const std::vector<simd_mv_t>&;
+        auto SIMDAlignedMVs() const -> const std::vector<simd_mv_t>&;
 
       public:
         auto matches() -> std::vector<ptr_t>&;
@@ -79,7 +70,7 @@ namespace XKLib
         std::vector<ptr_t> _matches;
         std::string _area_name;
         std::vector<organized_values_t> _vec_organized_values;
-        std::vector<simd_mv_t> _fast_aligned_mvs;
+        std::vector<simd_mv_t> _simd_aligned_mvs;
     };
 
     using patterns_bytes_t = std::vector<PatternByte>;

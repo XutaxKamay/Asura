@@ -25,7 +25,7 @@ namespace XKLib
           const std::function<void(decltype(fromPtr), decltype(to))> afterOverride = nullptr)
         {
             const auto old_func = view_as<std::uintptr_t>(
-                                    *view_as<int32_t*>(
+                                    *view_as<std::int32_t*>(
                                       view_as<std::uintptr_t>(fromPtr)
                                       + 1))
                                   + (view_as<std::uintptr_t>(fromPtr)
@@ -50,13 +50,9 @@ namespace XKLib
                 area->protectionFlags() = MemoryArea::ProtectionFlags::RWX;
             }
 
-            *view_as<int32_t*>(view_as<std::uintptr_t>(fromPtr) + 1) = view_as<
-                                                                         int32_t>(
-                                                                         to)
-                                                                       - (view_as<
-                                                                            int32_t>(
-                                                                            fromPtr)
-                                                                          + 5);
+            *view_as<std::int32_t*>(view_as<std::uintptr_t>(fromPtr) + 1)
+              = view_as<std::int32_t>(to)
+                - (view_as<std::int32_t>(fromPtr) + 5);
 
             if (afterOverride)
             {
