@@ -82,7 +82,7 @@ namespace XKLib
 #if defined(__AVX512F__)
             return _mm512_cmpeq_epi8_mask(mm1, mm2);
 #elif defined(__AVX2__)
-            return _mm256_cmpeq_epi8_mask(mm1, mm2);
+            return MoveMask8bits(_mm256_cmpeq_epi8(mm1, mm2));
 #elif defined(__SSE2__)
             /* RIP _mm_cmpeq_epi8_mask only supported with AVX512 */
             return MoveMask8bits(_mm_cmpeq_epi8(mm1, mm2));
