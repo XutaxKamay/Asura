@@ -53,7 +53,7 @@ auto XKLib::PatternScanning::searchInProcessWithAreaName(
         if (area->isReadable()
             and (area->name().find(areaName) != std::string::npos))
         {
-            auto area_read = area->read<SIMD::value_t>();
+            const auto area_read = area->read<SIMD::value_t>();
             searchMethod(pattern,
                          view_as<data_t>(area_read.data()),
                          area->size(),
