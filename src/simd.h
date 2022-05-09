@@ -7,7 +7,7 @@
 
 #define XKLIB_SIMD_THROW_ERROR #error "SSE/AVX2/AVX512F only supported"
 
-#if defined(__AVX512F__) or defined(__AVX2__) or defined(__SSE__)
+#if defined(__AVX512BW__) or defined(__AVX2__) or defined(__SSE__)
     #define XKLIB_HAS_SIMD
 #endif
 
@@ -16,7 +16,7 @@ namespace XKLib
     class SIMD
     {
       public:
-#if defined(__AVX512F__)
+#if defined(__AVX512BW__)
         using value_t = __m512i;
 #elif defined(__AVX2__)
         using value_t = __m256i;
@@ -30,7 +30,7 @@ namespace XKLib
 
         static inline auto Set8bits(const auto xx)
         {
-#if defined(__AVX512F__)
+#if defined(__AVX512BW__)
             return _mm512_set1_epi8(xx);
 #elif defined(__AVX2__)
             return _mm256_set1_epi8(xx);
@@ -52,8 +52,8 @@ namespace XKLib
 
         static inline auto MoveMask8bits(const auto mm1)
         {
-#if defined(__AVX512F__)
-            const auto mm2 = Set8bits(0);
+#if defined(__AVX512BW__)
+            const auto mm2 = _mm512_set1_epi8(0);
             return _mm512_cmpeq_epi8_mask(mm1, mm2);
 #elif defined(__AVX2__)
             return _mm256_movemask_epi8(mm1);
@@ -79,7 +79,7 @@ namespace XKLib
 
         static inline auto CMPMask8bits(const auto mm1, const auto mm2)
         {
-#if defined(__AVX512F__)
+#if defined(__AVX512BW__)
             return _mm512_cmpeq_epi8_mask(mm1, mm2);
 #elif defined(__AVX2__)
             return MoveMask8bits(_mm256_cmpeq_epi8(mm1, mm2));
@@ -112,7 +112,7 @@ namespace XKLib
 
         static inline auto And(const auto mm1, const auto mm2)
         {
-#if defined(__AVX512F__)
+#if defined(__AVX512BW__)
             return _mm512_and_si512(mm1, mm2);
 #elif defined(__AVX2__)
             return _mm256_and_si256(mm1, mm2);
@@ -127,7 +127,7 @@ namespace XKLib
 
         static inline auto Load(const auto mm1)
         {
-#if defined(__AVX512F__)
+#if defined(__AVX512BW__)
             return _mm512_load_si512(view_as<__m512i*>(mm1));
 #elif defined(__AVX2__)
             return _mm256_load_si256(view_as<__m256i*>(mm1));
@@ -142,7 +142,7 @@ namespace XKLib
 
         static inline auto LoadUnaligned(const auto mm1)
         {
-#if defined(__AVX512F__)
+#if defined(__AVX512BW__)
             return _mm512_loadu_si512(view_as<__m512i*>(mm1));
 #elif defined(__AVX2__)
             return _mm256_loadu_si256(view_as<__m256i*>(mm1));
