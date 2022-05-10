@@ -5,6 +5,7 @@
 
 #include "bits.h"
 #include "buffer.h"
+#include "builtins.h"
 #include "circularbuffer.h"
 #include "custom_linux_syscalls.h"
 #include "decryptrsablocks.h"

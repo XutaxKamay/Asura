@@ -1,5 +1,7 @@
 #include "pch.h"
 
+#include "builtins.h"
+
 #include "exception.h"
 
 #include "patternscanning.h"
@@ -86,8 +88,8 @@ auto XKLib::PatternScanning::searchV1(PatternByte& pattern,
     const auto pattern_size      = pattern_bytes.size();
     const auto& simd_aligned_mvs = pattern.SIMDAlignedMVs();
 
-    data_t start_data   = data;
-    data_t current_data = data;
+    auto start_data   = data;
+    auto current_data = data;
 
     while (current_data + pattern_size <= data + size)
     {
@@ -144,8 +146,8 @@ auto XKLib::PatternScanning::searchV2(PatternByte& pattern,
     const auto pattern_size          = pattern_bytes.size();
     const auto& vec_organized_values = pattern.vecOrganizedValues();
 
-    data_t start_data   = data;
-    data_t current_data = data;
+    auto start_data   = data;
+    auto current_data = data;
 
     while (current_data + pattern_size <= data + size)
     {
@@ -195,8 +197,8 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
     const auto pattern_size      = pattern_bytes.size();
     const auto& simd_aligned_mvs = pattern.SIMDAlignedMVs();
 
-    data_t start_data   = data + size - pattern_size;
-    data_t current_data = start_data;
+    auto start_data   = data + size - pattern_size;
+    auto current_data = start_data;
 
     /**
      * Reversed Boyer Moore variant starts from the start of the pattern
@@ -230,7 +232,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
 
         const auto mask              = it_mv->mask;
         const auto mismatch_byte_num = view_as<std::size_t>(
-          __builtin_ffsll(~SIMD::CMPMask8bits(
+          Builtins::FFS(~SIMD::CMPMask8bits(
             SIMD::And(SIMD::LoadUnaligned(
                         view_as<SIMD::value_t*>(current_data)),
                       mask),
@@ -282,7 +284,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
                 ();
 
                 const auto match_byte_num = view_as<std::size_t>(
-                  __builtin_ffsll(
+                  Builtins::FFS(
                     SIMD::CMPMask8bits(SIMD::And(simd_tmp, mask),
                                        it_mv->value)
                     & (std::numeric_limits<std::uint64_t>::max()
@@ -313,7 +315,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
             while (it_mv != simd_aligned_mvs.end())
             {
                 const auto match_byte_num = view_as<std::size_t>(
-                  __builtin_ffsll(
+                  Builtins::FFS(
                     SIMD::CMPMask8bits(SIMD::And(simd_tmp, it_mv->mask),
                                        it_mv->value)));
 
@@ -393,8 +395,8 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
     const auto pattern_size      = pattern_bytes.size();
     const auto& simd_aligned_mvs = pattern.SIMDAlignedMVs();
 
-    data_t start_data   = data + size - pattern_size;
-    data_t current_data = start_data;
+    auto start_data   = data + size - pattern_size;
+    auto current_data = start_data;
 
     /**
      * Reversed Boyer Moore variant starts from the start of the pattern
@@ -427,7 +429,7 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
         }
 
         const auto mismatch_byte_num = view_as<std::size_t>(
-          __builtin_ffsll(~SIMD::CMPMask8bits(
+          Builtins::FFS(~SIMD::CMPMask8bits(
             SIMD::And(SIMD::LoadUnaligned(
                         view_as<SIMD::value_t*>(current_data)),
                       it_mv->mask),
@@ -510,8 +512,8 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                         + " bytes");
     }
 
-    data_t start_data   = aligned_data;
-    data_t current_data = aligned_data;
+    auto start_data   = aligned_data;
+    auto current_data = aligned_data;
 
     /**
      * Here we are searching for a pattern that was aligned memory
@@ -577,6 +579,8 @@ auto XKLib::PatternScanning::searchAlignedV2(PatternByte& pattern,
 
     auto&& matches              = pattern.matches();
     const auto old_matches_size = matches.size();
+    const auto pattern_size     = pattern.bytes().size();
+    auto current_data           = aligned_data;
 
     if ((view_as<std::uintptr_t>(aligned_data) % sizeof(SIMD::value_t))
         != 0)
@@ -589,6 +593,10 @@ auto XKLib::PatternScanning::searchAlignedV2(PatternByte& pattern,
     /**
      * TODO:
      */
+
+    while (current_data + pattern_size <= aligned_data + size)
+    {
+    }
 
     return matches.size() != old_matches_size;
 }
