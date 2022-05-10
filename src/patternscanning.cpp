@@ -9,6 +9,7 @@
 #include "patternbyte.h"
 
 #include "simd.h"
+#include <memory>
 
 auto XKLib::PatternScanning::searchInProcess(
   PatternByte& pattern,
@@ -566,7 +567,7 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
 auto XKLib::PatternScanning::searchAlignedV2(PatternByte& pattern,
                                              const data_t aligned_data,
                                              const std::size_t size,
-                                             const ptr_t /*baseAddress*/)
+                                             const ptr_t baseAddress)
   -> bool
 {
     if (size < sizeof(SIMD::value_t)
@@ -577,11 +578,6 @@ auto XKLib::PatternScanning::searchAlignedV2(PatternByte& pattern,
                         + " bytes");
     }
 
-    auto&& matches              = pattern.matches();
-    const auto old_matches_size = matches.size();
-    const auto pattern_size     = pattern.bytes().size();
-    auto current_data           = aligned_data;
-
     if ((view_as<std::uintptr_t>(aligned_data) % sizeof(SIMD::value_t))
         != 0)
     {
@@ -590,12 +586,71 @@ auto XKLib::PatternScanning::searchAlignedV2(PatternByte& pattern,
                         + " bytes");
     }
 
-    /**
-     * TODO:
-     */
+    auto&& matches                             = pattern.matches();
+    const auto old_matches_size                = matches.size();
+    const auto& pattern_bytes                  = pattern.bytes();
+    const auto pattern_size                    = pattern_bytes.size();
+    const auto& simd_shifted_table_aligned_mvs = pattern
+                                                   .SIMDShiftedTableAlignedMVs();
 
-    while (current_data + pattern_size <= aligned_data + size)
+    auto start_data   = aligned_data + size - pattern_size;
+    auto current_data = start_data;
+
+    /**
+     * Reversed Boyer Moore variant starts from the start of the pattern
+     */
+    auto it_mv = simd_shifted_table_aligned_mvs[0].begin();
+
+    while (current_data >= aligned_data + pattern_size)
     {
+        /**
+         * Compare with our value (with unknown bytes, the mask)
+         * Invert bits with cmp result and turn them into bits so we can
+         * find the first set, so the mismatched byte.
+         */
+
+        /**
+         * Fast check if they are all unknown bytes
+         * We have the guarantee that patterns always have known bytes
+         * at the end
+         */
+        if (it_mv->can_skip)
+        {
+            /**
+             * We know that it is always the same amount of bytes in
+             * all cases due to pre-processing
+             */
+            current_data += sizeof(SIMD::value_t);
+            it_mv++;
+
+            continue;
+        }
+
+        const auto mismatch_byte_num = view_as<std::size_t>(
+          Builtins::FFS(~SIMD::CMPMask8bits(
+            SIMD::And(SIMD::Load(view_as<SIMD::value_t*>(current_data)),
+                      it_mv->mask),
+            it_mv->value)));
+
+        /* this part of the pattern mismatched ? */
+        if (mismatch_byte_num > 0
+            and mismatch_byte_num <= sizeof(SIMD::value_t))
+        {
+            /**
+             * We got a mismatch, we need to re-align pattern / adjust
+             * current data ptr
+             */
+
+            const auto pattern_index = (start_data - current_data)
+                                       + mismatch_byte_num - 1;
+
+            /* get the mismatched byte */
+            const auto misbyte = *(start_data + pattern_index);
+
+        }
+        else
+        {
+        }
     }
 
     return matches.size() != old_matches_size;

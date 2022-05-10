@@ -131,7 +131,7 @@ namespace XKLib
         if constexpr (N == 0)
         {
             asm("mov %1, %%eax\n\t"
-                "syscall\n\t"
+                "int $0x80\n\t"
                 "mov %%eax, %0\n\t"
                 : "=r"(ret)
                 : "g"(view_as<std::uintptr_t>(number))
@@ -141,7 +141,7 @@ namespace XKLib
         {
             asm("mov %1, %%eax\n\t"
                 "mov %2, %%ebx\n\t"
-                "syscall\n\t"
+                "int $0x80\n\t"
                 "mov %%eax, %0\n\t"
                 : "=r"(ret)
                 : "g"(view_as<std::uintptr_t>(number)),
@@ -153,7 +153,7 @@ namespace XKLib
             asm("mov %1, %%eax\n\t"
                 "mov %2, %%ebx\n\t"
                 "mov %3, %%ecx\n\t"
-                "syscall\n\t"
+                "int $0x80\n\t"
                 "mov %%eax, %0\n\t"
                 : "=r"(ret)
                 : "g"(view_as<std::uintptr_t>(number)),
@@ -167,7 +167,7 @@ namespace XKLib
                 "mov %2, %%ebx\n\t"
                 "mov %3, %%ecx\n\t"
                 "mov %4, %%edx\n\t"
-                "syscall\n\t"
+                "int $0x80\n\t"
                 "mov %%eax, %0\n\t"
                 : "=r"(ret)
                 : "g"(view_as<std::uintptr_t>(number)),
@@ -183,7 +183,7 @@ namespace XKLib
                 "mov %3, %%ecx\n\t"
                 "mov %4, %%edx\n\t"
                 "mov %5, %%esi\n\t"
-                "syscall\n\t"
+                "int $0x80\n\t"
                 "mov %%eax, %0\n\t"
                 : "=r"(ret)
                 : "g"(view_as<std::uintptr_t>(number)),
@@ -201,7 +201,7 @@ namespace XKLib
                 "mov %4, %%edx\n\t"
                 "mov %5, %%esi\n\t"
                 "mov %6, %%edi\n\t"
-                "syscall\n\t"
+                "int $0x80\n\t"
                 "mov %%eax, %0\n\t"
                 : "=r"(ret)
                 : "g"(view_as<std::uintptr_t>(number)),
@@ -221,7 +221,7 @@ namespace XKLib
                 "mov %5, %%esi\n\t"
                 "mov %6, %%edi\n\t"
                 "mov %7, %%ebp\n\t"
-                "syscall\n\t"
+                "int $0x80\n\t"
                 "mov %%eax, %0\n\t"
                 : "=r"(ret)
                 : "g"(view_as<std::uintptr_t>(number)),
