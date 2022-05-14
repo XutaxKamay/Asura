@@ -96,7 +96,7 @@ namespace XKLib
          * previously taken on aligned code. This is extremely fast.
          */
         static auto searchAlignedV1(PatternByte& pattern,
-                                    const data_t aligned_data,
+                                    const data_t alignedData,
                                     const std::size_t size,
                                     const ptr_t baseAddress) -> bool;
 
@@ -108,7 +108,7 @@ namespace XKLib
          * faster.
          */
         static auto searchAlignedV2(PatternByte& pattern,
-                                    const data_t aligned_data,
+                                    const data_t alignedData,
                                     const std::size_t size,
                                     const ptr_t baseAddress) -> bool;
     };

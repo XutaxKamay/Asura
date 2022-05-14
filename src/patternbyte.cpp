@@ -102,8 +102,10 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
             /* do wo we got a full simd value here */
             if (byte_simd_index >= sizeof(SIMD::value_t))
             {
-                simd_aligned_mvs.push_back(
-                  { simd_mask, simd_value, sizeof(SIMD::value_t), false });
+                simd_aligned_mvs.push_back({ simd_mask,
+                                             simd_value,
+                                             sizeof(SIMD::value_t),
+                                             simd_mv_t::MIXED });
 
                 /* reset values */
                 std::memset(&simd_value, 0, sizeof(simd_value));
@@ -116,16 +118,25 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
          */
         if (byte_simd_index > 0)
         {
-            simd_aligned_mvs.push_back(
-              { simd_mask, simd_value, byte_simd_index, false });
+            simd_aligned_mvs.push_back({ simd_mask,
+                                         simd_value,
+                                         byte_simd_index,
+                                         simd_mv_t::MIXED });
         }
     };
 
     for (auto&& mv : _simd_aligned_mvs)
     {
-        if (SIMD::MoveMask8bits(SIMD::Load(&mv.mask)) == 0)
+        const auto mmask = view_as<std::size_t>(
+          SIMD::MoveMask8bits(SIMD::Load(&mv.mask)));
+
+        if (mmask == 0)
         {
-            mv.can_skip = true;
+            mv.skip_type = simd_mv_t::ALL_UNKNOWN;
+        }
+        else if (mmask == SIMD::cmp_all)
+        {
+            mv.skip_type = simd_mv_t::ALL_KNOWN;
         }
     }
 
@@ -275,45 +286,15 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
         }
     };
 
+    do_simd_aligned_mvs(_simd_aligned_mvs, _bytes);
     do_horpspool_skip_table(skip_table, _simd_aligned_mvs, _bytes);
 
     /**
+     * TODO:
      * Shifted table skip table, for aligned searching in pattern
      * scanning, takes a lot of preprocessing and memory, but it is again
      * more faster.
      */
-
-    /* If not shifted, it's the same pattern */
-    _simd_shifted_table_aligned_mvs[0] = _simd_aligned_mvs;
-    shifted_table_skip_table[0]        = skip_table;
-
-    /**
-     * We don't care the beginning of the pattern,
-     * it's just that a pattern could be shifted at max
-     * for sizeof(SIMD::value_t).
-     */
-    auto copied_bytes = _bytes;
-
-    for (std::size_t i = 1; i < shifted_table_skip_table.size(); i++)
-    {
-        /* Let's add some unknown bytes for the shifted table */
-        _simd_shifted_table_aligned_mvs[i].resize(
-          _simd_aligned_mvs.size());
-
-        copied_bytes[i - 1] = Value::UNKNOWN;
-    }
-
-    for (std::size_t i = 1; i < shifted_table_skip_table.size(); i++)
-    {
-        copied_bytes.insert(copied_bytes.begin(), Value::UNKNOWN);
-
-        do_simd_aligned_mvs(_simd_shifted_table_aligned_mvs[i],
-                            copied_bytes);
-
-        do_horpspool_skip_table(shifted_table_skip_table[i],
-                                _simd_shifted_table_aligned_mvs[i],
-                                copied_bytes);
-    }
 }
 
 auto XKLib::PatternByte::bytes() const -> const std::vector<Value>&
@@ -356,16 +337,9 @@ auto XKLib::PatternByte::vecOrganizedValues() const
     return _vec_organized_values;
 }
 
-auto XKLib::PatternByte::SIMDAlignedMVs() const
-  -> const std::vector<simd_mv_t>&
+auto XKLib::PatternByte::SIMDMVs() const -> const std::vector<simd_mv_t>&
 {
     return _simd_aligned_mvs;
-}
-
-auto XKLib::PatternByte::SIMDShiftedTableAlignedMVs() const
-  -> const std::array<std::vector<simd_mv_t>, sizeof(SIMD::value_t)>&
-{
-    return _simd_shifted_table_aligned_mvs;
 }
 
 auto XKLib::PatternByte::matches() -> std::vector<ptr_t>&

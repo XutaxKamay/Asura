@@ -682,42 +682,44 @@ auto XKLib::Test::run() -> void
           << " page count and " << pattern.bytes().size()
           << " of pattern size in bytes" << std::endl;
 
-        /*static PatternByte pattern2({ 'T',
-                                      'A',
-                                      'T',
-                                      'G',
-                                      'T',
-                                      'G',
-                                      'T',
-                                      PatternByte::Value::UNKNOWN,
-                                      'T',
-                                      'G',
-                                      'T',
-                                      'G' });
+        /*  static PatternByte pattern2({ 'T',
+                                        'A',
+                                        'T',
+                                        'G',
+                                        'T',
+                                        'G',
+                                        'T',
+                                        PatternByte::Value::UNKNOWN,
+                                        'T',
+                                        'G',
+                                        'T',
+                                        'G' });
 
-        __attribute__((aligned(64))) static byte_t yey[] = {
-            'G', 'C', 'A', 'A', 'T', 'G', 'C', 'G', 'T', 'A', 'T', 'G',
-            'T', 'A', 'T', 'G', 'T', 'G', 'T', 'A', 'T', 'G', 'T', 'G',
-            'T', 'A', 'T', 'G', 'T', 'G', 'T', 'A', 'T', 'G', 'T', 'G',
-            'T', 'A', 'T', 'G', 'T', 'G', 'T', 'R', 'T', 'G', 'T', 'G',
-            'A', 'T', 'A', 'T', 'G', 'T', 'G', 'T', 'G', 'T', 'Z', 'G',
-            'T', 'A', 'T', 'G', 'T', 'G', 'T', 'A', 'T', 'G', 'T', 'M',
-            'G', 'A', 'C', 'C', 'T', 'A', 'T', 'A', 'T', 'G', 'T', 'A',
-            'T', 'A', 'V', 'G', 'T', 'G', 'T', 'A', 'T', 'G', 'T', 'G',
-            'T', 'A', 'T', 'G', 'T', 'C', 'T', 'A', 'T', 'A', 'T', 'G',
-            'T', 'A', 'T', 'G', 'T', 'G', 'T', 'G', 'T', 'Z'
-        };
+          __attribute__((aligned(64))) static byte_t yey[] = {
+              'G', 'C', 'A', 'A', 'T', 'G', 'C', 'G', 'T', 'A', 'T', 'G',
+              'T', 'A', 'T', 'G', 'T', 'G', 'T', 'A', 'T', 'G', 'T', 'G',
+              'T', 'A', 'T', 'G', 'T', 'G', 'T', 'A', 'T', 'G', 'T', 'G',
+              'T', 'A', 'T', 'G', 'T', 'G', 'T', 'R', 'T', 'G', 'T', 'G',
+              'A', 'T', 'A', 'T', 'G', 'T', 'G', 'T', 'G', 'T', 'Z', 'G',
+              'T', 'A', 'T', 'G', 'T', 'G', 'T', 'A', 'T', 'G', 'T', 'M',
+              'G', 'A', 'C', 'C', 'T', 'A', 'T', 'A', 'T', 'G', 'T', 'A',
+              'T', 'A', 'V', 'G', 'T', 'G', 'T', 'A', 'T', 'G', 'T', 'G',
+              'T', 'A', 'T', 'G', 'T', 'C', 'T', 'A', 'T', 'A', 'T', 'G',
+              'T', 'A', 'T', 'G', 'T', 'G', 'T', 'G', 'T', 'Z', 'T', 'A',
+              'T', 'G', 'T', 'G', 'T', 'G', 'T', 'Z'
+          };
 
-        timer.start();
-        PatternScanning::searchV4(pattern2, yey, sizeof(yey), nullptr);
-        timer.end();
+          timer.start();
+          PatternScanning::searchV4(pattern, yey, sizeof(yey), nullptr);
+          timer.end();
 
-        ConsoleOutput("v4 scan took: ")
-          << std::dec << timer.difference() << " nanoseconds "
-          << "with: "
-          << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
-          << " page count and " << pattern2.bytes().size()
-          << " of pattern size in bytes" << std::endl;*/
+          ConsoleOutput("v4 scan took: ")
+            << std::dec << timer.difference() << " nanoseconds "
+            << "with: "
+            << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
+            << " page count and " << pattern.bytes().size()
+            << " of pattern size in bytes" << std::endl;
+            */
 
         if (pattern.matches().size() != 0)
         {

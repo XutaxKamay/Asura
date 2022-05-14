@@ -90,6 +90,8 @@ namespace XKLib
     template <typesize_t T>
     constexpr inline auto _gvt()
     {
+        static_assert(T <= type_array, "Not implemented");
+
         if constexpr (T == type_safesize)
             return type_wrapper<std::size_t>;
         else if constexpr (T == type_8us)
@@ -114,8 +116,6 @@ namespace XKLib
             return type_wrapper<float>;
         else if constexpr (T == type_double)
             return type_wrapper<double>;
-        else
-            static_assert(T > type_array, "Not implemented");
     }
 
     auto get_variable_type_str(const typesize_t typeSize) -> std::string;

@@ -1,7 +1,6 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include <sys/cdefs.h>
 #define _MAKE_STRING(x) #x
 #define MAKE_STRING(x)  _MAKE_STRING(x)
 

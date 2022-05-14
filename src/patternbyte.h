@@ -36,7 +36,13 @@ namespace XKLib
             SIMD::value_t mask;
             SIMD::value_t value;
             std::size_t part_size;
-            bool can_skip;
+
+            enum skip_type_t
+            {
+                ALL_UNKNOWN,
+                ALL_KNOWN,
+                MIXED
+            } skip_type;
         };
 
         struct organized_values_t
@@ -45,6 +51,19 @@ namespace XKLib
             std::size_t skip_bytes;
         };
 
+      private:
+        std::vector<Value> _bytes;
+        std::vector<ptr_t> _matches;
+        std::string _area_name;
+        std::vector<organized_values_t> _vec_organized_values;
+        std::vector<simd_mv_t> _simd_aligned_mvs;
+
+      public:
+        std::array<std::vector<std::size_t>,
+                   std::numeric_limits<byte_t>::max() + 1>
+          skip_table;
+
+      public:
         PatternByte(const std::vector<Value> values,
                     const std::string _area_name     = "",
                     const std::vector<ptr_t> matches = {});
@@ -55,31 +74,11 @@ namespace XKLib
         auto areaName() const -> const std::string&;
         auto vecOrganizedValues() const
           -> const std::vector<organized_values_t>&;
-        auto SIMDAlignedMVs() const -> const std::vector<simd_mv_t>&;
-        auto SIMDShiftedTableAlignedMVs() const -> const
-          std::array<std::vector<simd_mv_t>, sizeof(SIMD::value_t)>&;
+        auto SIMDMVs() const -> const std::vector<simd_mv_t>&;
 
       public:
         auto matches() -> std::vector<ptr_t>&;
         auto scan(const Process& process) -> void;
-
-        std::array<std::vector<std::size_t>,
-                   std::numeric_limits<byte_t>::max() + 1>
-          skip_table;
-
-        std::array<std::array<std::vector<std::size_t>,
-                              std::numeric_limits<byte_t>::max() + 1>,
-                   sizeof(SIMD::value_t) - 1>
-          shifted_table_skip_table;
-
-      private:
-        std::vector<Value> _bytes;
-        std::vector<ptr_t> _matches;
-        std::string _area_name;
-        std::vector<organized_values_t> _vec_organized_values;
-        std::vector<simd_mv_t> _simd_aligned_mvs;
-        std::array<std::vector<simd_mv_t>, sizeof(SIMD::value_t) - 1>
-          _simd_shifted_table_aligned_mvs;
     };
 
     using patterns_bytes_t = std::vector<PatternByte>;

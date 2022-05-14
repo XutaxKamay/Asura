@@ -18,6 +18,10 @@ namespace XKLib
     template <ValidTypeForRegister... T, std::size_t N = sizeof...(T)>
     inline auto syscall_extended(const auto number, T... args)
     {
+        static_assert(N >= 0 and N <= 7,
+                      "The argument count for the system call is not "
+                      "valid.");
+
         std::uintptr_t ret;
         const auto targs = std::forward_as_tuple(args...);
 
@@ -234,12 +238,6 @@ namespace XKLib
                 : "eax", "ebx", "ecx", "edx", "esi", "edi", "ebp");
         }
         #endif
-        else
-        {
-            static_assert(N >= 0 and N <= 7,
-                          "The argument count for the system call is not "
-                          "valid.");
-        }
 
         return ret;
     }

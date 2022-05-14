@@ -1,5 +1,7 @@
 #include "pch.h"
 
+#include "memoryutils.h"
+
 #include "builtins.h"
 
 #include "exception.h"
@@ -9,7 +11,6 @@
 #include "patternbyte.h"
 
 #include "simd.h"
-#include <memory>
 
 auto XKLib::PatternScanning::searchInProcess(
   PatternByte& pattern,
@@ -83,25 +84,25 @@ auto XKLib::PatternScanning::searchV1(PatternByte& pattern,
     }
 
     /* prepare stuffs */
-    auto&& matches               = pattern.matches();
-    const auto old_matches_size  = matches.size();
-    const auto& pattern_bytes    = pattern.bytes();
-    const auto pattern_size      = pattern_bytes.size();
-    const auto& simd_aligned_mvs = pattern.SIMDAlignedMVs();
+    auto&& matches              = pattern.matches();
+    const auto old_matches_size = matches.size();
+    const auto& pattern_bytes   = pattern.bytes();
+    const auto pattern_size     = pattern_bytes.size();
+    const auto& simd_mvs        = pattern.SIMDMVs();
 
     auto start_data   = data;
     auto current_data = data;
 
     while (current_data + pattern_size <= data + size)
     {
-        for (const auto& mv : simd_aligned_mvs)
+        for (const auto& mv : simd_mvs)
         {
             /**
              * Fast check if they are all unknown bytes
              * We have the guarantee that patterns always have known bytes
              * at the end
              */
-            if (mv.can_skip)
+            if (mv.skip_type == PatternByte::simd_mv_t::ALL_UNKNOWN)
             {
                 /**
                  * We know that it is always the same amount of bytes in
@@ -192,11 +193,11 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
                         + " bytes");
     }
 
-    auto&& matches               = pattern.matches();
-    const auto old_matches_size  = matches.size();
-    const auto& pattern_bytes    = pattern.bytes();
-    const auto pattern_size      = pattern_bytes.size();
-    const auto& simd_aligned_mvs = pattern.SIMDAlignedMVs();
+    auto&& matches              = pattern.matches();
+    const auto old_matches_size = matches.size();
+    const auto& pattern_bytes   = pattern.bytes();
+    const auto pattern_size     = pattern_bytes.size();
+    const auto& simd_mvs        = pattern.SIMDMVs();
 
     auto start_data   = data + size - pattern_size;
     auto current_data = start_data;
@@ -204,7 +205,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
     /**
      * Reversed Boyer Moore variant starts from the start of the pattern
      */
-    auto it_mv = simd_aligned_mvs.begin();
+    auto it_mv = simd_mvs.begin();
 
     while (current_data >= data + pattern_size)
     {
@@ -214,162 +215,185 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
          * find the first set, so the mismatched byte.
          */
 
-        /**
-         * Fast check if they are all unknown bytes
-         * We have the guarantee that patterns always have known bytes
-         * at the end
-         */
-        if (it_mv->can_skip)
+        const auto do_scan =
+          [&](const auto& mismatch_byte_num, const auto& mask)
         {
-            /**
-             * We know that it is always the same amount of bytes in
-             * all cases due to pre-processing
-             */
-            current_data += sizeof(SIMD::value_t);
-            it_mv++;
-
-            continue;
-        }
-
-        const auto mask              = it_mv->mask;
-        const auto mismatch_byte_num = view_as<std::size_t>(
-          Builtins::FFS(~SIMD::CMPMask8bits(
-            SIMD::And(SIMD::LoadUnaligned(
-                        view_as<SIMD::value_t*>(current_data)),
-                      mask),
-            it_mv->value)));
-
-        /* this part of the pattern mismatched ? */
-        if (mismatch_byte_num > 0
-            and mismatch_byte_num <= sizeof(SIMD::value_t))
-        {
-            /**
-             * We got a mismatch, we need to re-align pattern / adjust
-             * current data ptr
-             */
-
-            /* get the mismatched byte */
-            const auto simd_tmp = SIMD::Set8bits(
-              view_as<char>(*(current_data + mismatch_byte_num - 1)));
-
-            std::size_t to_skip;
-
-            /**
-             * Do no enter if the last character of that part is
-             * mismatching
-             */
-            if (mismatch_byte_num < it_mv->part_size)
+            /* this part of the pattern mismatched ? */
+            if (mismatch_byte_num > 0
+                and mismatch_byte_num <= sizeof(SIMD::value_t))
             {
                 /**
-                 * Get the matched byte with a second mask,
-                 * due to the fact that we've already
-                 * checked previous values before entering here with the
-                 * previous cmp
+                 * We got a mismatch, we need to re-align pattern /
+                 * adjust current data ptr
                  */
 
-                constexpr auto bit_mask = []() constexpr
+                /* get the mismatched byte */
+                const auto simd_tmp = SIMD::Set8bits(
+                  view_as<char>(*(current_data + mismatch_byte_num - 1)));
+
+                std::size_t to_skip;
+
+                /**
+                 * Do no enter if the last character of that part is
+                 * mismatching
+                 */
+
+                if (mismatch_byte_num < it_mv->part_size)
                 {
-                    static_assert(sizeof(SIMD::value_t) <= 64,
-                                  "SIMD::value_t is bigger than 64 "
-                                  "bytes");
+                    /**
+                     * Get the matched byte with a second mask,
+                     * due to the fact that we've already
+                     * checked previous values before entering here
+                     * with the previous cmp
+                     */
 
-                    if constexpr (sizeof(SIMD::value_t) == 64)
+                    constexpr auto bit_mask = []() constexpr
                     {
-                        return std::numeric_limits<std::uint64_t>::max();
+                        static_assert(sizeof(SIMD::value_t) <= 64,
+                                      "SIMD::value_t is bigger than "
+                                      "64 "
+                                      "bytes");
+
+                        if constexpr (sizeof(SIMD::value_t) == 64)
+                        {
+                            return std::numeric_limits<
+                              std::uint64_t>::max();
+                        }
+                        else if constexpr (sizeof(SIMD::value_t) < 64)
+                        {
+                            return (1ull << sizeof(SIMD::value_t)) - 1ull;
+                        }
                     }
-                    else if constexpr (sizeof(SIMD::value_t) < 64)
+                    ();
+
+                    const auto match_byte_num = view_as<std::size_t>(
+                      Builtins::FFS(
+                        SIMD::CMPMask8bits(SIMD::And(simd_tmp, mask),
+                                           it_mv->value)
+                        & (std::numeric_limits<std::uint64_t>::max()
+                           << mismatch_byte_num)
+                        & bit_mask));
+
+                    if (match_byte_num > 0
+                        and match_byte_num <= it_mv->part_size)
                     {
-                        return (1ull << sizeof(SIMD::value_t)) - 1ull;
+                        to_skip = match_byte_num - mismatch_byte_num;
+                        goto good_char;
                     }
-                }
-                ();
-
-                const auto match_byte_num = view_as<std::size_t>(
-                  Builtins::FFS(
-                    SIMD::CMPMask8bits(SIMD::And(simd_tmp, mask),
-                                       it_mv->value)
-                    & (std::numeric_limits<std::uint64_t>::max()
-                       << mismatch_byte_num)
-                    & bit_mask));
-
-                if (match_byte_num > 0
-                    and match_byte_num <= it_mv->part_size)
-                {
-                    to_skip = match_byte_num - mismatch_byte_num;
-                    goto good_char;
+                    else
+                    {
+                        to_skip = it_mv->part_size - mismatch_byte_num;
+                    }
                 }
                 else
                 {
-                    to_skip = it_mv->part_size - mismatch_byte_num;
+                    /* nothing to skip here */
+                    to_skip = 0;
                 }
-            }
-            else
-            {
-                /* nothing to skip here */
-                to_skip = 0;
-            }
 
-            /* pass on the next part */
-            it_mv++;
+                /* pass on the next part */
+                it_mv++;
 
-            /* then search inside the rest of the pattern */
-            while (it_mv != simd_aligned_mvs.end())
-            {
-                const auto match_byte_num = view_as<std::size_t>(
-                  Builtins::FFS(
-                    SIMD::CMPMask8bits(SIMD::And(simd_tmp, it_mv->mask),
-                                       it_mv->value)));
+                /* then search inside the rest of the pattern */
+                while (it_mv != simd_mvs.end())
+                {
+                    const auto match_byte_num = view_as<std::size_t>(
+                      Builtins::FFS(SIMD::CMPMask8bits(
+                        SIMD::And(simd_tmp, it_mv->mask),
+                        it_mv->value)));
+
+                    /**
+                     * Matched, we found the mismatched byte inside
+                     * the rest of the pattern
+                     */
+                    if (match_byte_num > 0
+                        and match_byte_num <= it_mv->part_size)
+                    {
+                        to_skip += match_byte_num - 1;
+                        /* exit */
+                        goto good_char;
+                    }
+
+                    to_skip += it_mv->part_size;
+                    it_mv++;
+                }
 
                 /**
-                 * Matched, we found the mismatched byte inside
-                 * the rest of the pattern
+                 * If bad, we skip past to the last mismatched char
+                 * set new cursor before the mismatched char (skip +
+                 * 1)
                  */
-                if (match_byte_num > 0
-                    and match_byte_num <= it_mv->part_size)
-                {
-                    to_skip += match_byte_num - 1;
-                    /* exit */
-                    goto good_char;
-                }
+                to_skip++;
 
-                to_skip += it_mv->part_size;
-                it_mv++;
-            }
+            good_char:
+                /* otherwise just align pattern to the mismatch char */
+                start_data -= to_skip;
 
-            /**
-             * If bad, we skip past to the last mismatched char
-             * set new cursor before the mismatched char (skip + 1)
-             */
-            to_skip++;
+                /* start from the beginning */
+                it_mv = simd_mvs.begin();
 
-        good_char:
-            /* otherwise just align pattern to the mismatch char */
-            start_data -= to_skip;
-
-            /* start from the beginning */
-            it_mv = simd_aligned_mvs.begin();
-
-            /* apply new cursor position */
-            current_data = start_data;
-        }
-        else
-        {
-            /* did we found our stuff ? */
-            if (it_mv == std::prev(simd_aligned_mvs.end()))
-            {
-                matches.push_back(view_as<ptr_t>(
-                  view_as<std::uintptr_t>(baseAddress)
-                  + view_as<std::uintptr_t>(start_data - data)));
-
-                /* set new data cursor at data cursor - 1 */
-                start_data--;
+                /* apply new cursor position */
                 current_data = start_data;
-                it_mv        = simd_aligned_mvs.begin();
             }
             else
             {
-                current_data += it_mv->part_size;
+                /* did we found our stuff ? */
+                if (it_mv == std::prev(simd_mvs.end()))
+                {
+                    matches.push_back(view_as<ptr_t>(
+                      view_as<std::uintptr_t>(baseAddress)
+                      + view_as<std::uintptr_t>(start_data - data)));
+
+                    /* set new data cursor at data cursor - 1 */
+                    start_data--;
+                    current_data = start_data;
+                    it_mv        = simd_mvs.begin();
+                }
+                else
+                {
+                    current_data += it_mv->part_size;
+                    it_mv++;
+                }
+            }
+        };
+
+        switch (it_mv->skip_type)
+        {
+            case PatternByte::simd_mv_t::ALL_UNKNOWN:
+            {
+                /**
+                 * We know that it is always the same amount of bytes in
+                 * all cases due to pre-processing
+                 */
+                current_data += sizeof(SIMD::value_t);
                 it_mv++;
+                continue;
+            }
+
+            case PatternByte::simd_mv_t::ALL_KNOWN:
+            {
+                const auto mismatch_byte_num = view_as<std::size_t>(
+                  Builtins::FFS(~SIMD::CMPMask8bits(
+                    SIMD::LoadUnaligned(
+                      view_as<SIMD::value_t*>(current_data)),
+                    it_mv->value)));
+
+                do_scan(mismatch_byte_num, it_mv->mask);
+                break;
+            }
+
+            case PatternByte::simd_mv_t::MIXED:
+            {
+                const auto mask              = it_mv->mask;
+                const auto mismatch_byte_num = view_as<std::size_t>(
+                  Builtins::FFS(~SIMD::CMPMask8bits(
+                    SIMD::And(SIMD::LoadUnaligned(
+                                view_as<SIMD::value_t*>(current_data)),
+                              mask),
+                    it_mv->value)));
+
+                do_scan(mismatch_byte_num, mask);
+                break;
             }
         }
     }
@@ -390,11 +414,11 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
                         + " bytes");
     }
 
-    auto&& matches               = pattern.matches();
-    const auto old_matches_size  = matches.size();
-    const auto& pattern_bytes    = pattern.bytes();
-    const auto pattern_size      = pattern_bytes.size();
-    const auto& simd_aligned_mvs = pattern.SIMDAlignedMVs();
+    auto&& matches              = pattern.matches();
+    const auto old_matches_size = matches.size();
+    const auto& pattern_bytes   = pattern.bytes();
+    const auto pattern_size     = pattern_bytes.size();
+    const auto& simd_mvs        = pattern.SIMDMVs();
 
     auto start_data   = data + size - pattern_size;
     auto current_data = start_data;
@@ -402,7 +426,7 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
     /**
      * Reversed Boyer Moore variant starts from the start of the pattern
      */
-    auto it_mv = simd_aligned_mvs.begin();
+    auto it_mv = simd_mvs.begin();
 
     while (current_data >= data + pattern_size)
     {
@@ -412,72 +436,90 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
          * find the first set, so the mismatched byte.
          */
 
-        /**
-         * Fast check if they are all unknown bytes
-         * We have the guarantee that patterns always have known bytes
-         * at the end
-         */
-        if (it_mv->can_skip)
+        const auto do_scan = [&](const auto& mismatch_byte_num)
         {
-            /**
-             * We know that it is always the same amount of bytes in
-             * all cases due to pre-processing
-             */
-            current_data += sizeof(SIMD::value_t);
-            it_mv++;
-
-            continue;
-        }
-
-        const auto mismatch_byte_num = view_as<std::size_t>(
-          Builtins::FFS(~SIMD::CMPMask8bits(
-            SIMD::And(SIMD::LoadUnaligned(
-                        view_as<SIMD::value_t*>(current_data)),
-                      it_mv->mask),
-            it_mv->value)));
-
-        /* this part of the pattern mismatched ? */
-        if (mismatch_byte_num > 0
-            and mismatch_byte_num <= sizeof(SIMD::value_t))
-        {
-            /**
-             * We got a mismatch, we need to re-align pattern / adjust
-             * current data ptr
-             */
-
-            const auto pattern_index = (start_data - current_data)
-                                       + mismatch_byte_num - 1;
-
-            /* get the mismatched byte */
-            const auto misbyte = *(start_data + pattern_index);
-
-            /* use skip table instead, takes a lot of memory though */
-            start_data -= pattern.skip_table[misbyte][pattern_index];
-
-            /* start from the beginning */
-            it_mv = simd_aligned_mvs.begin();
-
-            /* apply new cursor position */
-            current_data = start_data;
-        }
-        else
-        {
-            /* did we found our stuff ? */
-            if (it_mv == std::prev(simd_aligned_mvs.end()))
+            /* this part of the pattern mismatched ? */
+            if (mismatch_byte_num > 0
+                and mismatch_byte_num <= sizeof(SIMD::value_t))
             {
-                matches.push_back(view_as<ptr_t>(
-                  view_as<std::uintptr_t>(baseAddress)
-                  + view_as<std::uintptr_t>(start_data - data)));
+                /**
+                 * We got a mismatch, we need to re-align pattern / adjust
+                 * current data ptr
+                 */
 
-                /* set new data cursor at data cursor - 1 */
-                start_data--;
+                const auto pattern_index = (start_data - current_data)
+                                           + mismatch_byte_num - 1;
+
+                /* get the mismatched byte */
+                const auto misbyte = *(start_data + pattern_index);
+
+                /* use skip table instead, takes a lot of memory though */
+                start_data -= pattern.skip_table[misbyte][pattern_index];
+
+                /* start from the beginning */
+                it_mv = simd_mvs.begin();
+
+                /* apply new cursor position */
                 current_data = start_data;
-                it_mv        = simd_aligned_mvs.begin();
             }
             else
             {
-                current_data += it_mv->part_size;
+                /* did we found our stuff ? */
+                if (it_mv == std::prev(simd_mvs.end()))
+                {
+                    matches.push_back(view_as<ptr_t>(
+                      view_as<std::uintptr_t>(baseAddress)
+                      + view_as<std::uintptr_t>(start_data - data)));
+
+                    /* set new data cursor at data cursor - 1 */
+                    start_data--;
+                    current_data = start_data;
+                    it_mv        = simd_mvs.begin();
+                }
+                else
+                {
+                    current_data += it_mv->part_size;
+                    it_mv++;
+                }
+            }
+        };
+
+        switch (it_mv->skip_type)
+        {
+            case PatternByte::simd_mv_t::ALL_UNKNOWN:
+            {
+                /**
+                 * We know that it is always the same amount of bytes in
+                 * all cases due to pre-processing
+                 */
+                current_data += sizeof(SIMD::value_t);
                 it_mv++;
+                continue;
+            }
+
+            case PatternByte::simd_mv_t::ALL_KNOWN:
+            {
+                const auto mismatch_byte_num = view_as<std::size_t>(
+                  Builtins::FFS(~SIMD::CMPMask8bits(
+                    SIMD::LoadUnaligned(
+                      view_as<SIMD::value_t*>(current_data)),
+                    it_mv->value)));
+
+                do_scan(mismatch_byte_num);
+                break;
+            }
+
+            case PatternByte::simd_mv_t::MIXED:
+            {
+                const auto mismatch_byte_num = view_as<std::size_t>(
+                  Builtins::FFS(~SIMD::CMPMask8bits(
+                    SIMD::And(SIMD::LoadUnaligned(
+                                view_as<SIMD::value_t*>(current_data)),
+                              it_mv->mask),
+                    it_mv->value)));
+
+                do_scan(mismatch_byte_num);
+                break;
             }
         }
     }
@@ -486,7 +528,7 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
 }
 
 auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
-                                             const data_t aligned_data,
+                                             const data_t alignedData,
                                              const std::size_t size,
                                              const ptr_t baseAddress)
   -> bool
@@ -499,13 +541,13 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                         + " bytes");
     }
 
-    const auto& pattern_bytes    = pattern.bytes();
-    auto&& matches               = pattern.matches();
-    const auto old_matches_size  = matches.size();
-    const auto pattern_size      = pattern_bytes.size();
-    const auto& simd_aligned_mvs = pattern.SIMDAlignedMVs();
+    const auto& pattern_bytes   = pattern.bytes();
+    auto&& matches              = pattern.matches();
+    const auto old_matches_size = matches.size();
+    const auto pattern_size     = pattern_bytes.size();
+    const auto& simd_mvs        = pattern.SIMDMVs();
 
-    if ((view_as<std::uintptr_t>(aligned_data) % sizeof(SIMD::value_t))
+    if ((view_as<std::uintptr_t>(alignedData) % sizeof(SIMD::value_t))
         != 0)
     {
         XKLIB_EXCEPTION("Buffer is not aligned to "
@@ -513,24 +555,24 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                         + " bytes");
     }
 
-    auto start_data   = aligned_data;
-    auto current_data = aligned_data;
+    auto start_data   = alignedData;
+    auto current_data = alignedData;
 
     /**
      * Here we are searching for a pattern that was aligned memory
      * on smid_value_t bits. This is really faster than the previous
      * methods.
      */
-    while (current_data + pattern_size <= aligned_data + size)
+    while (current_data + pattern_size <= alignedData + size)
     {
-        for (const auto& mv : simd_aligned_mvs)
+        for (const auto& mv : simd_mvs)
         {
             /**
              * Fast check if they are all unknown bytes
              * We have the guarantee that patterns always have known bytes
              * at the end
              */
-            if (mv.can_skip)
+            if (mv.skip_type == PatternByte::simd_mv_t::ALL_UNKNOWN)
             {
                 /**
                  * We know that it is always the same amount of bytes in
@@ -554,7 +596,7 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
 
         matches.push_back(view_as<ptr_t>(
           view_as<std::uintptr_t>(baseAddress)
-          + view_as<std::uintptr_t>(start_data - aligned_data)));
+          + view_as<std::uintptr_t>(start_data - alignedData)));
 
     skip:
         start_data += sizeof(SIMD::value_t);
@@ -565,9 +607,9 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
 }
 
 auto XKLib::PatternScanning::searchAlignedV2(PatternByte& pattern,
-                                             const data_t aligned_data,
+                                             const data_t alignedData,
                                              const std::size_t size,
-                                             const ptr_t baseAddress)
+                                             const ptr_t /*baseAddress*/)
   -> bool
 {
     if (size < sizeof(SIMD::value_t)
@@ -578,7 +620,7 @@ auto XKLib::PatternScanning::searchAlignedV2(PatternByte& pattern,
                         + " bytes");
     }
 
-    if ((view_as<std::uintptr_t>(aligned_data) % sizeof(SIMD::value_t))
+    if ((view_as<std::uintptr_t>(alignedData) % sizeof(SIMD::value_t))
         != 0)
     {
         XKLIB_EXCEPTION("Buffer is not aligned to "
@@ -586,72 +628,12 @@ auto XKLib::PatternScanning::searchAlignedV2(PatternByte& pattern,
                         + " bytes");
     }
 
-    auto&& matches                             = pattern.matches();
-    const auto old_matches_size                = matches.size();
-    const auto& pattern_bytes                  = pattern.bytes();
-    const auto pattern_size                    = pattern_bytes.size();
-    const auto& simd_shifted_table_aligned_mvs = pattern
-                                                   .SIMDShiftedTableAlignedMVs();
-
-    auto start_data   = aligned_data + size - pattern_size;
-    auto current_data = start_data;
-
     /**
-     * Reversed Boyer Moore variant starts from the start of the pattern
+     * TODO:
      */
-    auto it_mv = simd_shifted_table_aligned_mvs[0].begin();
 
-    while (current_data >= aligned_data + pattern_size)
-    {
-        /**
-         * Compare with our value (with unknown bytes, the mask)
-         * Invert bits with cmp result and turn them into bits so we can
-         * find the first set, so the mismatched byte.
-         */
-
-        /**
-         * Fast check if they are all unknown bytes
-         * We have the guarantee that patterns always have known bytes
-         * at the end
-         */
-        if (it_mv->can_skip)
-        {
-            /**
-             * We know that it is always the same amount of bytes in
-             * all cases due to pre-processing
-             */
-            current_data += sizeof(SIMD::value_t);
-            it_mv++;
-
-            continue;
-        }
-
-        const auto mismatch_byte_num = view_as<std::size_t>(
-          Builtins::FFS(~SIMD::CMPMask8bits(
-            SIMD::And(SIMD::Load(view_as<SIMD::value_t*>(current_data)),
-                      it_mv->mask),
-            it_mv->value)));
-
-        /* this part of the pattern mismatched ? */
-        if (mismatch_byte_num > 0
-            and mismatch_byte_num <= sizeof(SIMD::value_t))
-        {
-            /**
-             * We got a mismatch, we need to re-align pattern / adjust
-             * current data ptr
-             */
-
-            const auto pattern_index = (start_data - current_data)
-                                       + mismatch_byte_num - 1;
-
-            /* get the mismatched byte */
-            const auto misbyte = *(start_data + pattern_index);
-
-        }
-        else
-        {
-        }
-    }
+    auto&& matches              = pattern.matches();
+    const auto old_matches_size = matches.size();
 
     return matches.size() != old_matches_size;
 }
