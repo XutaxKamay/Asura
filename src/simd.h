@@ -45,7 +45,7 @@ namespace XKLib
 #elif defined(__SSE2__)
             return _mm_set1_epi8(xx);
 #elif defined(__SSE__)
-            return _set1_pi8(xx);
+            return _mm_set1_pi8(xx);
 #else
             value_t value;
 
@@ -68,7 +68,7 @@ namespace XKLib
 #elif defined(__SSE2__)
             return _mm_movemask_epi8(mm1);
 #elif defined(__SSE__)
-            return _movemask_pi8(mm1);
+            return _mm_movemask_pi8(mm1);
 #else
             /* Search cross-platform builtin for this */
             typename std::remove_cv<decltype(mm1)>::type ret = 0;
@@ -95,7 +95,7 @@ namespace XKLib
             /* RIP _mm_cmpeq_epi8_mask only supported with AVX512 */
             return MoveMask8bits(_mm_cmpeq_epi8(mm1, mm2));
 #elif defined(__SSE__)
-            return MoveMask8bits(_cmpeq_pi8(mm1, mm2));
+            return MoveMask8bits(_mm_cmpeq_pi8(mm1, mm2));
 #else
             static_assert(sizeof(mm1) == sizeof(mm2), "not same size");
 
@@ -127,7 +127,7 @@ namespace XKLib
 #elif defined(__SSE2__)
             return _mm_and_si128(mm1, mm2);
 #elif defined(__SSE__)
-            return _and_si64(mm1, mm2);
+            return _mm_and_si64(mm1, mm2);
 #else
             return mm1 & mm2;
 #endif
@@ -142,7 +142,7 @@ namespace XKLib
 #elif defined(__SSE2__)
             return _mm_load_si128(mm1);
 #elif defined(__SSE__)
-            return *mm1;
+            return *view_as<__m64*>(mm1);
 #else
             return *mm1;
 #endif
@@ -157,7 +157,7 @@ namespace XKLib
 #elif defined(__SSE2__)
             return _mm_loadu_si128(mm1);
 #elif defined(__SSE__)
-            return *mm1;
+            return *view_as<__m64*>(mm1);
 #else
             return *mm1;
 #endif
