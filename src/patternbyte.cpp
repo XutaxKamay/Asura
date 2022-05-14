@@ -130,9 +130,9 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
      * index
      */
 
-    auto do_horpspool_skip_table = [](decltype(skip_table)& sktable,
-                                      decltype(_simd_mvs)& simd_mvs,
-                                      decltype(_bytes)& bytes)
+    auto do_horspool_skip_table = [](decltype(skip_table)& sktable,
+                                     decltype(_simd_mvs)& simd_mvs,
+                                     decltype(_bytes)& bytes)
     {
         for (int i = 0; i < std::numeric_limits<byte_t>::max() + 1; i++)
         {
@@ -285,7 +285,7 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
     };
 
     do_simd_mvs(_simd_mvs, _bytes);
-    do_horpspool_skip_table(skip_table, _simd_mvs, _bytes);
+    do_horspool_skip_table(skip_table, _simd_mvs, _bytes);
 
     /**
      * TODO:
