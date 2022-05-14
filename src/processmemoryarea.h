@@ -51,7 +51,7 @@ namespace XKLib
 
       public:
         template <typename T = byte_t>
-        auto read() const -> std::vector<T>
+        auto readAligned() const -> std::vector<T>
         {
             if (ProcessBase::self().id() == _process_base.id())
             {

@@ -2,8 +2,6 @@
 #define SIMD_H
 
 #include "types.h"
-#include <emmintrin.h>
-#include <immintrin.h>
 
 #define XKLIB_SIMD_THROW_ERROR #error "SSE/AVX2/AVX512F only supported"
 
