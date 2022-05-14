@@ -105,8 +105,7 @@ auto XKLib::PatternScanning::searchV1(PatternByte& pattern,
                      * We know that it is always the same amount of bytes
                      * in all cases due to pre-processing
                      */
-                    current_data += sizeof(SIMD::value_t);
-                    continue;
+                    break;
                 }
 
                 case PatternByte::simd_mv_t::ALL_KNOWN:

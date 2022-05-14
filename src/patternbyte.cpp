@@ -271,7 +271,7 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
         for (auto&& mv : simd_mvs)
         {
             const auto mmask = view_as<std::size_t>(
-              SIMD::MoveMask8bits(SIMD::Load(&mv.mask)));
+              SIMD::MoveMask8bits(mv.mask));
 
             if (mmask == 0)
             {
