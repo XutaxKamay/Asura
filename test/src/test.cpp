@@ -658,30 +658,6 @@ auto XKLib::Test::run() -> void
           << " page count and " << pattern.bytes().size()
           << " of pattern size in bytes" << std::endl;
 
-        timer.start();
-
-        for (int i = 0; i < 21; i++)
-        {
-            ConsoleOutput("aligned V1: ") << i + 1 << std::endl;
-
-            PatternScanning::searchAlignedV1(pattern,
-                                             aligned_memory,
-                                             random_bytes.size() * 8,
-                                             nullptr);
-        }
-
-        ConsoleOutput("size: ") << pattern.matches().size() << "\n";
-        pattern.matches().resize(pattern.matches().size() - 20);
-
-        timer.end();
-
-        ConsoleOutput("v1 aligned scan took: ")
-          << std::dec << timer.difference() << " nanoseconds "
-          << "with: "
-          << (random_bytes.size() * 8) / MemoryUtils::GetPageSize()
-          << " page count and " << pattern.bytes().size()
-          << " of pattern size in bytes" << std::endl;
-
         /*  static PatternByte pattern2({ 'T',
                                         'A',
                                         'T',

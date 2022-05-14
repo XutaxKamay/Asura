@@ -75,9 +75,8 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
         }
     }
 
-    auto do_simd_aligned_mvs =
-      [](decltype(_simd_aligned_mvs)& simd_aligned_mvs,
-         const decltype(_bytes)& bytes)
+    auto do_simd_mvs =
+      [](decltype(_simd_mvs)& simd_mvs, const decltype(_bytes)& bytes)
     {
         /* index of the simd value */
         std::size_t byte_simd_index = 0;
@@ -102,10 +101,10 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
             /* do wo we got a full simd value here */
             if (byte_simd_index >= sizeof(SIMD::value_t))
             {
-                simd_aligned_mvs.push_back({ simd_mask,
-                                             simd_value,
-                                             sizeof(SIMD::value_t),
-                                             simd_mv_t::MIXED });
+                simd_mvs.push_back({ simd_mask,
+                                     simd_value,
+                                     sizeof(SIMD::value_t),
+                                     simd_mv_t::MIXED });
 
                 /* reset values */
                 std::memset(&simd_value, 0, sizeof(simd_value));
@@ -118,27 +117,12 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
          */
         if (byte_simd_index > 0)
         {
-            simd_aligned_mvs.push_back({ simd_mask,
-                                         simd_value,
-                                         byte_simd_index,
-                                         simd_mv_t::MIXED });
+            simd_mvs.push_back({ simd_mask,
+                                 simd_value,
+                                 byte_simd_index,
+                                 simd_mv_t::MIXED });
         }
     };
-
-    for (auto&& mv : _simd_aligned_mvs)
-    {
-        const auto mmask = view_as<std::size_t>(
-          SIMD::MoveMask8bits(SIMD::Load(&mv.mask)));
-
-        if (mmask == 0)
-        {
-            mv.skip_type = simd_mv_t::ALL_UNKNOWN;
-        }
-        else if (mmask == SIMD::cmp_all)
-        {
-            mv.skip_type = simd_mv_t::ALL_KNOWN;
-        }
-    }
 
     /**
      * Setup variant of horspool precalculated table,
@@ -146,10 +130,9 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
      * index
      */
 
-    auto do_horpspool_skip_table =
-      [](decltype(skip_table)& sktable,
-         decltype(_simd_aligned_mvs)& simd_aligned_mvs,
-         decltype(_bytes)& bytes)
+    auto do_horpspool_skip_table = [](decltype(skip_table)& sktable,
+                                      decltype(_simd_mvs)& simd_mvs,
+                                      decltype(_bytes)& bytes)
     {
         for (int i = 0; i < std::numeric_limits<byte_t>::max() + 1; i++)
         {
@@ -201,7 +184,7 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
                 const auto prev_slot = j % sizeof(SIMD::value_t);
                 auto ptr_cur_skip    = &sktable[i][j];
 
-                auto it_mv = simd_aligned_mvs.begin() + part;
+                auto it_mv = simd_mvs.begin() + part;
 
                 /**
                  * Do no enter if we entered in a new part
@@ -258,7 +241,7 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
                 }
 
                 /* Then search inside the rest of the pattern */
-                while (it_mv != simd_aligned_mvs.end())
+                while (it_mv != simd_mvs.end())
                 {
                     const std::size_t match_byte_num = view_as<std::size_t>(
                       Builtins::FFS(SIMD::CMPMask8bits(
@@ -284,10 +267,25 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
             good_char:;
             }
         }
+
+        for (auto&& mv : simd_mvs)
+        {
+            const auto mmask = view_as<std::size_t>(
+              SIMD::MoveMask8bits(SIMD::Load(&mv.mask)));
+
+            if (mmask == 0)
+            {
+                mv.skip_type = simd_mv_t::ALL_UNKNOWN;
+            }
+            else if (mmask == SIMD::cmp_all)
+            {
+                mv.skip_type = simd_mv_t::ALL_KNOWN;
+            }
+        }
     };
 
-    do_simd_aligned_mvs(_simd_aligned_mvs, _bytes);
-    do_horpspool_skip_table(skip_table, _simd_aligned_mvs, _bytes);
+    do_simd_mvs(_simd_mvs, _bytes);
+    do_horpspool_skip_table(skip_table, _simd_mvs, _bytes);
 
     /**
      * TODO:
@@ -339,7 +337,7 @@ auto XKLib::PatternByte::vecOrganizedValues() const
 
 auto XKLib::PatternByte::SIMDMVs() const -> const std::vector<simd_mv_t>&
 {
-    return _simd_aligned_mvs;
+    return _simd_mvs;
 }
 
 auto XKLib::PatternByte::matches() -> std::vector<ptr_t>&

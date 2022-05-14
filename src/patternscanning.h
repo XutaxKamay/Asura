@@ -92,22 +92,13 @@ namespace XKLib
                              const ptr_t baseAddress) -> bool;
 
         /**
-         * This one is the same as V1, but works on pattern that was
-         * previously taken on aligned code. This is extremely fast.
-         */
-        static auto searchAlignedV1(PatternByte& pattern,
-                                    const data_t alignedData,
-                                    const std::size_t size,
-                                    const ptr_t baseAddress) -> bool;
-
-        /**
          * SIMD Boyer-Moore-Horspool's Algorithm, aligned.
          * This one must not use loadu but just load instead,
          * though things can get a bit more complicated, but we can
          * use memory alignment here, which could be potentially a lot
          * faster.
          */
-        static auto searchAlignedV2(PatternByte& pattern,
+        static auto searchAlignedV1(PatternByte& pattern,
                                     const data_t alignedData,
                                     const std::size_t size,
                                     const ptr_t baseAddress) -> bool;

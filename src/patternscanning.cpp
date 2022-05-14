@@ -97,30 +97,46 @@ auto XKLib::PatternScanning::searchV1(PatternByte& pattern,
     {
         for (const auto& mv : simd_mvs)
         {
-            /**
-             * Fast check if they are all unknown bytes
-             * We have the guarantee that patterns always have known bytes
-             * at the end
-             */
-            if (mv.skip_type == PatternByte::simd_mv_t::ALL_UNKNOWN)
+            switch (mv.skip_type)
             {
-                /**
-                 * We know that it is always the same amount of bytes in
-                 * all cases due to pre-processing
-                 */
-                current_data += sizeof(SIMD::value_t);
+                case PatternByte::simd_mv_t::ALL_UNKNOWN:
+                {
+                    /**
+                     * We know that it is always the same amount of bytes
+                     * in all cases due to pre-processing
+                     */
+                    current_data += sizeof(SIMD::value_t);
+                    continue;
+                }
 
-                continue;
-            }
+                case PatternByte::simd_mv_t::ALL_KNOWN:
+                {
+                    if (!SIMD::CMPMask8bits(SIMD::LoadUnaligned(
+                                              view_as<SIMD::value_t*>(
+                                                current_data)),
+                                            mv.value))
+                    {
+                        goto skip;
+                    }
 
-            /* if ((value & mask) == pattern_value) */
-            if (!SIMD::CMPMask8bits(
-                  SIMD::And(SIMD::LoadUnaligned(
-                              view_as<SIMD::value_t*>(current_data)),
-                            mv.mask),
-                  mv.value))
-            {
-                goto skip;
+                    break;
+                }
+
+                case PatternByte::simd_mv_t::MIXED:
+                {
+                    /* if ((value & mask) == pattern_value) */
+                    if (!SIMD::CMPMask8bits(
+                          SIMD::And(SIMD::LoadUnaligned(
+                                      view_as<SIMD::value_t*>(
+                                        current_data)),
+                                    mv.mask),
+                          mv.value))
+                    {
+                        goto skip;
+                    }
+
+                    break;
+                }
             }
 
             current_data += sizeof(SIMD::value_t);
@@ -214,7 +230,6 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
          * Invert bits with cmp result and turn them into bits so we can
          * find the first set, so the mismatched byte.
          */
-
         const auto do_scan =
           [&](const auto& mismatch_byte_num, const auto& mask)
         {
@@ -528,85 +543,6 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
 }
 
 auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
-                                             const data_t alignedData,
-                                             const std::size_t size,
-                                             const ptr_t baseAddress)
-  -> bool
-{
-    if (size < sizeof(SIMD::value_t)
-        or (size % sizeof(SIMD::value_t) != 0))
-    {
-        XKLIB_EXCEPTION("Size must be aligned to "
-                        + std::to_string(sizeof(SIMD::value_t))
-                        + " bytes");
-    }
-
-    const auto& pattern_bytes   = pattern.bytes();
-    auto&& matches              = pattern.matches();
-    const auto old_matches_size = matches.size();
-    const auto pattern_size     = pattern_bytes.size();
-    const auto& simd_mvs        = pattern.SIMDMVs();
-
-    if ((view_as<std::uintptr_t>(alignedData) % sizeof(SIMD::value_t))
-        != 0)
-    {
-        XKLIB_EXCEPTION("Buffer is not aligned to "
-                        + std::to_string(sizeof(SIMD::value_t))
-                        + " bytes");
-    }
-
-    auto start_data   = alignedData;
-    auto current_data = alignedData;
-
-    /**
-     * Here we are searching for a pattern that was aligned memory
-     * on smid_value_t bits. This is really faster than the previous
-     * methods.
-     */
-    while (current_data + pattern_size <= alignedData + size)
-    {
-        for (const auto& mv : simd_mvs)
-        {
-            /**
-             * Fast check if they are all unknown bytes
-             * We have the guarantee that patterns always have known bytes
-             * at the end
-             */
-            if (mv.skip_type == PatternByte::simd_mv_t::ALL_UNKNOWN)
-            {
-                /**
-                 * We know that it is always the same amount of bytes in
-                 * all cases due to pre-processing
-                 */
-                current_data += sizeof(SIMD::value_t);
-                continue;
-            }
-
-            if (!SIMD::CMPMask8bits(
-                  SIMD::And(SIMD::Load(
-                              view_as<SIMD::value_t*>(current_data)),
-                            mv.mask),
-                  mv.value))
-            {
-                goto skip;
-            }
-
-            current_data += sizeof(SIMD::value_t);
-        }
-
-        matches.push_back(view_as<ptr_t>(
-          view_as<std::uintptr_t>(baseAddress)
-          + view_as<std::uintptr_t>(start_data - alignedData)));
-
-    skip:
-        start_data += sizeof(SIMD::value_t);
-        current_data = start_data;
-    }
-
-    return matches.size() != old_matches_size;
-}
-
-auto XKLib::PatternScanning::searchAlignedV2(PatternByte& pattern,
                                              const data_t alignedData,
                                              const std::size_t size,
                                              const ptr_t /*baseAddress*/)

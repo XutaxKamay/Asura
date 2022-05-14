@@ -56,7 +56,7 @@ namespace XKLib
         std::vector<ptr_t> _matches;
         std::string _area_name;
         std::vector<organized_values_t> _vec_organized_values;
-        std::vector<simd_mv_t> _simd_aligned_mvs;
+        std::vector<simd_mv_t> _simd_mvs;
 
       public:
         std::array<std::vector<std::size_t>,
