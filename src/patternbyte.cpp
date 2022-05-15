@@ -131,7 +131,7 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
      */
 
     auto do_horspool_skip_table =
-      [](decltype(horspool_skip_table)& sktable,
+      [](decltype(_horspool_skip_table)& sktable,
          decltype(_simd_mvs)& simd_mvs,
          decltype(_bytes)& bytes)
     {
@@ -286,7 +286,7 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
     };
 
     do_simd_mvs(_simd_mvs, _bytes);
-    do_horspool_skip_table(horspool_skip_table, _simd_mvs, _bytes);
+    do_horspool_skip_table(_horspool_skip_table, _simd_mvs, _bytes);
 
     /**
      * Shifted table skip table, for aligned searching in pattern
@@ -294,15 +294,15 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
      * more faster.
      */
 
-    shifted_simd_mvs[0] = _simd_mvs;
+    _shifted_simd_mvs[0] = _simd_mvs;
 
     auto copied_bytes = _bytes;
 
-    for (std::size_t i = 1; i < shifted_simd_mvs.size(); i++)
+    for (std::size_t i = 1; i < _shifted_simd_mvs.size(); i++)
     {
         copied_bytes.insert(copied_bytes.begin(), Value::UNKNOWN);
 
-        do_simd_mvs(shifted_simd_mvs[i], copied_bytes);
+        do_simd_mvs(_shifted_simd_mvs[i], copied_bytes);
     }
 }
 
@@ -346,9 +346,21 @@ auto XKLib::PatternByte::vecOrganizedValues() const
     return _vec_organized_values;
 }
 
-auto XKLib::PatternByte::SIMDMVs() const -> const std::vector<simd_mv_t>&
+auto XKLib::PatternByte::simdMVs() const -> const std::vector<simd_mv_t>&
 {
     return _simd_mvs;
+}
+
+auto XKLib::PatternByte::horspoolSkipTable() -> const
+  decltype(_horspool_skip_table)&
+{
+    return _horspool_skip_table;
+}
+
+auto XKLib::PatternByte::shiftedSIMDMvs() -> const
+  decltype(_shifted_simd_mvs)&
+{
+    return _shifted_simd_mvs;
 }
 
 auto XKLib::PatternByte::matches() -> std::vector<ptr_t>&

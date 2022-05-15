@@ -88,7 +88,7 @@ auto XKLib::PatternScanning::searchV1(PatternByte& pattern,
     const auto old_matches_size = matches.size();
     const auto& pattern_bytes   = pattern.bytes();
     const auto pattern_size     = pattern_bytes.size();
-    const auto& simd_mvs        = pattern.SIMDMVs();
+    const auto& simd_mvs        = pattern.simdMVs();
 
     auto start_data   = data;
     auto current_data = data;
@@ -212,7 +212,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
     const auto old_matches_size = matches.size();
     const auto& pattern_bytes   = pattern.bytes();
     const auto pattern_size     = pattern_bytes.size();
-    const auto& simd_mvs        = pattern.SIMDMVs();
+    const auto& simd_mvs        = pattern.simdMVs();
 
     auto start_data   = data + size - pattern_size;
     auto current_data = start_data;
@@ -432,11 +432,12 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
                         + " bytes");
     }
 
-    auto&& matches              = pattern.matches();
-    const auto old_matches_size = matches.size();
-    const auto& pattern_bytes   = pattern.bytes();
-    const auto pattern_size     = pattern_bytes.size();
-    const auto& simd_mvs        = pattern.SIMDMVs();
+    auto&& matches                  = pattern.matches();
+    const auto old_matches_size     = matches.size();
+    const auto& pattern_bytes       = pattern.bytes();
+    const auto pattern_size         = pattern_bytes.size();
+    const auto& simd_mvs            = pattern.simdMVs();
+    const auto& horspool_skip_table = pattern.horspoolSkipTable();
 
     auto start_data   = data + size - pattern_size;
     auto current_data = start_data;
@@ -472,8 +473,7 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
                 const auto misbyte = *(start_data + pattern_index);
 
                 /* use skip table instead, takes a lot of memory though */
-                start_data -= pattern.horspool_skip_table[misbyte]
-                                                         [pattern_index];
+                start_data -= horspool_skip_table[misbyte][pattern_index];
 
                 /* start from the beginning */
                 it_mv = simd_mvs.begin();
@@ -572,19 +572,19 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                         + " bytes");
     }
 
-    auto&& matches              = pattern.matches();
-    const auto old_matches_size = matches.size();
-    const auto& pattern_bytes   = pattern.bytes();
-    const auto pattern_size     = pattern_bytes.size();
+    auto&& matches                  = pattern.matches();
+    const auto old_matches_size     = matches.size();
+    const auto& pattern_bytes       = pattern.bytes();
+    const auto pattern_size         = pattern_bytes.size();
+    const auto& shifted_simd_mvs    = pattern.shiftedSIMDMvs();
+    const auto& horspool_skip_table = pattern.horspoolSkipTable();
 
-    auto start_data           = alignedData + size - pattern_size;
-    auto current_data         = start_data;
-    auto aligned_current_data = MemoryUtils::Align(current_data,
+    auto start_data              = alignedData + size - pattern_size;
+    auto current_data            = start_data;
+    auto aligned_current_data    = MemoryUtils::Align(current_data,
                                                    sizeof(SIMD::value_t));
-
     auto shift_from_current_data = current_data - aligned_current_data;
-
-    auto it_mv = pattern.shifted_simd_mvs[shift_from_current_data].begin();
+    auto it_mv = shifted_simd_mvs[shift_from_current_data].begin();
 
     while (current_data >= alignedData + pattern_size)
     {
@@ -608,8 +608,7 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                 const auto misbyte = *(start_data + pattern_index);
 
                 /* use skip table instead, takes a lot of memory though */
-                start_data -= pattern.horspool_skip_table[misbyte]
-                                                         [pattern_index];
+                start_data -= horspool_skip_table[misbyte][pattern_index];
 
                 /* apply new cursor position */
                 current_data = start_data;
@@ -621,16 +620,14 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                                           - aligned_current_data;
 
                 /* start from the beginning */
-                it_mv = pattern.shifted_simd_mvs[shift_from_current_data]
-                          .begin();
+                it_mv = shifted_simd_mvs[shift_from_current_data].begin();
             }
             else
             {
                 /* did we found our stuff ? */
                 if (it_mv
                     == std::prev(
-                      pattern.shifted_simd_mvs[shift_from_current_data]
-                        .end()))
+                      shifted_simd_mvs[shift_from_current_data].end()))
                 {
                     matches.push_back(
                       view_as<ptr_t>(view_as<std::uintptr_t>(baseAddress)
@@ -647,8 +644,7 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                     shift_from_current_data = current_data
                                               - aligned_current_data;
 
-                    it_mv = pattern
-                              .shifted_simd_mvs[shift_from_current_data]
+                    it_mv = shifted_simd_mvs[shift_from_current_data]
                               .begin();
                 }
                 else

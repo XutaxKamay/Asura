@@ -57,15 +57,12 @@ namespace XKLib
         std::string _area_name;
         std::vector<organized_values_t> _vec_organized_values;
         std::vector<simd_mv_t> _simd_mvs;
-
-      public:
         std::array<std::vector<std::size_t>,
                    std::numeric_limits<byte_t>::max() + 1>
-          horspool_skip_table;
-
+          _horspool_skip_table;
         /* Shift could be max a size of simd integer value */
         std::array<std::vector<simd_mv_t>, sizeof(SIMD::value_t)>
-          shifted_simd_mvs;
+          _shifted_simd_mvs;
 
       public:
         PatternByte(const std::vector<Value> values,
@@ -78,9 +75,9 @@ namespace XKLib
         auto areaName() const -> const std::string&;
         auto vecOrganizedValues() const
           -> const std::vector<organized_values_t>&;
-        auto SIMDMVs() const -> const std::vector<simd_mv_t>&;
-
-      public:
+        auto simdMVs() const -> const std::vector<simd_mv_t>&;
+        auto horspoolSkipTable() -> const decltype(_horspool_skip_table)&;
+        auto shiftedSIMDMvs() -> const decltype(_shifted_simd_mvs)&;
         auto matches() -> std::vector<ptr_t>&;
         auto scan(const Process& process) -> void;
     };
@@ -89,5 +86,3 @@ namespace XKLib
 }
 
 #endif
-
-
