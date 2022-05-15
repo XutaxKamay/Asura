@@ -572,10 +572,6 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                         + " bytes");
     }
 
-    /**
-     * TODO:
-     */
-
     auto&& matches              = pattern.matches();
     const auto old_matches_size = matches.size();
     const auto& pattern_bytes   = pattern.bytes();

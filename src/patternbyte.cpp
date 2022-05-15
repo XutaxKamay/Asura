@@ -289,7 +289,6 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
     do_horspool_skip_table(horspool_skip_table, _simd_mvs, _bytes);
 
     /**
-     * TODO:
      * Shifted table skip table, for aligned searching in pattern
      * scanning, takes a lot of preprocessing and memory, but it is again
      * more faster.

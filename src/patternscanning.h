@@ -93,10 +93,9 @@ namespace XKLib
 
         /**
          * SIMD Boyer-Moore-Horspool's Algorithm, aligned.
-         * This one must not use loadu but just load instead,
-         * though things can get a bit more complicated, but we can
-         * use memory alignment here, which could be potentially a lot
-         * faster.
+         * This increases the number of steps because we need
+         * to align the memory, but we don't have the same
+         * problem as V3 and V4 (no overlap)
          */
         static auto searchAlignedV1(PatternByte& pattern,
                                     const data_t alignedData,
