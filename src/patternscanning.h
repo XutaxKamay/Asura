@@ -60,7 +60,7 @@ namespace XKLib
         /**
          * SIMD Boyer-Moore's Algorithm.
          * Consums less memory than V4 but it is slower.
-         * Problem:
+         * WARNING: please increase memory a bit more.
          * due to SIMD, if somehow the pattern has arrived
          * at the start of data, when loading into MD registers,
          * it could cause a crash if not aligned properly.
@@ -85,6 +85,7 @@ namespace XKLib
         /**
          * SIMD Boyer-Moore-Horspool's Algorithm.
          * Consums a lot more memory but it is faster.
+         * WARNING: have same problem as V3.
          */
         static auto searchV4(PatternByte& pattern,
                              const data_t data,

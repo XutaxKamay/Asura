@@ -20,7 +20,7 @@ namespace XKLib
                                            const std::size_t size)
         {
             auto original_value = view_as<std::uintptr_t>(value);
-            original_value -= original_value % size;
+            original_value -= original_value & (size - 1);
             return view_as<decltype(value)>(original_value);
         }
 
