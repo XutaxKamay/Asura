@@ -78,6 +78,14 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
     auto do_simd_mvs =
       [](decltype(_simd_mvs)& simd_mvs, const decltype(_bytes)& bytes)
     {
+        /**
+         * NOTE:
+         * This only works because x86 is in little endian,
+         * for others arch that has big endian, Boyer-Moore alg might not
+         * work and needs byte reversing (starting at
+         * sizeof(SIMD::value_t) - 1 instead)
+         */
+
         /* index of the simd value */
         std::size_t byte_simd_index = 0;
         /* mask - values */

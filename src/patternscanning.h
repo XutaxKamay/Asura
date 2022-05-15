@@ -95,8 +95,11 @@ namespace XKLib
         /**
          * SIMD Boyer-Moore-Horspool's Algorithm, aligned.
          * This increases the number of steps because we need
-         * to align the memory, but we don't have the same
-         * problem as V3 and V4 (no overlap)
+         * to align the memory but also pad our pattern with unknown
+         * bytes, due to the shift between the aligned data cursor and
+         * current data cursor.
+         * As an advantage, we don't have the same problem as V3 and V4
+         * (no overlap)
          */
         static auto searchAlignedV1(PatternByte& pattern,
                                     const data_t alignedData,

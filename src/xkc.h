@@ -101,7 +101,7 @@ namespace XKLib
           -> bytes_t;
         static auto decode(const bytes_t& bytes) -> bytes_t;
     };
-};
+}
 
 template <XKLib::XKCAlphabetType T>
 auto XKLib::XKC<T>::BinaryTree::Node::height() const -> std::size_t
