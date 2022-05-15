@@ -1,5 +1,5 @@
-#ifndef BUFFER_H
-#define BUFFER_H
+#ifndef XKLIB_BUFFER_H
+#define XKLIB_BUFFER_H
 
 #include "bits.h"
 #include "types.h"

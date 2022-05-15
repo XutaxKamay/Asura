@@ -1,5 +1,5 @@
-#ifndef KOKABIEL_H
-#define KOKABIEL_H
+#ifndef XKLIB_KOKABIEL_H
+#define XKLIB_KOKABIEL_H
 
 #include "memoryarea.h"
 #include "process.h"

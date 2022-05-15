@@ -1,5 +1,5 @@
-#ifndef OSUTILS_H
-#define OSUTILS_H
+#ifndef XKLIB_OSUTILS_H
+#define XKLIB_OSUTILS_H
 
 #include "exception.h"
 #include "memoryutils.h"

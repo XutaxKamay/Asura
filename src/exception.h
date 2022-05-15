@@ -1,5 +1,5 @@
-#ifndef EXCEPTION_H
-#define EXCEPTION_H
+#ifndef XKLIB_EXCEPTION_H
+#define XKLIB_EXCEPTION_H
 
 #include "types.h"
 

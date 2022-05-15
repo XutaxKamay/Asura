@@ -1,5 +1,5 @@
-#ifndef OFFSET_H
-#define OFFSET_H
+#ifndef XKLIB_OFFSET_H
+#define XKLIB_OFFSET_H
 
 #include "memoryutils.h"
 

@@ -1,5 +1,5 @@
-#ifndef VIRTUALTABLETOOLS_H
-#define VIRTUALTABLETOOLS_H
+#ifndef XKLIB_VIRTUALTABLETOOLS_H
+#define XKLIB_VIRTUALTABLETOOLS_H
 
 #include "buffer.h"
 #include "process.h"

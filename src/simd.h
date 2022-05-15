@@ -1,5 +1,5 @@
-#ifndef SIMD_H
-#define SIMD_H
+#ifndef XKLIB_SIMD_H
+#define XKLIB_SIMD_H
 
 #include "types.h"
 

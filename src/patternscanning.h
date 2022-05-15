@@ -1,5 +1,5 @@
-#ifndef PATTERNSCANNING_H
-#define PATTERNSCANNING_H
+#ifndef XKLIB_PATTERNSCANNING_H
+#define XKLIB_PATTERNSCANNING_H
 
 #include "process.h"
 

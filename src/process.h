@@ -1,5 +1,5 @@
-#ifndef PROCESS_H
-#define PROCESS_H
+#ifndef XKLIB_PROCESS_H
+#define XKLIB_PROCESS_H
 
 #include "exception.h"
 #include "memorymap.h"

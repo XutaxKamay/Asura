@@ -1,5 +1,5 @@
-#ifndef MEMORYAREA_H
-#define MEMORYAREA_H
+#ifndef XKLIB_MEMORYAREA_H
+#define XKLIB_MEMORYAREA_H
 
 #include "types.h"
 

@@ -1,5 +1,5 @@
-#ifndef BITS_H
-#define BITS_H
+#ifndef XKLIB_BITS_H
+#define XKLIB_BITS_H
 
 #include "exception.h"
 #include "types.h"

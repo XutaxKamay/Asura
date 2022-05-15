@@ -1,5 +1,5 @@
-#ifndef PROCESSMEMORYMAP_H
-#define PROCESSMEMORYMAP_H
+#ifndef XKLIB_PROCESSMEMORYMAP_H
+#define XKLIB_PROCESSMEMORYMAP_H
 
 #include "memorymap.h"
 #include "memoryutils.h"

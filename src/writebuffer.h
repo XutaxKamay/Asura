@@ -1,5 +1,5 @@
-#ifndef WRITEBUFFER_H
-#define WRITEBUFFER_H
+#ifndef XKLIB_WRITEBUFFER_H
+#define XKLIB_WRITEBUFFER_H
 
 #include "buffer.h"
 

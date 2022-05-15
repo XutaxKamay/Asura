@@ -1,5 +1,5 @@
-#ifndef PROCESSMEMORYAREA_H
-#define PROCESSMEMORYAREA_H
+#ifndef XKLIB_PROCESSMEMORYAREA_H
+#define XKLIB_PROCESSMEMORYAREA_H
 
 #include "memoryarea.h"
 #include "memoryutils.h"

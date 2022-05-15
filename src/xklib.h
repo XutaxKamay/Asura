@@ -1,5 +1,5 @@
-#ifndef XLIB_H
-#define XLIB_H
+#ifndef XKLIB_H
+#define XKLIB_H
 
 #include "pch.h"
 
@@ -37,4 +37,4 @@
 #include "writebuffer.h"
 #include "xkc.h"
 
-#endif // XLIB_H
+#endif

@@ -1,5 +1,5 @@
-#ifndef TIMER_H
-#define TIMER_H
+#ifndef XKLIB_TIMER_H
+#define XKLIB_TIMER_H
 
 #include "types.h"
 

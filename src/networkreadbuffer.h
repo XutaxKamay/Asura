@@ -1,5 +1,5 @@
-#ifndef NETWORKREADBUFFER_H
-#define NETWORKREADBUFFER_H
+#ifndef XKLIB_NETWORKREADBUFFER_H
+#define XKLIB_NETWORKREADBUFFER_H
 
 #include "readbuffer.h"
 

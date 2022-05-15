@@ -1,5 +1,5 @@
-#ifndef DETOURX86_H
-#define DETOURX86_H
+#ifndef XKLIB_DETOURX86_H
+#define XKLIB_DETOURX86_H
 
 #include "process.h"
 

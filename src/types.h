@@ -1,5 +1,5 @@
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef XKLIB_TYPES_H
+#define XKLIB_TYPES_H
 
 #define _MAKE_STRING(x) #x
 #define MAKE_STRING(x)  _MAKE_STRING(x)

@@ -1,5 +1,5 @@
-#ifndef RSABLOCKS_H
-#define RSABLOCKS_H
+#ifndef XKLIB_RSABLOCKS_H
+#define XKLIB_RSABLOCKS_H
 
 #include "exception.h"
 #include "types.h"

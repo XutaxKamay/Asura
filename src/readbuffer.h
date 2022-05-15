@@ -1,5 +1,5 @@
-#ifndef READBUFFER_H
-#define READBUFFER_H
+#ifndef XKLIB_READBUFFER_H
+#define XKLIB_READBUFFER_H
 
 #include "buffer.h"
 #include "exception.h"

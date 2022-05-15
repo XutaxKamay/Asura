@@ -1,5 +1,5 @@
-#ifndef MEMORYMAP_H
-#define MEMORYMAP_H
+#ifndef XKLIB_MEMORYMAP_H
+#define XKLIB_MEMORYMAP_H
 
 #include "memoryarea.h"
 #include "memoryutils.h"

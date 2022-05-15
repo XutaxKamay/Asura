@@ -1,5 +1,5 @@
-#ifndef XKLIB_BUILTINS
-#define XKLIB_BUILTINS
+#ifndef XKLIB_BUILTINS_H
+#define XKLIB_BUILTINS_H
 
 namespace XKLib
 {

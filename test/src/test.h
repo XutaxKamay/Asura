@@ -1,5 +1,5 @@
-#ifndef TEST_H
-#define TEST_H
+#ifndef XKLIB_TEST_H
+#define XKLIB_TEST_H
 
 #include <cstdarg>
 

@@ -1,5 +1,5 @@
-#ifndef PATTERNBYTE_H
-#define PATTERNBYTE_H
+#ifndef XKLIB_PATTERNBYTE_H
+#define XKLIB_PATTERNBYTE_H
 
 #include "simd.h"
 

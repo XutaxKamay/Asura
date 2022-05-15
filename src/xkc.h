@@ -1,5 +1,5 @@
-#ifndef XKC_H
-#define XKC_H
+#ifndef XKLIB_XKC_H
+#define XKLIB_XKC_H
 
 #include "bits.h"
 #include "buffer.h"

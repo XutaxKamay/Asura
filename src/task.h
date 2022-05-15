@@ -1,5 +1,5 @@
-#ifndef TASK_H
-#define TASK_H
+#ifndef XKLIB_TASK_H
+#define XKLIB_TASK_H
 
 #include "memoryutils.h"
 #include "processbase.h"

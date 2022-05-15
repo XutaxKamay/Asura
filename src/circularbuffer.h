@@ -1,5 +1,5 @@
-#ifndef CIRCULARBUFFER_H
-#define CIRCULARBUFFER_H
+#ifndef XKLIB_CIRCULARBUFFER_H
+#define XKLIB_CIRCULARBUFFER_H
 
 #include "types.h"
 

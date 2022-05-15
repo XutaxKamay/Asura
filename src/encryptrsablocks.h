@@ -1,5 +1,5 @@
-#ifndef ENCRYPTRSABLOCKS_H
-#define ENCRYPTRSABLOCKS_H
+#ifndef XKLIB_ENCRYPTRSABLOCKS_H
+#define XKLIB_ENCRYPTRSABLOCKS_H
 
 #include "rsablocks.h"
 

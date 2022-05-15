@@ -1,5 +1,5 @@
-#ifndef RUNNABLETASK_H
-#define RUNNABLETASK_H
+#ifndef XKLIB_RUNNABLETASK_H
+#define XKLIB_RUNNABLETASK_H
 
 #include "buffer.h"
 #include "exception.h"

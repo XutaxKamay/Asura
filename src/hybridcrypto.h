@@ -1,5 +1,5 @@
-#ifndef HYBRIDCRYPT_H
-#define HYBRIDCRYPT_H
+#ifndef XKLIB_HYBRIDCRYPT_H
+#define XKLIB_HYBRIDCRYPT_H
 
 #include "types.h"
 

@@ -1,5 +1,5 @@
-#ifndef PCH_H
-#define PCH_H
+#ifndef XKLIB_PCH_H
+#define XKLIB_PCH_H
 
 /* std */
 #include <algorithm>

@@ -1,5 +1,5 @@
-#ifndef MEMORYUTILS_H
-#define MEMORYUTILS_H
+#ifndef XKLIB_MEMORYUTILS_H
+#define XKLIB_MEMORYUTILS_H
 
 #include "exception.h"
 #include "memoryarea.h"

@@ -1,5 +1,5 @@
-#ifndef PROCESSBASE_H
-#define PROCESSBASE_H
+#ifndef XKLIB_PROCESSBASE_H
+#define XKLIB_PROCESSBASE_H
 
 #include "types.h"
 
