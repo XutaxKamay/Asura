@@ -467,11 +467,11 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
                 start_data -= horspool_skip_table[*(
                   start_data + pattern_index)][pattern_index];
 
-                /* start from the beginning */
-                it_mv = simd_mvs.begin();
-
                 /* apply new cursor position */
                 current_data = start_data;
+
+                /* start from the beginning */
+                it_mv = simd_mvs.begin();
             }
             else
             {
@@ -602,6 +602,7 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                 aligned_current_data = MemoryUtils::Align(
                   current_data,
                   sizeof(SIMD::value_t));
+
                 shift_from_current_data = current_data
                                           - aligned_current_data;
 
@@ -627,6 +628,7 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                     aligned_current_data = MemoryUtils::Align(
                       current_data,
                       sizeof(SIMD::value_t));
+
                     shift_from_current_data = current_data
                                               - aligned_current_data;
 
