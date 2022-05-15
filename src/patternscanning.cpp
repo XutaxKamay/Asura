@@ -1,15 +1,10 @@
 #include "pch.h"
 
-#include "memoryutils.h"
-
 #include "builtins.h"
-
 #include "exception.h"
-
-#include "patternscanning.h"
-
+#include "memoryutils.h"
 #include "patternbyte.h"
-
+#include "patternscanning.h"
 #include "simd.h"
 
 auto XKLib::PatternScanning::searchInProcess(
