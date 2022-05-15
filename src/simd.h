@@ -3,9 +3,11 @@
 
 #include "types.h"
 
-#define XKLIB_SIMD_THROW_ERROR #error "SSE/SSE2/AVX2/AVX512F only supported"
+#define XKLIB_SIMD_THROW_ERROR                                           \
+    #error "SSE/SSE2/AVX2/AVX512BW only supported"
 
-#if defined(__AVX512BW__) or defined(__AVX2__) or defined(__SSE__)
+#if defined(__SSE__) or defined(__SSE2__) or defined(__AVX2__)           \
+  or defined(__AVX512BW__)
     #define XKLIB_HAS_SIMD
 #endif
 
