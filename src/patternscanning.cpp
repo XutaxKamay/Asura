@@ -468,11 +468,9 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
                 const auto pattern_index = (start_data - current_data)
                                            + mismatch_byte_num - 1;
 
-                /* get the mismatched byte */
-                const auto misbyte = *(start_data + pattern_index);
-
                 /* use skip table instead, takes a lot of memory though */
-                start_data -= horspool_skip_table[misbyte][pattern_index];
+                start_data -= horspool_skip_table[*(
+                  start_data + pattern_index)][pattern_index];
 
                 /* start from the beginning */
                 it_mv = simd_mvs.begin();
@@ -599,11 +597,9 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                                               - shift_from_current_data)
                                            - 1;
 
-                /* get the mismatched byte */
-                const auto misbyte = *(start_data + pattern_index);
-
                 /* use skip table instead, takes a lot of memory though */
-                start_data -= horspool_skip_table[misbyte][pattern_index];
+                start_data -= horspool_skip_table[*(
+                  start_data + pattern_index)][pattern_index];
 
                 /* apply new cursor position */
                 current_data = start_data;
