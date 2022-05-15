@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-#define XKLIB_SIMD_THROW_ERROR #error "SSE/AVX2/AVX512F only supported"
+#define XKLIB_SIMD_THROW_ERROR #error "SSE/SSE2/AVX2/AVX512F only supported"
 
 #if defined(__AVX512BW__) or defined(__AVX2__) or defined(__SSE__)
     #define XKLIB_HAS_SIMD
@@ -161,6 +161,14 @@ namespace XKLib
 #else
             return *mm1;
 #endif
+        }
+
+        static inline auto LoadAuto(const auto mm1)
+        {
+            return ((view_as<std::uintptr_t>(mm1) & (sizeof(value_t) - 1))
+                    == 0) ?
+                     Load(mm1) :
+                     LoadUnaligned(mm1);
         }
     };
 }

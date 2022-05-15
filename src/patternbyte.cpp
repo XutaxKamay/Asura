@@ -130,9 +130,10 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
      * index
      */
 
-    auto do_horspool_skip_table = [](decltype(skip_table)& sktable,
-                                     decltype(_simd_mvs)& simd_mvs,
-                                     decltype(_bytes)& bytes)
+    auto do_horspool_skip_table =
+      [](decltype(horspool_skip_table)& sktable,
+         decltype(_simd_mvs)& simd_mvs,
+         decltype(_bytes)& bytes)
     {
         for (int i = 0; i < std::numeric_limits<byte_t>::max() + 1; i++)
         {
@@ -285,7 +286,7 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
     };
 
     do_simd_mvs(_simd_mvs, _bytes);
-    do_horspool_skip_table(skip_table, _simd_mvs, _bytes);
+    do_horspool_skip_table(horspool_skip_table, _simd_mvs, _bytes);
 
     /**
      * TODO:
@@ -293,6 +294,17 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
      * scanning, takes a lot of preprocessing and memory, but it is again
      * more faster.
      */
+
+    shifted_simd_mvs[0] = _simd_mvs;
+
+    auto copied_bytes = _bytes;
+
+    for (std::size_t i = 1; i < shifted_simd_mvs.size(); i++)
+    {
+        copied_bytes.insert(copied_bytes.begin(), Value::UNKNOWN);
+
+        do_simd_mvs(shifted_simd_mvs[i], copied_bytes);
+    }
 }
 
 auto XKLib::PatternByte::bytes() const -> const std::vector<Value>&

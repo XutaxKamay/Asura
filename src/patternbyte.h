@@ -61,7 +61,11 @@ namespace XKLib
       public:
         std::array<std::vector<std::size_t>,
                    std::numeric_limits<byte_t>::max() + 1>
-          skip_table;
+          horspool_skip_table;
+
+        /* Shift could be max a size of simd integer value */
+        std::array<std::vector<simd_mv_t>, sizeof(SIMD::value_t)>
+          shifted_simd_mvs;
 
       public:
         PatternByte(const std::vector<Value> values,
@@ -85,3 +89,5 @@ namespace XKLib
 }
 
 #endif
+
+
