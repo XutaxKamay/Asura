@@ -390,27 +390,26 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
 
             case PatternByte::simd_mv_t::ALL_KNOWN:
             {
-                const auto mismatch_byte_num = view_as<std::size_t>(
-                  Builtins::FFS(~SIMD::CMPMask8bits(
-                    SIMD::LoadUnaligned(
-                      view_as<SIMD::value_t*>(current_data)),
-                    it_mv->value)));
-
-                do_scan(mismatch_byte_num, it_mv->mask);
+                do_scan(view_as<std::size_t>(
+                          Builtins::FFS(~SIMD::CMPMask8bits(
+                            SIMD::LoadUnaligned(
+                              view_as<SIMD::value_t*>(current_data)),
+                            it_mv->value))),
+                        it_mv->mask);
                 break;
             }
 
             case PatternByte::simd_mv_t::MIXED:
             {
-                const auto mask              = it_mv->mask;
-                const auto mismatch_byte_num = view_as<std::size_t>(
-                  Builtins::FFS(~SIMD::CMPMask8bits(
+                const auto mask = it_mv->mask;
+
+                do_scan(
+                  view_as<std::size_t>(Builtins::FFS(~SIMD::CMPMask8bits(
                     SIMD::And(SIMD::LoadUnaligned(
                                 view_as<SIMD::value_t*>(current_data)),
                               mask),
-                    it_mv->value)));
-
-                do_scan(mismatch_byte_num, mask);
+                    it_mv->value))),
+                  mask);
                 break;
             }
         }
@@ -522,26 +521,22 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
 
             case PatternByte::simd_mv_t::ALL_KNOWN:
             {
-                const auto mismatch_byte_num = view_as<std::size_t>(
-                  Builtins::FFS(~SIMD::CMPMask8bits(
+                do_scan(
+                  view_as<std::size_t>(Builtins::FFS(~SIMD::CMPMask8bits(
                     SIMD::LoadUnaligned(
                       view_as<SIMD::value_t*>(current_data)),
-                    it_mv->value)));
-
-                do_scan(mismatch_byte_num);
+                    it_mv->value))));
                 break;
             }
 
             case PatternByte::simd_mv_t::MIXED:
             {
-                const auto mismatch_byte_num = view_as<std::size_t>(
-                  Builtins::FFS(~SIMD::CMPMask8bits(
+                do_scan(
+                  view_as<std::size_t>(Builtins::FFS(~SIMD::CMPMask8bits(
                     SIMD::And(SIMD::LoadUnaligned(
                                 view_as<SIMD::value_t*>(current_data)),
                               it_mv->mask),
-                    it_mv->value)));
-
-                do_scan(mismatch_byte_num);
+                    it_mv->value))));
                 break;
             }
         }
@@ -672,26 +667,21 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
 
             case PatternByte::simd_mv_t::ALL_KNOWN:
             {
-                const auto mismatch_byte_num = view_as<std::size_t>(
-                  Builtins::FFS(~SIMD::CMPMask8bits(
-                    SIMD::Load(
-                      view_as<SIMD::value_t*>(aligned_current_data)),
-                    it_mv->value)));
-
-                do_scan(mismatch_byte_num);
+                do_scan(view_as<std::size_t>(Builtins::FFS(
+                  ~SIMD::CMPMask8bits(SIMD::Load(view_as<SIMD::value_t*>(
+                                        aligned_current_data)),
+                                      it_mv->value))));
                 break;
             }
 
             case PatternByte::simd_mv_t::MIXED:
             {
-                const auto mismatch_byte_num = view_as<std::size_t>(
-                  Builtins::FFS(~SIMD::CMPMask8bits(
+                do_scan(
+                  view_as<std::size_t>(Builtins::FFS(~SIMD::CMPMask8bits(
                     SIMD::And(SIMD::Load(view_as<SIMD::value_t*>(
                                 aligned_current_data)),
                               it_mv->mask),
-                    it_mv->value)));
-
-                do_scan(mismatch_byte_num);
+                    it_mv->value))));
                 break;
             }
         }
