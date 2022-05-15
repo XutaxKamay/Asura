@@ -19,23 +19,23 @@ namespace XKLib
 #if defined(__AVX512BW__)
         using value_t                        = __m512i;
         static constexpr std::size_t cmp_all = std::numeric_limits<
-          uint64_t>::max();
+          std::uint64_t>::max();
 #elif defined(__AVX2__)
         using value_t                        = __m256i;
         static constexpr std::size_t cmp_all = std::numeric_limits<
-          uint32_t>::max();
+          std::uint32_t>::max();
 #elif defined(__SSE2__)
         using value_t                        = __m128i;
         static constexpr std::size_t cmp_all = std::numeric_limits<
-          uint16_t>::max();
+          std::uint16_t>::max();
 #elif defined(__SSE__)
         using value_t                        = __m64;
         static constexpr std::size_t cmp_all = std::numeric_limits<
-          uint8_t>::max();
+          std::uint8_t>::max();
 #else
         using value_t                        = std::uint64_t;
         static constexpr std::size_t cmp_all = std::numeric_limits<
-          uint8_t>::max();
+          std::uint8_t>::max();
 #endif
 
         static inline auto Set8bits(const auto xx)
