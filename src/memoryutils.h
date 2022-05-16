@@ -116,19 +116,19 @@ namespace XKLib
             struct
             {
                 pid_t pid;
-                unsigned long addr;
-                unsigned long len;
-                unsigned long prot;
-                unsigned long flags;
-                unsigned long fd;
-                unsigned long pgoff;
+                std::uint64_t addr;
+                std::uint64_t len;
+                std::uint64_t prot;
+                std::uint64_t flags;
+                std::uint64_t fd;
+                std::uint64_t pgoff;
             } args { pid,
-                     view_as<unsigned long>(address),
-                     view_as<unsigned long>(size),
-                     view_as<unsigned long>(
+                     view_as<std::uint64_t>(address),
+                     view_as<std::uint64_t>(size),
+                     view_as<std::uint64_t>(
                        MemoryArea::ProtectionFlags::ToOS(flags)),
-                     view_as<unsigned long>(MAP_PRIVATE | MAP_ANONYMOUS),
-                     view_as<unsigned long>(-1),
+                     view_as<std::uint64_t>(MAP_PRIVATE | MAP_ANONYMOUS),
+                     view_as<std::uint64_t>(-1),
                      0 };
 
             const auto ret = syscall(__NR_rmmap, &args, sizeof(args));
@@ -274,7 +274,7 @@ namespace XKLib
                                            const T address) -> void
         {
 #ifndef WINDOWS
-            const iovec local  = { .iov_base = view_as<data_t>(
+            const iovec local  = { .iov_base = view_as<const data_t>(
                                     bytes.data()),
                                    .iov_len = bytes.size() };
             const iovec remote = { .iov_base = view_as<ptr_t>(address),

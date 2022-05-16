@@ -6,6 +6,7 @@
 #include "patternbyte.h"
 #include "patternscanning.h"
 #include "simd.h"
+#include <atomic>
 
 auto XKLib::PatternScanning::searchInProcess(
   PatternByte& pattern,
@@ -291,7 +292,8 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
                     }
                     else
                     {
-                        to_skip = it_mv->part_size - mismatch_byte_num;
+                        to_skip = it_mv->part_size - mismatch_byte_num
+                                  + 1;
                     }
                 }
                 else
@@ -319,6 +321,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
                         and match_byte_num <= it_mv->part_size)
                     {
                         to_skip += match_byte_num - 1;
+
                         /* exit */
                         goto good_char;
                     }
@@ -327,11 +330,6 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
                     it_mv++;
                 }
 
-                /**
-                 * If bad, we skip past to the last mismatched char
-                 * set new cursor before the mismatched char (skip +
-                 * 1)
-                 */
                 to_skip++;
 
             good_char:
@@ -459,8 +457,7 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
                  * We got a mismatch, we need to re-align pattern / adjust
                  * current data ptr
                  */
-
-                const auto pattern_index = (start_data - current_data)
+                const auto pattern_index = (current_data - start_data)
                                            + mismatch_byte_num - 1;
 
                 /* use skip table instead, takes a lot of memory though */
@@ -587,10 +584,9 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                  * current data ptr
                  */
 
-                const auto pattern_index = (start_data - current_data)
-                                           + (mismatch_byte_num
-                                              - shift_from_current_data)
-                                           - 1;
+                const auto pattern_index = (current_data - start_data)
+                                           + (mismatch_byte_num - 1)
+                                           - shift_from_current_data;
 
                 /* use skip table instead, takes a lot of memory though */
                 start_data -= horspool_skip_table[*(

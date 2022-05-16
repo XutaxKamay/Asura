@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "builtins.h"
+#include "exception.h"
 #include "patternbyte.h"
 #include "patternscanning.h"
 #include "process.h"
@@ -130,6 +131,21 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
                                  byte_simd_index,
                                  simd_mv_t::MIXED });
         }
+
+        for (auto&& mv : simd_mvs)
+        {
+            const auto mmask = view_as<std::size_t>(
+              SIMD::MoveMask8bits(mv.mask));
+
+            if (mmask == 0)
+            {
+                mv.skip_type = simd_mv_t::ALL_UNKNOWN;
+            }
+            else if (mmask == SIMD::cmp_all)
+            {
+                mv.skip_type = simd_mv_t::ALL_KNOWN;
+            }
+        }
     };
 
     /**
@@ -138,49 +154,59 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
      * index
      */
 
-    auto do_horspool_skip_table =
-      [](decltype(_horspool_skip_table)& sktable,
-         decltype(_simd_mvs)& simd_mvs,
-         decltype(_bytes)& bytes)
+#ifdef false
+    const auto do_horspool_skip_table_slow =
+      [](decltype(_horspool_skip_table)& sktable, decltype(_bytes)& bytes)
     {
         for (int i = 0; i < std::numeric_limits<byte_t>::max() + 1; i++)
         {
             sktable[i].resize(bytes.size());
 
-            /**
-             * NOTE:
-             * Essentially it does that faster:
-             */
+            for (std::size_t j = 0; j < bytes.size(); j++)
+            {
+                /* Find the wanted byte further in the pattern */
+                const auto it = std::find_if(
+                  bytes.begin() + j + 1,
+                  bytes.end(),
+                  [&i](const Value& value)
+                  {
+                      if (value.value == i
+                          or value.value == Value::UNKNOWN)
+                      {
+                          return true;
+                      }
 
-#if false
-        /*  Find the wanted byte further in the pattern */
-        auto it = std::find_if(_bytes.begin() + j + 1,
-                               _bytes.end(),
-                               [&i](const Value& value)
-                               {
-                                   if (value.value == i
-                                       or value.value == Value::UNKNOWN)
-                                   {
-                                       return true;
-                                   }
+                      return false;
+                  });
 
-                                   return false;
-                               });
-
-        /**
-         * Good character skip until matched byte or
-         * unknown byte
-         */
-        if (it != _bytes.end())
-        {
-            skip_table[i][j] = it->index - j;
+                /**
+                 * Good character skip until matched byte or
+                 * unknown byte
+                 */
+                if (it != bytes.end())
+                {
+                    sktable[i][j] = it->index - j;
+                }
+                /* Bad character, skip the whole pattern */
+                else
+                {
+                    sktable[i][j] = bytes.size() - j;
+                }
+            }
         }
-        /* Bad character, skip the whole pattern */
-        else
-        {
-            skip_table[i][j] = _bytes.size() - j;
-        }
+    };
 #endif
+
+    const auto do_horspool_skip_table =
+      [](decltype(_horspool_skip_table)& sktable,
+         decltype(_simd_mvs)& simd_mvs,
+         decltype(_bytes)& bytes)
+    {
+        for (std::size_t i = 0;
+             i < std::numeric_limits<byte_t>::max() + 1;
+             i++)
+        {
+            sktable[i].resize(bytes.size());
 
             /* Get the asked byte */
             const auto simd_tmp = SIMD::Set8bits(view_as<char>(i));
@@ -276,25 +302,29 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
             good_char:;
             }
         }
-
-        for (auto&& mv : simd_mvs)
-        {
-            const auto mmask = view_as<std::size_t>(
-              SIMD::MoveMask8bits(mv.mask));
-
-            if (mmask == 0)
-            {
-                mv.skip_type = simd_mv_t::ALL_UNKNOWN;
-            }
-            else if (mmask == SIMD::cmp_all)
-            {
-                mv.skip_type = simd_mv_t::ALL_KNOWN;
-            }
-        }
     };
 
     do_simd_mvs(_simd_mvs, _bytes);
     do_horspool_skip_table(_horspool_skip_table, _simd_mvs, _bytes);
+
+#ifdef false
+    decltype(_horspool_skip_table) sktest;
+    do_horspool_skip_table_slow(sktest, _bytes);
+
+    /**
+     * Test
+     */
+    for (std::size_t i = 0; i < std::numeric_limits<char>::max() + 1; i++)
+    {
+        for (std::size_t j = 0; j < _bytes.size(); j++)
+        {
+            if (sktest[i][j] != _horspool_skip_table[i][j])
+            {
+                XKLIB_EXCEPTION("Fix your algorithm kamay");
+            }
+        }
+    }
+#endif
 
     /**
      * Shifted table skip table, for aligned searching in pattern
