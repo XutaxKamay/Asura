@@ -23,6 +23,6 @@ namespace XKLib
       private:
         CryptoPP::RSA::PublicKey _public_key {};
     };
-};
+}
 
 #endif

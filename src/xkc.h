@@ -594,7 +594,7 @@ auto XKLib::XKC<T>::encode(const data_t data, const std::size_t size)
             check_bit();
         }
 
-        for (uint32_t depth_bit = 0; depth_bit < max_depth_bits;
+        for (std::uint32_t depth_bit = 0; depth_bit < max_depth_bits;
              depth_bit++)
         {
             if (path_info.depth & (1u << depth_bit))
