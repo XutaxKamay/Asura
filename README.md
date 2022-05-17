@@ -292,7 +292,7 @@ index 463b2d2bf..c6c7dd4be 100644
  	if (retval)
  		goto bad_fork_cleanup_sighand;
 -	retval = copy_mm(clone_flags, p);
-+	retval = copy_mm(clone_flags, p, args->tsk_wtd_mm ? args->wtd_tsk : current);
++	retval = copy_mm(clone_flags, p, args->tsk_wtd_mm ? args->tsk_wtd_mm : current);
  	if (retval)
  		goto bad_fork_cleanup_signal;
  	retval = copy_namespaces(clone_flags, p);
