@@ -78,17 +78,19 @@
 #endif
 
 /* SIMD */
-#include <x86intrin.h>
+#if defined(__x86_64__) or defined(__i386__)
+    #include <x86intrin.h>
+#endif
 
 /* CryptoPP */
-#include "vendor/cryptopp/aes.h"
-#include "vendor/cryptopp/modes.h"
-#include "vendor/cryptopp/osrng.h"
-#include "vendor/cryptopp/randpool.h"
-#include "vendor/cryptopp/rdrand.h"
-#include "vendor/cryptopp/rng.h"
-#include "vendor/cryptopp/rsa.h"
-#include "vendor/cryptopp/sha.h"
-#include "vendor/cryptopp/zlib.h"
+#include <cryptopp/aes.h>
+#include <cryptopp/modes.h>
+#include <cryptopp/osrng.h>
+#include <cryptopp/randpool.h>
+#include <cryptopp/rdrand.h>
+#include <cryptopp/rng.h>
+#include <cryptopp/rsa.h>
+#include <cryptopp/sha.h>
+#include <cryptopp/zlib.h>
 
 #endif

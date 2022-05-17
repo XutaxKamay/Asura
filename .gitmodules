@@ -1,6 +1,3 @@
-[submodule "vendor/cryptopp"]
-	path = src/vendor/cryptopp
-	url = https://github.com/weidai11/cryptopp.git
 [submodule "vendor/ELFIO"]
 	path = src/vendor/ELFIO
 	url = https://github.com/serge1/ELFIO.git

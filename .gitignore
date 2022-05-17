@@ -8,3 +8,4 @@
 !README.md
 !.gitmodules
 !.gitignore
+!meson.build

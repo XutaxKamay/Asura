@@ -99,11 +99,11 @@ auto ProcessMemoryArea::write(const bytes_t& bytes,
 
 auto XKLib::ProcessMemoryArea::isDeniedByOS() const -> bool
 {
-    return _protection_flags.cachedValue() == 0
 #ifndef WIN32
-           or name() == "[vvar]"
+    return name() == "[vvar]";
+#else
+    return false;
 #endif
-      ;
 }
 
 auto XKLib::ProcessMemoryArea::isReadable() const -> bool
