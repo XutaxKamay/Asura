@@ -115,7 +115,7 @@ namespace XKLib
 #else
             struct
             {
-                pid_t pid;
+                std::int64_t pid;
                 std::uint64_t addr;
                 std::uint64_t len;
                 std::uint64_t prot;
