@@ -565,13 +565,12 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
     const auto& horspool_skip_table = pattern.horspoolSkipTable();
 
     auto start_data              = alignedData + size - pattern_size;
-    auto current_data            = start_data;
-    auto aligned_current_data    = MemoryUtils::Align(current_data,
+    auto aligned_current_data    = MemoryUtils::Align(start_data,
                                                    sizeof(SIMD::value_t));
-    auto shift_from_current_data = current_data - aligned_current_data;
+    auto shift_from_current_data = start_data - aligned_current_data;
     auto it_mv = shifted_simd_mvs[shift_from_current_data].begin();
 
-    while (current_data >= alignedData + pattern_size)
+    while (aligned_current_data >= alignedData + pattern_size)
     {
         const auto do_scan = [&](const auto& mismatch_byte_num)
         {
@@ -584,22 +583,19 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                  * current data ptr
                  */
 
-                const auto pattern_index = (current_data - start_data)
-                                           + (mismatch_byte_num - 1)
-                                           - shift_from_current_data;
+                const auto pattern_index = (aligned_current_data
+                                            - start_data)
+                                           + (mismatch_byte_num - 1);
 
                 /* use skip table instead, takes a lot of memory though */
                 start_data -= horspool_skip_table[*(
                   start_data + pattern_index)][pattern_index];
 
-                /* apply new cursor position */
-                current_data = start_data;
-
                 aligned_current_data = MemoryUtils::Align(
-                  current_data,
+                  start_data,
                   sizeof(SIMD::value_t));
 
-                shift_from_current_data = current_data
+                shift_from_current_data = start_data
                                           - aligned_current_data;
 
                 /* start from the beginning */
@@ -619,13 +615,12 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
 
                     /* set new data cursor at data cursor - 1 */
                     start_data--;
-                    current_data = start_data;
 
                     aligned_current_data = MemoryUtils::Align(
-                      current_data,
+                      start_data,
                       sizeof(SIMD::value_t));
 
-                    shift_from_current_data = current_data
+                    shift_from_current_data = start_data
                                               - aligned_current_data;
 
                     it_mv = shifted_simd_mvs[shift_from_current_data]
@@ -633,7 +628,6 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                 }
                 else
                 {
-                    current_data += sizeof(SIMD::value_t);
                     aligned_current_data += sizeof(SIMD::value_t);
                     it_mv++;
                 }
@@ -648,7 +642,6 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                  * We know that it is always the same amount of bytes in
                  * all cases due to pre-processing
                  */
-                current_data += sizeof(SIMD::value_t);
                 aligned_current_data += sizeof(SIMD::value_t);
                 it_mv++;
                 continue;
