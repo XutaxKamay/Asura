@@ -16,7 +16,7 @@ $(shell mkdir -p $(PCH_OUT))
 XKLIB_DEBUG:=xklib.dbg
 XKLIB_RELEASE:=xklib.rel
 
-CRYPTOPP_LIB:=vendor/cryptopp/libcryptopp.a
+CRYPTOPP_LIB:=src/vendor/cryptopp/libcryptopp.a
 DLOPEN_LIB:=
 DBGHELP_LIB:=
 PTHREAD_LIB:=
@@ -48,7 +48,7 @@ XKLIB_DEBUG:=$(XKLIB_DEBUG).a
 XKLIB_RELEASE:=$(XKLIB_RELEASE).a
 
 ## INCLUDES
-INCLUDES:=-I ./vendor/ELFIO -iquote src/ -iquote test/src/ -iquote ./
+INCLUDES:=-I ./src/vendor/ELFIO -iquote src/ -iquote test/src/ -iquote ./
 
 ## ERRORS
 ERRORS:= -Wextra -W -Wall -Werror
@@ -71,7 +71,7 @@ xklib_testdbg: $(XKLIB_TEST_DEBUG)
 xklib_testrel: $(XKLIB_TEST_RELEASE)
 
 cryptopplib:
-	$(MAKE) -C vendor/cryptopp static
+	$(MAKE) -C src/vendor/cryptopp static
 
 .PHONY: all clean
 
@@ -97,7 +97,7 @@ $(XKLIB_RELEASE): $(XKLIB_OBJ_RELEASE)
 $(XKLIB_TEST_OBJ_DEBUG): %$(XKLIB_OBJ_DEBUG_OUT): %.cpp $(PCH_COMPILED_DBG) $(XKLIB_DEPS)
 	$(CXX) -c -o $@ $< $(CPPFLAGS_DEBUG)
 
-$(XKLIB_TEST_OBJ_RELEASE): %$(XKLIB_OBJ_RELEASE_OUT): %.cpp $(PCH_COMPILED_REL) $(XKLIB_DEPS) 
+$(XKLIB_TEST_OBJ_RELEASE): %$(XKLIB_OBJ_RELEASE_OUT): %.cpp $(PCH_COMPILED_REL) $(XKLIB_DEPS)
 	$(CXX) -c -o $@ $< $(CPPFLAGS_RELEASE)
 
 $(XKLIB_TEST_DEBUG): cryptopplib $(XKLIB_TEST_OBJ_DEBUG) $(XKLIB_OBJ_DEBUG)
@@ -119,4 +119,4 @@ clean:
 	${RM} $(PCH_COMPILED_REL)
 
 clean_cryptopp:
-	$(MAKE) -C vendor/cryptopp clean
+	$(MAKE) -C src/vendor/cryptopp clean

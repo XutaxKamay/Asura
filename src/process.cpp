@@ -2,6 +2,8 @@
 
 #include "patternscanning.h"
 #include "process.h"
+#include "types.h"
+#include <stdexcept>
 
 using namespace XKLib;
 
@@ -41,10 +43,26 @@ auto XKLib::Process::find(const std::string& name) -> XKLib::Process
     {
         if (entry.is_directory())
         {
-            const auto pid = view_as<process_id_t>(
-              std::stoi(entry.path().filename()));
+            process_id_t pid;
 
-            if (name.find(ProcessName(pid)) != std::string::npos)
+            try
+            {
+                pid = std::stoi(entry.path().filename());
+            }
+            /* could be fs or any folder that is not a number */
+            catch (std::invalid_argument&)
+            {
+                continue;
+            }
+
+            const auto [result, found] = ProcessName(pid);
+
+            if (!found)
+            {
+                continue;
+            }
+
+            if (result.find(name) != std::string::npos)
             {
                 process = Process(pid);
                 break;
@@ -64,12 +82,14 @@ end:
     return process;
 }
 
-auto XKLib::Process::ProcessName(const process_id_t pid) -> std::string
+auto XKLib::Process::ProcessName(const process_id_t pid)
+  -> std::tuple<std::string, bool>
 {
-    std::string result("unknown");
+    std::string result;
+    bool found;
 
 #ifndef WINDOWS
-    result.reserve(PATH_MAX);
+    result.resize(PATH_MAX);
 
     if (readlink(
           std::string("/proc/" + std::to_string(pid) + "/exe").c_str(),
@@ -77,10 +97,17 @@ auto XKLib::Process::ProcessName(const process_id_t pid) -> std::string
           result.size())
         < 0)
     {
-        XKLIB_EXCEPTION("Could not read symlink.");
+        /* could be a kernel thread */
+        found = false;
+
+        /* XKLIB_EXCEPTION("Could not read symlink."); */
+    }
+    else
+    {
+        found = true;
     }
 #else
-    result.reserve(MAX_PATH);
+    result.resize(MAX_PATH);
 
     const auto process_handle = OpenProcess(PROCESS_QUERY_INFORMATION
                                               | PROCESS_VM_READ,
@@ -98,13 +125,17 @@ auto XKLib::Process::ProcessName(const process_id_t pid) -> std::string
                              result.size())
         <= 0)
     {
-        XKLIB_EXCEPTION("Could not read process path.");
+        found = false;
+    }
+    else
+    {
+        found = true;
     }
 
     CloseHandle(process_handle);
 #endif
 
-    return result;
+    return { result, found };
 }
 
 auto Process::self() -> Process
@@ -123,9 +154,15 @@ Process::Process()
 }
 
 Process::Process(const process_id_t pid)
- : ProcessBase(pid), _full_name(ProcessName(pid)),
-   _mmap(ProcessMemoryMap(*this))
+ : ProcessBase(pid), _mmap(ProcessMemoryMap(*this))
 {
+    const auto [result, found] = ProcessName(pid);
+    if (!found)
+    {
+        return;
+    }
+
+    _full_name = result;
 }
 
 auto Process::tasks() const -> tasks_t

@@ -21,7 +21,8 @@ namespace XKLib
       public:
         static auto self() -> Process;
         static auto find(const std::string& name) -> Process;
-        static auto ProcessName(const process_id_t pid) -> std::string;
+        static auto ProcessName(const process_id_t pid)
+          -> std::tuple<std::string, bool>;
 
       public:
         Process();

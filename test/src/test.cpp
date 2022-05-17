@@ -442,7 +442,7 @@ auto XKLib::Test::run() -> void
     ConsoleOutput(intBits) << std::endl;
 
     bytes_t random_bytes;
-    constexpr auto size_of_random = 0x100000ull;
+    constexpr auto size_of_random = 0x2000000ull;
 
     for (std::size_t i = 0; i < size_of_random; i++)
     {
