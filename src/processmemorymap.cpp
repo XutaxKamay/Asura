@@ -62,8 +62,8 @@ auto ProcessMemoryMap::refresh() -> void
         //                    &prot[2]);
 
         constexpr auto REGEX_HEX_NUMBER = "[0-9a-f]+";
-        constexpr auto REGEX_PROT       = "[r-][w-][x-]p";
-        constexpr auto REGEX_NAME = "[0-9a-f]+-[0-9a-f]+ [r-][w-][x-]p "
+        constexpr auto REGEX_PROT       = "[r-][w-][x-][ps]";
+        constexpr auto REGEX_NAME = "[0-9a-f]+-[0-9a-f]+ [r-][w-][x-][ps] "
                                     "[0-9a-f]+ "
                                     "[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f] "
                                     "[0-9]+[ ]+";

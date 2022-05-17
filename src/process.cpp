@@ -62,6 +62,8 @@ auto XKLib::Process::find(const std::string& name) -> XKLib::Process
                 continue;
             }
 
+	    std::cout << result << "\n";
+
             if (result.find(name) != std::string::npos)
             {
                 process = Process(pid);
