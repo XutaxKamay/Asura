@@ -6,15 +6,16 @@ https://github.com/XutaxKamay/mylib/blob/master/src/custom_linux_syscalls.h
 
 ## Requirements
 - GNU/Linux:
-    - make
+    - meson
     - g++ / clang++
+    - CryptoPP
 
 - For Windows you need MinGW with g++
 
 ## How to build
 Clone the repo `git clone --recurse-submodules https://github.com/XutaxKamay/XKLib`.
 
-Type `make -j$(nproc)` inside the root directory of the repository.
+Type `meson build;cd build:meson compile` inside the root directory of the repository.
 
 ## How to use
 
