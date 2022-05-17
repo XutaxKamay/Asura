@@ -6,7 +6,6 @@
 #include "patternbyte.h"
 #include "patternscanning.h"
 #include "simd.h"
-#include <atomic>
 
 auto XKLib::PatternScanning::searchInProcess(
   PatternByte& pattern,
