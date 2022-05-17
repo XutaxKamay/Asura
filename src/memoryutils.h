@@ -6,6 +6,7 @@
 #include "types.h"
 
 #include "custom_linux_syscalls.h"
+#include <sstream>
 
 namespace XKLib
 {
@@ -196,9 +197,13 @@ namespace XKLib
 
             if (ret != view_as<decltype(ret)>(size))
             {
-                XKLIB_EXCEPTION("process_vm_readv failed with "
-                                + std::to_string(address)
-                                + " and size: " + std::to_string(size));
+                std::stringstream ss;
+                ss << std::hex << address;
+
+                XKLIB_EXCEPTION("process_vm_readv failed with: address: "
+                                + ss.str()
+                                + ", size: " + std::to_string(size)
+                                + ", ret: " + std::to_string(ret));
             }
 #else
 
@@ -211,9 +216,13 @@ namespace XKLib
 
             if (!ret)
             {
-                XKLIB_EXCEPTION("ReadProcessMemory failed with "
-                                + std::to_string(address)
-                                + " and size: " + std::to_string(size));
+                std::stringstream ss;
+                ss << std::hex << address;
+
+                XKLIB_EXCEPTION("ReadProcessMemory failed with: address: "
+                                + ss.str()
+                                + ", size: " + std::to_string(size)
+                                + ", ret: " + std::to_string(ret));
             }
 #endif
 
@@ -244,9 +253,13 @@ namespace XKLib
 
             if (ret != view_as<decltype(ret)>(size * sizeof(A)))
             {
-                XKLIB_EXCEPTION("process_vm_readv failed with "
-                                + std::to_string(address) + " and size: "
-                                + std::to_string(size * sizeof(A)));
+                std::stringstream ss;
+                ss << std::hex << address;
+
+                XKLIB_EXCEPTION("process_vm_readv failed with: address: "
+                                + ss.str()
+                                + ", size: " + std::to_string(size)
+                                + ", ret: " + std::to_string(ret));
             }
 #else
 
@@ -260,8 +273,8 @@ namespace XKLib
             if (!ret)
             {
                 XKLIB_EXCEPTION("ReadProcessMemory failed with "
-                                + std::to_string(address)
-                                + " and size: " + std::to_string(size));
+                                + std::to_string(address) + " and size: "
+                                + std::to_string(size * sizeof(A)));
             }
 #endif
 
@@ -289,7 +302,13 @@ namespace XKLib
 
             if (ret != view_as<decltype(ret)>(bytes.size()))
             {
-                XKLIB_EXCEPTION("process_vm_writev failed");
+                std::stringstream ss;
+                ss << std::hex << address;
+
+                XKLIB_EXCEPTION(
+                  "process_vm_writev failed with: address: " + ss.str()
+                  + ", size: " + std::to_string(bytes.size())
+                  + ", ret: " + std::to_string(ret));
             }
 
 #else
@@ -314,7 +333,10 @@ namespace XKLib
 
             if (!ret)
             {
-                XKLIB_EXCEPTION("WriteProcessMemory failed");
+                XKLIB_EXCEPTION(
+                  "WriteProcessMemory failed with: address: " + ss.str()
+                  + ", size: " + std::to_string(bytes.size())
+                  + ", ret: " + std::to_string(ret));
             }
 
             CloseHandle(process_handle);
