@@ -15,10 +15,12 @@ namespace XKLib
           public:
             virtual void func1()                             = 0;
             virtual std::vector<int> func2(char const*, ...) = 0;
+            virtual ~APIPure()                               = default;
         };
 
         class API : public APIPure
         {
+          public:
             virtual void func1() override;
             virtual std::vector<int> func2(char const*, ...) override;
         };
