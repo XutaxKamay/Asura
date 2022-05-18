@@ -31,7 +31,7 @@ namespace XKLib
             asm("mov %1, %%rax\n\t"
                 "syscall\n\t"
                 "mov %%rax, %0\n\t"
-                : "=r"(ret)
+                : "=g"(ret)
                 : "g"(view_as<std::uintptr_t>(number))
                 : "rax");
         }
@@ -41,7 +41,7 @@ namespace XKLib
                 "mov %2, %%rdi\n\t"
                 "syscall\n\t"
                 "mov %%rax, %0\n\t"
-                : "=r"(ret)
+                : "=g"(ret)
                 : "g"(view_as<std::uintptr_t>(number)),
                   "g"(view_as<std::uintptr_t>(std::get<0>(targs)))
                 : "rax");
@@ -53,7 +53,7 @@ namespace XKLib
                 "mov %3, %%rsi\n\t"
                 "syscall\n\t"
                 "mov %%rax, %0\n\t"
-                : "=r"(ret)
+                : "=g"(ret)
                 : "g"(view_as<std::uintptr_t>(number)),
                   "g"(view_as<std::uintptr_t>(std::get<0>(targs))),
                   "g"(view_as<std::uintptr_t>(std::get<1>(targs)))
@@ -67,7 +67,7 @@ namespace XKLib
                 "mov %4, %%rdx\n\t"
                 "syscall\n\t"
                 "mov %%rax, %0\n\t"
-                : "=r"(ret)
+                : "=g"(ret)
                 : "g"(view_as<std::uintptr_t>(number)),
                   "g"(view_as<std::uintptr_t>(std::get<0>(targs))),
                   "g"(view_as<std::uintptr_t>(std::get<1>(targs))),
@@ -83,7 +83,7 @@ namespace XKLib
                 "mov %5, %%rcx\n\t"
                 "syscall\n\t"
                 "mov %%rax, %0\n\t"
-                : "=r"(ret)
+                : "=g"(ret)
                 : "g"(view_as<std::uintptr_t>(number)),
                   "g"(view_as<std::uintptr_t>(std::get<0>(targs))),
                   "g"(view_as<std::uintptr_t>(std::get<1>(targs))),
@@ -101,7 +101,7 @@ namespace XKLib
                 "mov %6, %%r8\n\t"
                 "syscall\n\t"
                 "mov %%rax, %0\n\t"
-                : "=r"(ret)
+                : "=g"(ret)
                 : "g"(view_as<std::uintptr_t>(number)),
                   "g"(view_as<std::uintptr_t>(std::get<0>(targs))),
                   "g"(view_as<std::uintptr_t>(std::get<1>(targs))),
@@ -121,7 +121,7 @@ namespace XKLib
                 "mov %7, %%r9\n\t"
                 "syscall\n\t"
                 "mov %%rax, %0\n\t"
-                : "=r"(ret)
+                : "=g"(ret)
                 : "g"(view_as<std::uintptr_t>(number)),
                   "g"(view_as<std::uintptr_t>(std::get<0>(targs))),
                   "g"(view_as<std::uintptr_t>(std::get<1>(targs))),
@@ -137,7 +137,7 @@ namespace XKLib
             asm("mov %1, %%eax\n\t"
                 "int $0x80\n\t"
                 "mov %%eax, %0\n\t"
-                : "=r"(ret)
+                : "=g"(ret)
                 : "g"(view_as<std::uintptr_t>(number))
                 : "eax");
         }
@@ -147,7 +147,7 @@ namespace XKLib
                 "mov %2, %%ebx\n\t"
                 "int $0x80\n\t"
                 "mov %%eax, %0\n\t"
-                : "=r"(ret)
+                : "=g"(ret)
                 : "g"(view_as<std::uintptr_t>(number)),
                   "g"(view_as<std::uintptr_t>(std::get<0>(targs)))
                 : "eax");
@@ -159,7 +159,7 @@ namespace XKLib
                 "mov %3, %%ecx\n\t"
                 "int $0x80\n\t"
                 "mov %%eax, %0\n\t"
-                : "=r"(ret)
+                : "=g"(ret)
                 : "g"(view_as<std::uintptr_t>(number)),
                   "g"(view_as<std::uintptr_t>(std::get<0>(targs))),
                   "g"(view_as<std::uintptr_t>(std::get<1>(targs)))
@@ -173,7 +173,7 @@ namespace XKLib
                 "mov %4, %%edx\n\t"
                 "int $0x80\n\t"
                 "mov %%eax, %0\n\t"
-                : "=r"(ret)
+                : "=g"(ret)
                 : "g"(view_as<std::uintptr_t>(number)),
                   "g"(view_as<std::uintptr_t>(std::get<0>(targs))),
                   "g"(view_as<std::uintptr_t>(std::get<1>(targs))),
@@ -189,7 +189,7 @@ namespace XKLib
                 "mov %5, %%esi\n\t"
                 "int $0x80\n\t"
                 "mov %%eax, %0\n\t"
-                : "=r"(ret)
+                : "=g"(ret)
                 : "g"(view_as<std::uintptr_t>(number)),
                   "g"(view_as<std::uintptr_t>(std::get<0>(targs))),
                   "g"(view_as<std::uintptr_t>(std::get<1>(targs))),
@@ -207,7 +207,7 @@ namespace XKLib
                 "mov %6, %%edi\n\t"
                 "int $0x80\n\t"
                 "mov %%eax, %0\n\t"
-                : "=r"(ret)
+                : "=g"(ret)
                 : "g"(view_as<std::uintptr_t>(number)),
                   "g"(view_as<std::uintptr_t>(std::get<0>(targs))),
                   "g"(view_as<std::uintptr_t>(std::get<1>(targs))),
@@ -227,7 +227,7 @@ namespace XKLib
                 "mov %7, %%ebp\n\t"
                 "int $0x80\n\t"
                 "mov %%eax, %0\n\t"
-                : "=r"(ret)
+                : "=g"(ret)
                 : "g"(view_as<std::uintptr_t>(number)),
                   "g"(view_as<std::uintptr_t>(std::get<0>(targs))),
                   "g"(view_as<std::uintptr_t>(std::get<1>(targs))),
