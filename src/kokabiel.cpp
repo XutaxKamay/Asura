@@ -1,3 +1,4 @@
+#include "memoryutils.h"
 #include "pch.h"
 
 #include "exception.h"
@@ -87,7 +88,8 @@ auto XKLib::Kokabiel::freeInjection(injection_info_t& injectionInfo) const
 
     injectionInfo.process_memory_map.freeArea(
       injectionInfo.allocated_mem.env_data.start,
-      injectionInfo.allocated_mem.env_data.bytes.size());
+      injectionInfo.allocated_mem.env_data.bytes.size()
+        + MemoryUtils::GetPageSize());
 
     injectionInfo.process_memory_map.freeArea(
       injectionInfo.loaded_segments.begin()->start,

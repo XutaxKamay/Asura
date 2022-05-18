@@ -141,6 +141,11 @@ namespace XKLib
                              const auto address,
                              const std::size_t size) -> void
         {
+            const auto aligned_address = Align<ptr_t>(view_as<ptr_t>(
+                                                        address),
+                                                      GetPageSize());
+            const auto aligned_size    = AlignToPageSize(size,
+                                                      GetPageSize());
 #ifdef WINDOWS
             const auto process_handle = GetCurrentProcessId() == pid ?
                                           GetCurrentProcess() :
@@ -155,8 +160,8 @@ namespace XKLib
             }
 
             const auto ret = VirtualFreeEx(process_handle,
-                                           view_as<ptr_t>(address),
-                                           size,
+                                           view_as<ptr_t>(aligned_address),
+                                           aligned_size,
                                            MEM_RELEASE);
 
             if (!ret)
@@ -166,7 +171,10 @@ namespace XKLib
 
             CloseHandle(process_handle);
 #else
-            const auto ret = syscall(__NR_rmunmap, pid, address, size);
+            const auto ret = syscall(__NR_rmunmap,
+                                     pid,
+                                     aligned_address,
+                                     aligned_size);
 
             if (ret < 0)
             {
