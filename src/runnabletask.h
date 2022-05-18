@@ -25,6 +25,8 @@ namespace XKLib
 
       public:
         auto& routineAddress();
+
+        template <bool untraced>
         auto run() -> void;
 
       public:
@@ -79,7 +81,8 @@ namespace XKLib
 
         if (ret != 0)
         {
-            XKLIB_EXCEPTION("Could not terminate task");
+            XKLIB_EXCEPTION("Could not terminate task "
+                            + std::to_string(_id));
         }
 #endif
     }
@@ -90,17 +93,20 @@ namespace XKLib
 #ifdef WINDOWS
         if (!_thread_handle)
         {
-            XKLIB_EXCEPTION("Thread did not start yet");
+            XKLIB_EXCEPTION("Task did not start yet");
         }
 
         WaitForSingleObject(_thread_handle, INFINITE);
 
         CloseHandle(_thread_handle);
 #else
-        while (::kill(_id, 0) != -1)
+        int status;
+        const auto ret = waitpid(_id, &status, 0);
+
+        if (ret == -1)
         {
-            timespec delay { 0, 100 * 1000 };
-            nanosleep(&delay, &delay);
+            XKLIB_EXCEPTION("Could not wait for task "
+                            + std::to_string(_id));
         }
 #endif
     }
@@ -118,6 +124,7 @@ namespace XKLib
     }
 
     template <std::size_t N>
+    template <bool untraced>
     auto RunnableTask<N>::run() -> void
     {
 #ifdef WINDOWS
@@ -151,9 +158,19 @@ namespace XKLib
 
         CloseHandle(process_handle);
 #else
+        constexpr auto untraced_flag = []()
+        {
+            if constexpr (untraced)
+            {
+                return CLONE_UNTRACED;
+            }
+
+            return 0;
+        }();
+
         _id = syscall(__NR_rclone,
                       _process_base.id(),
-                      (CLONE_VM | CLONE_SIGHAND | CLONE_THREAD),
+                      CLONE_VM | CLONE_SIGHAND | SIGCHLD | untraced_flag,
                       _routine_address,
                       view_as<ptr_t>(view_as<std::uintptr_t>(_base_stack)
                                      + N),
