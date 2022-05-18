@@ -84,10 +84,19 @@ deps = [
     dependency('libcryptopp')
 ]
 
-library('xklib.dbg', sources : xklib_srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : args_dbg, dependencies : deps)
-library('xklib.rel', sources : xklib_srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : args_rel, dependencies : deps)
-library('xklib.rel.native', sources : xklib_srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : args_rel_native, dependencies : deps)
+library('xklib.32.dbg', sources : xklib_srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : args_dbg + '-m32', link_args : '-m32', dependencies : deps)
+library('xklib.32.rel', sources : xklib_srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : args_rel + '-m32', link_args : '-m32', dependencies : deps)
+library('xklib.32.rel.native', sources : xklib_srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : args_rel_native + '-m32', link_args : '-m32', dependencies : deps)
 
-executable('test.dbg', sources : srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : args_dbg, dependencies : deps)
-executable('test.rel', sources : srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : args_rel, dependencies : deps)
-executable('test.rel.native', sources : srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : args_rel_native, dependencies : deps)
+executable('test.32.dbg', sources : srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : args_dbg + '-m32', link_args : '-m32', dependencies : deps)
+executable('test.32.rel', sources : srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : args_rel + '-m32', link_args : '-m32', dependencies : deps)
+executable('test.32.rel.native', sources : srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : args_rel_native + '-m32', link_args : '-m32', dependencies : deps)
+
+
+library('xklib.64.dbg', sources : xklib_srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : args_dbg, dependencies : deps)
+library('xklib.64.rel', sources : xklib_srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : args_rel, dependencies : deps)
+library('xklib.64.rel.native', sources : xklib_srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : args_rel_native, dependencies : deps)
+
+executable('test.64.dbg', sources : srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : args_dbg, dependencies : deps)
+executable('test.64.rel', sources : srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : args_rel, dependencies : deps)
+executable('test.64.rel.native', sources : srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : args_rel_native, dependencies : deps)
