@@ -3,7 +3,11 @@
 
 #include "buffer.h"
 #include "exception.h"
+#include "memoryutils.h"
 #include "task.h"
+#include <bits/types/siginfo_t.h>
+#include <sched.h>
+#include <sys/wait.h>
 
 namespace XKLib
 {
@@ -48,6 +52,8 @@ namespace XKLib
        _thread_handle(nullptr)
 #endif
     {
+        static_assert(N >= 0x2000, "Stack size not large enough");
+
         _base_stack = MemoryUtils::AllocArea(
           _process_base.id(),
           nullptr,
@@ -100,8 +106,8 @@ namespace XKLib
 
         CloseHandle(_thread_handle);
 #else
-        int status;
-        const auto ret = waitpid(_id, &status, 0);
+        siginfo_t siginfo;
+        const auto ret = waitid(P_PID, _id, &siginfo, WEXITED);
 
         if (ret == -1)
         {
@@ -172,8 +178,8 @@ namespace XKLib
                       _process_base.id(),
                       CLONE_VM | CLONE_SIGHAND | SIGCHLD | untraced_flag,
                       _routine_address,
-                      view_as<ptr_t>(view_as<std::uintptr_t>(_base_stack)
-                                     + N),
+                      view_as<std::uintptr_t>(_base_stack) - N
+                        + MemoryUtils::GetPageSize(),
                       N);
 
         if (_id == INVALID_ID)

@@ -16,7 +16,7 @@ namespace XKLib
     {
       public:
         static inline constexpr process_id_t INVALID_PID    = -1;
-        static inline constexpr std::size_t TASK_STACK_SIZE = 0x10000;
+        static inline constexpr std::size_t TASK_STACK_SIZE = 0x100000;
 
       public:
         static auto self() -> Process;
