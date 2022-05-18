@@ -62,7 +62,7 @@ int main(int argc, char** argv)
 
         std::cout << "Base stack: " << task.baseStack() << "\n";
 
-        task.run<false>();
+        task.run<true>();
 
         std::cout << "Running with id: " << task.id() << "\n";
 
