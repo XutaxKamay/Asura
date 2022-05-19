@@ -54,7 +54,9 @@ common_args = [
     '-Wextra',
     '-W',
     '-Wall',
-    '-Werror'
+    '-Werror',
+    '-Wno-unused-command-line-argument',
+    '-Wno-ignored-optimization-argument'
 ]
 
 args_dbg = [
