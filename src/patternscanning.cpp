@@ -582,13 +582,18 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                  * current data ptr
                  */
 
-                const auto pattern_index = (aligned_current_data
-                                            - start_data)
-                                           + (mismatch_byte_num - 1);
+                const auto mismsatch_index = (aligned_current_data
+                                              - start_data)
+                                             + (mismatch_byte_num - 1);
 
-                /* use skip table instead, takes a lot of memory though */
+                /**
+		 * Use skip table instead, takes a lot of memory though.
+		 * We also need to take into account the shift,
+		 * in case it the pattern was misaligned
+		 */
                 start_data -= horspool_skip_table[*(
-                  start_data + pattern_index)][pattern_index];
+                  start_data + mismsatch_index)][mismsatch_index
+                                                 - shift_from_current_data];
 
                 aligned_current_data = MemoryUtils::Align(
                   start_data,

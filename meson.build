@@ -53,7 +53,8 @@ common_args = [
     '-std=c++20',
     '-Wextra',
     '-W',
-    '-Wall'
+    '-Wall',
+    '-Werror'
 ]
 
 args_dbg = [
