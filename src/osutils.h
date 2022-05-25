@@ -6,7 +6,6 @@
 #include "memoryutils.h"
 #include "pe.h"
 #include "process.h"
-#include <cstdint>
 
 namespace XKLib
 {

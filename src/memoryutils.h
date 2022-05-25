@@ -6,7 +6,6 @@
 #include "types.h"
 
 #include "custom_linux_syscalls.h"
-#include <sstream>
 
 namespace XKLib
 {

@@ -1,8 +1,6 @@
 #ifndef XKLIB_TEST_H
 #define XKLIB_TEST_H
 
-#include <cstdarg>
-
 #include "xklib.h"
 
 namespace XKLib
