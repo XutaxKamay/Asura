@@ -8,7 +8,6 @@ namespace XKLib
 {
     namespace PE
     {
-
         constexpr inline std::uint16_t MAGIC_NUMBER            = 0x5A4D;
         constexpr inline auto IMAGE_NUMBEROF_DIRECTORY_ENTRIES = 16;
         constexpr inline auto IMAGE_DIRECTORY_ENTRY_EXPORT     = 0;

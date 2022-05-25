@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 
         XKLib::Kokabiel kok(argv[2]);
 
-        XKLib::Kokabiel::injection_info_t injection_info;
+        XKLib::Kokabiel::InjectionInfo injection_info;
 
         auto task = process.createTask(nullptr);
 
@@ -40,11 +40,11 @@ int main(int argc, char** argv)
                   << "\n";
 
         kok.inject<XKLib::Process::TASK_STACK_SIZE,
-                   XKLib::Kokabiel::arch_t::X86>(mmap,
-                                                 {},
-                                                 {},
-                                                 task,
-                                                 injection_info);
+                   XKLib::Kokabiel::arch::X86>(mmap,
+                                               {},
+                                               {},
+                                               task,
+                                               injection_info);
 
         task.run<true>();
 
