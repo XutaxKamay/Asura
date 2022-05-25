@@ -344,7 +344,7 @@ namespace XKLib
                                                random_bytes);
 
         /* Setup auxiliary vectors */
-        ELFIO::Elf_auxv<reloc_ptr_t> elf_aux[2] {
+        const ELFIO::Elf_auxv<reloc_ptr_t> elf_aux[2] {
             {  ELFIO::AT_NULL,                                  { 0 }},
             {ELFIO::AT_RANDOM, { *view_as<reloc_ptr_t*>(&at_random) }}
         };
@@ -361,7 +361,7 @@ namespace XKLib
               sizeof(ELFIO::Elf_auxv<reloc_ptr_t>));
         }
 
-        static reloc_ptr_t null_address = 0;
+        const static reloc_ptr_t null_address = 0;
 
         /* write null address for limiting enp */
         injectionInfo.stack_start -= sizeof(reloc_ptr_t);
@@ -379,7 +379,7 @@ namespace XKLib
         {
             injectionInfo.stack_start -= sizeof(reloc_ptr_t);
 
-            auto address_of_string = view_as<reloc_ptr_t>(
+            const auto address_of_string = view_as<reloc_ptr_t>(
               injectionInfo.allocated_mem.env_data.start + env_offset);
 
             injectionInfo.process_memory_map.write(
@@ -400,7 +400,7 @@ namespace XKLib
         {
             injectionInfo.stack_start -= sizeof(reloc_ptr_t);
 
-            auto address_of_string = view_as<reloc_ptr_t>(
+            const auto address_of_string = view_as<reloc_ptr_t>(
               injectionInfo.allocated_mem.env_data.start + cmd_offset);
 
             injectionInfo.process_memory_map.write(

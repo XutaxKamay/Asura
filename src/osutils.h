@@ -40,22 +40,40 @@ namespace XKLib
 
                 case PE::IMAGE_FILE_MACHINE_IA64:
                 {
-                    return PE::find_exported_function<std::uint64_t, M>(
-                      dos_header,
-                      nt_parent_headers,
-                      funcName,
-                      baseAddress,
-                      FindExportedFunctionRunTime<M>);
+                    if constexpr (sizeof(std::uintptr_t)
+                                  >= sizeof(std::uint64_t))
+                    {
+                        return PE::find_exported_function<std::uint64_t, M>(
+                          dos_header,
+                          nt_parent_headers,
+                          funcName,
+                          baseAddress,
+                          FindExportedFunctionRunTime<M>);
+                    }
+                    else
+                    {
+                        XKLIB_EXCEPTION("Can't parse PE 64 bit files on "
+                                        "32 bit");
+                    }
                 }
 
                 case PE::IMAGE_FILE_MACHINE_AMD64:
                 {
-                    return PE::find_exported_function<std::uint64_t, M>(
-                      dos_header,
-                      nt_parent_headers,
-                      funcName,
-                      baseAddress,
-                      FindExportedFunctionRunTime<M>);
+                    if constexpr (sizeof(std::uintptr_t)
+                                  >= sizeof(std::uint64_t))
+                    {
+                        return PE::find_exported_function<std::uint64_t, M>(
+                          dos_header,
+                          nt_parent_headers,
+                          funcName,
+                          baseAddress,
+                          FindExportedFunctionRunTime<M>);
+                    }
+                    else
+                    {
+                        XKLIB_EXCEPTION("Can't parse PE 64 bit files on "
+                                        "32 bit");
+                    }
                 }
 
                 default:
@@ -89,11 +107,19 @@ namespace XKLib
 
                 case ELF::ELFCLASS64:
                 {
-                    return ELF::find_symbol<std::uint64_t, M>(
-                      elf_parent_header,
-                      funcName,
-                      baseAddress);
-                    break;
+                    if constexpr (sizeof(std::uintptr_t)
+                                  >= sizeof(std::uint64_t))
+                    {
+                        return ELF::find_symbol<std::uint64_t, M>(
+                          elf_parent_header,
+                          funcName,
+                          baseAddress);
+                    }
+                    else
+                    {
+                        XKLIB_EXCEPTION("Can't parse ELF 64 bit files on "
+                                        "32 bit");
+                    }
                 }
 
                 default:
@@ -231,4 +257,3 @@ namespace XKLib
 }
 
 #endif
-
