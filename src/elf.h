@@ -292,7 +292,7 @@ namespace XKLib
                     }
                 }
 
-                return { true, 0 };
+                return { false, 0 };
             };
 
             for (std::uint16_t i = 0; i < view_count; i++)

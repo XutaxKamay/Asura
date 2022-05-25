@@ -303,6 +303,7 @@ namespace XKLib
             {
                 const std::string& forward_func_name(
                   view_as<const char* const>(func_ptr));
+
                 const auto dot_pos = forward_func_name.find('.');
 
                 if (dot_pos != std::string::npos)
