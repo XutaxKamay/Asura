@@ -302,10 +302,17 @@ namespace XKLib
 
                 if constexpr (M)
                 {
+                    /**
+                     * We want only PT_DYNAMIC that holds our information.
+                     */
+                    if (view->p_type != PT_DYNAMIC)
+                    {
+                        continue;
+                    }
+
                     const Elf_Sym<T>* symbol_table = nullptr;
                     T symbol_count                 = 0;
                     std::uintptr_t string_table    = 0;
-                    bool processed_pt_dynamic      = false;
 
                     const auto process_symtab = [&](const auto dyn)
                     {
@@ -345,7 +352,7 @@ namespace XKLib
                         string_table = dyn->d_un.d_val;
                     };
 
-                    const auto process_pt_dynamic = [&]()
+                    const auto process_pt_dynamic = [&]() -> module_sym_t
                     {
                         for (auto dyn = view_as<const Elf_Dyn<T>*>(
                                view_as<std::uintptr_t>(elf_header)
@@ -367,61 +374,42 @@ namespace XKLib
                                 }
                             }
                         }
-                    };
 
-                    switch (view->p_type)
-                    {
-                        case PT_DYNAMIC:
+                        if (symbol_count and symbol_table
+                            and string_table)
                         {
-                            if (processed_pt_dynamic)
+                            const auto [found, st_value] = process_symbol_table(
+                              symbol_count,
+                              symbol_table,
+                              string_table);
+
+                            if (found)
                             {
-                                XKLIB_EXCEPTION("Can't contain more than"
-                                                " one PT_DYNAMIC type");
+                                return { view_as<std::uintptr_t>(
+                                           baseAddress),
+                                         st_value
+                                           + view_as<std::uintptr_t>(
+                                             baseAddress) };
                             }
-                            else
-                            {
-                                processed_pt_dynamic = true;
-                            }
 
-                            process_pt_dynamic();
-
-                            break;
+                            return { 0, 0 };
                         }
-                    }
-
-                    if (symbol_count and symbol_table and string_table)
-                    {
-                        const auto [found, st_value] = process_symbol_table(
-                          symbol_count,
-                          symbol_table,
-                          string_table);
-
-                        if (found)
-                        {
-                            return { view_as<std::uintptr_t>(baseAddress),
-                                     st_value
-                                       + view_as<std::uintptr_t>(
-                                         baseAddress) };
-                        }
-                        /* else we break the view loop since we didn't
-                         * find */
                         else
                         {
-                            break;
+                            XKLIB_EXCEPTION(
+                              "Couldn't find enough information about "
+                              "ELF => "
+                              "symbol_count: "
+                              + std::to_string(symbol_count)
+                              + " symbol_table: "
+                              + std::to_string(
+                                view_as<std::uintptr_t>(symbol_table))
+                              + " string_table: "
+                              + std::to_string(string_table));
                         }
-                    }
-                    else
-                    {
-                        XKLIB_EXCEPTION(
-                          "Couldn't find enough information about ELF => "
-                          "symbol_count: "
-                          + std::to_string(symbol_count)
-                          + " symbol_table: "
-                          + std::to_string(
-                            view_as<std::uintptr_t>(symbol_table))
-                          + " string_table: "
-                          + std::to_string(string_table));
-                    }
+                    };
+
+                    return process_pt_dynamic();
                 }
                 else
                 {

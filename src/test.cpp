@@ -790,19 +790,27 @@ auto XKLib::Test::run() -> void
 
     rogue();
 
-    const auto [self_proc_name, result] = Process::name(
-      Process::self().id());
+    try
+    {
+        const auto [self_proc_name, result] = Process::name(
+          Process::self().id());
 
-    const auto [mod_addr, symbol_addr] = OSUtils::
-      FindExportedFunctionRunTime<true>(self_proc_name, "syscall");
+        const auto [mod_addr, symbol_addr] = OSUtils::
+          FindExportedFunctionRunTime<true>(self_proc_name, "syscall");
 
-    std::cout << std::hex << mod_addr << " " << symbol_addr << std::endl;
+        std::cout << std::hex << mod_addr << " " << symbol_addr
+                  << std::endl;
 
-    const auto [mod_addr2, symbol_addr2] = OSUtils::
-      FindExportedFunctionRunTime<false>(self_proc_name, "syscall");
+        const auto [mod_addr2, symbol_addr2] = OSUtils::
+          FindExportedFunctionRunTime<false>(self_proc_name, "syscall");
 
-    std::cout << std::hex << mod_addr2 << " " << symbol_addr2
-              << std::endl;
+        std::cout << std::hex << mod_addr2 << " " << symbol_addr2
+                  << std::endl;
+    }
+    catch (Exception& e)
+    {
+        std::cout << e.msg() << std::endl;
+    }
 
     // std::getchar();
 }
