@@ -51,13 +51,13 @@ namespace XKLib
                 return address;
             }
 
-            struct simplified_area_t
+            struct SimplifiedArea
             {
                 std::uintptr_t begin;
                 std::uintptr_t end;
             };
 
-            std::vector<simplified_area_t> simplified_areas;
+            std::vector<SimplifiedArea> simplified_areas;
 
             /**
              * Merge areas, even if they're not the same memory
@@ -69,7 +69,7 @@ namespace XKLib
 
             while (area_index < _areas.size())
             {
-                simplified_area_t simplified_area;
+                SimplifiedArea simplified_area;
 
                 const auto first_area = _areas[area_index];
                 const auto begin_ptr  = first_area->begin();
@@ -199,7 +199,7 @@ namespace XKLib
 
             const auto area = search(address);
 
-            if (!area)
+            if (not area)
             {
                 XKLIB_EXCEPTION("Could not find area");
             }

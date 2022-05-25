@@ -24,7 +24,7 @@ auto WriteBuffer::toBytes() const -> bytes_t
     return bs;
 }
 
-auto WriteBuffer::addType(typesize_t typeSize) -> void
+auto WriteBuffer::addType(TypeSize typeSize) -> void
 {
     addData(&typeSize, view_as<std::size_t>(sizeof(typeSize)));
 }

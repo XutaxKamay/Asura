@@ -22,7 +22,7 @@ namespace XKLib
         auto advance(const std::size_t size) -> void;
 
       public:
-        template <typesize_t T = type_32s>
+        template <TypeSize T = type_32s>
         constexpr inline auto readVar(std::size_t* const pSize = nullptr)
         {
             if (_read_size >= maxSize())
@@ -30,8 +30,8 @@ namespace XKLib
                 XKLIB_EXCEPTION("Filled buffer");
             }
 
-            auto type = *this->shift<typesize_t*>(_read_size);
-            advance(sizeof(typesize_t));
+            auto type = *this->shift<TypeSize*>(_read_size);
+            advance(sizeof(TypeSize));
 
             /* Read type first */
             if (type != T)

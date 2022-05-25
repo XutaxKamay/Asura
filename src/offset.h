@@ -5,17 +5,16 @@
 
 namespace XKLib
 {
-    class Offset
+    struct Offset
     {
-      public:
         template <std::size_t O, typename T>
-        auto member_at() const -> T
+        auto member() const -> T
         {
             return view_as<T>(view_as<std::uintptr_t>(this) + O);
         }
 
         template <typename T, typename... A>
-        auto call_at(const auto addr, A... args) const
+        auto call(const auto addr, A... args) const
         {
 #ifndef WIN32
             return view_as<T (*)(decltype(this), A...)>(addr)(this,

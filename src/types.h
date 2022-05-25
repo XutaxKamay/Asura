@@ -22,19 +22,22 @@ namespace XKLib
 #endif
 
     template <typename T>
-    struct type_wrapper_t
+    struct TypeWrapper
     {
         using type = T;
     };
 
     template <typename T>
-    inline constexpr type_wrapper_t<T> type_wrapper {};
+    inline constexpr TypeWrapper<T> type_wrapper {};
 
     template <typename T>
-    __attribute__((__always_inline__)) constexpr auto view_as(auto var)
+    __attribute__((__always_inline__)) inline constexpr auto view_as(
+      const auto var)
     {
         return (T)(var);
     }
-} // namespace XKLib
 
-#endif // TYPES_H
+    using module_sym_t = std::tuple<std::uintptr_t, std::uintptr_t>;
+}
+
+#endif

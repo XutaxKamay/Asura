@@ -15,7 +15,7 @@ namespace XKLib
         bool readBit();
         void pos(std::size_t toBit = 0);
 
-        template <typesize_t T = type_array>
+        template <TypeSize T = type_array>
         auto readVar()
         {
             if constexpr (T == type_array)

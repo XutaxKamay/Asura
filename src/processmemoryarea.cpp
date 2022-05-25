@@ -109,13 +109,13 @@ auto XKLib::ProcessMemoryArea::isDeniedByOS() const -> bool
 auto XKLib::ProcessMemoryArea::isReadable() const -> bool
 {
     return (_protection_flags.cachedValue() & ProtectionFlags::R)
-           and !isDeniedByOS();
+           and not isDeniedByOS();
 }
 
 auto XKLib::ProcessMemoryArea::isWritable() const -> bool
 {
     return (_protection_flags.cachedValue() & ProtectionFlags::W)
-           and !isDeniedByOS();
+           and not isDeniedByOS();
 }
 
 auto ProcessMemoryArea::protectionFlags() -> ModifiableProtectionFlags&

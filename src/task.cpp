@@ -96,7 +96,7 @@ auto Task::wait() const -> void
                                           false,
                                           view_as<DWORD>(_id));
 
-    if (!thread_handle)
+    if (not thread_handle)
     {
         XKLIB_EXCEPTION("Don't have permissions to wait "
                         "for task termination");
@@ -120,13 +120,13 @@ auto Task::kill() const -> void
                                           false,
                                           view_as<DWORD>(_id));
 
-    if (!thread_handle)
+    if (not thread_handle)
     {
         XKLIB_EXCEPTION("Don't have permissions to terminate "
                         "task");
     }
 
-    if (!TerminateThread(thread_handle, view_as<DWORD>(EXIT_CODE)))
+    if (not TerminateThread(thread_handle, view_as<DWORD>(EXIT_CODE)))
     {
         XKLIB_EXCEPTION("Could not terminate task");
     }

@@ -30,7 +30,7 @@ auto ProcessMemoryMap::refresh() -> void
       "/proc/" + std::to_string(_process_base.id()) + "/maps");
     std::string line;
 
-    if (!file_memory_map.is_open())
+    if (not file_memory_map.is_open())
     {
         XKLIB_EXCEPTION("Couldn't open /proc/"
                         + std::to_string(_process_base.id()) + "/maps");
@@ -63,10 +63,11 @@ auto ProcessMemoryMap::refresh() -> void
 
         constexpr auto REGEX_HEX_NUMBER = "[0-9a-f]+";
         constexpr auto REGEX_PROT       = "[r-][w-][x-][ps]";
-        constexpr auto REGEX_NAME = "[0-9a-f]+-[0-9a-f]+ [r-][w-][x-][ps] "
-                                    "[0-9a-f]+ "
-                                    "[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f] "
-                                    "[0-9]+[ ]+";
+        constexpr auto REGEX_NAME       = "[0-9a-f]+-[0-9a-f]+ "
+                                          "[r-][w-][x-][ps] "
+                                          "[0-9a-f]+ "
+                                          "[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f] "
+                                          "[0-9]+[ ]+";
 
         std::smatch match;
         const std::regex regex_hex_number(REGEX_HEX_NUMBER);

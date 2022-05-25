@@ -15,7 +15,7 @@ namespace XKLib
         void writeBit(bool value);
         void pos(std::size_t toBit = 0);
 
-        template <typesize_t T = type_array>
+        template <TypeSize T = type_array>
         auto writeVar(g_v_t<T> var)
         {
             if constexpr (T == type_array)

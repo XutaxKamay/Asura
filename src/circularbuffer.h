@@ -11,7 +11,7 @@ namespace XKLib
       public:
         using pT = T*;
 
-        enum push_type_t
+        enum PushType
         {
             Filling,
             Updating

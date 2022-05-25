@@ -1,13 +1,13 @@
-#include "memoryutils.h"
 #include "pch.h"
 
 #include "exception.h"
+#include "memoryutils.h"
 
 #include "kokabiel.h"
 
 XKLib::Kokabiel::Kokabiel(const std::string& fileName)
 {
-    if (!_elf.load(fileName))
+    if (not _elf.load(fileName))
     {
         XKLIB_EXCEPTION("Couldn't load " + fileName);
     }
@@ -24,7 +24,7 @@ auto XKLib::Kokabiel::loadSegments() -> void
 
         if (seg_type == ELFIO::PT_LOAD)
         {
-            memory_area_t loadable_segment;
+            MemoryArea loadable_segment;
 
             loadable_segment.start = MemoryUtils::Align(
               segment->get_virtual_address(),
@@ -46,14 +46,16 @@ auto XKLib::Kokabiel::loadSegments() -> void
 
             const auto seg_flags = segment->get_flags();
 
-            loadable_segment.flags = ((seg_flags & ELFIO::PF_R) ?
-                                        MemoryArea::ProtectionFlags::R :
-                                        0)
+            loadable_segment.flags = ((seg_flags & ELFIO::PF_R) ? XKLib::
+                                          MemoryArea::ProtectionFlags::R :
+                                                                  0)
                                      | ((seg_flags & ELFIO::PF_W) ?
-                                          MemoryArea::ProtectionFlags::W :
+                                          XKLib::MemoryArea::
+                                            ProtectionFlags::W :
                                           0)
                                      | ((seg_flags & ELFIO::PF_X) ?
-                                          MemoryArea::ProtectionFlags::X :
+                                          XKLib::MemoryArea::
+                                            ProtectionFlags::X :
                                           0);
 
             _loadable_segments.push_back(loadable_segment);
@@ -68,7 +70,7 @@ auto XKLib::Kokabiel::loadSegments() -> void
     /* sort segments */
     std::sort(_loadable_segments.begin(),
               _loadable_segments.end(),
-              [](const memory_area_t& ma1, const memory_area_t& ma2)
+              [](const MemoryArea& ma1, const MemoryArea& ma2)
               {
                   return ma1.start < ma2.start;
               });
@@ -79,7 +81,7 @@ auto XKLib::Kokabiel::loadSegments() -> void
                   - _loadable_segments.begin()->start;
 }
 
-auto XKLib::Kokabiel::freeInjection(injection_info_t& injectionInfo) const
+auto XKLib::Kokabiel::freeInjection(InjectionInfo& injectionInfo) const
   -> void
 {
     injectionInfo.process_memory_map.freeArea(

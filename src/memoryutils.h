@@ -66,7 +66,7 @@ namespace XKLib
               MemoryArea::ProtectionFlags::ToOS(flags),
               &dwOldFlags);
 
-            if (!ret)
+            if (not ret)
             {
                 XKLIB_EXCEPTION("VirtualProtectEx failed");
             }
@@ -164,7 +164,7 @@ namespace XKLib
                                            aligned_size,
                                            MEM_RELEASE);
 
-            if (!ret)
+            if (not ret)
             {
                 XKLIB_EXCEPTION("VirtualFreeEx failed");
             }
@@ -222,7 +222,7 @@ namespace XKLib
               result.size(),
               nullptr);
 
-            if (!ret)
+            if (not ret)
             {
                 std::stringstream ss;
                 ss << std::hex << address;
@@ -278,7 +278,7 @@ namespace XKLib
               result.size() * sizeof(A),
               nullptr);
 
-            if (!ret)
+            if (not ret)
             {
                 XKLIB_EXCEPTION("ReadProcessMemory failed with "
                                 + std::to_string(address) + " and size: "
@@ -339,7 +339,7 @@ namespace XKLib
                                                 bytes.size(),
                                                 nullptr);
 
-            if (!ret)
+            if (not ret)
             {
                 XKLIB_EXCEPTION(
                   "WriteProcessMemory failed with: address: " + ss.str()

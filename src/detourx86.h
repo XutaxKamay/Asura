@@ -4,7 +4,7 @@
 #include "process.h"
 
 #ifdef WINDOWS
-enum calling_conventions_t
+enum CallingConventions
 {
     cc_fastcall,
     cc_stdcall,
@@ -90,7 +90,7 @@ namespace XKLib
          * instead'
          */
 #ifdef _WIN32
-    template <calling_conventions_t C, typename T, typename... A>
+    template <CallingConventions C, typename T, typename... A>
 #else
     template <typename T, typename... A>
 #endif
@@ -176,7 +176,7 @@ namespace XKLib
  * always pushed to the stack.
  */
 #ifdef _WIN32
-    template <calling_conventions_t C, typename T, typename... A>
+    template <CallingConventions C, typename T, typename... A>
     constexpr auto TraditionalDetourX86<C, T, A...>::
       GenerateCallBackFuncType()
     {
@@ -195,7 +195,7 @@ namespace XKLib
         }
     }
 
-    template <calling_conventions_t C, typename T, typename... A>
+    template <CallingConventions C, typename T, typename... A>
     constexpr auto TraditionalDetourX86<C, T, A...>::GenerateNewFuncType()
     {
         if constexpr (C == cc_fastcall)

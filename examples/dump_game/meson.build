@@ -6,6 +6,7 @@ xklib_srcs = [
     'src/XKLib/src/circularbuffer.cpp',
     'src/XKLib/src/decryptrsablocks.cpp',
     'src/XKLib/src/detourx86.cpp',
+    'src/XKLib/src/elf.cpp',
     'src/XKLib/src/encryptrsablocks.cpp',
     'src/XKLib/src/exception.cpp',
     'src/XKLib/src/hybridcrypto.cpp',
@@ -19,6 +20,7 @@ xklib_srcs = [
     'src/XKLib/src/osutils.cpp',
     'src/XKLib/src/patternbyte.cpp',
     'src/XKLib/src/patternscanning.cpp',
+    'src/XKLib/src/pe.cpp',
     'src/XKLib/src/processbase.cpp',
     'src/XKLib/src/process.cpp',
     'src/XKLib/src/processmemoryarea.cpp',
@@ -57,34 +59,12 @@ common_args = [
     '-Wno-ignored-optimization-argument'
 ]
 
-args_dbg = [
-    '-O0',
-    '-g'
-]
-args_dbg += common_args
-
-args_rel = [
-    '-O3',
-    '-fvisibility=hidden',
-    '-fvisibility-inlines-hidden',
-    '-frename-registers',
-    '-fomit-frame-pointer',
-    '-s'
-]
-
-args_rel += common_args
-
-args_rel_native = [
-    '-march=native',
-    '-mtune=native'
-]
-args_rel_native += args_rel
-
-
 deps = [
   dependency('libcryptopp')
 ]
 
-executable('dump_game.dbg', sources : srcs, cpp_pch : 'src/pch.h', include_directories : incdirs, cpp_args : args_dbg, dependencies : deps)
-executable('dump_game.rel', sources : srcs, cpp_pch : 'src/pch.h', include_directories : incdirs, cpp_args : args_rel, dependencies : deps)
-executable('dump_game.rel.native', sources : srcs, cpp_pch : 'src/pch.h', include_directories : incdirs, cpp_args : args_rel_native, dependencies : deps)
+if get_option('native')
+    common_args += '-march=native -mtune=native'
+endif
+
+executable('dump_game.out', sources : srcs, cpp_pch : 'src/pch.h', include_directories : incdirs, cpp_args : common_args, dependencies : deps)

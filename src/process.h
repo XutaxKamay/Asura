@@ -2,6 +2,7 @@
 #define XKLIB_PROCESS_H
 
 #include "exception.h"
+#include "memoryarea.h"
 #include "memorymap.h"
 #include "memoryutils.h"
 #include "patternbyte.h"
@@ -15,13 +16,38 @@ namespace XKLib
     class Process : public ProcessBase
     {
       public:
+        class Module
+        {
+          public:
+            Module() = default;
+            Module(ptr_t baseAddress,
+                   const std::string& name,
+                   const std::string& path = {});
+
+          public:
+            auto baseAddress() const -> const ptr_t&;
+            auto name() const -> const std::string&;
+            auto path() const -> const std::string&;
+
+          public:
+            auto baseAddress() -> ptr_t&;
+            auto name() -> std::string&;
+            auto path() -> std::string&;
+
+          private:
+            ptr_t _base_address;
+            std::string _name;
+            std::string _path;
+        };
+
+      public:
         static inline constexpr process_id_t INVALID_PID    = -1;
         static inline constexpr std::size_t TASK_STACK_SIZE = 0x100000;
 
       public:
         static auto self() -> Process;
         static auto find(const std::string& name) -> Process;
-        static auto ProcessName(const process_id_t pid)
+        static auto name(const process_id_t pid)
           -> std::tuple<std::string, bool>;
 
       public:
@@ -31,10 +57,13 @@ namespace XKLib
       public:
         auto tasks() const -> tasks_t;
         auto mmap() const -> const ProcessMemoryMap&;
+        auto modules() const -> const std::list<Module>&;
         auto search(PatternByte& patternByte) const -> void;
 
       public:
         auto mmap() -> ProcessMemoryMap&;
+        auto modules() -> std::list<Module>&;
+        auto refreshModules() -> void;
 
       public:
         template <std::size_t N = TASK_STACK_SIZE>
@@ -98,6 +127,7 @@ namespace XKLib
       private:
         std::string _full_name;
         ProcessMemoryMap _mmap;
+        std::list<Module> _modules;
     };
 }
 

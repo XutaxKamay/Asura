@@ -70,7 +70,7 @@ namespace XKLib
         pBuf = nullptr;
     }
 
-    enum typesize_t : byte_t
+    enum TypeSize : byte_t
     {
         type_float,
         type_double,
@@ -86,7 +86,7 @@ namespace XKLib
         type_array
     };
 
-    template <typesize_t T>
+    template <TypeSize T>
     constexpr inline auto _gvt()
     {
         static_assert(T <= type_array, "Not implemented");
@@ -117,11 +117,11 @@ namespace XKLib
             return type_wrapper<double>;
     }
 
-    auto get_variable_type_str(const typesize_t typeSize) -> std::string;
+    auto get_variable_type_str(const TypeSize typeSize) -> std::string;
 
-    template <typesize_t T>
+    template <TypeSize T>
     using get_variable_t = typename decltype(_gvt<T>())::type;
-    template <typesize_t T>
+    template <TypeSize T>
     using g_v_t = get_variable_t<T>;
 
     class Buffer
@@ -145,7 +145,7 @@ namespace XKLib
         template <typename T = ptr_t>
         constexpr inline auto shift(const std::size_t size = 0) const
         {
-            if (!_data and size >= _max_size)
+            if (not _data and size >= _max_size)
             {
                 XKLIB_EXCEPTION("Out of bounds.");
             }

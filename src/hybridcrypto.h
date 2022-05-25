@@ -11,7 +11,7 @@ namespace XKLib
         static constexpr auto AESKeySize = CryptoPP::AES::MAX_KEYLENGTH;
         static constexpr auto AESIVSize  = CryptoPP::AES::BLOCKSIZE;
 
-        struct AESData_t
+        struct AESData
         {
             std::array<CryptoPP::byte, AESKeySize> key;
             std::array<CryptoPP::byte, AESIVSize> iv;

@@ -2,10 +2,47 @@
 
 #include "patternscanning.h"
 #include "process.h"
+#include "processmemoryarea.h"
 #include "types.h"
-#include <stdexcept>
 
 using namespace XKLib;
+
+Process::Module::Module(ptr_t baseAddress,
+                        const std::string& name,
+                        const std::string& path)
+ : _base_address(baseAddress), _name(name), _path(path)
+{
+}
+
+auto Process::Module::baseAddress() const -> const ptr_t&
+{
+    return _base_address;
+}
+
+auto Process::Module::name() const -> const std::string&
+{
+    return _name;
+}
+
+auto Process::Module::path() const -> const std::string&
+{
+    return _path;
+}
+
+auto Process::Module::baseAddress() -> ptr_t&
+{
+    return _base_address;
+}
+
+auto Process::Module::name() -> std::string&
+{
+    return _name;
+}
+
+auto Process::Module::path() -> std::string&
+{
+    return _path;
+}
 
 auto XKLib::Process::find(const std::string& name) -> XKLib::Process
 {
@@ -15,7 +52,7 @@ auto XKLib::Process::find(const std::string& name) -> XKLib::Process
     const auto tool_handle = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS,
                                                       0);
 
-    if (!tool_handle)
+    if (not tool_handle)
     {
         goto end;
     }
@@ -27,7 +64,10 @@ auto XKLib::Process::find(const std::string& name) -> XKLib::Process
     {
         do
         {
-            if (name.find(process_entry32.szExeFile) != std::string::npos)
+            const auto exe_file_name = std::string(
+              process_entry32.szExeFile);
+
+            if (exe_file_name.find(name) != std::string::npos)
             {
                 process = Process(process_entry32.th32ProcessID);
                 break;
@@ -55,14 +95,12 @@ auto XKLib::Process::find(const std::string& name) -> XKLib::Process
                 continue;
             }
 
-            const auto [result, found] = ProcessName(pid);
+            const auto [result, found] = Process::name(pid);
 
-            if (!found)
+            if (not found)
             {
                 continue;
             }
-
-	    std::cout << result << "\n";
 
             if (result.find(name) != std::string::npos)
             {
@@ -84,7 +122,7 @@ end:
     return process;
 }
 
-auto XKLib::Process::ProcessName(const process_id_t pid)
+auto XKLib::Process::name(const process_id_t pid)
   -> std::tuple<std::string, bool>
 {
     std::string result;
@@ -93,11 +131,12 @@ auto XKLib::Process::ProcessName(const process_id_t pid)
 #ifndef WINDOWS
     result.resize(PATH_MAX);
 
-    if (readlink(
-          std::string("/proc/" + std::to_string(pid) + "/exe").c_str(),
-          result.data(),
-          result.size())
-        < 0)
+    const auto real_size = readlink(
+      std::string("/proc/" + std::to_string(pid) + "/exe").c_str(),
+      result.data(),
+      result.size());
+
+    if (real_size < 0)
     {
         /* could be a kernel thread */
         found = false;
@@ -106,6 +145,7 @@ auto XKLib::Process::ProcessName(const process_id_t pid)
     }
     else
     {
+        result.resize(real_size);
         found = true;
     }
 #else
@@ -116,21 +156,22 @@ auto XKLib::Process::ProcessName(const process_id_t pid)
                                             false,
                                             view_as<DWORD>(pid));
 
-    if (!process_handle)
+    if (not process_handle)
     {
         XKLIB_EXCEPTION("Could not get process handle.");
     }
 
-    if (GetModuleFileNameExA(process_handle,
-                             nullptr,
-                             result.data(),
-                             result.size())
-        <= 0)
+    const auto real_size = GetModuleFileNameExA(process_handle,
+                                                nullptr,
+                                                result.data(),
+                                                result.size());
+    if (real_size <= 0)
     {
         found = false;
     }
     else
     {
+        result.resize(real_size);
         found = true;
     }
 
@@ -149,22 +190,23 @@ auto Process::self() -> Process
 #endif
 }
 
-Process::Process()
- : ProcessBase(INVALID_PID), _full_name("unknown"),
-   _mmap(ProcessMemoryMap(*this))
+Process::Process() : ProcessBase(INVALID_PID), _full_name("unknown")
 {
 }
 
 Process::Process(const process_id_t pid)
  : ProcessBase(pid), _mmap(ProcessMemoryMap(*this))
 {
-    const auto [result, found] = ProcessName(pid);
-    if (!found)
+    const auto [result, found] = name(pid);
+
+    if (not found)
     {
         return;
     }
 
     _full_name = result;
+
+    refreshModules();
 }
 
 auto Process::tasks() const -> tasks_t
@@ -177,6 +219,11 @@ auto Process::mmap() const -> const ProcessMemoryMap&
     return _mmap;
 }
 
+auto Process::modules() const -> const std::list<Module>&
+{
+    return _modules;
+}
+
 auto Process::search(PatternByte& patternByte) const -> void
 {
     PatternScanning::searchInProcess(patternByte, *this);
@@ -185,4 +232,46 @@ auto Process::search(PatternByte& patternByte) const -> void
 auto Process::mmap() -> ProcessMemoryMap&
 {
     return _mmap;
+}
+
+auto Process::modules() -> std::list<Module>&
+{
+    return _modules;
+}
+
+auto Process::refreshModules() -> void
+{
+    _modules.clear();
+
+    const auto& mmap  = this->mmap();
+    const auto& areas = mmap.areas();
+
+    std::for_each(
+      areas.begin(),
+      areas.end(),
+      [&](const std::shared_ptr<ProcessMemoryArea>& area)
+      {
+          if (area->isDeniedByOS() or not area->isReadable())
+          {
+              return;
+          }
+
+          const auto area_name = area->name();
+
+          const auto path = std::filesystem::path(area->name());
+
+          if (std::filesystem::exists(path))
+          {
+              const auto base_name = path.filename();
+
+              _modules.push_back(
+                { area->begin<ptr_t>(), base_name, area->name() });
+          }
+      });
+
+    _modules.unique(
+      [](const Module& moduleA, const Module& moduleB)
+      {
+          return (moduleA.name() == moduleB.name());
+      });
 }

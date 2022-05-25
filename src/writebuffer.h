@@ -25,13 +25,13 @@ namespace XKLib
 
       public:
         auto writeSize() -> std::size_t&;
-        auto addType(const typesize_t T) -> void;
+        auto addType(const TypeSize T) -> void;
         auto reset() -> void;
         auto addData(const ptr_t data, const std::size_t size) -> void;
         auto advance(const std::size_t size) -> void;
 
       public:
-        template <typesize_t T = type_32s>
+        template <TypeSize T = type_32s>
         constexpr inline auto addVar(get_variable_t<T> value,
                                      std::size_t size = 0)
         {

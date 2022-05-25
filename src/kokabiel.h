@@ -12,7 +12,7 @@ namespace ELFIO
     constexpr auto AT_RANDOM = 25;
 
     template <typename T>
-    struct Elf_auxv_t
+    struct Elf_auxv
     {
         T a_type; /* Entry type */
         union
@@ -40,7 +40,7 @@ namespace XKLib
     class Kokabiel
     {
       private:
-        struct memory_area_t
+        struct MemoryArea
         {
             bytes_t bytes;
             mapf_t flags;
@@ -48,69 +48,69 @@ namespace XKLib
         };
 
       public:
-        struct injection_info_t
+        struct InjectionInfo
         {
             struct
             {
-                memory_area_t shellcode;
-                memory_area_t env_data;
+                MemoryArea shellcode;
+                MemoryArea env_data;
             } allocated_mem;
 
             std::uintptr_t offset_image;
             std::uintptr_t entry_point;
             std::uintptr_t stack_start;
-            std::vector<memory_area_t> loaded_segments;
+            std::vector<MemoryArea> loaded_segments;
             ProcessMemoryMap process_memory_map;
         };
 
-        enum class arch_t
+        enum class arch
         {
             X86
         };
 
         Kokabiel(const std::string& fileName);
 
-        template <std::size_t N, arch_t A>
+        template <std::size_t N, arch A>
         auto inject(ProcessMemoryMap& processMemoryMap,
                     const std::vector<std::string>& cmdLine,
                     const std::vector<std::string>& env,
                     RunnableTask<N>& runnableTask,
-                    injection_info_t& injectionInfo) const -> void;
+                    InjectionInfo& injectionInfo) const -> void;
 
-        auto freeInjection(injection_info_t& injectionInfo) const -> void;
+        auto freeInjection(InjectionInfo& injectionInfo) const -> void;
 
       private:
         auto loadSegments() -> void;
 
         template <unsigned char E>
         requires(ELFClassSupported<E>) auto relocateSegments(
-          injection_info_t& injectionInfo) const -> void;
+          InjectionInfo& injectionInfo) const -> void;
 
         template <unsigned char E, std::size_t N>
         requires(ELFClassSupported<E>) auto createEnv(
           const std::vector<std::string>& cmdLine,
           const std::vector<std::string>& env,
           RunnableTask<N>& runnableTask,
-          injection_info_t& injectionInfo) const;
+          InjectionInfo& injectionInfo) const;
 
-        template <unsigned char E, std::size_t N, arch_t A>
+        template <unsigned char E, std::size_t N, arch A>
         requires(ELFClassSupported<E>) auto createShellCode(
           const std::vector<std::string>& cmdLine,
           RunnableTask<N>& runnableTask,
-          injection_info_t& injectionInfo) const -> void;
+          InjectionInfo& injectionInfo) const -> void;
 
       private:
         ELFIO::elfio _elf;
-        std::vector<memory_area_t> _loadable_segments;
+        std::vector<MemoryArea> _loadable_segments;
         std::size_t _image_size;
     };
 
-    template <std::size_t N, Kokabiel::arch_t A>
+    template <std::size_t N, Kokabiel::arch A>
     auto Kokabiel::inject(ProcessMemoryMap& processMemoryMap,
                           const std::vector<std::string>& cmdLine,
                           const std::vector<std::string>& env,
                           RunnableTask<N>& runnableTask,
-                          injection_info_t& injectionInfo) const -> void
+                          InjectionInfo& injectionInfo) const -> void
     {
         if (_elf.get_type() != ELFIO::ET_DYN
             and _elf.get_type() != ELFIO::ET_EXEC)
@@ -153,7 +153,7 @@ namespace XKLib
 
     template <unsigned char E>
     requires(ELFClassSupported<E>) auto Kokabiel::relocateSegments(
-      injection_info_t& injectionInfo) const -> void
+      InjectionInfo& injectionInfo) const -> void
     {
         /* Only copy previous segments for multi-threading */
         injectionInfo.loaded_segments = _loadable_segments;
@@ -166,7 +166,7 @@ namespace XKLib
               injectionInfo.process_memory_map.allocArea(
                 injectionInfo.loaded_segments.begin()->start,
                 _image_size,
-                MemoryArea::ProtectionFlags::RW));
+                XKLib::MemoryArea::ProtectionFlags::RW));
 
             if (image_base == 0
                 or (image_base
@@ -181,7 +181,7 @@ namespace XKLib
               injectionInfo.process_memory_map.allocArea(
                 0,
                 _image_size,
-                MemoryArea::ProtectionFlags::RW));
+                XKLib::MemoryArea::ProtectionFlags::RW));
 
             if (image_base == 0)
             {
@@ -249,7 +249,7 @@ namespace XKLib
       const std::vector<std::string>& cmdLine,
       const std::vector<std::string>& env,
       RunnableTask<N>& runnableTask,
-      injection_info_t& injectionInfo) const
+      InjectionInfo& injectionInfo) const
     {
         constexpr auto _reloc_ptr = []()
         {
@@ -308,7 +308,7 @@ namespace XKLib
           nullptr,
           injectionInfo.allocated_mem.env_data.bytes.size()
             + MemoryUtils::GetPageSize(),
-          MemoryArea::ProtectionFlags::RW));
+          XKLib::MemoryArea::ProtectionFlags::RW));
 
         if (injectionInfo.allocated_mem.env_data.start == 0)
         {
@@ -344,7 +344,7 @@ namespace XKLib
                                                random_bytes);
 
         /* Setup auxiliary vectors */
-        ELFIO::Elf_auxv_t<reloc_ptr_t> elf_aux[2] {
+        ELFIO::Elf_auxv<reloc_ptr_t> elf_aux[2] {
             {  ELFIO::AT_NULL,                                  { 0 }},
             {ELFIO::AT_RANDOM, { *view_as<reloc_ptr_t*>(&at_random) }}
         };
@@ -353,12 +353,12 @@ namespace XKLib
         for (std::size_t i = 0; i < 2; i++)
         {
             injectionInfo.stack_start -= sizeof(
-              ELFIO::Elf_auxv_t<reloc_ptr_t>);
+              ELFIO::Elf_auxv<reloc_ptr_t>);
 
             injectionInfo.process_memory_map.write(
               view_as<ptr_t>(injectionInfo.stack_start),
               &elf_aux[i],
-              sizeof(ELFIO::Elf_auxv_t<reloc_ptr_t>));
+              sizeof(ELFIO::Elf_auxv<reloc_ptr_t>));
         }
 
         static reloc_ptr_t null_address = 0;
@@ -410,11 +410,11 @@ namespace XKLib
         }
     }
 
-    template <unsigned char E, std::size_t N, Kokabiel::arch_t A>
+    template <unsigned char E, std::size_t N, Kokabiel::arch A>
     requires(ELFClassSupported<E>) auto Kokabiel::createShellCode(
       const std::vector<std::string>& cmdLine,
       RunnableTask<N>& runnableTask,
-      injection_info_t& injectionInfo) const -> void
+      InjectionInfo& injectionInfo) const -> void
     {
         constexpr auto _reloc_ptr = []()
         {
@@ -430,7 +430,7 @@ namespace XKLib
 
         using reloc_ptr_t = typename decltype(_reloc_ptr)::type;
 
-        if constexpr (A == arch_t::X86)
+        if constexpr (A == arch::X86)
         {
             if constexpr (E == ELFIO::ELFCLASS64)
             {
@@ -509,7 +509,7 @@ namespace XKLib
           std::uintptr_t>(injectionInfo.process_memory_map.allocArea(
           nullptr,
           injectionInfo.allocated_mem.shellcode.bytes.size(),
-          MemoryArea::ProtectionFlags::RW));
+          XKLib::MemoryArea::ProtectionFlags::RW));
 
         injectionInfo.process_memory_map.write(
           view_as<ptr_t>(injectionInfo.allocated_mem.shellcode.start),
@@ -518,7 +518,7 @@ namespace XKLib
         injectionInfo.process_memory_map.protectMemoryArea(
           injectionInfo.allocated_mem.shellcode.start,
           injectionInfo.allocated_mem.shellcode.bytes.size(),
-          MemoryArea::ProtectionFlags::RX);
+          XKLib::MemoryArea::ProtectionFlags::RX);
 
         runnableTask.routineAddress() = view_as<ptr_t>(
           injectionInfo.allocated_mem.shellcode.start);
