@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "test.h"
+#include <cstdarg>
 
 using namespace XKLib;
 using namespace CryptoPP;
