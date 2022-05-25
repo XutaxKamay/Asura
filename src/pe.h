@@ -17,9 +17,11 @@ namespace XKLib
         constexpr inline auto IMAGE_FILE_MACHINE_IA64          = 0x200;
         constexpr inline auto IMAGE_FILE_MACHINE_AMD64         = 0x8664;
 
+        /* For 32 bits programs, PE 32 bit only supported */
         template <typename T>
-        concept IntType = std::is_same<std::uint32_t, T>::value or std::
-          is_same<std::uint64_t, T>::value;
+        concept IntType = std::is_same<std::uint32_t, T>::value or(
+          std::is_same<std::uint64_t, T>::value
+          and (sizeof(std::uintptr_t) >= sizeof(std::uint64_t)));
 
         struct IMAGE_DOS_HEADER
         {
@@ -256,12 +258,12 @@ namespace XKLib
             const auto nt_headers = view_as<
               const IMAGE_NT_HEADERS<T>* const>(ntParentHeaders);
 
-            const auto export_directory_entry = &nt_headers->OptionalHeader
-                                                   .DataDirectory
-                                                     [IMAGE_DIRECTORY_ENTRY_EXPORT];
+            const auto exp_dir_entry = &nt_headers->OptionalHeader
+                                          .DataDirectory
+                                            [IMAGE_DIRECTORY_ENTRY_EXPORT];
 
-            const auto entry_rva = export_directory_entry->VirtualAddress;
-            const auto entry_size = export_directory_entry->Size;
+            const auto entry_rva  = exp_dir_entry->VirtualAddress;
+            const auto entry_size = exp_dir_entry->Size;
 
             const auto get_va = [&](const auto rva)
             {
@@ -366,10 +368,10 @@ namespace XKLib
                      i < export_directory->NumberOfNames;
                      i++)
                 {
-                    const auto func_name = view_as<const char* const>(
-                      get_va(names[i]));
+                    const std::string func_name = view_as<
+                      const char* const>(get_va(names[i]));
 
-                    if (funcName != func_name)
+                    if (func_name.find(funcName) != std::string::npos)
                     {
                         continue;
                     }

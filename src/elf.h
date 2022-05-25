@@ -87,9 +87,11 @@ namespace XKLib
             DT_GNU_HASH = 0x6ffffef5
         };
 
+        /* For 32 bits programs, ELF 32 bit only supported */
         template <typename T>
-        concept IntType = std::is_same<std::uint32_t, T>::value or std::
-          is_same<std::uint64_t, T>::value;
+        concept IntType = std::is_same<std::uint32_t, T>::value or(
+          std::is_same<std::uint64_t, T>::value
+          and (sizeof(std::uintptr_t) >= sizeof(std::uint64_t)));
 
         struct Elf_Parent_Ehdr
         {
@@ -272,6 +274,28 @@ namespace XKLib
             const auto views = view_as<const ph_or_sec_t* const>(
               view_as<std::uintptr_t>(elf_header) + view_offset);
 
+            const auto process_symbol_table =
+              [&](const auto symbol_count,
+                  const auto symbol_table,
+                  const auto string_table) -> std::tuple<bool, T>
+            {
+                for (T i = 0; i < symbol_count; i++)
+                {
+                    const auto current_symbol = &symbol_table[i];
+
+                    const std::string symbol_name = view_as<
+                      const char* const>(string_table
+                                         + current_symbol->st_name);
+
+                    if (symbol_name.find(funcName) != std::string::npos)
+                    {
+                        return { true, current_symbol->st_value };
+                    }
+                }
+
+                return { true, 0 };
+            };
+
             for (std::uint16_t i = 0; i < view_count; i++)
             {
                 const auto view = &views[i];
@@ -279,9 +303,71 @@ namespace XKLib
                 if constexpr (M)
                 {
                     const Elf_Sym<T>* symbol_table = nullptr;
-                    std::size_t symbol_count       = 0;
+                    T symbol_count                 = 0;
                     std::uintptr_t string_table    = 0;
                     bool processed_pt_dynamic      = false;
+
+                    const auto process_symtab = [&](const auto dyn)
+                    {
+                        if (symbol_table)
+                        {
+                            XKLIB_EXCEPTION("Can't contain more than one "
+                                            "symbol table in PT_DYNAMIC");
+                        }
+
+                        symbol_table = view_as<decltype(symbol_table)>(
+                          view_as<std::uintptr_t>(dyn->d_un.d_val));
+
+                        auto current_symbol = symbol_table;
+
+                        /**
+                         * HACK:
+                         * Usually symbol table is just before string
+                         * table, so that ease our stuff.
+                         */
+                        while (view_as<std::uintptr_t>(current_symbol)
+                               < string_table)
+                        {
+                            current_symbol++;
+                        }
+
+                        symbol_count = (current_symbol - symbol_table);
+                    };
+
+                    const auto process_strtab = [&](const auto dyn)
+                    {
+                        if (string_table)
+                        {
+                            XKLIB_EXCEPTION("Can't contain more than one "
+                                            "string table in PT_DYNAMIC");
+                        }
+
+                        string_table = dyn->d_un.d_val;
+                    };
+
+                    const auto process_pt_dynamic = [&]()
+                    {
+                        for (auto dyn = view_as<const Elf_Dyn<T>*>(
+                               view_as<std::uintptr_t>(elf_header)
+                               + view->p_vaddr);
+                             dyn->d_tag != DT_NULL;
+                             dyn++)
+                        {
+                            switch (dyn->d_tag)
+                            {
+                                case DT_SYMTAB:
+                                {
+                                    process_symtab(dyn);
+                                    break;
+                                }
+                                case DT_STRTAB:
+                                {
+                                    process_strtab(dyn);
+                                    break;
+                                }
+                            }
+                        }
+                    };
 
                     switch (view->p_type)
                     {
@@ -297,95 +383,44 @@ namespace XKLib
                                 processed_pt_dynamic = true;
                             }
 
-                            for (auto dyn = view_as<const Elf_Dyn<T>*>(
-                                   view_as<std::uintptr_t>(elf_header)
-                                   + view->p_vaddr);
-                                 dyn->d_tag != DT_NULL;
-                                 dyn++)
-                            {
-                                switch (dyn->d_tag)
-                                {
-                                    case DT_SYMTAB:
-                                    {
-                                        if (symbol_table)
-                                        {
-                                            XKLIB_EXCEPTION(
-                                              "Can't contain more "
-                                              "than "
-                                              "one symbol table in "
-                                              "PT_DYNAMIC");
-                                        }
+                            process_pt_dynamic();
 
-                                        symbol_table = view_as<
-                                          decltype(symbol_table)>(
-                                          view_as<std::uintptr_t>(
-                                            dyn->d_un.d_val));
-
-                                        auto current_symbol = symbol_table;
-
-                                        /**
-                                         * HACK:
-                                         * Usually symbol table is just
-                                         * before string table, so that
-                                         * ease our stuff.
-                                         */
-                                        while (view_as<std::uintptr_t>(
-                                                 current_symbol)
-                                               < string_table)
-                                        {
-                                            current_symbol++;
-                                        }
-
-                                        symbol_count = (current_symbol
-                                                        - symbol_table);
-
-                                        break;
-                                    }
-                                    case DT_STRTAB:
-                                    {
-                                        if (string_table)
-                                        {
-                                            XKLIB_EXCEPTION(
-                                              "Can't contain more than "
-                                              "one string table in "
-                                              "PT_DYNAMIC");
-                                        }
-
-                                        string_table = dyn->d_un.d_val;
-                                        break;
-                                    }
-                                }
-                            }
                             break;
                         }
                     }
 
-                    if (symbol_count and string_table and symbol_table)
+                    if (symbol_count and symbol_table and string_table)
                     {
-                        for (
-                          typename std::remove_const<decltype(symbol_count)>::type i = 0;
-                          i < symbol_count;
-                          i++)
+                        const auto [found, st_value] = process_symbol_table(
+                          symbol_count,
+                          symbol_table,
+                          string_table);
+
+                        if (found)
                         {
-                            const auto current_symbol = &symbol_table[i];
-
-                            const auto symbol_name = view_as<
-                              const char* const>(
-                              string_table + current_symbol->st_name);
-
-                            if (funcName == symbol_name)
-                            {
-                                return { view_as<std::uintptr_t>(
-                                           baseAddress),
-                                         view_as<std::uintptr_t>(
-                                           current_symbol->st_value)
-                                           + view_as<std::uintptr_t>(
-                                             baseAddress) };
-                            }
+                            return { view_as<std::uintptr_t>(baseAddress),
+                                     st_value
+                                       + view_as<std::uintptr_t>(
+                                         baseAddress) };
                         }
-
-                        /* couldn't find symbol here ... */
-                        break;
+                        /* else we break the view loop since we didn't
+                         * find */
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        XKLIB_EXCEPTION(
+                          "Couldn't find enough information about ELF => "
+                          "symbol_count: "
+                          + std::to_string(symbol_count)
+                          + " symbol_table: "
+                          + std::to_string(
+                            view_as<std::uintptr_t>(symbol_table))
+                          + " string_table: "
+                          + std::to_string(string_table));
                     }
                 }
                 else
@@ -401,42 +436,36 @@ namespace XKLib
                                                       + views[view->sh_link]
                                                           .sh_offset;
 
-                            const auto symbol_count = view->sh_size /
-                                                      /**
-                                                       * Or
-                                                       * view->sh_entsize
-                                                       */
-                                                      sizeof(Elf_Sym<T>);
-                            ;
+                            const T symbol_count = view->sh_size /
+                                                   /**
+                                                    * Or
+                                                    * view->sh_entsize
+                                                    */
+                                                   sizeof(Elf_Sym<T>);
 
                             const auto symbol_table = view_as<
                               const Elf_Sym<T>* const>(
                               view_as<std::uintptr_t>(elf_header)
                               + view->sh_offset);
 
-                            for (
-                              typename std::remove_const<decltype(symbol_count)>::type i = 0;
-                              i < symbol_count;
-                              i++)
+                            const auto [found, st_value] = process_symbol_table(
+                              symbol_count,
+                              symbol_table,
+                              string_table);
+
+                            if (found)
                             {
-                                const auto current_symbol = &symbol_table[i];
-
-                                const auto symbol_name = view_as<
-                                  const char* const>(
-                                  string_table + current_symbol->st_name);
-
-                                if (funcName == symbol_name)
-                                {
-                                    return { view_as<std::uintptr_t>(
-                                               baseAddress),
-                                             view_as<std::uintptr_t>(
-                                               current_symbol->st_value)
-                                               + view_as<std::uintptr_t>(
-                                                 baseAddress) };
-                                }
+                                return { view_as<std::uintptr_t>(
+                                           baseAddress),
+                                         st_value
+                                           + view_as<std::uintptr_t>(
+                                             baseAddress) };
                             }
-                            break;
-                        };
+                            else
+                            {
+                                break;
+                            }
+                        }
                     }
                 }
             }
