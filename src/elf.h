@@ -90,8 +90,7 @@ namespace XKLib
         /* For 32 bits programs, ELF 32 bit only supported */
         template <typename T>
         concept IntType = std::is_same<std::uint32_t, T>::value or(
-          std::is_same<std::uint64_t, T>::value
-          and (sizeof(std::uintptr_t) >= sizeof(std::uint64_t)));
+          std::is_same<std::uint64_t, T>::value);
 
         struct Elf_Parent_Ehdr
         {
