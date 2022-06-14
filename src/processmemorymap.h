@@ -9,6 +9,7 @@
 namespace XKLib
 {
     class ProcessMemoryArea;
+
     class ProcessMemoryMap : public MemoryMap<ProcessMemoryArea>
     {
       public:

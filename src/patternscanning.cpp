@@ -105,10 +105,10 @@ auto XKLib::PatternScanning::searchV1(PatternByte& pattern,
 
                 case PatternByte::SIMDMaskValue::ALL_KNOWN:
                 {
-                    if (not SIMD::CMPMask8bits(SIMD::LoadUnaligned(
-                                                 view_as<SIMD::value_t*>(
-                                                   current_data)),
-                                               mask_value.value))
+                    if (not SIMD::CMPMask8bits(
+                          SIMD::LoadUnaligned(
+                            view_as<SIMD::value_t*>(current_data)),
+                          mask_value.value))
                     {
                         goto skip;
                     }
@@ -120,10 +120,10 @@ auto XKLib::PatternScanning::searchV1(PatternByte& pattern,
                 {
                     /* if ((value & mask) == pattern_value) */
                     if (not SIMD::CMPMask8bits(
-                          SIMD::And(SIMD::LoadUnaligned(
-                                      view_as<SIMD::value_t*>(
-                                        current_data)),
-                                    mask_value.mask),
+                          SIMD::And(
+                            SIMD::LoadUnaligned(
+                              view_as<SIMD::value_t*>(current_data)),
+                            mask_value.mask),
                           mask_value.value))
                     {
                         goto skip;
@@ -661,9 +661,9 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
             start_data -= horspool_skip_table[*(
               start_data + pattern_index)][pattern_index];
 
-            aligned_current_data = MemoryUtils::Align(start_data,
-                                                      sizeof(
-                                                        SIMD::value_t));
+            aligned_current_data = MemoryUtils::Align(
+              start_data,
+              sizeof(SIMD::value_t));
 
             shift_from_current_data = start_data - aligned_current_data;
 
@@ -674,9 +674,10 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
         else
         {
             /* did we found our stuff ? */
-            if (it_mask_value
-                == std::prev(
-                  shifted_simd_masks_values[shift_from_current_data].end()))
+            if (
+              it_mask_value
+              == std::prev(
+                shifted_simd_masks_values[shift_from_current_data].end()))
             {
                 matches.push_back(view_as<ptr_t>(
                   view_as<std::uintptr_t>(baseAddress)

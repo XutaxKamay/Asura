@@ -54,8 +54,9 @@ auto Task::list(ProcessBase processBase) -> tasks_t
     /**
      * Should always exists
      */
-    std::ifstream file_childrens(
-      "/proc/" + std::to_string(processBase.id()) + "/task/children");
+    std::ifstream file_childrens("/proc/"
+                                 + std::to_string(processBase.id())
+                                 + "/task/children");
 
     std::string line;
     while (std::getline(file_childrens, line))
@@ -80,12 +81,14 @@ auto Task::list(ProcessBase processBase) -> tasks_t
 }
 
 Task::Task(ProcessBase processBase, thread_id_t id)
- : _process_base(processBase), _id(id)
+ : _process_base(processBase),
+   _id(id)
 {
 }
 
 Task::Task(ProcessBase processBase)
- : _process_base(processBase), _id(INVALID_ID)
+ : _process_base(processBase),
+   _id(INVALID_ID)
 {
 }
 

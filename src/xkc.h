@@ -494,8 +494,8 @@ auto XKLib::XKC<T>::encode(const data_t data, const std::size_t size)
         }
         else
         {
-            alphabet.push_back(
-              { occurrence.letter_value, occurrence.count });
+            alphabet.push_back({ occurrence.letter_value,
+                                 occurrence.count });
         }
     }
 

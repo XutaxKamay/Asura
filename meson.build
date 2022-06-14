@@ -64,7 +64,7 @@ deps = [
 ]
 
 if get_option('native')
-    common_args += '-march=native -mtune=native'
+    common_args += ['-march=native', '-mtune=native']
 endif
 
 library('xklib', sources : xklib_srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : common_args, dependencies : deps)

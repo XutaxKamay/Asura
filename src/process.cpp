@@ -10,7 +10,9 @@ using namespace XKLib;
 Process::Module::Module(ptr_t baseAddress,
                         const std::string& name,
                         const std::string& path)
- : _base_address(baseAddress), _name(name), _path(path)
+ : _base_address(baseAddress),
+   _name(name),
+   _path(path)
 {
 }
 
@@ -195,7 +197,8 @@ Process::Process() : ProcessBase(INVALID_PID), _full_name("unknown")
 }
 
 Process::Process(const process_id_t pid)
- : ProcessBase(pid), _mmap(ProcessMemoryMap(*this))
+ : ProcessBase(pid),
+   _mmap(ProcessMemoryMap(*this))
 {
     const auto [result, found] = name(pid);
 

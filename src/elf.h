@@ -384,11 +384,12 @@ namespace XKLib
 
                             if (found)
                             {
-                                return { view_as<std::uintptr_t>(
-                                           baseAddress),
-                                         st_value
-                                           + view_as<std::uintptr_t>(
-                                             baseAddress) };
+                                return {
+                                    view_as<std::uintptr_t>(baseAddress),
+                                    st_value
+                                      + view_as<std::uintptr_t>(
+                                        baseAddress)
+                                };
                             }
 
                             return { 0, 0 };
@@ -442,11 +443,12 @@ namespace XKLib
 
                             if (found)
                             {
-                                return { view_as<std::uintptr_t>(
-                                           baseAddress),
-                                         st_value
-                                           + view_as<std::uintptr_t>(
-                                             baseAddress) };
+                                return {
+                                    view_as<std::uintptr_t>(baseAddress),
+                                    st_value
+                                      + view_as<std::uintptr_t>(
+                                        baseAddress)
+                                };
                             }
                             else
                             {

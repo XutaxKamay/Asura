@@ -7,7 +7,8 @@ using namespace XKLib;
 ReadBuffer::ReadBuffer(data_t data,
                        std::size_t maxSize,
                        std::size_t readSize)
- : Buffer(data, maxSize), _read_size(readSize)
+ : Buffer(data, maxSize),
+   _read_size(readSize)
 {
 }
 

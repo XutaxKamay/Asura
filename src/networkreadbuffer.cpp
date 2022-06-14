@@ -5,7 +5,8 @@
 XKLib::NetworkReadBuffer::NetworkReadBuffer(const data_t data,
                                             const std::size_t maxSize,
                                             const std::size_t readBits)
- : Buffer(data, maxSize), _read_bits(readBits)
+ : Buffer(data, maxSize),
+   _read_bits(readBits)
 {
 }
 

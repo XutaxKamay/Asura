@@ -15,6 +15,7 @@ namespace ELFIO
     struct Elf_auxv
     {
         T a_type; /* Entry type */
+
         union
         {
             T a_val; /* Integer value */
@@ -152,6 +153,7 @@ namespace XKLib
     }
 
     template <unsigned char E>
+
     requires(ELFClassSupported<E>) auto Kokabiel::relocateSegments(
       InjectionInfo& injectionInfo) const -> void
     {
@@ -245,6 +247,7 @@ namespace XKLib
     }
 
     template <unsigned char E, std::size_t N>
+
     requires(ELFClassSupported<E>) auto Kokabiel::createEnv(
       const std::vector<std::string>& cmdLine,
       const std::vector<std::string>& env,
@@ -339,9 +342,9 @@ namespace XKLib
             return data;
         }();
 
-        injectionInfo.process_memory_map.write(*view_as<ptr_t*>(
-                                                 &at_random),
-                                               random_bytes);
+        injectionInfo.process_memory_map.write(
+          *view_as<ptr_t*>(&at_random),
+          random_bytes);
 
         /* Setup auxiliary vectors */
         const ELFIO::Elf_auxv<reloc_ptr_t> elf_aux[2] {
@@ -411,6 +414,7 @@ namespace XKLib
     }
 
     template <unsigned char E, std::size_t N, Kokabiel::arch A>
+
     requires(ELFClassSupported<E>) auto Kokabiel::createShellCode(
       const std::vector<std::string>& cmdLine,
       RunnableTask<N>& runnableTask,

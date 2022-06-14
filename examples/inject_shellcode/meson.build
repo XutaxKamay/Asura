@@ -64,7 +64,7 @@ deps = [
 ]
 
 if get_option('native')
-    common_args += '-march=native -mtune=native'
+    common_args += ['-march=native', '-mtune=native']
 endif
 
 executable('inject_shellcode.out', sources : srcs, cpp_pch : 'src/pch.h', include_directories : incdirs, cpp_args : common_args, dependencies : deps)

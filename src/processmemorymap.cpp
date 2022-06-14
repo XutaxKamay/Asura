@@ -26,8 +26,9 @@ auto ProcessMemoryMap::refresh() -> void
     _areas.clear();
 
 #ifndef WINDOWS
-    std::ifstream file_memory_map(
-      "/proc/" + std::to_string(_process_base.id()) + "/maps");
+    std::ifstream file_memory_map("/proc/"
+                                  + std::to_string(_process_base.id())
+                                  + "/maps");
     std::string line;
 
     if (not file_memory_map.is_open())
@@ -145,10 +146,10 @@ auto ProcessMemoryMap::refresh() -> void
     file_memory_map.close();
 
 #else
-    const auto process_handle = OpenProcess(PROCESS_QUERY_INFORMATION,
-                                            false,
-                                            view_as<DWORD>(
-                                              _process_base.id()));
+    const auto process_handle = OpenProcess(
+      PROCESS_QUERY_INFORMATION,
+      false,
+      view_as<DWORD>(_process_base.id()));
 
     if (process_handle == nullptr)
     {
@@ -176,8 +177,8 @@ auto ProcessMemoryMap::refresh() -> void
                                module_path.data(),
                                module_path.size()))
         {
-            area->setName(
-              std::string(module_path.begin(), module_path.end()));
+            area->setName(std::string(module_path.begin(),
+                                      module_path.end()));
         }
 
         _areas.push_back(std::move(area));

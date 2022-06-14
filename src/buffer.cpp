@@ -28,7 +28,8 @@ auto XKLib::get_variable_type_str(const TypeSize typeSize) -> std::string
 }
 
 Buffer::Buffer(const std::size_t maxSize)
- : _max_size(maxSize), _allocated(true)
+ : _max_size(maxSize),
+   _allocated(true)
 {
     _data = alloc<data_t>(_max_size);
 }

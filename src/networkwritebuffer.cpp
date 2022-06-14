@@ -5,7 +5,8 @@
 XKLib::NetworkWriteBuffer::NetworkWriteBuffer(XKLib::data_t data,
                                               std::size_t maxSize,
                                               std::size_t writtenBits)
- : Buffer(data, maxSize), _written_bits(writtenBits)
+ : Buffer(data, maxSize),
+   _written_bits(writtenBits)
 {
 }
 

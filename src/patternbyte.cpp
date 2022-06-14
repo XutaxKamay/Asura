@@ -13,7 +13,8 @@ XKLib::PatternByte::Value::Value(int value) : value(value)
 XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
                                 const std::string areaName,
                                 const std::vector<ptr_t> matches)
- : _bytes(std::move(bytes_)), _matches(std::move(matches)),
+ : _bytes(std::move(bytes_)),
+   _matches(std::move(matches)),
    _area_name(std::move(areaName))
 {
     if (not isValid())
@@ -65,8 +66,8 @@ auto XKLib::PatternByte::setupOrganizedValues() -> void
             if (not are_known_values)
             {
                 /* push back the last count of unknown_bytes */
-                _vec_organized_values.push_back(
-                  { known_bytes, count_unknown_byte });
+                _vec_organized_values.push_back({ known_bytes,
+                                                  count_unknown_byte });
                 count_unknown_byte = 0;
                 known_bytes.clear();
                 are_known_values = true;

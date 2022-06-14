@@ -43,7 +43,8 @@ namespace XKLib
     template <std::size_t N>
     RunnableTask<N>::RunnableTask(ProcessBase processBase,
                                   ptr_t routineAddress)
-     : Task(processBase), _routine_address(routineAddress)
+     : Task(processBase),
+       _routine_address(routineAddress)
 #ifdef WINDOWS
        ,
        _thread_handle(nullptr)

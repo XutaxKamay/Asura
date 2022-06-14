@@ -39,10 +39,10 @@ namespace XKLib
                                       const std::size_t size,
                                       const mapf_t flags) -> void
         {
-            const auto aligned_address = Align<ptr_t>(view_as<ptr_t>(
-                                                        address),
-                                                      GetPageSize());
-            const auto aligned_size    = AlignToPageSize(size,
+            const auto aligned_address = Align<ptr_t>(
+              view_as<ptr_t>(address),
+              GetPageSize());
+            const auto aligned_size = AlignToPageSize(size,
                                                       GetPageSize());
 #ifdef WINDOWS
             const auto process_handle = GetCurrentProcessId() == pid ?
@@ -72,12 +72,12 @@ namespace XKLib
 
             CloseHandle(process_handle);
 #else
-            const auto ret = syscall(__NR_rmprotect,
-                                     pid,
-                                     aligned_address,
-                                     aligned_size,
-                                     MemoryArea::ProtectionFlags::ToOS(
-                                       flags));
+            const auto ret = syscall(
+              __NR_rmprotect,
+              pid,
+              aligned_address,
+              aligned_size,
+              MemoryArea::ProtectionFlags::ToOS(flags));
 
             if (ret < 0)
             {
@@ -140,10 +140,10 @@ namespace XKLib
                              const auto address,
                              const std::size_t size) -> void
         {
-            const auto aligned_address = Align<ptr_t>(view_as<ptr_t>(
-                                                        address),
-                                                      GetPageSize());
-            const auto aligned_size    = AlignToPageSize(size,
+            const auto aligned_address = Align<ptr_t>(
+              view_as<ptr_t>(address),
+              GetPageSize());
+            const auto aligned_size = AlignToPageSize(size,
                                                       GetPageSize());
 #ifdef WINDOWS
             const auto process_handle = GetCurrentProcessId() == pid ?
@@ -242,8 +242,8 @@ namespace XKLib
                                                  const std::size_t size)
           -> std::vector<A>
         {
-            std::vector<A> result(
-              AlignToPageSize(size + (sizeof(A) * 2), sizeof(A)));
+            std::vector<A> result(AlignToPageSize(size + (sizeof(A) * 2),
+                                                  sizeof(A)));
 
 #ifndef WINDOWS
             const iovec local  = { .iov_base = result.data() + 1,
@@ -294,9 +294,10 @@ namespace XKLib
                                            const T address) -> void
         {
 #ifndef WINDOWS
-            const iovec local  = { .iov_base = view_as<const data_t>(
-                                    bytes.data()),
-                                   .iov_len = bytes.size() };
+            const iovec local = {
+                .iov_base = view_as<const data_t>(bytes.data()),
+                .iov_len  = bytes.size()
+            };
             const iovec remote = { .iov_base = view_as<ptr_t>(address),
                                    .iov_len  = bytes.size() };
 
@@ -312,10 +313,10 @@ namespace XKLib
                 std::stringstream ss;
                 ss << std::hex << address;
 
-                XKLIB_EXCEPTION(
-                  "process_vm_writev failed with: address: " + ss.str()
-                  + ", size: " + std::to_string(bytes.size())
-                  + ", ret: " + std::to_string(ret));
+                XKLIB_EXCEPTION("process_vm_writev failed with: address: "
+                                + ss.str() + ", size: "
+                                + std::to_string(bytes.size())
+                                + ", ret: " + std::to_string(ret));
             }
 
 #else
