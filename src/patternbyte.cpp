@@ -400,7 +400,7 @@ auto XKLib::PatternByte::vecOrganizedValues() const
 }
 
 auto XKLib::PatternByte::simdMasksValues() const
-  -> const std::vector<SIMDMaskValue>&
+  -> const simd_masks_values_t&
 {
     return _simd_masks_values;
 }

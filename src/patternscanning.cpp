@@ -105,10 +105,12 @@ auto XKLib::PatternScanning::searchV1(PatternByte& pattern,
 
                 case PatternByte::SIMDMaskValue::ALL_KNOWN:
                 {
-                    if (not SIMD::CMPMask8bits(
-                          SIMD::LoadUnaligned(
-                            view_as<SIMD::value_t*>(current_data)),
-                          mask_value.value))
+                    const auto cmp = SIMD::CMPMask8bits(
+                      SIMD::LoadUnaligned(
+                        view_as<SIMD::value_t*>(current_data)),
+                      mask_value.value);
+
+                    if (cmp != SIMD::cmp_all)
                     {
                         goto skip;
                     }
@@ -119,12 +121,13 @@ auto XKLib::PatternScanning::searchV1(PatternByte& pattern,
                 case PatternByte::SIMDMaskValue::MIXED:
                 {
                     /* if ((value & mask) == pattern_value) */
-                    if (not SIMD::CMPMask8bits(
-                          SIMD::And(
-                            SIMD::LoadUnaligned(
-                              view_as<SIMD::value_t*>(current_data)),
-                            mask_value.mask),
-                          mask_value.value))
+                    const auto cmp = SIMD::CMPMask8bits(
+                      SIMD::And(SIMD::LoadUnaligned(
+                                  view_as<SIMD::value_t*>(current_data)),
+                                mask_value.mask),
+                      mask_value.value);
+
+                    if (cmp != SIMD::cmp_all)
                     {
                         goto skip;
                     }

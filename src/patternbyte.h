@@ -37,12 +37,14 @@ namespace XKLib
             SIMD::value_t value;
             std::size_t part_size;
 
-            enum SkipType
+            enum SkipType : int
             {
                 ALL_UNKNOWN,
                 ALL_KNOWN,
                 MIXED
             } skip_type;
+
+            char pad[64 - sizeof(std::size_t) - sizeof(int)] {};
         };
 
         using simd_masks_values_t = std::vector<SIMDMaskValue>;
@@ -102,3 +104,4 @@ namespace XKLib
 }
 
 #endif
+

@@ -63,8 +63,28 @@ namespace XKLib
         static inline auto MoveMask8bits(const auto mm1)
         {
 #if defined(__AVX512BW__)
-            const auto mm2 = _mm512_set1_epi8(0);
-            return _mm512_cmpeq_epi8_mask(mm1, mm2);
+            const auto part1 = _mm256_movemask_epi8(
+              _mm256_load_si256(view_as<__m256i*>(&mm1)));
+            const auto part2 = _mm256_movemask_epi8(_mm256_load_si256(
+              view_as<__m256i*>(view_as<std::uintptr_t>(&mm1)
+                                + sizeof(__m256i))));
+
+            struct
+            {
+                union
+                {
+                    struct
+                    {
+                        std::int32_t l;
+                        std::int32_t h;
+                    } parts;
+
+                    std::int64_t val;
+                };
+
+            } ret { {part2, part1} };
+
+            return ret.val;
 #elif defined(__AVX2__)
             return _mm256_movemask_epi8(mm1);
 #elif defined(__SSE2__)
