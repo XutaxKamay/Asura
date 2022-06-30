@@ -304,7 +304,7 @@ auto XKLib::Test::run() -> void
 
         auto task = Process::self().createTask(shellcode_address);
 
-        task.run<false>();
+        task.run<true>();
         task.wait();
 
         area->protectionFlags() = MemoryArea::ProtectionFlags::R;

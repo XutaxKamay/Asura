@@ -1,6 +1,8 @@
 #ifndef XKLIB_BUILTINS_H
 #define XKLIB_BUILTINS_H
 
+#include "types.h"
+
 namespace XKLib
 {
     class Builtins
@@ -22,11 +24,11 @@ namespace XKLib
         {
             if constexpr (sizeof(var) <= sizeof(std::int32_t))
             {
-                return __builtin_ffs(var);
+                return view_as<std::uint32_t>(__builtin_ffs(var));
             }
             else
             {
-                return __builtin_ffsll(var);
+                return view_as<std::uint64_t>(__builtin_ffsll(var));
             }
         }
     };

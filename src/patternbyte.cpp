@@ -147,8 +147,7 @@ auto XKLib::PatternByte::setupSIMDMaskValues(
 
     for (auto&& mask_value : simdMasksValues)
     {
-        const auto mmask = view_as<std::size_t>(
-          SIMD::MoveMask8bits(mask_value.mask));
+        const auto mmask = SIMD::MoveMask8bits(mask_value.mask);
 
         if (mmask == 0)
         {
@@ -302,8 +301,8 @@ auto XKLib::PatternByte::setupHorspoolTable(
                                                       << slot)
                                                    & bit_mask;
 
-                const auto match_byte_num = view_as<std::size_t>(
-                  Builtins::FFS(compare_matched_bytes));
+                const auto match_byte_num = Builtins::FFS(
+                  compare_matched_bytes);
 
                 if (match_byte_num > 0
                     and match_byte_num <= it_mask_value->part_size)
@@ -335,8 +334,8 @@ auto XKLib::PatternByte::setupHorspoolTable(
                   loaded_mask_value,
                   it_mask_value->value);
 
-                const auto match_byte_num = view_as<std::size_t>(
-                  Builtins::FFS(compare_matched_bytes));
+                const auto match_byte_num = Builtins::FFS(
+                  compare_matched_bytes);
 
                 /**
                  * Matched, we found the (unknown ?) byte

@@ -17,24 +17,24 @@ namespace XKLib
     {
       public:
 #if defined(__AVX512BW__)
-        using value_t                        = __m512i;
-        static constexpr std::size_t cmp_all = std::numeric_limits<
+        using value_t                          = __m512i;
+        static constexpr std::uint64_t cmp_all = std::numeric_limits<
           std::uint64_t>::max();
 #elif defined(__AVX2__)
-        using value_t                        = __m256i;
-        static constexpr std::size_t cmp_all = std::numeric_limits<
+        using value_t                          = __m256i;
+        static constexpr std::uint32_t cmp_all = std::numeric_limits<
           std::uint32_t>::max();
 #elif defined(__SSE2__)
-        using value_t                        = __m128i;
-        static constexpr std::size_t cmp_all = std::numeric_limits<
+        using value_t                          = __m128i;
+        static constexpr std::uint32_t cmp_all = std::numeric_limits<
           std::uint16_t>::max();
 #elif defined(__SSE__)
-        using value_t                        = __m64;
-        static constexpr std::size_t cmp_all = std::numeric_limits<
+        using value_t                          = __m64;
+        static constexpr std::uint32_t cmp_all = std::numeric_limits<
           std::uint8_t>::max();
 #else
-        using value_t                        = std::uint64_t;
-        static constexpr std::size_t cmp_all = std::numeric_limits<
+        using value_t                         = std::uint64_t;
+        static constexpr std::int32_t cmp_all = std::numeric_limits<
           std::uint8_t>::max();
 #endif
 
@@ -75,22 +75,24 @@ namespace XKLib
                 {
                     struct
                     {
-                        std::int32_t l;
-                        std::int32_t h;
+                        std::uint32_t l;
+                        std::uint32_t h;
                     } parts;
 
-                    std::int64_t val;
+                    std::uint64_t val;
                 };
 
-            } ret { {part2, part1} };
+            } ret {
+                {part2, part1}
+            };
 
             return ret.val;
 #elif defined(__AVX2__)
-            return _mm256_movemask_epi8(mm1);
+            return view_as<std::uint32_t>(_mm256_movemask_epi8(mm1));
 #elif defined(__SSE2__)
-            return _mm_movemask_epi8(mm1);
+            return view_as<std::uint32_t>( _mm_movemask_epi8(mm1));
 #elif defined(__SSE__)
-            return _mm_movemask_pi8(mm1);
+            return view_as<std::uint32_t>(_mm_movemask_pi8(mm1));
 #else
             /* Search cross-platform builtin for this */
             typename std::remove_cv<decltype(mm1)>::type ret = 0;

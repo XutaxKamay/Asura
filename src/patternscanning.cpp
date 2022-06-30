@@ -288,8 +288,8 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
                                                       << mismatch_byte_num)
                                                    & bit_mask;
 
-                const auto match_byte_num = view_as<std::size_t>(
-                  Builtins::FFS(compare_matched_bytes));
+                const auto match_byte_num = Builtins::FFS(
+                  compare_matched_bytes);
 
                 if (match_byte_num > 0
                     and match_byte_num <= it_mask_value->part_size)
@@ -323,8 +323,8 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
                   loaded_mask_value,
                   it_mask_value->value);
 
-                const auto match_byte_num = view_as<std::size_t>(
-                  Builtins::FFS(compare_matched_bytes));
+                const auto match_byte_num = Builtins::FFS(
+                  compare_matched_bytes);
 
                 /**
                  * Matched, we found the mismatched byte inside
@@ -413,8 +413,8 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
                   loaded_value,
                   pattern_loaded_value);
 
-                const auto mismatch_byte_num = view_as<std::size_t>(
-                  Builtins::FFS(compare_mismatched_bytes));
+                const auto mismatch_byte_num = Builtins::FFS(
+                  compare_mismatched_bytes);
 
                 do_scan(mismatch_byte_num,
                         it_mask_value->mask,
@@ -438,8 +438,8 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
                   loaded_mask_value,
                   pattern_loaded_value);
 
-                const auto mismatch_byte_num = view_as<std::size_t>(
-                  Builtins::FFS(compare_mismatched_bytes));
+                const auto mismatch_byte_num = Builtins::FFS(
+                  compare_mismatched_bytes);
 
                 do_scan(mismatch_byte_num, mask, pattern_loaded_value);
                 break;
@@ -563,8 +563,8 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
                   loaded_value,
                   it_mask_value->value);
 
-                const auto mismatch_byte_num = view_as<std::size_t>(
-                  Builtins::FFS(compare_mismatched_bytes));
+                const auto mismatch_byte_num = Builtins::FFS(
+                  compare_mismatched_bytes);
 
                 do_scan(mismatch_byte_num);
                 break;
@@ -583,8 +583,8 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
                   loaded_mask_value,
                   it_mask_value->value);
 
-                const auto mismatch_byte_num = view_as<std::size_t>(
-                  Builtins::FFS(compare_mismatched_bytes));
+                const auto mismatch_byte_num = Builtins::FFS(
+                  compare_mismatched_bytes);
 
                 do_scan(mismatch_byte_num);
                 break;
@@ -732,8 +732,8 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                   loaded_value,
                   it_mask_value->value);
 
-                const auto mismatch_byte_num = view_as<std::size_t>(
-                  Builtins::FFS(compare_mismatched_bytes));
+                const auto mismatch_byte_num = Builtins::FFS(
+                  compare_mismatched_bytes);
 
                 do_scan(mismatch_byte_num);
                 break;
@@ -752,7 +752,7 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
                   loaded_mask_value,
                   it_mask_value->value);
 
-                const auto mismatch_byte_num = view_as<std::size_t>(
+                const auto mismatch_byte_num = view_as<std::uint64_t>(
                   Builtins::FFS(compare_mismatched_bytes));
 
                 do_scan(mismatch_byte_num);
