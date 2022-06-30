@@ -25,11 +25,11 @@ Type `meson build;cd build:meson compile` inside the root directory of the repos
 If you want to use the library, for GNU/Linux you'll likely need this Linux kernel patch and recompile your kernel:
 ```diff
 diff --git a/arch/um/kernel/process.c b/arch/um/kernel/process.c
-index 4a420778e..8c20fd333 100644
+index 457a38db3..e7d75e9e3 100644
 --- a/arch/um/kernel/process.c
 +++ b/arch/um/kernel/process.c
-@@ -34,6 +34,25 @@
- #include <registers.h>
+@@ -33,6 +33,26 @@
+ #include <skas.h>
  #include <linux/time-internal.h>
  
 +__always_inline struct task_struct *get_current(void)
@@ -51,35 +51,36 @@ index 4a420778e..8c20fd333 100644
 +
 +EXPORT_SYMBOL(get_real_current);
 +
++
  /*
   * This is a per-cpu array.  A processor only modifies its entry and it only
   * cares about its entry, so it's OK if another processor is modifying its
 diff --git a/arch/x86/entry/syscalls/syscall_32.tbl b/arch/x86/entry/syscalls/syscall_32.tbl
-index 331aaf1a7..b80db4ece 100644
+index 960a021d5..e386354f0 100644
 --- a/arch/x86/entry/syscalls/syscall_32.tbl
 +++ b/arch/x86/entry/syscalls/syscall_32.tbl
-@@ -456,3 +456,8 @@
- 449	i386	futex_waitv		sys_futex_waitv
- 450	i386	set_mempolicy_home_node		sys_set_mempolicy_home_node
- 451	i386	pmadv_ksm		sys_pmadv_ksm
-+452	i386	rmmap   		sys_rmmap
-+453	i386	rmprotect		sys_rmprotect
-+454	i386	pkey_rmprotect          sys_pkey_rmprotect
-+455	i386	rmunmap 		sys_rmunmap
-+456	i386	rclone			sys_rclone
+@@ -453,3 +453,8 @@
+ 446	i386	landlock_restrict_self	sys_landlock_restrict_self
+ 447	i386	memfd_secret		sys_memfd_secret
+ 448	i386	process_mrelease	sys_process_mrelease
++449	i386	rmmap   		sys_rmmap
++450	i386	rmprotect		sys_rmprotect
++451	i386	pkey_rmprotect          sys_pkey_rmprotect
++452	i386	rmunmap 		sys_rmunmap
++453	i386	rclone			sys_rclone
 diff --git a/arch/x86/entry/syscalls/syscall_64.tbl b/arch/x86/entry/syscalls/syscall_64.tbl
-index 14902db4c..eae328ab6 100644
+index 18b5500ea..43613b520 100644
 --- a/arch/x86/entry/syscalls/syscall_64.tbl
 +++ b/arch/x86/entry/syscalls/syscall_64.tbl
-@@ -373,6 +373,11 @@
- 449	common	futex_waitv		sys_futex_waitv
- 450	common	set_mempolicy_home_node	sys_set_mempolicy_home_node
- 451	common	pmadv_ksm		sys_pmadv_ksm
-+452	common	rmmap   		sys_rmmap
-+453	common	rmprotect		sys_rmprotect
-+454	common	pkey_rmprotect    sys_pkey_rmprotect
-+455	common	rmunmap 		sys_rmunmap
-+456	common	rclone     sys_rclone
+@@ -370,6 +370,11 @@
+ 446	common	landlock_restrict_self	sys_landlock_restrict_self
+ 447	common	memfd_secret		sys_memfd_secret
+ 448	common	process_mrelease	sys_process_mrelease
++449	common	rmmap   		sys_rmmap
++450	common	rmprotect		sys_rmprotect
++451	common	pkey_rmprotect		sys_pkey_rmprotect
++452	common	rmunmap			sys_rmunmap
++453	common	rclone			sys_rclone
  
  #
  # Due to a historical design error, certain syscalls are numbered differently
@@ -113,10 +114,10 @@ index 80e9d5206..300865120 100644
 +# define __ARCH_WANT_SYS_RFUNCS
  #endif /* _ASM_X86_UNISTD_H */
 diff --git a/arch/x86/kernel/process.c b/arch/x86/kernel/process.c
-index 81d8ef036..c79265021 100644
+index 1d9463e30..e427666be 100644
 --- a/arch/x86/kernel/process.c
 +++ b/arch/x86/kernel/process.c
-@@ -49,6 +49,18 @@
+@@ -46,6 +46,18 @@
  
  #include "process.h"
  
@@ -136,10 +137,10 @@ index 81d8ef036..c79265021 100644
   * per-CPU TSS segments. Threads are completely 'soft' on Linux,
   * no more per-task TSS's. The TSS size is kept cacheline-aligned
 diff --git a/fs/exec.c b/fs/exec.c
-index 6027e2a93..c40afa596 100644
+index a098c133d..e1ee3487d 100644
 --- a/fs/exec.c
 +++ b/fs/exec.c
-@@ -813,7 +813,7 @@ int setup_arg_pages(struct linux_binprm *bprm,
+@@ -806,7 +806,7 @@ int setup_arg_pages(struct linux_binprm *bprm,
  	vm_flags |= mm->def_flags;
  	vm_flags |= VM_STACK_INCOMPLETE_SETUP;
  
@@ -164,10 +165,10 @@ index 3a2e224b9..371dfffd0 100644
  
  #endif /* __ASM_GENERIC_CURRENT_H */
 diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 1f3695e95..29d67adb4 100644
+index 73a52aba4..8d481512a 100644
 --- a/include/linux/mm.h
 +++ b/include/linux/mm.h
-@@ -1980,7 +1980,7 @@ extern unsigned long move_page_tables(struct vm_area_struct *vma,
+@@ -1895,7 +1895,7 @@ extern unsigned long move_page_tables(struct vm_area_struct *vma,
  extern unsigned long change_protection(struct vm_area_struct *vma, unsigned long start,
  			      unsigned long end, pgprot_t newprot,
  			      unsigned long cp_flags);
@@ -177,10 +178,10 @@ index 1f3695e95..29d67adb4 100644
  			  unsigned long end, unsigned long newflags);
  
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index e17536490..855703aeb 100644
+index c1a927dde..8ef7df206 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
-@@ -1518,6 +1518,8 @@ struct task_struct {
+@@ -1488,6 +1488,8 @@ struct task_struct {
  	struct callback_head		l1d_flush_kill;
  #endif
  
@@ -190,7 +191,7 @@ index e17536490..855703aeb 100644
  	 * New fields for task_struct should be added above here, so that
  	 * they are included in the randomized portion of task_struct.
 diff --git a/include/linux/sched/task.h b/include/linux/sched/task.h
-index e84e54d1b..623d76a50 100644
+index ef02be869..4347a3b47 100644
 --- a/include/linux/sched/task.h
 +++ b/include/linux/sched/task.h
 @@ -34,6 +34,8 @@ struct kernel_clone_args {
@@ -203,10 +204,10 @@ index e84e54d1b..623d76a50 100644
  
  /*
 diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
-index 0cd9c82d6..5020f1098 100644
+index 252243c77..bfa8baaa6 100644
 --- a/include/linux/syscalls.h
 +++ b/include/linux/syscalls.h
-@@ -1274,6 +1276,22 @@ asmlinkage long sys_mmap_pgoff(unsigned long addr, unsigned long len,
+@@ -1265,6 +1265,22 @@ asmlinkage long sys_mmap_pgoff(unsigned long addr, unsigned long len,
  			unsigned long fd, unsigned long pgoff);
  asmlinkage long sys_old_mmap(struct mmap_arg_struct __user *arg);
  
@@ -230,37 +231,37 @@ index 0cd9c82d6..5020f1098 100644
  /*
   * Not a real system call, but a placeholder for syscalls which are
 diff --git a/include/uapi/asm-generic/unistd.h b/include/uapi/asm-generic/unistd.h
-index c780129ab..4728bca2a 100644
+index 1c5fb86d4..c67768489 100644
 --- a/include/uapi/asm-generic/unistd.h
 +++ b/include/uapi/asm-generic/unistd.h
-@@ -889,8 +889,21 @@ __SYSCALL(__NR_set_mempolicy_home_node, sys_set_mempolicy_home_node)
- #define __NR_pmadv_ksm 451
- __SYSCALL(__NR_pmadv_ksm, sys_pmadv_ksm)
+@@ -880,8 +880,21 @@ __SYSCALL(__NR_memfd_secret, sys_memfd_secret)
+ #define __NR_process_mrelease 448
+ __SYSCALL(__NR_process_mrelease, sys_process_mrelease)
  
 +#ifdef __ARCH_WANT_SYS_RFUNCS
-+#define __NR_rmmap 452
++#define __NR_rmmap 449
 +__SYSCALL(__NR_rmmap, sys_rmmap);
-+#define __NR_rmprotect 453
++#define __NR_rmprotect 450
 +__SYSCALL(__NR_rmprotect, sys_rmprotect);
-+#define __NR_pkey_rmprotect 454
++#define __NR_pkey_rmprotect 451
 +__SYSCALL(__NR_pkey_rmprotect, sys_pkey_rmprotect);
-+#define __NR_rmunmap 455
++#define __NR_rmunmap 452
 +__SYSCALL(__NR_rmunmap, sys_rmunmap);
-+#define __NR_rclone 456
++#define __NR_rclone 453
 +__SYSCALL(__NR_rclone, sys_rclone);
 +#endif
 +
  #undef __NR_syscalls
--#define __NR_syscalls 452
-+#define __NR_syscalls 457
+-#define __NR_syscalls 449
++#define __NR_syscalls 454
  
  /*
   * 32 bit systems traditionally used different
 diff --git a/kernel/fork.c b/kernel/fork.c
-index 463b2d2bf..c6c7dd4be 100644
+index 38681ad44..d1c157d6d 100644
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
-@@ -1476,7 +1476,7 @@ static struct mm_struct *dup_mm(struct task_struct *tsk,
+@@ -1472,7 +1472,7 @@ static struct mm_struct *dup_mm(struct task_struct *tsk,
  	return NULL;
  }
  
@@ -269,7 +270,7 @@ index 463b2d2bf..c6c7dd4be 100644
  {
  	struct mm_struct *mm, *oldmm;
  
-@@ -1495,7 +1495,7 @@ static int copy_mm(unsigned long clone_flags, struct task_struct *tsk)
+@@ -1491,7 +1491,7 @@ static int copy_mm(unsigned long clone_flags, struct task_struct *tsk)
  	 *
  	 * We need to steal a active VM for that..
  	 */
@@ -278,7 +279,7 @@ index 463b2d2bf..c6c7dd4be 100644
  	if (!oldmm)
  		return 0;
  
-@@ -1506,7 +1506,7 @@ static int copy_mm(unsigned long clone_flags, struct task_struct *tsk)
+@@ -1502,7 +1502,7 @@ static int copy_mm(unsigned long clone_flags, struct task_struct *tsk)
  		mmget(oldmm);
  		mm = oldmm;
  	} else {
@@ -287,7 +288,7 @@ index 463b2d2bf..c6c7dd4be 100644
  		if (!mm)
  			return -ENOMEM;
  	}
-@@ -2171,7 +2171,7 @@ static __latent_entropy struct task_struct *copy_process(
+@@ -2191,7 +2191,7 @@ static __latent_entropy struct task_struct *copy_process(
  	retval = copy_signal(clone_flags, p);
  	if (retval)
  		goto bad_fork_cleanup_sighand;
@@ -296,8 +297,8 @@ index 463b2d2bf..c6c7dd4be 100644
  	if (retval)
  		goto bad_fork_cleanup_signal;
  	retval = copy_namespaces(clone_flags, p);
-@@ -2603,6 +2603,16 @@ pid_t kernel_clone(struct kernel_clone_args *args)
- 		task_unlock(p);
+@@ -2605,6 +2605,16 @@ pid_t kernel_clone(struct kernel_clone_args *args)
+ 		get_task_struct(p);
  	}
  
 +#ifdef __ARCH_WANT_SYS_RFUNCS
@@ -313,7 +314,7 @@ index 463b2d2bf..c6c7dd4be 100644
  	wake_up_new_task(p);
  
  	/* forking complete and child started to run, tell ptracer */
-@@ -2858,6 +2868,51 @@ SYSCALL_DEFINE2(clone3, struct clone_args __user *, uargs, size_t, size)
+@@ -2860,6 +2870,51 @@ SYSCALL_DEFINE2(clone3, struct clone_args __user *, uargs, size_t, size)
  }
  #endif
  
@@ -366,10 +367,10 @@ index 463b2d2bf..c6c7dd4be 100644
  {
  	struct task_struct *leader, *parent, *child;
 diff --git a/kernel/sys_ni.c b/kernel/sys_ni.c
-index dc765f3ef..3e67344ff 100644
+index f43d89d92..0793dc0d0 100644
 --- a/kernel/sys_ni.c
 +++ b/kernel/sys_ni.c
-@@ -479,3 +479,11 @@ COND_SYSCALL(setuid16);
+@@ -476,3 +476,11 @@ COND_SYSCALL(setuid16);
  
  /* restartable sequence */
  COND_SYSCALL(rseq);
@@ -382,10 +383,10 @@ index dc765f3ef..3e67344ff 100644
 +COND_SYSCALL(rclone);
 +#endif
 diff --git a/mm/mmap.c b/mm/mmap.c
-index 18875c216..57f438497 100644
+index 88dcc5c25..84ff24c68 100644
 --- a/mm/mmap.c
 +++ b/mm/mmap.c
-@@ -2901,10 +2901,10 @@ int do_munmap(struct mm_struct *mm, unsigned long start, size_t len,
+@@ -2895,10 +2895,10 @@ int do_munmap(struct mm_struct *mm, unsigned long start, size_t len,
  	return __do_munmap(mm, start, len, uf, false);
  }
  
@@ -398,7 +399,7 @@ index 18875c216..57f438497 100644
  	LIST_HEAD(uf);
  
  	if (mmap_write_lock_killable(mm))
-@@ -2928,14 +2928,14 @@ static int __vm_munmap(unsigned long start, size_t len, bool downgrade)
+@@ -2922,18 +2922,16 @@ static int __vm_munmap(unsigned long start, size_t len, bool downgrade)
  
  int vm_munmap(unsigned long start, size_t len)
  {
@@ -410,12 +411,16 @@ index 18875c216..57f438497 100644
  SYSCALL_DEFINE2(munmap, unsigned long, addr, size_t, len)
  {
  	addr = untagged_addr(addr);
+-	profile_munmap(addr);
 -	return __vm_munmap(addr, len, true);
 +	return __vm_munmap(current, addr, len, true);
  }
  
- 
-@@ -3019,6 +3019,80 @@ SYSCALL_DEFINE5(remap_file_pages, unsigned long, start, unsigned long, size,
+-
+ /*
+  * Emulation of deprecated remap_file_pages() syscall.
+  */
+@@ -3014,6 +3012,80 @@ SYSCALL_DEFINE5(remap_file_pages, unsigned long, start, unsigned long, size,
  	return ret;
  }
  
@@ -497,17 +502,17 @@ index 18875c216..57f438497 100644
   *  this is really a simplified "do_mmap".  it only handles
   *  anonymous maps.  eventually we may be able to do some
 diff --git a/mm/mprotect.c b/mm/mprotect.c
-index 2887644fd..3dcea57a5 100644
+index 883e2cc85..860589834 100644
 --- a/mm/mprotect.c
 +++ b/mm/mprotect.c
-@@ -29,6 +29,7 @@
- #include <linux/uaccess.h>
- #include <linux/mm_inline.h>
- #include <linux/pgtable.h>
+@@ -9,6 +9,7 @@
+  *  (C) Copyright 2002 Red Hat Inc, All Rights Reserved
+  */
+ 
 +#include <linux/sched/mm.h>
- #include <asm/cacheflush.h>
- #include <asm/mmu_context.h>
- #include <asm/tlbflush.h>
+ #include <linux/pagewalk.h>
+ #include <linux/hugetlb.h>
+ #include <linux/shm.h>
 @@ -406,7 +407,7 @@ static const struct mm_walk_ops prot_none_walk_ops = {
  };
  
@@ -565,7 +570,7 @@ index 2887644fd..3dcea57a5 100644
  	error = -ENOMEM;
  	if (!vma)
  		goto out;
-@@ -636,7 +637,7 @@ static int do_mprotect_pkey(unsigned long start, size_t len,
+@@ -633,7 +634,7 @@ static int do_mprotect_pkey(unsigned long start, size_t len,
  				goto out;
  		}
  
@@ -574,7 +579,7 @@ index 2887644fd..3dcea57a5 100644
  		if (error)
  			goto out;
  
-@@ -655,22 +656,79 @@ static int do_mprotect_pkey(unsigned long start, size_t len,
+@@ -652,22 +653,79 @@ static int do_mprotect_pkey(unsigned long start, size_t len,
  		prot = reqprot;
  	}
  out:
