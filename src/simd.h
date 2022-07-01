@@ -34,7 +34,7 @@ namespace XKLib
           std::uint8_t>::max();
 #else
         using value_t                         = std::uint64_t;
-        static constexpr std::int32_t cmp_all = std::numeric_limits<
+        static constexpr std::int64_t cmp_all = std::numeric_limits<
           std::uint8_t>::max();
 #endif
 
