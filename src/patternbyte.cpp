@@ -247,7 +247,7 @@ auto XKLib::PatternByte::setupHorspoolTable(
     }
 #endif
 
-    for (std::size_t i = 0; i < horspoolTable.size() + 1; i++)
+    for (std::size_t i = 0; i < horspoolTable.size(); i++)
     {
         horspoolTable[i].resize(bytes.size());
 

@@ -39,7 +39,7 @@ int main(int argc, char** argv)
         }
 
         shellcode_bin.seekg(0, std::ios::end);
-        auto shellcode_size = shellcode_bin.tellg();
+        const auto shellcode_size = shellcode_bin.tellg();
         shellcode_bin.seekg(0, std::ios::beg);
 
         const auto shellcode_start = mmap.allocArea(
