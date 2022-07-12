@@ -72,6 +72,7 @@ namespace XKLib
             std::uint32_t SizeOfUninitializedData;
             std::uint32_t AddressOfEntryPoint;
             std::uint32_t BaseOfCode;
+            std::uint32_t BaseOfData;
             T ImageBase;
             std::uint32_t SectionAlignment;
             std::uint32_t FileAlignment;
