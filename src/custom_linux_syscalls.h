@@ -214,8 +214,6 @@ namespace XKLib
         return ret;
     }
     #endif
-#else
-    #error "Not supported architecture"
 #endif
 }
 

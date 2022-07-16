@@ -39,6 +39,7 @@
 #include <elfio/elfio.hpp>
 
 #if defined(_WIN32) or defined(_WIN64)
+    #define WIN32_LEAN_AND_MEAN
     #define WINDOWS
     #if _WIN64
         #define ENVIRONMENT64

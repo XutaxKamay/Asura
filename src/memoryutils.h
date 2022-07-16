@@ -341,6 +341,9 @@ namespace XKLib
 
             if (not ret)
             {
+                std::stringstream ss;
+                ss << std::hex << address;
+
                 XKLIB_EXCEPTION(
                   "WriteProcessMemory failed with: address: " + ss.str()
                   + ", size: " + std::to_string(bytes.size())

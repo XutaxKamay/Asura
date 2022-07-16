@@ -174,11 +174,13 @@ namespace XKLib
 
         _id = syscall(__NR_rclone,
                       _process_base.id(),
-                      CLONE_VM | CLONE_SIGHAND | SIGCHLD | untraced_flag,
+                      CLONE_VM | SIGCHLD | untraced_flag,
                       _routine_address,
                       view_as<std::uintptr_t>(_base_stack) - N
                         + MemoryUtils::GetPageSize(),
                       N);
+
+        ::kill(_id, SIGSTOP);
 
         if (_id <= INVALID_ID)
         {

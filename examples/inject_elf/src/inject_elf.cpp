@@ -41,8 +41,8 @@ int main(int argc, char** argv)
 
         kok.inject<XKLib::Process::TASK_STACK_SIZE,
                    XKLib::Kokabiel::arch::X86>(mmap,
-                                               {},
-                                               {},
+                                               { "kokabiel" },
+                                               { "kokabiel" },
                                                task,
                                                injection_info);
 

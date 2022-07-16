@@ -2,6 +2,7 @@
 #define XKLIB_KOKABIEL_H
 
 #include "memoryarea.h"
+#include "memoryutils.h"
 #include "process.h"
 #include "processmemoryarea.h"
 
@@ -351,6 +352,20 @@ namespace XKLib
             {  ELFIO::AT_NULL,                                  { 0 }},
             {ELFIO::AT_RANDOM, { *view_as<reloc_ptr_t*>(&at_random) }}
         };
+
+        /* glibc keeps fucking changing stuffs, makes me loose time.
+         * stability = 0 */
+        injectionInfo.stack_start = MemoryUtils::Align(
+          injectionInfo.stack_start,
+          0x8);
+
+        const auto handle_argc_push = MemoryUtils::AlignToPageSize(
+          (cmds_offsets.size() + envs_offsets.size()
+           + (2 + 2 + 1)) /* aux + null_address * 2 + argc */
+            * sizeof(reloc_ptr_t),
+          0x8);
+
+        injectionInfo.stack_start += 0x8 - handle_argc_push;
 
         /* write aux vecs */
         for (std::size_t i = 0; i < 2; i++)
