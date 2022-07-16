@@ -25,62 +25,61 @@ Type `meson build;cd build:meson compile` inside the root directory of the repos
 If you want to use the library, for GNU/Linux you'll likely need this Linux kernel patch and recompile your kernel:
 ```diff
 diff --git a/arch/um/kernel/process.c b/arch/um/kernel/process.c
-index 457a38db3..e7d75e9e3 100644
+index 80504680b..a3f0120d0 100644
 --- a/arch/um/kernel/process.c
 +++ b/arch/um/kernel/process.c
-@@ -33,6 +33,26 @@
- #include <skas.h>
+@@ -34,6 +34,25 @@
+ #include <registers.h>
  #include <linux/time-internal.h>
  
 +__always_inline struct task_struct *get_current(void)
 +{
-+	struct task_struct *curtsk = current_thread_info()->task;
++       struct task_struct *curtsk = current_thread_info()->task;
 +
-+	if (curtsk->attached_to)
-+		return curtsk->attached_to;
++       if (curtsk->attached_to)
++               return curtsk->attached_to;
 +
-+	return curtsk;
++       return curtsk;
 +}
 +
 +EXPORT_SYMBOL(get_current);
 +
 +__always_inline struct task_struct *get_real_current(void)
 +{
-+	return real_current;
++       return real_current;
 +}
 +
 +EXPORT_SYMBOL(get_real_current);
-+
 +
  /*
   * This is a per-cpu array.  A processor only modifies its entry and it only
   * cares about its entry, so it's OK if another processor is modifying its
 diff --git a/arch/x86/entry/syscalls/syscall_32.tbl b/arch/x86/entry/syscalls/syscall_32.tbl
-index 960a021d5..e386354f0 100644
+index 331aaf1a7..b80db4ece 100644
 --- a/arch/x86/entry/syscalls/syscall_32.tbl
 +++ b/arch/x86/entry/syscalls/syscall_32.tbl
-@@ -453,3 +453,8 @@
- 446	i386	landlock_restrict_self	sys_landlock_restrict_self
- 447	i386	memfd_secret		sys_memfd_secret
- 448	i386	process_mrelease	sys_process_mrelease
-+449	i386	rmmap   		sys_rmmap
-+450	i386	rmprotect		sys_rmprotect
-+451	i386	pkey_rmprotect          sys_pkey_rmprotect
-+452	i386	rmunmap 		sys_rmunmap
-+453	i386	rclone			sys_rclone
+@@ -456,3 +456,8 @@
+ 449    i386    futex_waitv             sys_futex_waitv
+ 450    i386    set_mempolicy_home_node         sys_set_mempolicy_home_node
+ 451    i386    pmadv_ksm               sys_pmadv_ksm
++452    i386    rmmap                   sys_rmmap
++453    i386    rmprotect               sys_rmprotect
++454    i386    pkey_rmprotect          sys_pkey_rmprotect
++455    i386    rmunmap                 sys_rmunmap
++456    i386    rclone                  sys_rclone
 diff --git a/arch/x86/entry/syscalls/syscall_64.tbl b/arch/x86/entry/syscalls/syscall_64.tbl
-index 18b5500ea..43613b520 100644
+index 14902db4c..eae328ab6 100644
 --- a/arch/x86/entry/syscalls/syscall_64.tbl
 +++ b/arch/x86/entry/syscalls/syscall_64.tbl
-@@ -370,6 +370,11 @@
- 446	common	landlock_restrict_self	sys_landlock_restrict_self
- 447	common	memfd_secret		sys_memfd_secret
- 448	common	process_mrelease	sys_process_mrelease
-+449	common	rmmap   		sys_rmmap
-+450	common	rmprotect		sys_rmprotect
-+451	common	pkey_rmprotect		sys_pkey_rmprotect
-+452	common	rmunmap			sys_rmunmap
-+453	common	rclone			sys_rclone
+@@ -373,6 +373,11 @@
+ 449    common  futex_waitv             sys_futex_waitv
+ 450    common  set_mempolicy_home_node sys_set_mempolicy_home_node
+ 451    common  pmadv_ksm               sys_pmadv_ksm
++452    common  rmmap                   sys_rmmap
++453    common  rmprotect               sys_rmprotect
++454    common  pkey_rmprotect    sys_pkey_rmprotect
++455    common  rmunmap                 sys_rmunmap
++456    common  rclone     sys_rclone
  
  #
  # Due to a historical design error, certain syscalls are numbered differently
@@ -94,7 +93,7 @@ index 3e204e614..c86a3e524 100644
  
 -static __always_inline struct task_struct *get_current(void)
 -{
--	return this_cpu_read_stable(current_task);
+-       return this_cpu_read_stable(current_task);
 -}
 +struct task_struct *get_current(void);
  
@@ -114,21 +113,21 @@ index 80e9d5206..300865120 100644
 +# define __ARCH_WANT_SYS_RFUNCS
  #endif /* _ASM_X86_UNISTD_H */
 diff --git a/arch/x86/kernel/process.c b/arch/x86/kernel/process.c
-index 1d9463e30..e427666be 100644
+index b370767f5..82f6795a3 100644
 --- a/arch/x86/kernel/process.c
 +++ b/arch/x86/kernel/process.c
-@@ -46,6 +46,18 @@
+@@ -49,6 +49,18 @@
  
  #include "process.h"
  
 +__always_inline struct task_struct *get_current(void)
 +{
-+	struct task_struct *curtsk = this_cpu_read_stable(current_task);
++       struct task_struct *curtsk = this_cpu_read_stable(current_task);
 +
-+	if (curtsk->attached_to)
-+		return curtsk->attached_to;
++       if (curtsk->attached_to)
++               return curtsk->attached_to;
 +
-+	return curtsk;
++       return curtsk;
 +}
 +
 +EXPORT_SYMBOL(get_current);
@@ -137,18 +136,18 @@ index 1d9463e30..e427666be 100644
   * per-CPU TSS segments. Threads are completely 'soft' on Linux,
   * no more per-task TSS's. The TSS size is kept cacheline-aligned
 diff --git a/fs/exec.c b/fs/exec.c
-index a098c133d..e1ee3487d 100644
+index bba8fc449..d3671390b 100644
 --- a/fs/exec.c
 +++ b/fs/exec.c
-@@ -806,7 +806,7 @@ int setup_arg_pages(struct linux_binprm *bprm,
- 	vm_flags |= mm->def_flags;
- 	vm_flags |= VM_STACK_INCOMPLETE_SETUP;
+@@ -812,7 +812,7 @@ int setup_arg_pages(struct linux_binprm *bprm,
+        vm_flags |= mm->def_flags;
+        vm_flags |= VM_STACK_INCOMPLETE_SETUP;
  
--	ret = mprotect_fixup(vma, &prev, vma->vm_start, vma->vm_end,
-+	ret = mprotect_fixup(current, vma, &prev, vma->vm_start, vma->vm_end,
- 			vm_flags);
- 	if (ret)
- 		goto out_unlock;
+-       ret = mprotect_fixup(vma, &prev, vma->vm_start, vma->vm_end,
++       ret = mprotect_fixup(current, vma, &prev, vma->vm_start, vma->vm_end,
+                        vm_flags);
+        if (ret)
+                goto out_unlock;
 diff --git a/include/asm-generic/current.h b/include/asm-generic/current.h
 index 3a2e224b9..371dfffd0 100644
 --- a/include/asm-generic/current.h
@@ -165,212 +164,212 @@ index 3a2e224b9..371dfffd0 100644
  
  #endif /* __ASM_GENERIC_CURRENT_H */
 diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 73a52aba4..8d481512a 100644
+index 4e8ab4ad4..ad5c6b433 100644
 --- a/include/linux/mm.h
 +++ b/include/linux/mm.h
-@@ -1895,7 +1895,7 @@ extern unsigned long move_page_tables(struct vm_area_struct *vma,
+@@ -1979,7 +1979,7 @@ extern unsigned long move_page_tables(struct vm_area_struct *vma,
  extern unsigned long change_protection(struct vm_area_struct *vma, unsigned long start,
- 			      unsigned long end, pgprot_t newprot,
- 			      unsigned long cp_flags);
+                              unsigned long end, pgprot_t newprot,
+                              unsigned long cp_flags);
 -extern int mprotect_fixup(struct vm_area_struct *vma,
 +extern int mprotect_fixup(struct task_struct *task, struct vm_area_struct *vma,
- 			  struct vm_area_struct **pprev, unsigned long start,
- 			  unsigned long end, unsigned long newflags);
+                          struct vm_area_struct **pprev, unsigned long start,
+                          unsigned long end, unsigned long newflags);
  
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index c1a927dde..8ef7df206 100644
+index cc1fcacac..9eb3d5428 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
-@@ -1488,6 +1488,8 @@ struct task_struct {
- 	struct callback_head		l1d_flush_kill;
+@@ -1525,6 +1525,8 @@ struct task_struct {
+        struct callback_head            l1d_flush_kill;
  #endif
  
-+	struct task_struct*			attached_to;
++       struct task_struct*                     attached_to;
 +
- 	/*
- 	 * New fields for task_struct should be added above here, so that
- 	 * they are included in the randomized portion of task_struct.
+        /*
+         * New fields for task_struct should be added above here, so that
+         * they are included in the randomized portion of task_struct.
 diff --git a/include/linux/sched/task.h b/include/linux/sched/task.h
-index ef02be869..4347a3b47 100644
+index 719c9a6ca..ea9811fb6 100644
 --- a/include/linux/sched/task.h
 +++ b/include/linux/sched/task.h
 @@ -34,6 +34,8 @@ struct kernel_clone_args {
- 	int io_thread;
- 	struct cgroup *cgrp;
- 	struct css_set *cset;
-+	unsigned long ip;
-+	struct task_struct *tsk_wtd_mm;
+        int io_thread;
+        struct cgroup *cgrp;
+        struct css_set *cset;
++       unsigned long ip;
++       struct task_struct *tsk_wtd_mm;
  };
  
  /*
 diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
-index 252243c77..bfa8baaa6 100644
+index 82afad91d..0580189ee 100644
 --- a/include/linux/syscalls.h
 +++ b/include/linux/syscalls.h
-@@ -1265,6 +1265,22 @@ asmlinkage long sys_mmap_pgoff(unsigned long addr, unsigned long len,
- 			unsigned long fd, unsigned long pgoff);
+@@ -1270,6 +1270,22 @@ asmlinkage long sys_mmap_pgoff(unsigned long addr, unsigned long len,
+                        unsigned long fd, unsigned long pgoff);
  asmlinkage long sys_old_mmap(struct mmap_arg_struct __user *arg);
  
 +#ifdef __ARCH_WANT_SYS_RFUNCS
 +asmlinkage long sys_rmmap(pid_t pid, unsigned long addr, unsigned long len,
-+			  unsigned long prot, unsigned long flags,
-+			  unsigned long fd, unsigned long pgoff);
++                         unsigned long prot, unsigned long flags,
++                         unsigned long fd, unsigned long pgoff);
 +
 +asmlinkage long sys_rmprotect(pid_t pid, unsigned long start, size_t len,
-+			      unsigned long prot);
++                             unsigned long prot);
 +
 +asmlinkage long sys_pkey_rmprotect(pid_t pid, unsigned long start, size_t len,
-+				   unsigned long prot, int pkey);
++                                  unsigned long prot, int pkey);
 +
 +asmlinkage long sys_rmunmap(pid_t pid, unsigned long addr, size_t len);
 +
 +asmlinkage long sys_rclone(pid_t pid, unsigned long, unsigned long,
-+			   unsigned long, unsigned long);
++                          unsigned long, unsigned long);
 +#endif
  
  /*
   * Not a real system call, but a placeholder for syscalls which are
 diff --git a/include/uapi/asm-generic/unistd.h b/include/uapi/asm-generic/unistd.h
-index 1c5fb86d4..c67768489 100644
+index c780129ab..4728bca2a 100644
 --- a/include/uapi/asm-generic/unistd.h
 +++ b/include/uapi/asm-generic/unistd.h
-@@ -880,8 +880,21 @@ __SYSCALL(__NR_memfd_secret, sys_memfd_secret)
- #define __NR_process_mrelease 448
- __SYSCALL(__NR_process_mrelease, sys_process_mrelease)
+@@ -889,8 +889,21 @@ __SYSCALL(__NR_set_mempolicy_home_node, sys_set_mempolicy_home_node)
+ #define __NR_pmadv_ksm 451
+ __SYSCALL(__NR_pmadv_ksm, sys_pmadv_ksm)
  
 +#ifdef __ARCH_WANT_SYS_RFUNCS
-+#define __NR_rmmap 449
++#define __NR_rmmap 452
 +__SYSCALL(__NR_rmmap, sys_rmmap);
-+#define __NR_rmprotect 450
++#define __NR_rmprotect 453
 +__SYSCALL(__NR_rmprotect, sys_rmprotect);
-+#define __NR_pkey_rmprotect 451
++#define __NR_pkey_rmprotect 454
 +__SYSCALL(__NR_pkey_rmprotect, sys_pkey_rmprotect);
-+#define __NR_rmunmap 452
++#define __NR_rmunmap 455
 +__SYSCALL(__NR_rmunmap, sys_rmunmap);
-+#define __NR_rclone 453
++#define __NR_rclone 456
 +__SYSCALL(__NR_rclone, sys_rclone);
 +#endif
 +
  #undef __NR_syscalls
--#define __NR_syscalls 449
-+#define __NR_syscalls 454
+-#define __NR_syscalls 452
++#define __NR_syscalls 457
  
  /*
   * 32 bit systems traditionally used different
 diff --git a/kernel/fork.c b/kernel/fork.c
-index 38681ad44..d1c157d6d 100644
+index cf07934f5..c0d3508ef 100644
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
-@@ -1472,7 +1472,7 @@ static struct mm_struct *dup_mm(struct task_struct *tsk,
- 	return NULL;
+@@ -1546,7 +1546,7 @@ static struct mm_struct *dup_mm(struct task_struct *tsk,
+        return NULL;
  }
  
 -static int copy_mm(unsigned long clone_flags, struct task_struct *tsk)
 +static int copy_mm(unsigned long clone_flags, struct task_struct *tsk, struct task_struct* wtd_tsk)
  {
- 	struct mm_struct *mm, *oldmm;
+        struct mm_struct *mm, *oldmm;
  
-@@ -1491,7 +1491,7 @@ static int copy_mm(unsigned long clone_flags, struct task_struct *tsk)
- 	 *
- 	 * We need to steal a active VM for that..
- 	 */
--	oldmm = current->mm;
-+	oldmm = wtd_tsk->mm;
- 	if (!oldmm)
- 		return 0;
+@@ -1565,7 +1565,7 @@ static int copy_mm(unsigned long clone_flags, struct task_struct *tsk)
+         *
+         * We need to steal a active VM for that..
+         */
+-       oldmm = current->mm;
++       oldmm = wtd_tsk->mm;
+        if (!oldmm)
+                return 0;
  
-@@ -1502,7 +1502,7 @@ static int copy_mm(unsigned long clone_flags, struct task_struct *tsk)
- 		mmget(oldmm);
- 		mm = oldmm;
- 	} else {
--		mm = dup_mm(tsk, current->mm);
-+		mm = dup_mm(tsk, wtd_tsk->mm);
- 		if (!mm)
- 			return -ENOMEM;
- 	}
-@@ -2191,7 +2191,7 @@ static __latent_entropy struct task_struct *copy_process(
- 	retval = copy_signal(clone_flags, p);
- 	if (retval)
- 		goto bad_fork_cleanup_sighand;
--	retval = copy_mm(clone_flags, p);
-+	retval = copy_mm(clone_flags, p, args->tsk_wtd_mm ? args->tsk_wtd_mm : current);
- 	if (retval)
- 		goto bad_fork_cleanup_signal;
- 	retval = copy_namespaces(clone_flags, p);
-@@ -2605,6 +2605,16 @@ pid_t kernel_clone(struct kernel_clone_args *args)
- 		get_task_struct(p);
- 	}
+@@ -1576,7 +1576,7 @@ static int copy_mm(unsigned long clone_flags, struct task_struct *tsk)
+                mmget(oldmm);
+                mm = oldmm;
+        } else {
+-               mm = dup_mm(tsk, current->mm);
++               mm = dup_mm(tsk, wtd_tsk->mm);
+                if (!mm)
+                        return -ENOMEM;
+        }
+@@ -2241,7 +2241,7 @@ static __latent_entropy struct task_struct *copy_process(
+        retval = copy_signal(clone_flags, p);
+        if (retval)
+                goto bad_fork_cleanup_sighand;
+-       retval = copy_mm(clone_flags, p);
++       retval = copy_mm(clone_flags, p, args->tsk_wtd_mm ? args->tsk_wtd_mm : current);
+        if (retval)
+                goto bad_fork_cleanup_signal;
+        retval = copy_namespaces(clone_flags, p);
+@@ -2677,6 +2677,16 @@ pid_t kernel_clone(struct kernel_clone_args *args)
+                task_unlock(p);
+        }
  
 +#ifdef __ARCH_WANT_SYS_RFUNCS
-+	/* set registers before waking up the forked task */
-+	if (args->ip)
++       /* set registers before waking up the forked task */
++       if (args->ip)
 +#ifdef __arch_um__
-+		PT_REGS_IP(task_pt_regs(p)) = args->ip;
++               PT_REGS_IP(task_pt_regs(p)) = args->ip;
 +#else
-+		task_pt_regs(p)->ip = args->ip;
++               task_pt_regs(p)->ip = args->ip;
 +#endif
 +#endif
 +
- 	wake_up_new_task(p);
+        wake_up_new_task(p);
  
- 	/* forking complete and child started to run, tell ptracer */
-@@ -2860,6 +2870,51 @@ SYSCALL_DEFINE2(clone3, struct clone_args __user *, uargs, size_t, size)
+        /* forking complete and child started to run, tell ptracer */
+@@ -2932,6 +2942,51 @@ SYSCALL_DEFINE2(clone3, struct clone_args __user *, uargs, size_t, size)
  }
  #endif
  
 +#ifdef __ARCH_WANT_SYS_RFUNCS
 +/**
 + * rclone - create a new process from a remote process,
-+ * 			with limited options.
++ *                     with limited options.
 + * Return: On success, a positive PID for the new process.
 + *         On error, a negative errno number.
 + */
 +SYSCALL_DEFINE5(rclone, pid_t, pid, unsigned long, clone_flags, unsigned long,
-+		ip, unsigned long, stack, unsigned long, stack_size)
++               ip, unsigned long, stack, unsigned long, stack_size)
 +{
-+	long result = -EPERM;
-+	struct mm_struct *mm;
++       long result = -EPERM;
++       struct mm_struct *mm;
 +
-+	struct kernel_clone_args args = {
-+		.flags = (lower_32_bits(clone_flags) & ~CSIGNAL),
-+		.exit_signal = (lower_32_bits(clone_flags) & CSIGNAL),
-+		.ip = ip,
-+		.stack = stack,
-+		.stack_size = stack_size,
-+		.tsk_wtd_mm = find_get_task_by_vpid(pid),
-+	};
++       struct kernel_clone_args args = {
++               .flags = (lower_32_bits(clone_flags) & ~CSIGNAL),
++               .exit_signal = (lower_32_bits(clone_flags) & CSIGNAL),
++               .ip = ip,
++               .stack = stack,
++               .stack_size = stack_size,
++               .tsk_wtd_mm = find_get_task_by_vpid(pid),
++       };
 +
-+	if (!clone3_args_valid(&args))
-+		return -EINVAL;
++       if (!clone3_args_valid(&args))
++               return -EINVAL;
 +
-+	if (!args.tsk_wtd_mm) {
-+		return -EPERM;
-+	}
++       if (!args.tsk_wtd_mm) {
++               return -EPERM;
++       }
 +
-+	mm = mm_access(args.tsk_wtd_mm, PTRACE_MODE_ATTACH_REALCREDS);
-+	if (!mm || IS_ERR(mm)) {
-+		goto put_task_struct;
-+	}
++       mm = mm_access(args.tsk_wtd_mm, PTRACE_MODE_ATTACH_REALCREDS);
++       if (!mm || IS_ERR(mm)) {
++               goto put_task_struct;
++       }
 +
-+	result = kernel_clone(&args);
++       result = kernel_clone(&args);
 +
-+	mmput(mm);
++       mmput(mm);
 +
 +put_task_struct:
-+	put_task_struct(args.tsk_wtd_mm);
++       put_task_struct(args.tsk_wtd_mm);
 +
-+	return result;
++       return result;
 +}
 +#endif
 +
  void walk_process_tree(struct task_struct *top, proc_visitor visitor, void *data)
  {
- 	struct task_struct *leader, *parent, *child;
+        struct task_struct *leader, *parent, *child;
 diff --git a/kernel/sys_ni.c b/kernel/sys_ni.c
-index f43d89d92..0793dc0d0 100644
+index dc765f3ef..3e67344ff 100644
 --- a/kernel/sys_ni.c
 +++ b/kernel/sys_ni.c
-@@ -476,3 +476,11 @@ COND_SYSCALL(setuid16);
+@@ -479,3 +479,11 @@ COND_SYSCALL(setuid16);
  
  /* restartable sequence */
  COND_SYSCALL(rseq);
@@ -383,118 +382,114 @@ index f43d89d92..0793dc0d0 100644
 +COND_SYSCALL(rclone);
 +#endif
 diff --git a/mm/mmap.c b/mm/mmap.c
-index 88dcc5c25..84ff24c68 100644
+index 313b57d55..56ab54e86 100644
 --- a/mm/mmap.c
 +++ b/mm/mmap.c
-@@ -2895,10 +2895,10 @@ int do_munmap(struct mm_struct *mm, unsigned long start, size_t len,
- 	return __do_munmap(mm, start, len, uf, false);
+@@ -2871,10 +2871,10 @@ int do_munmap(struct mm_struct *mm, unsigned long start, size_t len,
+        return __do_munmap(mm, start, len, uf, false);
  }
  
 -static int __vm_munmap(unsigned long start, size_t len, bool downgrade)
 +static int __vm_munmap(struct task_struct *task, unsigned long start, size_t len, bool downgrade)
  {
- 	int ret;
--	struct mm_struct *mm = current->mm;
-+	struct mm_struct *mm = task->mm;
- 	LIST_HEAD(uf);
+        int ret;
+-       struct mm_struct *mm = current->mm;
++       struct mm_struct *mm = task->mm;
+        LIST_HEAD(uf);
  
- 	if (mmap_write_lock_killable(mm))
-@@ -2922,18 +2922,16 @@ static int __vm_munmap(unsigned long start, size_t len, bool downgrade)
+        if (mmap_write_lock_killable(mm))
+@@ -2898,14 +2898,14 @@ static int __vm_munmap(unsigned long start, size_t len, bool downgrade)
  
  int vm_munmap(unsigned long start, size_t len)
  {
--	return __vm_munmap(start, len, false);
-+	return __vm_munmap(current, start, len, false);
+-       return __vm_munmap(start, len, false);
++       return __vm_munmap(current, start, len, false);
  }
  EXPORT_SYMBOL(vm_munmap);
  
  SYSCALL_DEFINE2(munmap, unsigned long, addr, size_t, len)
  {
- 	addr = untagged_addr(addr);
--	profile_munmap(addr);
--	return __vm_munmap(addr, len, true);
-+	return __vm_munmap(current, addr, len, true);
+        addr = untagged_addr(addr);
+-       return __vm_munmap(addr, len, true);
++       return __vm_munmap(current, addr, len, true);
  }
  
--
- /*
-  * Emulation of deprecated remap_file_pages() syscall.
-  */
-@@ -3014,6 +3012,80 @@ SYSCALL_DEFINE5(remap_file_pages, unsigned long, start, unsigned long, size,
- 	return ret;
+ 
+@@ -2989,6 +2989,80 @@ SYSCALL_DEFINE5(remap_file_pages, unsigned long, start, unsigned long, size,
+        return ret;
  }
  
 +#ifdef __ARCH_WANT_SYS_RFUNCS
 +SYSCALL_DEFINE3(rmunmap, pid_t, pid, unsigned long, addr, size_t, len)
 +{
-+	struct task_struct *task = NULL;
-+	int result = -EPERM;
-+	struct mm_struct *mm;
++       struct task_struct *task = NULL;
++       int result = -EPERM;
++       struct mm_struct *mm;
 +
-+	task = find_get_task_by_vpid(pid);
-+	if (!task) {
-+		return -EPERM;
-+	}
++       task = find_get_task_by_vpid(pid);
++       if (!task) {
++               return -EPERM;
++       }
 +
-+	mm = mm_access(task, PTRACE_MODE_ATTACH_REALCREDS);
-+	if (!mm || IS_ERR(mm)) {
-+		goto put_task_struct;
-+	}
++       mm = mm_access(task, PTRACE_MODE_ATTACH_REALCREDS);
++       if (!mm || IS_ERR(mm)) {
++               goto put_task_struct;
++       }
 +
-+	addr = untagged_addr(addr);
-+	result = __vm_munmap(task, addr, len, true);
++       addr = untagged_addr(addr);
++       result = __vm_munmap(task, addr, len, true);
 +
-+	mmput(mm);
++       mmput(mm);
 +
 +put_task_struct:
-+	put_task_struct(task);
++       put_task_struct(task);
 +
-+	return result;
++       return result;
 +}
 +
 +struct user_rmmap {
-+	pid_t         pid;
-+	unsigned long addr;
-+	unsigned long len;
-+	unsigned long prot;
-+	unsigned long flags;
-+	unsigned long fd;
-+	unsigned long pgoff;
++       pid_t         pid;
++       unsigned long addr;
++       unsigned long len;
++       unsigned long prot;
++       unsigned long flags;
++       unsigned long fd;
++       unsigned long pgoff;
 +};
 +
 +SYSCALL_DEFINE2(rmmap, struct user_rmmap*, uargs, size_t, usize)
 +{
-+	struct task_struct *task = NULL;
-+	unsigned long result = 0;
-+	struct mm_struct *mm;
-+	int err;
-+	struct user_rmmap args;
++       struct task_struct *task = NULL;
++       unsigned long result = 0;
++       struct mm_struct *mm;
++       int err;
++       struct user_rmmap args;
 +
-+	err = copy_struct_from_user(&args, sizeof(args), uargs, usize);
-+	if (err) {
-+		return err;
-+	}
++       err = copy_struct_from_user(&args, sizeof(args), uargs, usize);
++       if (err) {
++               return err;
++       }
 +
-+	task = find_get_task_by_vpid(args.pid);
-+	if (!task) {
-+		return -EINVAL;
-+	}
++       task = find_get_task_by_vpid(args.pid);
++       if (!task) {
++               return -EINVAL;
++       }
 +
-+	mm = mm_access(task, PTRACE_MODE_ATTACH_REALCREDS);
-+	if (!mm || IS_ERR(mm)) {
-+		goto put_task_struct;
-+	}
++       mm = mm_access(task, PTRACE_MODE_ATTACH_REALCREDS);
++       if (!mm || IS_ERR(mm)) {
++               goto put_task_struct;
++       }
 +
-+	real_current->attached_to = task;
-+	result = ksys_mmap_pgoff(args.addr, args.len, args.prot, args.flags, args.fd, args.pgoff);
-+	real_current->attached_to = NULL;
++       real_current->attached_to = task;
++       result = ksys_mmap_pgoff(args.addr, args.len, args.prot, args.flags, args.fd, args.pgoff);
++       real_current->attached_to = NULL;
 +
-+	mmput(mm);
++       mmput(mm);
 +
 +put_task_struct:
-+	put_task_struct(task);
++       put_task_struct(task);
 +
-+	return result;
++       return result;
 +}
 +#endif
 +
@@ -502,7 +497,7 @@ index 88dcc5c25..84ff24c68 100644
   *  this is really a simplified "do_mmap".  it only handles
   *  anonymous maps.  eventually we may be able to do some
 diff --git a/mm/mprotect.c b/mm/mprotect.c
-index 883e2cc85..860589834 100644
+index b69ce7a7b..a6f8851c5 100644
 --- a/mm/mprotect.c
 +++ b/mm/mprotect.c
 @@ -9,6 +9,7 @@
@@ -513,154 +508,154 @@ index 883e2cc85..860589834 100644
  #include <linux/pagewalk.h>
  #include <linux/hugetlb.h>
  #include <linux/shm.h>
-@@ -406,7 +407,7 @@ static const struct mm_walk_ops prot_none_walk_ops = {
+@@ -417,7 +418,7 @@ static const struct mm_walk_ops prot_none_walk_ops = {
  };
  
  int
 -mprotect_fixup(struct vm_area_struct *vma, struct vm_area_struct **pprev,
 +mprotect_fixup(struct task_struct *task, struct vm_area_struct *vma, struct vm_area_struct **pprev,
- 	unsigned long start, unsigned long end, unsigned long newflags)
+        unsigned long start, unsigned long end, unsigned long newflags)
  {
- 	struct mm_struct *mm = vma->vm_mm;
-@@ -432,7 +433,7 @@ mprotect_fixup(struct vm_area_struct *vma, struct vm_area_struct **pprev,
- 	    (newflags & VM_ACCESS_FLAGS) == 0) {
- 		pgprot_t new_pgprot = vm_get_page_prot(newflags);
+        struct mm_struct *mm = vma->vm_mm;
+@@ -443,7 +444,7 @@ mprotect_fixup(struct vm_area_struct *vma, struct vm_area_struct **pprev,
+            (newflags & VM_ACCESS_FLAGS) == 0) {
+                pgprot_t new_pgprot = vm_get_page_prot(newflags);
  
--		error = walk_page_range(current->mm, start, end,
-+		error = walk_page_range(task->mm, start, end,
- 				&prot_none_walk_ops, &new_pgprot);
- 		if (error)
- 			return error;
-@@ -519,14 +520,14 @@ mprotect_fixup(struct vm_area_struct *vma, struct vm_area_struct **pprev,
+-               error = walk_page_range(current->mm, start, end,
++               error = walk_page_range(task->mm, start, end,
+                                &prot_none_walk_ops, &new_pgprot);
+                if (error)
+                        return error;
+@@ -530,14 +531,14 @@ mprotect_fixup(struct vm_area_struct *vma, struct vm_area_struct **pprev,
  /*
   * pkey==-1 when doing a legacy mprotect()
   */
 -static int do_mprotect_pkey(unsigned long start, size_t len,
 +static int do_mprotect_pkey(struct task_struct *task, unsigned long start, size_t len,
- 		unsigned long prot, int pkey)
+                unsigned long prot, int pkey)
  {
- 	unsigned long nstart, end, tmp, reqprot;
- 	struct vm_area_struct *vma, *prev;
- 	int error = -EINVAL;
- 	const int grows = prot & (PROT_GROWSDOWN|PROT_GROWSUP);
--	const bool rier = (current->personality & READ_IMPLIES_EXEC) &&
-+	const bool rier = (task->personality & READ_IMPLIES_EXEC) &&
- 				(prot & PROT_READ);
+        unsigned long nstart, end, tmp, reqprot;
+        struct vm_area_struct *vma, *prev;
+        int error = -EINVAL;
+        const int grows = prot & (PROT_GROWSDOWN|PROT_GROWSUP);
+-       const bool rier = (current->personality & READ_IMPLIES_EXEC) &&
++       const bool rier = (task->personality & READ_IMPLIES_EXEC) &&
+                                (prot & PROT_READ);
  
- 	start = untagged_addr(start);
-@@ -548,7 +549,7 @@ static int do_mprotect_pkey(unsigned long start, size_t len,
+        start = untagged_addr(start);
+@@ -559,7 +560,7 @@ static int do_mprotect_pkey(unsigned long start, size_t len,
  
- 	reqprot = prot;
+        reqprot = prot;
  
--	if (mmap_write_lock_killable(current->mm))
-+	if (mmap_write_lock_killable(task->mm))
- 		return -EINTR;
+-       if (mmap_write_lock_killable(current->mm))
++       if (mmap_write_lock_killable(task->mm))
+                return -EINTR;
  
- 	/*
-@@ -556,10 +557,10 @@ static int do_mprotect_pkey(unsigned long start, size_t len,
- 	 * them use it here.
- 	 */
- 	error = -EINVAL;
--	if ((pkey != -1) && !mm_pkey_is_allocated(current->mm, pkey))
-+	if ((pkey != -1) && !mm_pkey_is_allocated(task->mm, pkey))
- 		goto out;
+        /*
+@@ -567,10 +568,10 @@ static int do_mprotect_pkey(unsigned long start, size_t len,
+         * them use it here.
+         */
+        error = -EINVAL;
+-       if ((pkey != -1) && !mm_pkey_is_allocated(current->mm, pkey))
++       if ((pkey != -1) && !mm_pkey_is_allocated(task->mm, pkey))
+                goto out;
  
--	vma = find_vma(current->mm, start);
-+	vma = find_vma(task->mm, start);
- 	error = -ENOMEM;
- 	if (!vma)
- 		goto out;
-@@ -633,7 +634,7 @@ static int do_mprotect_pkey(unsigned long start, size_t len,
- 				goto out;
- 		}
+-       vma = find_vma(current->mm, start);
++       vma = find_vma(task->mm, start);
+        error = -ENOMEM;
+        if (!vma)
+                goto out;
+@@ -647,7 +648,7 @@ static int do_mprotect_pkey(unsigned long start, size_t len,
+                                goto out;
+                }
  
--		error = mprotect_fixup(vma, &prev, nstart, tmp, newflags);
-+		error = mprotect_fixup(task, vma, &prev, nstart, tmp, newflags);
- 		if (error)
- 			goto out;
+-               error = mprotect_fixup(vma, &prev, nstart, tmp, newflags);
++               error = mprotect_fixup(task, vma, &prev, nstart, tmp, newflags);
+                if (error)
+                        goto out;
  
-@@ -652,22 +653,79 @@ static int do_mprotect_pkey(unsigned long start, size_t len,
- 		prot = reqprot;
- 	}
+@@ -666,22 +667,79 @@ static int do_mprotect_pkey(unsigned long start, size_t len,
+                prot = reqprot;
+        }
  out:
--	mmap_write_unlock(current->mm);
-+	mmap_write_unlock(task->mm);
- 	return error;
+-       mmap_write_unlock(current->mm);
++       mmap_write_unlock(task->mm);
+        return error;
  }
  
 -SYSCALL_DEFINE3(mprotect, unsigned long, start, size_t, len,
 +#ifdef __ARCH_WANT_SYS_RFUNCS
 +SYSCALL_DEFINE4(rmprotect, pid_t, pid, unsigned long, start, size_t, len,
- 		unsigned long, prot)
+                unsigned long, prot)
  {
--	return do_mprotect_pkey(start, len, prot, -1);
-+	struct task_struct *task = NULL;
-+	int result = -EPERM;
-+	struct mm_struct *mm;
+-       return do_mprotect_pkey(start, len, prot, -1);
++       struct task_struct *task = NULL;
++       int result = -EPERM;
++       struct mm_struct *mm;
 +
-+	task = find_get_task_by_vpid(pid);
-+	if (!task) {
-+		return -EPERM;
-+	}
++       task = find_get_task_by_vpid(pid);
++       if (!task) {
++               return -EPERM;
++       }
 +
-+	mm = mm_access(task, PTRACE_MODE_ATTACH_REALCREDS);
-+	if (!mm || IS_ERR(mm)) {
-+		goto put_task_struct;
-+	}
++       mm = mm_access(task, PTRACE_MODE_ATTACH_REALCREDS);
++       if (!mm || IS_ERR(mm)) {
++               goto put_task_struct;
++       }
 +
-+	result = do_mprotect_pkey(task, start, len, prot, -1);
++       result = do_mprotect_pkey(task, start, len, prot, -1);
 +
-+	mmput(mm);
++       mmput(mm);
 +
 +put_task_struct:
-+	put_task_struct(task);
++       put_task_struct(task);
 +
-+	return result;
++       return result;
  }
  
  #ifdef CONFIG_ARCH_HAS_PKEYS
 +SYSCALL_DEFINE5(pkey_rmprotect, pid_t, pid, unsigned long, start, size_t, len,
-+		unsigned long, prot, int, pkey)
++               unsigned long, prot, int, pkey)
 +{
-+	struct task_struct *task = NULL;
-+	int result = -EPERM;
-+	struct mm_struct *mm;
++       struct task_struct *task = NULL;
++       int result = -EPERM;
++       struct mm_struct *mm;
 +
-+	task = find_get_task_by_vpid(pid);
-+	if (!task) {
-+		return -EPERM;
-+	}
++       task = find_get_task_by_vpid(pid);
++       if (!task) {
++               return -EPERM;
++       }
  
 -SYSCALL_DEFINE4(pkey_mprotect, unsigned long, start, size_t, len,
-+	mm = mm_access(task, PTRACE_MODE_ATTACH_REALCREDS);
-+	if (!mm || IS_ERR(mm)) {
-+		goto put_task_struct;
-+	}
++       mm = mm_access(task, PTRACE_MODE_ATTACH_REALCREDS);
++       if (!mm || IS_ERR(mm)) {
++               goto put_task_struct;
++       }
 +
-+	result = do_mprotect_pkey(task, start, len, prot, pkey);
++       result = do_mprotect_pkey(task, start, len, prot, pkey);
 +
-+	mmput(mm);
++       mmput(mm);
 +
 +put_task_struct:
-+	put_task_struct(task);
++       put_task_struct(task);
 +
-+	return result;
++       return result;
 +}
 +#endif
 +#endif
 +
 +SYSCALL_DEFINE3(mprotect, unsigned long, start, size_t, len, unsigned long,
-+		prot)
++               prot)
 +{
-+	return do_mprotect_pkey(current, start, len, prot, -1);
++       return do_mprotect_pkey(current, start, len, prot, -1);
 +}
 +
 +#ifdef CONFIG_ARCH_HAS_PKEYS
 + SYSCALL_DEFINE4(pkey_mprotect, unsigned long, start, size_t, len,
- 		unsigned long, prot, int, pkey)
+                unsigned long, prot, int, pkey)
  {
--	return do_mprotect_pkey(start, len, prot, pkey);
-+	return do_mprotect_pkey(current, start, len, prot, pkey);
+-       return do_mprotect_pkey(start, len, prot, pkey);
++       return do_mprotect_pkey(current, start, len, prot, pkey);
  }
  
  SYSCALL_DEFINE2(pkey_alloc, unsigned long, flags, unsigned long, init_val)

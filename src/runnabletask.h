@@ -180,8 +180,6 @@ namespace XKLib
                         + MemoryUtils::GetPageSize(),
                       N);
 
-        ::kill(_id, SIGSTOP);
-
         if (_id <= INVALID_ID)
         {
             XKLIB_EXCEPTION("Could not create task");
