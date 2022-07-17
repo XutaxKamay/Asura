@@ -33,7 +33,7 @@ namespace XKLib
         static constexpr std::uint32_t cmp_all = std::numeric_limits<
           std::uint8_t>::max();
 #else
-        using value_t                         = std::uint64_t;
+        using value_t                          = std::uint64_t;
         static constexpr std::uint64_t cmp_all = std::numeric_limits<
           std::uint8_t>::max();
 #endif
@@ -83,14 +83,15 @@ namespace XKLib
                 };
 
             } ret {
-                {part2, part1}
+                {view_as<std::uint32_t>(part2),
+                 view_as<std::uint32_t>(part1)}
             };
 
             return ret.val;
 #elif defined(__AVX2__)
             return view_as<std::uint32_t>(_mm256_movemask_epi8(mm1));
 #elif defined(__SSE2__)
-            return view_as<std::uint32_t>( _mm_movemask_epi8(mm1));
+            return view_as<std::uint32_t>(_mm_movemask_epi8(mm1));
 #elif defined(__SSE__)
             return view_as<std::uint32_t>(_mm_movemask_pi8(mm1));
 #else
