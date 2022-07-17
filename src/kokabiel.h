@@ -6,12 +6,8 @@
 #include "process.h"
 #include "processmemoryarea.h"
 
-/* Expand ELFIO */
-namespace ELFIO
+namespace XKLib
 {
-    constexpr auto AT_NULL   = 0;
-    constexpr auto AT_RANDOM = 25;
-
     template <typename T>
     struct Elf_auxv
     {
@@ -23,10 +19,6 @@ namespace ELFIO
         } a_un;
     };
 
-};
-
-namespace XKLib
-{
     template <unsigned char E>
     concept ELFClassSupported = E == ELFIO::ELFCLASS32
 #ifndef ENVIRONMENT32
@@ -348,7 +340,7 @@ namespace XKLib
           random_bytes);
 
         /* Setup auxiliary vectors */
-        const ELFIO::Elf_auxv<reloc_ptr_t> elf_aux[2] {
+        const Elf_auxv<reloc_ptr_t> elf_aux[2] {
             {  ELFIO::AT_NULL,                                  { 0 }},
             {ELFIO::AT_RANDOM, { *view_as<reloc_ptr_t*>(&at_random) }}
         };
@@ -370,13 +362,12 @@ namespace XKLib
         /* write aux vecs */
         for (std::size_t i = 0; i < 2; i++)
         {
-            injectionInfo.stack_start -= sizeof(
-              ELFIO::Elf_auxv<reloc_ptr_t>);
+            injectionInfo.stack_start -= sizeof(Elf_auxv<reloc_ptr_t>);
 
             injectionInfo.process_memory_map.write(
               view_as<ptr_t>(injectionInfo.stack_start),
               &elf_aux[i],
-              sizeof(ELFIO::Elf_auxv<reloc_ptr_t>));
+              sizeof(Elf_auxv<reloc_ptr_t>));
         }
 
         const static reloc_ptr_t null_address = 0;
