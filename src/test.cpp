@@ -4,7 +4,6 @@
 #include <cstdarg>
 
 using namespace XKLib;
-using namespace CryptoPP;
 
 #define ConsoleOutput(format) std::cout << "[XKLib] -> " << format
 
@@ -76,50 +75,7 @@ auto XKLib::Test::run() -> void
 
     std::cout << std::endl;
 
-    ConsoleOutput("Generating RSA Key...") << std::endl;
-    auto privateKey = RSABlocks::GenerateRSAPrivateKey();
-
-    ConsoleOutput("Encrypting with RSA Key...") << std::endl;
-    auto publicKey = RSA::PublicKey(privateKey);
-
-    auto enc = EncryptRSABlocks(publicKey).encrypt(bs);
-
-    ConsoleOutput("Raw encrypted bytes:") << std::endl;
-
-    for (auto&& b : enc)
-    {
-        std::cout << std::hex << view_as<int>(b);
-    }
-
-    std::cout << std::endl;
-
-    ConsoleOutput("Decrypting with RSA Key...") << std::endl;
-
-    auto dec = DecryptRSABlocks(privateKey).decrypt(enc);
-
-    ConsoleOutput("Raw decrypted bytes:") << std::endl;
-
-    for (auto&& b : dec)
-    {
-        std::cout << std::hex << view_as<int>(b);
-    }
-
-    std::cout << std::endl;
-
-    ReadBuffer readBuffer(dec.data(), dec.size());
-
-    if (std::memcmp(readBuffer.data(),
-                    writeBuffer.data(),
-                    view_as<std::size_t>(writeBuffer.writeSize()))
-        == 0)
-    {
-        ConsoleOutput("Passed decryption test") << std::endl;
-    }
-    else
-    {
-        ConsoleOutput("Passed decryption test failed") << std::endl;
-        g_PassedTests = false;
-    }
+    ReadBuffer readBuffer(bs.data(), bs.size());
 
     auto ptr = readBuffer.readVar<type_array>(&strSize);
     ConsoleOutput(std::string(ptr, ptr + strSize)) << std::endl;

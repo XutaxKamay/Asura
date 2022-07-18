@@ -4,12 +4,9 @@ xklib_srcs = [
     'src/bits.cpp',
     'src/buffer.cpp',
     'src/circularbuffer.cpp',
-    'src/decryptrsablocks.cpp',
     'src/detourx86.cpp',
     'src/elf.cpp',
-    'src/encryptrsablocks.cpp',
     'src/exception.cpp',
-    'src/hybridcrypto.cpp',
     'src/kokabiel.cpp',
     'src/memoryarea.cpp',
     'src/memorymap.cpp',
@@ -26,7 +23,6 @@ xklib_srcs = [
     'src/processmemoryarea.cpp',
     'src/processmemorymap.cpp',
     'src/readbuffer.cpp',
-    'src/rsablocks.cpp',
     'src/runnabletask.cpp',
     'src/simd.cpp',
     'src/task.cpp',
@@ -46,6 +42,7 @@ srcs = xklib_srcs + test_srcs
 
 include_dirs = [
     'src/vendor/ELFIO',
+    'src/vendor',
     'src'
 ]
 
@@ -59,14 +56,11 @@ common_args = [
     '-Wno-ignored-optimization-argument'
 ]
 
-deps = [
-    dependency('libcryptopp')
-]
-
 if get_option('native')
     common_args += ['-march=native', '-mtune=native']
 endif
 
-library('xklib', sources : xklib_srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : common_args, dependencies : deps)
+library('xklib', sources : xklib_srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : common_args)
 
-executable('test.out', sources : srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : common_args, dependencies : deps)
+executable('test.out', sources : srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : common_args)
+

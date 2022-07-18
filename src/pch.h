@@ -83,15 +83,4 @@
     #include <x86intrin.h>
 #endif
 
-/* CryptoPP */
-#include <cryptopp/aes.h>
-#include <cryptopp/modes.h>
-#include <cryptopp/osrng.h>
-#include <cryptopp/randpool.h>
-#include <cryptopp/rdrand.h>
-#include <cryptopp/rng.h>
-#include <cryptopp/rsa.h>
-#include <cryptopp/sha.h>
-#include <cryptopp/zlib.h>
-
 #endif
