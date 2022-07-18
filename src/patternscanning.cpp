@@ -387,7 +387,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
      * find the first set, so the mismatched byte.
      */
 
-    while (current_data >= data + pattern_size)
+    while (current_data >= data + sizeof(SIMD::value_t))
     {
         switch (it_mask_value->skip_type)
         {
@@ -534,7 +534,7 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
         }
     };
 
-    while (current_data >= data + pattern_size)
+    while (current_data >= data + sizeof(SIMD::value_t))
     {
         /**
          * Compare with our value (with unknown bytes, the mask)
@@ -708,7 +708,7 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
         }
     };
 
-    while (aligned_current_data >= alignedData + pattern_size)
+    while (aligned_current_data >= alignedData + sizeof(SIMD::value_t))
     {
         switch (it_mask_value->skip_type)
         {

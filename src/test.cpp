@@ -28,9 +28,10 @@ auto XKLib::Test::run() -> void
 {
     ConsoleOutput("Starting test") << std::endl;
 
-    auto pid = syscall_extended(__NR_getppid);
-
-    std::cout << pid << " " << getppid() << std::endl;
+    // TODO: Windows
+    //    auto pid = syscall_extended(__NR_getppid);
+    //
+    //    std::cout << pid << " " << getppid() << std::endl;
 
     std::string str("Life is a game, but you can not restart it."
                     "There might be no happy end.."
@@ -523,6 +524,11 @@ auto XKLib::Test::run() -> void
               pattern_bytes[i].value);
             i++;
         }
+
+        std::ofstream file("dump_memory",
+                           std::ios::binary | std::ios::out);
+        file.write(view_as<char*>(aligned_memory),
+                   random_bytes.size() * 8);
 
         timer.start();
 

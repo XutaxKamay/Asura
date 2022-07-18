@@ -249,28 +249,29 @@ auto Process::refreshModules() -> void
     const auto& mmap  = this->mmap();
     const auto& areas = mmap.areas();
 
-    std::for_each(
-      areas.begin(),
-      areas.end(),
-      [&](const std::shared_ptr<ProcessMemoryArea>& area)
-      {
-          if (area->isDeniedByOS() or not area->isReadable())
-          {
-              return;
-          }
+    std::for_each(areas.begin(),
+                  areas.end(),
+                  [&](const std::shared_ptr<ProcessMemoryArea>& area)
+                  {
+                      if (area->isDeniedByOS() or not area->isReadable())
+                      {
+                          return;
+                      }
 
-          const auto area_name = area->name();
+                      const auto area_name = area->name();
 
-          const auto path = std::filesystem::path(area->name());
+                      const auto path = std::filesystem::path(
+                        area->name());
 
-          if (std::filesystem::exists(path))
-          {
-              const auto base_name = path.filename();
+                      if (std::filesystem::exists(path))
+                      {
+                          const auto base_name = path.filename();
 
-              _modules.push_back(
-                { area->begin<ptr_t>(), base_name, area->name() });
-          }
-      });
+                          _modules.push_back({ area->begin<ptr_t>(),
+                                               base_name.string(),
+                                               area->name() });
+                      }
+                  });
 
     _modules.unique(
       [](const Module& moduleA, const Module& moduleB)

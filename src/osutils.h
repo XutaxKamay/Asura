@@ -20,32 +20,38 @@ namespace XKLib
           -> module_sym_t
         {
             const auto dos_header = view_as<
-              const PE::IMAGE_DOS_HEADER* const>(data);
+              const PE::IMAGE::DOS_HEADER* const>(data);
 
             const auto nt_parent_headers = view_as<
-              const PE::IMAGE_PARENT_NT_HEADERS* const>(
+              const PE::IMAGE::PARENT_NT_HEADERS* const>(
               view_as<std::uintptr_t>(dos_header) + dos_header->e_lfanew);
 
             switch (nt_parent_headers->FileHeader.Machine)
             {
-                case PE::IMAGE_FILE_MACHINE_I386:
+                case PE::IMAGE::FILE_MACHINE_I386:
                 {
-                    return PE::find_exported_function<std::uint32_t, M>(
+                    const auto nt_headers = view_as<
+                      const PE::IMAGE::NT_HEADERS<std::uint32_t>* const>(
+                      nt_parent_headers);
+
+                    return nt_headers->find_exported_function<M>(
                       dos_header,
-                      nt_parent_headers,
                       funcName,
                       baseAddress,
                       FindExportedFunctionRunTime<M>);
                 }
 
-                case PE::IMAGE_FILE_MACHINE_IA64:
+                case PE::IMAGE::FILE_MACHINE_IA64:
                 {
                     if constexpr (sizeof(std::uintptr_t)
                                   >= sizeof(std::uint64_t))
                     {
-                        return PE::find_exported_function<std::uint64_t, M>(
+                        const auto nt_headers = view_as<
+                          const PE::IMAGE::NT_HEADERS<std::uint64_t>* const>(
+                          nt_parent_headers);
+
+                        return nt_headers->find_exported_function<M>(
                           dos_header,
-                          nt_parent_headers,
                           funcName,
                           baseAddress,
                           FindExportedFunctionRunTime<M>);
@@ -57,14 +63,17 @@ namespace XKLib
                     }
                 }
 
-                case PE::IMAGE_FILE_MACHINE_AMD64:
+                case PE::IMAGE::FILE_MACHINE_AMD64:
                 {
                     if constexpr (sizeof(std::uintptr_t)
                                   >= sizeof(std::uint64_t))
                     {
-                        return PE::find_exported_function<std::uint64_t, M>(
+                        const auto nt_headers = view_as<
+                          const PE::IMAGE::NT_HEADERS<std::uint64_t>* const>(
+                          nt_parent_headers);
+
+                        return nt_headers->find_exported_function<M>(
                           dos_header,
-                          nt_parent_headers,
                           funcName,
                           baseAddress,
                           FindExportedFunctionRunTime<M>);
@@ -133,7 +142,7 @@ namespace XKLib
         }
 
       public:
-        /*  M is to say if we want to search from mapped module. */
+        /* M is to say if we want to search from mapped module. */
         template <bool M = true>
         static auto FindExportedFunctionRunTime(
           const std::string& modName,

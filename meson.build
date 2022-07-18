@@ -60,7 +60,9 @@ if get_option('native')
     common_args += ['-march=native', '-mtune=native']
 endif
 
-library('xklib', sources : xklib_srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : common_args)
+largs = ['-static-libgcc', '-static-libstdc++']
 
-executable('test.out', sources : srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : common_args)
+library('xklib', sources : xklib_srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : common_args, link_args : largs)
+
+executable('test.out', sources : srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : common_args, link_args : largs)
 

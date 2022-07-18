@@ -10,6 +10,20 @@ XKLib::PatternByte::Value::Value(int value) : value(value)
 {
 }
 
+auto XKLib::PatternByte::Value::str() -> std::string
+{
+    if (value == UNKNOWN)
+    {
+        return "UNKNOWN";
+    }
+    else
+    {
+        std::stringstream ss;
+        ss << std::setfill('0') << std::setw(2) << std::hex << value;
+        return ss.str();
+    }
+}
+
 XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
                                 const std::string areaName,
                                 const std::vector<ptr_t> matches)
@@ -208,7 +222,6 @@ auto XKLib::PatternByte::setupHorspoolTable(
   std::vector<Value>& bytes) -> void
 {
 #ifdef false
-
     for (std::size_t i = 0; i < horspoolTable.size() + 1; i++)
     {
         horspoolTable[i].resize(bytes.size());
@@ -246,7 +259,6 @@ auto XKLib::PatternByte::setupHorspoolTable(
         }
     }
 #endif
-
     for (std::size_t i = 0; i < horspoolTable.size(); i++)
     {
         horspoolTable[i].resize(bytes.size());

@@ -27,6 +27,8 @@ namespace XKLib
 
             Value(int value);
 
+            auto str() -> std::string;
+
             int value = INVALID;
             std::size_t index {};
         };
@@ -104,4 +106,3 @@ namespace XKLib
 }
 
 #endif
-
