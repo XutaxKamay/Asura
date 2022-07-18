@@ -206,11 +206,12 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
                         + " bytes");
     }
 
-    auto&& matches                = pattern.matches();
-    const auto old_matches_size   = matches.size();
-    const auto& pattern_bytes     = pattern.bytes();
-    const auto pattern_size       = pattern_bytes.size();
-    const auto& simd_masks_values = pattern.simdMasksValues();
+    auto&& matches                    = pattern.matches();
+    const auto old_matches_size       = matches.size();
+    const auto& pattern_bytes         = pattern.bytes();
+    const auto pattern_size           = pattern_bytes.size();
+    const auto& simd_masks_values     = pattern.simdMasksValues();
+    const auto penultimate_simd_masks = std::prev(simd_masks_values.end());
 
     auto start_data   = data + size - pattern_size;
     auto current_data = start_data;
@@ -358,7 +359,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
         else
         {
             /* did we found our stuff ? */
-            if (it_mask_value == std::prev(simd_masks_values.end()))
+            if (it_mask_value == penultimate_simd_masks)
             {
                 matches.push_back(view_as<ptr_t>(
                   view_as<std::uintptr_t>(baseAddress)
@@ -463,12 +464,13 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
                         + " bytes");
     }
 
-    auto&& matches                  = pattern.matches();
-    const auto old_matches_size     = matches.size();
-    const auto& pattern_bytes       = pattern.bytes();
-    const auto pattern_size         = pattern_bytes.size();
-    const auto& simd_masks_values   = pattern.simdMasksValues();
-    const auto& horspool_skip_table = pattern.horspoolSkipTable();
+    auto&& matches                    = pattern.matches();
+    const auto old_matches_size       = matches.size();
+    const auto& pattern_bytes         = pattern.bytes();
+    const auto pattern_size           = pattern_bytes.size();
+    const auto& simd_masks_values     = pattern.simdMasksValues();
+    const auto& horspool_skip_table   = pattern.horspoolSkipTable();
+    const auto penultimate_simd_masks = std::prev(simd_masks_values.end());
 
     auto start_data   = data + size - pattern_size;
     auto current_data = start_data;
@@ -511,7 +513,7 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
         else
         {
             /* did we found our stuff ? */
-            if (it_mask_value == std::prev(simd_masks_values.end()))
+            if (it_mask_value == penultimate_simd_masks)
             {
                 matches.push_back(view_as<ptr_t>(
                   view_as<std::uintptr_t>(baseAddress)
@@ -632,6 +634,15 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
     auto it_mask_value = shifted_simd_masks_values[shift_from_current_data]
                            .begin();
 
+    std::array<decltype(it_mask_value), sizeof(SIMD::value_t)>
+      penultimates_simd_masks;
+
+    for (std::size_t i = 0; i < sizeof(SIMD::value_t); i++)
+    {
+        penultimates_simd_masks[i] = std::prev(
+          shifted_simd_masks_values[i].end());
+    }
+
     /**
      * NOTE:
      * Way too much parameters to make it as a static method, lambda will
@@ -677,10 +688,8 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
         else
         {
             /* did we found our stuff ? */
-            if (
-              it_mask_value
-              == std::prev(
-                shifted_simd_masks_values[shift_from_current_data].end()))
+            if (it_mask_value
+                == penultimates_simd_masks[shift_from_current_data])
             {
                 matches.push_back(view_as<ptr_t>(
                   view_as<std::uintptr_t>(baseAddress)
