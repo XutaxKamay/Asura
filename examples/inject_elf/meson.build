@@ -4,12 +4,9 @@ xklib_srcs = [
     'src/XKLib/src/bits.cpp',
     'src/XKLib/src/buffer.cpp',
     'src/XKLib/src/circularbuffer.cpp',
-    'src/XKLib/src/decryptrsablocks.cpp',
     'src/XKLib/src/detourx86.cpp',
     'src/XKLib/src/elf.cpp',
-    'src/XKLib/src/encryptrsablocks.cpp',
     'src/XKLib/src/exception.cpp',
-    'src/XKLib/src/hybridcrypto.cpp',
     'src/XKLib/src/kokabiel.cpp',
     'src/XKLib/src/memoryarea.cpp',
     'src/XKLib/src/memorymap.cpp',
@@ -26,7 +23,6 @@ xklib_srcs = [
     'src/XKLib/src/processmemoryarea.cpp',
     'src/XKLib/src/processmemorymap.cpp',
     'src/XKLib/src/readbuffer.cpp',
-    'src/XKLib/src/rsablocks.cpp',
     'src/XKLib/src/runnabletask.cpp',
     'src/XKLib/src/simd.cpp',
     'src/XKLib/src/task.cpp',
@@ -59,12 +55,8 @@ common_args = [
     '-Wno-ignored-optimization-argument'
 ]
 
-deps = [
-  dependency('libcryptopp')
-]
-
 if get_option('native')
     common_args += ['-march=native', '-mtune=native']
 endif
 
-executable('inject_elf.out', sources : srcs, cpp_pch : 'src/pch.h', include_directories : incdirs, cpp_args : common_args, dependencies : deps)
+executable('inject_elf.out', sources : srcs, cpp_pch : 'src/pch.h', include_directories : incdirs, cpp_args : common_args)
