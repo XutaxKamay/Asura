@@ -8,7 +8,6 @@ https://github.com/XutaxKamay/mylib/blob/master/src/custom_linux_syscalls.h
 - GNU/Linux:
     - meson
     - g++ / clang++
-    - CryptoPP
 
 - For Windows you need MinGW with g++
 
