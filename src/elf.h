@@ -100,21 +100,6 @@ namespace XKLib
             std::uint32_t e_version;
         };
 
-        template <IntType T>
-        struct Elf_Ehdr : Elf_Parent_Ehdr
-        {
-            T e_entry;
-            T e_phoff;
-            T e_shoff;
-            std::uint32_t e_flags;
-            std::uint16_t e_ehsize;
-            std::uint16_t e_phentsize;
-            std::uint16_t e_phnum;
-            std::uint16_t e_shentsize;
-            std::uint16_t e_shnum;
-            std::uint16_t e_shstrndx;
-        };
-
         struct Elf32_Phdr
         {
             std::uint32_t p_type;
@@ -225,242 +210,257 @@ namespace XKLib
             T n_type;
         };
 
-        template <IntType T, bool M>
-        auto find_symbol(const Elf_Parent_Ehdr* const elfParentHeader,
-                         const std::string& funcName,
-                         const auto baseAddress) -> module_sym_t
+        template <IntType T>
+        struct Elf_Ehdr : Elf_Parent_Ehdr
         {
-            const auto elf_header = view_as<const Elf_Ehdr<T>* const>(
-              elfParentHeader);
+            T e_entry;
+            T e_phoff;
+            T e_shoff;
+            std::uint32_t e_flags;
+            std::uint16_t e_ehsize;
+            std::uint16_t e_phentsize;
+            std::uint16_t e_phnum;
+            std::uint16_t e_shentsize;
+            std::uint16_t e_shnum;
+            std::uint16_t e_shstrndx;
 
-            const auto view_offset = [&]()
+            template <bool M>
+            auto find_symbol(const std::string& funcName,
+                             const auto baseAddress) const -> module_sym_t
             {
-                if constexpr (M)
+                const auto view_offset = [&]()
                 {
-                    return elf_header->e_phoff;
-                }
-                else
-                {
-                    return elf_header->e_shoff;
-                }
-            }();
-
-            if (not view_offset)
-            {
-                return { 0, 0 };
-            }
-
-            const auto view_count = [&]()
-            {
-                if constexpr (M)
-                {
-                    return elf_header->e_phnum;
-                }
-                else
-                {
-                    return elf_header->e_shnum;
-                }
-            }();
-
-            /**
-             * If mapped, then we use program header, otherwise section
-             * header
-             */
-
-            using ph_or_sec_t = typename std::
-              conditional<M, Elf_Phdr<T>, Elf_Shdr<T>>::type;
-
-            const auto views = view_as<const ph_or_sec_t* const>(
-              view_as<std::uintptr_t>(elf_header) + view_offset);
-
-            const auto process_symbol_table =
-              [&](const auto symbol_count,
-                  const auto symbol_table,
-                  const auto string_table) -> std::tuple<bool, T>
-            {
-                for (T i = 0; i < symbol_count; i++)
-                {
-                    const auto current_symbol = &symbol_table[i];
-
-                    const std::string symbol_name = view_as<
-                      const char* const>(string_table
-                                         + current_symbol->st_name);
-
-                    if (symbol_name.find(funcName) != std::string::npos)
+                    if constexpr (M)
                     {
-                        return { true, current_symbol->st_value };
+                        return e_phoff;
                     }
+                    else
+                    {
+                        return e_shoff;
+                    }
+                }();
+
+                if (not view_offset)
+                {
+                    return { 0, 0 };
                 }
 
-                return { false, 0 };
-            };
-
-            for (std::uint16_t i = 0; i < view_count; i++)
-            {
-                const auto view = &views[i];
-
-                if constexpr (M)
+                const auto view_count = [&]()
                 {
-                    /**
-                     * We want only PT_DYNAMIC that holds our information.
-                     */
-                    if (view->p_type != PT_DYNAMIC)
+                    if constexpr (M)
                     {
-                        continue;
+                        return e_phnum;
                     }
-
-                    const Elf_Sym<T>* symbol_table = nullptr;
-                    T symbol_count                 = 0;
-                    std::uintptr_t string_table    = 0;
-
-                    const auto process_symtab = [&](const auto dyn)
+                    else
                     {
-                        if (symbol_table)
+                        return e_shnum;
+                    }
+                }();
+
+                /**
+                 * If mapped, then we use program header, otherwise
+                 * section header
+                 */
+                using ph_or_sec_t = typename std::
+                  conditional<M, Elf_Phdr<T>, Elf_Shdr<T>>::type;
+
+                const auto views = view_as<const ph_or_sec_t* const>(
+                  view_as<std::uintptr_t>(this) + view_offset);
+
+                const auto process_symbol_table =
+                  [&](const auto symbol_count,
+                      const auto symbol_table,
+                      const auto string_table) -> std::tuple<bool, T>
+                {
+                    for (T i = 0; i < symbol_count; i++)
+                    {
+                        const auto current_symbol = &symbol_table[i];
+
+                        const std::string symbol_name = view_as<
+                          const char* const>(string_table
+                                             + current_symbol->st_name);
+
+                        if (symbol_name.find(funcName)
+                            != std::string::npos)
                         {
-                            XKLIB_EXCEPTION("Can't contain more than one "
-                                            "symbol table in PT_DYNAMIC");
+                            return { true, current_symbol->st_value };
                         }
+                    }
 
-                        symbol_table = view_as<decltype(symbol_table)>(
-                          view_as<std::uintptr_t>(dyn->d_un.d_val));
+                    return { false, 0 };
+                };
 
-                        auto current_symbol = symbol_table;
+                for (std::uint16_t i = 0; i < view_count; i++)
+                {
+                    const auto view = &views[i];
 
+                    if constexpr (M)
+                    {
                         /**
-                         * HACK:
-                         * Usually symbol table is just before string
-                         * table, so that ease our stuff.
+                         * We want only PT_DYNAMIC that holds our
+                         * information.
                          */
-                        while (view_as<std::uintptr_t>(current_symbol)
-                               < string_table)
+                        if (view->p_type != PT_DYNAMIC)
                         {
-                            current_symbol++;
+                            continue;
                         }
 
-                        symbol_count = (current_symbol - symbol_table);
-                    };
+                        const Elf_Sym<T>* symbol_table = nullptr;
+                        T symbol_count                 = 0;
+                        std::uintptr_t string_table    = 0;
 
-                    const auto process_strtab = [&](const auto dyn)
-                    {
-                        if (string_table)
+                        const auto process_symtab = [&](const auto dyn)
                         {
-                            XKLIB_EXCEPTION("Can't contain more than one "
-                                            "string table in PT_DYNAMIC");
-                        }
-
-                        string_table = dyn->d_un.d_val;
-                    };
-
-                    const auto process_pt_dynamic = [&]() -> module_sym_t
-                    {
-                        for (auto dyn = view_as<const Elf_Dyn<T>*>(
-                               view_as<std::uintptr_t>(elf_header)
-                               + view->p_vaddr);
-                             dyn->d_tag != DT_NULL;
-                             dyn++)
-                        {
-                            switch (dyn->d_tag)
+                            if (symbol_table)
                             {
-                                case DT_SYMTAB:
-                                {
-                                    process_symtab(dyn);
-                                    break;
-                                }
-                                case DT_STRTAB:
-                                {
-                                    process_strtab(dyn);
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (symbol_count and symbol_table
-                            and string_table)
-                        {
-                            const auto [found, st_value] = process_symbol_table(
-                              symbol_count,
-                              symbol_table,
-                              string_table);
-
-                            if (found)
-                            {
-                                return {
-                                    view_as<std::uintptr_t>(baseAddress),
-                                    st_value
-                                      + view_as<std::uintptr_t>(
-                                        baseAddress)
-                                };
+                                XKLIB_EXCEPTION(
+                                  "Can't contain more than one "
+                                  "symbol table in PT_DYNAMIC");
                             }
 
-                            return { 0, 0 };
-                        }
-                        else
-                        {
-                            XKLIB_EXCEPTION(
-                              "Couldn't find enough information about "
-                              "ELF => "
-                              "symbol_count: "
-                              + std::to_string(symbol_count)
-                              + " symbol_table: "
-                              + std::to_string(
-                                view_as<std::uintptr_t>(symbol_table))
-                              + " string_table: "
-                              + std::to_string(string_table));
-                        }
-                    };
+                            symbol_table = view_as<decltype(symbol_table)>(
+                              view_as<std::uintptr_t>(dyn->d_un.d_val));
 
-                    return process_pt_dynamic();
-                }
-                else
-                {
-                    switch (view->sh_type)
-                    {
-                        case SHT_DYNSYM:
-                        case SHT_SYMTAB:
-                        {
-                            const auto string_table = view_as<
-                                                        std::uintptr_t>(
-                                                        elf_header)
-                                                      + views[view->sh_link]
-                                                          .sh_offset;
+                            auto current_symbol = symbol_table;
 
-                            const T symbol_count = view->sh_size /
-                                                   /**
-                                                    * Or
-                                                    * view->sh_entsize
-                                                    */
-                                                   sizeof(Elf_Sym<T>);
-
-                            const auto symbol_table = view_as<
-                              const Elf_Sym<T>* const>(
-                              view_as<std::uintptr_t>(elf_header)
-                              + view->sh_offset);
-
-                            const auto [found, st_value] = process_symbol_table(
-                              symbol_count,
-                              symbol_table,
-                              string_table);
-
-                            if (found)
+                            /**
+                             * HACK:
+                             * Usually symbol table is just before string
+                             * table, so that ease our stuff.
+                             */
+                            while (view_as<std::uintptr_t>(current_symbol)
+                                   < string_table)
                             {
-                                return {
-                                    view_as<std::uintptr_t>(baseAddress),
-                                    st_value
-                                      + view_as<std::uintptr_t>(
-                                        baseAddress)
-                                };
+                                current_symbol++;
+                            }
+
+                            symbol_count = (current_symbol
+                                            - symbol_table);
+                        };
+
+                        const auto process_strtab = [&](const auto dyn)
+                        {
+                            if (string_table)
+                            {
+                                XKLIB_EXCEPTION(
+                                  "Can't contain more than one "
+                                  "string table in PT_DYNAMIC");
+                            }
+
+                            string_table = dyn->d_un.d_val;
+                        };
+
+                        const auto process_pt_dynamic =
+                          [&]() -> module_sym_t
+                        {
+                            for (auto dyn = view_as<const Elf_Dyn<T>*>(
+                                   view_as<std::uintptr_t>(this)
+                                   + view->p_vaddr);
+                                 dyn->d_tag != DT_NULL;
+                                 dyn++)
+                            {
+                                switch (dyn->d_tag)
+                                {
+                                    case DT_SYMTAB:
+                                    {
+                                        process_symtab(dyn);
+                                        break;
+                                    }
+                                    case DT_STRTAB:
+                                    {
+                                        process_strtab(dyn);
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (symbol_count and symbol_table
+                                and string_table)
+                            {
+                                const auto [found, st_value] = process_symbol_table(
+                                  symbol_count,
+                                  symbol_table,
+                                  string_table);
+
+                                if (found)
+                                {
+                                    return { view_as<std::uintptr_t>(
+                                               baseAddress),
+                                             st_value
+                                               + view_as<std::uintptr_t>(
+                                                 baseAddress) };
+                                }
+
+                                return { 0, 0 };
                             }
                             else
                             {
-                                break;
+                                XKLIB_EXCEPTION(
+                                  "Couldn't find enough information "
+                                  "about "
+                                  "ELF => "
+                                  "symbol_count: "
+                                  + std::to_string(symbol_count)
+                                  + " symbol_table: "
+                                  + std::to_string(
+                                    view_as<std::uintptr_t>(symbol_table))
+                                  + " string_table: "
+                                  + std::to_string(string_table));
+                            }
+                        };
+
+                        return process_pt_dynamic();
+                    }
+                    else
+                    {
+                        switch (view->sh_type)
+                        {
+                            case SHT_DYNSYM:
+                            case SHT_SYMTAB:
+                            {
+                                const auto string_table = view_as<
+                                                            std::uintptr_t>(
+                                                            this)
+                                                          + views[view->sh_link]
+                                                              .sh_offset;
+
+                                const T symbol_count = view->sh_size /
+                                                       /**
+                                                        * Or
+                                                        * view->sh_entsize
+                                                        */
+                                                       sizeof(Elf_Sym<T>);
+
+                                const auto symbol_table = view_as<
+                                  const Elf_Sym<T>* const>(
+                                  view_as<std::uintptr_t>(this)
+                                  + view->sh_offset);
+
+                                const auto [found, st_value] = process_symbol_table(
+                                  symbol_count,
+                                  symbol_table,
+                                  string_table);
+
+                                if (found)
+                                {
+                                    return { view_as<std::uintptr_t>(
+                                               baseAddress),
+                                             st_value
+                                               + view_as<std::uintptr_t>(
+                                                 baseAddress) };
+                                }
+                                else
+                                {
+                                    break;
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            return { 0, 0 };
-        }
+                return { 0, 0 };
+            }
+        };
 
     };
 };

@@ -108,10 +108,11 @@ namespace XKLib
             {
                 case ELF::ELFCLASS32:
                 {
-                    return ELF::find_symbol<std::uint32_t, M>(
-                      elf_parent_header,
-                      funcName,
-                      baseAddress);
+                    const auto elf_header = view_as<
+                      const ELF::Elf_Ehdr<std::uint32_t>* const>(
+                      elf_parent_header);
+                    return elf_header->find_symbol<M>(funcName,
+                                                      baseAddress);
                 }
 
                 case ELF::ELFCLASS64:
@@ -119,10 +120,11 @@ namespace XKLib
                     if constexpr (sizeof(std::uintptr_t)
                                   >= sizeof(std::uint64_t))
                     {
-                        return ELF::find_symbol<std::uint64_t, M>(
-                          elf_parent_header,
-                          funcName,
-                          baseAddress);
+                        const auto elf_header = view_as<
+                          const ELF::Elf_Ehdr<std::uint64_t>* const>(
+                          elf_parent_header);
+                        return elf_header->find_symbol<M>(funcName,
+                                                          baseAddress);
                     }
                     else
                     {
