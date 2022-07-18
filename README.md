@@ -9,7 +9,7 @@ https://github.com/XutaxKamay/mylib/blob/master/src/custom_linux_syscalls.h
     - meson
     - g++ / clang++
 
-- For Windows you need MinGW with g++
+- For Windows you need g++ with MinGW installed and meson
 
 ## How to build
 Clone the repo `git clone --recurse-submodules https://github.com/XutaxKamay/XKLib`.
