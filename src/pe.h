@@ -338,8 +338,8 @@ namespace XKLib
                       [&](const auto func_rva) -> module_sym_t
                     {
                         /* is it forwarded ? */
-                        if (func_rva > entry_rva
-                            and func_rva < entry_size)
+                        if (func_rva >= entry_rva
+                            and func_rva < entry_rva + entry_size)
                         {
                             return do_forwarded_function(get_va(func_rva));
                         }
