@@ -192,7 +192,9 @@ auto Process::self() -> Process
 #endif
 }
 
-Process::Process() : ProcessBase(INVALID_PID), _full_name("unknown")
+Process::Process()
+ : ProcessBase(INVALID_PID),
+   _full_name("unknown")
 {
 }
 

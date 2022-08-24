@@ -2,7 +2,8 @@
 
 #include "exception.h"
 
-XKLib::Exception::Exception(std::string msg) : _msg(std::move(msg))
+XKLib::Exception::Exception(std::string msg)
+ : _msg(std::move(msg))
 {
 }
 

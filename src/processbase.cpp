@@ -13,7 +13,8 @@ auto ProcessBase::self() -> ProcessBase
 #endif
 }
 
-ProcessBase::ProcessBase(const process_id_t pid) : _pid(pid)
+ProcessBase::ProcessBase(const process_id_t pid)
+ : _pid(pid)
 {
 }
 

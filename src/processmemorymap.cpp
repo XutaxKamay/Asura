@@ -6,7 +6,8 @@
 
 using namespace XKLib;
 
-ProcessMemoryMap::ProcessMemoryMap() : _process_base(-1)
+ProcessMemoryMap::ProcessMemoryMap()
+ : _process_base(-1)
 {
 }
 

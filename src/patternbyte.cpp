@@ -6,7 +6,8 @@
 #include "patternscanning.h"
 #include "process.h"
 
-XKLib::PatternByte::Value::Value(int value) : value(value)
+XKLib::PatternByte::Value::Value(int value)
+ : value(value)
 {
 }
 

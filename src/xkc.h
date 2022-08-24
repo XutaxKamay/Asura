@@ -160,7 +160,8 @@ auto XKLib::XKC<T>::BinaryTree::Node::count_subnodes() const
 }
 
 template <XKLib::XKCAlphabetType T>
-XKLib::XKC<T>::BinaryTree::BinaryTree() : root(std::make_shared<Node>())
+XKLib::XKC<T>::BinaryTree::BinaryTree()
+ : root(std::make_shared<Node>())
 {
     root->root = root;
 }
