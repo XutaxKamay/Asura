@@ -1,4 +1,4 @@
-project('inject_elf', 'cpp')
+project('inject_elf', 'cpp', default_options : ['cpp_std=c++20', 'warning_level=3', 'werror=true'])
 
 asura_srcs = [
     'src/Asura/src/bits.cpp',

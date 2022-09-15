@@ -1,4 +1,4 @@
-project('asura', 'cpp')
+project('asura', 'cpp', default_options : ['cpp_std=c++20', 'warning_level=3', 'werror=true'])
 
 asura_srcs = [
     'src/bits.cpp',
