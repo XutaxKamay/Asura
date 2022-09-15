@@ -2,7 +2,7 @@
 
 #include "memoryutils.h"
 
-using namespace XKLib;
+using namespace Asura;
 
 std::size_t MemoryUtils::_page_size;
 std::once_flag MemoryUtils::_get_page_size_once_flag;

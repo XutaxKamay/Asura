@@ -1,5 +1,5 @@
-#ifndef XKLIB_XKC_H
-#define XKLIB_XKC_H
+#ifndef ASURA_XKC_H
+#define ASURA_XKC_H
 
 #include "bits.h"
 #include "buffer.h"
@@ -8,7 +8,7 @@
 /**
  * This was done for fun, huffman is better
  **/
-namespace XKLib
+namespace Asura
 {
     template <typename T = byte_t>
     concept XKCAlphabetType = std::is_same<T, byte_t>::value or std::is_same<
@@ -103,8 +103,8 @@ namespace XKLib
     };
 }
 
-template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::Node::height() const -> std::size_t
+template <Asura::XKCAlphabetType T>
+auto Asura::XKC<T>::BinaryTree::Node::height() const -> std::size_t
 {
     std::size_t height_left = 0, height_right = 0;
 
@@ -123,8 +123,8 @@ auto XKLib::XKC<T>::BinaryTree::Node::height() const -> std::size_t
     return std::max(height_left, height_right);
 }
 
-template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::Node::depth() const -> std::size_t
+template <Asura::XKCAlphabetType T>
+auto Asura::XKC<T>::BinaryTree::Node::depth() const -> std::size_t
 {
     std::size_t result = 0;
     auto node          = parent;
@@ -138,8 +138,8 @@ auto XKLib::XKC<T>::BinaryTree::Node::depth() const -> std::size_t
     return result;
 }
 
-template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::Node::count_subnodes() const
+template <Asura::XKCAlphabetType T>
+auto Asura::XKC<T>::BinaryTree::Node::count_subnodes() const
   -> std::size_t
 {
     std::size_t result = 0;
@@ -159,8 +159,8 @@ auto XKLib::XKC<T>::BinaryTree::Node::count_subnodes() const
     return result;
 }
 
-template <XKLib::XKCAlphabetType T>
-XKLib::XKC<T>::BinaryTree::BinaryTree()
+template <Asura::XKCAlphabetType T>
+Asura::XKC<T>::BinaryTree::BinaryTree()
  : root(std::make_shared<Node>())
 {
     root->root = root;
@@ -171,8 +171,8 @@ XKLib::XKC<T>::BinaryTree::BinaryTree()
  * so the insertion of the most frequebnt value is the highest
  * in the tree
  */
-template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::insert(const std::shared_ptr<Node> parent,
+template <Asura::XKCAlphabetType T>
+auto Asura::XKC<T>::BinaryTree::insert(const std::shared_ptr<Node> parent,
                                        const T value) -> void
 {
     if (not parent->left)
@@ -198,8 +198,8 @@ auto XKLib::XKC<T>::BinaryTree::insert(const std::shared_ptr<Node> parent,
     }
 }
 
-template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::insert(const T value) -> void
+template <Asura::XKCAlphabetType T>
+auto Asura::XKC<T>::BinaryTree::insert(const T value) -> void
 {
     if (root->value == Node::Value::INVALID)
     {
@@ -211,14 +211,14 @@ auto XKLib::XKC<T>::BinaryTree::insert(const T value) -> void
     }
 }
 
-template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::encode(const bytes_t& bytes) -> XKLib::bytes_t
+template <Asura::XKCAlphabetType T>
+auto Asura::XKC<T>::encode(const bytes_t& bytes) -> Asura::bytes_t
 {
     return encode(view_as<data_t>(bytes.data()), bytes.size());
 }
 
-template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::path_info(
+template <Asura::XKCAlphabetType T>
+auto Asura::XKC<T>::BinaryTree::path_info(
   PathInfo& pathInfo,
   const std::shared_ptr<Node> parent,
   const T value) const -> bool
@@ -256,20 +256,20 @@ auto XKLib::XKC<T>::BinaryTree::path_info(
     return found_right;
 }
 
-template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::path_info(PathInfo& pathInfo,
+template <Asura::XKCAlphabetType T>
+auto Asura::XKC<T>::BinaryTree::path_info(PathInfo& pathInfo,
                                           const T value) const -> bool
 {
     return path_info(pathInfo, root, value);
 }
 
-template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::find_value(PathInfoResult& pathInfo) const
+template <Asura::XKCAlphabetType T>
+auto Asura::XKC<T>::BinaryTree::find_value(PathInfoResult& pathInfo) const
   -> void
 {
     if (root->height() < pathInfo.depth)
     {
-        XKLIB_EXCEPTION("Can't go deeper than the height of the "
+        ASURA_EXCEPTION("Can't go deeper than the height of the "
                         "tree.");
     }
 
@@ -288,15 +288,15 @@ auto XKLib::XKC<T>::BinaryTree::find_value(PathInfoResult& pathInfo) const
 
         if (current_node == nullptr)
         {
-            XKLIB_EXCEPTION("The node doesn't exist!");
+            ASURA_EXCEPTION("The node doesn't exist!");
         }
     }
 
     pathInfo.letter_value = view_as<T>(current_node->value);
 }
 
-template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::dot_format(
+template <Asura::XKCAlphabetType T>
+auto Asura::XKC<T>::BinaryTree::dot_format(
   const std::shared_ptr<Node> parent) const -> std::string
 {
     std::string result;
@@ -424,8 +424,8 @@ auto XKLib::XKC<T>::BinaryTree::dot_format(
     return result;
 }
 
-template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::BinaryTree::dot_format() const -> std::string
+template <Asura::XKCAlphabetType T>
+auto Asura::XKC<T>::BinaryTree::dot_format() const -> std::string
 {
     std::string result = "strict graph {";
 
@@ -436,8 +436,8 @@ auto XKLib::XKC<T>::BinaryTree::dot_format() const -> std::string
     return result;
 }
 
-template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::encode(const data_t data, const std::size_t size)
+template <Asura::XKCAlphabetType T>
+auto Asura::XKC<T>::encode(const data_t data, const std::size_t size)
   -> bytes_t
 {
     bytes_t result;
@@ -632,15 +632,15 @@ auto XKLib::XKC<T>::encode(const data_t data, const std::size_t size)
     return result;
 }
 
-template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::decode(const bytes_t& bytes) -> bytes_t
+template <Asura::XKCAlphabetType T>
+auto Asura::XKC<T>::decode(const bytes_t& bytes) -> bytes_t
 {
     return decode(view_as<data_t>(bytes.data()), bytes.size());
 }
 
-template <XKLib::XKCAlphabetType T>
-auto XKLib::XKC<T>::decode(const data_t data, const std::size_t size)
-  -> XKLib::bytes_t
+template <Asura::XKCAlphabetType T>
+auto Asura::XKC<T>::decode(const data_t data, const std::size_t size)
+  -> Asura::bytes_t
 {
     bytes_t result;
 
@@ -651,7 +651,7 @@ auto XKLib::XKC<T>::decode(const data_t data, const std::size_t size)
 
     if (written_bits / CHAR_BIT >= size)
     {
-        XKLIB_EXCEPTION("there's too much bits to decode.");
+        ASURA_EXCEPTION("there's too much bits to decode.");
     }
 
     const auto max_count_occurs_bits = data[read_bytes];
@@ -711,7 +711,7 @@ auto XKLib::XKC<T>::decode(const data_t data, const std::size_t size)
 
                 if (read_bytes >= size)
                 {
-                    XKLIB_EXCEPTION("Too much bytes decoded.. "
+                    ASURA_EXCEPTION("Too much bytes decoded.. "
                                     "Something is wrong.");
                 }
             }

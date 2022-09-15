@@ -1,9 +1,9 @@
-#ifndef XKLIB_CIRCULARBUFFER_H
-#define XKLIB_CIRCULARBUFFER_H
+#ifndef ASURA_CIRCULARBUFFER_H
+#define ASURA_CIRCULARBUFFER_H
 
 #include "types.h"
 
-namespace XKLib
+namespace Asura
 {
     template <typename T, std::size_t N>
     class CircularBuffer

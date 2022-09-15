@@ -1,9 +1,9 @@
-#ifndef XKLIB_TIMER_H
-#define XKLIB_TIMER_H
+#ifndef ASURA_TIMER_H
+#define ASURA_TIMER_H
 
 #include "types.h"
 
-namespace XKLib
+namespace Asura
 {
     template <typename T>
     concept FloatingPoint = std::is_same<float, T>::value or std::

@@ -2,7 +2,7 @@
 This is a library for testing mainly my new ideas, maintaining and improving some of my skills.
 
 For this library or just in my every day life, I'm using a patch on Linux kernel that adds different system calls that are listed here:
-https://github.com/XutaxKamay/mylib/blob/master/src/custom_linux_syscalls.h
+https://github.com/XutaxKamay/Asura/blob/master/src/custom_linux_syscalls.h
 
 ## Requirements
 - GNU/Linux:
@@ -12,13 +12,13 @@ https://github.com/XutaxKamay/mylib/blob/master/src/custom_linux_syscalls.h
 - For Windows you need g++ with MinGW installed and meson
 
 ## How to build
-Clone the repo `git clone --recurse-submodules https://github.com/XutaxKamay/XKLib`.
+Clone the repo `git clone --recurse-submodules https://github.com/XutaxKamay/Asura`.
 
 Type `meson build;cd build:meson compile` inside the root directory of the repository.
 
 ## How to use
 
-- Just include \<repo\>/src in your project and link the a library. (xklib.rel.a or xklib.dbg.a)
+- Just include \<repo\>/src in your project and link the a library. (asura.rel.a or asura.dbg.a)
 
 ### Warning!!!
 If you want to use the library, for GNU/Linux you'll likely need this Linux kernel patch and recompile your kernel:
@@ -679,4 +679,4 @@ To even go further by hiding our asses, we could theorically create a new memory
 The other easier method is to add a special dirty flag to the memory area so it hides a bit the new allocated memory area from the remote task (/proc/pid/maps), but it is clearly not a proper solution.
 
 ## Testing & Examples
-There is tests and examples being done on my code at test/src and being compiled as xklib_test.rel / xklib_test.dbg
+There is tests and examples being done on my code at test/src and being compiled as asura_test.rel / asura_test.dbg

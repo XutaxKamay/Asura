@@ -1,9 +1,9 @@
-#ifndef XKLIB_EXCEPTION_H
-#define XKLIB_EXCEPTION_H
+#ifndef ASURA_EXCEPTION_H
+#define ASURA_EXCEPTION_H
 
 #include "types.h"
 
-namespace XKLib
+namespace Asura
 {
     class Exception : std::exception
     {
@@ -16,8 +16,8 @@ namespace XKLib
         std::string _msg {};
     };
 
-#define XKLIB_EXCEPTION(msg)                                             \
-    throw XKLib::Exception(std::string(CURRENT_CONTEXT) + (msg))
+#define ASURA_EXCEPTION(msg)                                             \
+    throw Asura::Exception(std::string(CURRENT_CONTEXT) + (msg))
 };
 
 #endif

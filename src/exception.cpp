@@ -2,12 +2,12 @@
 
 #include "exception.h"
 
-XKLib::Exception::Exception(std::string msg)
+Asura::Exception::Exception(std::string msg)
  : _msg(std::move(msg))
 {
 }
 
-auto XKLib::Exception::msg() const -> const std::string&
+auto Asura::Exception::msg() const -> const std::string&
 {
     return _msg;
 }

@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "xklib.h"
+#include "asura.h"
 
 namespace error_code
 {
@@ -24,14 +24,14 @@ int main(int argc, char** argv)
     {
         std::string game_pid(argv[1]);
 
-        const auto process = XKLib::Process(std::stoi(game_pid));
+        const auto process = Asura::Process(std::stoi(game_pid));
         const auto& mmap   = process.mmap();
 
         const std::string dump_folder = "./dumps/" + game_pid + "/";
 
         if (!std::filesystem::create_directories(dump_folder))
         {
-            throw XKLib::Exception("Couldn't create directory at "
+            throw Asura::Exception("Couldn't create directory at "
                                    + dump_folder);
         }
 
@@ -69,13 +69,13 @@ int main(int argc, char** argv)
 
             if (!dump_file.is_open())
             {
-                throw XKLib::Exception("Could not open file" + file_name);
+                throw Asura::Exception("Could not open file" + file_name);
             }
 
             const auto old_flags = area->protectionFlags().cachedValue();
 
             area->protectionFlags().change(
-              old_flags | XKLib::MemoryArea::ProtectionFlags::READ);
+              old_flags | Asura::MemoryArea::ProtectionFlags::READ);
 
             try
             {
@@ -83,20 +83,20 @@ int main(int argc, char** argv)
 
                 area->protectionFlags().change(old_flags);
 
-                dump_file.write(XKLib::view_as<const char*>(
+                dump_file.write(Asura::view_as<const char*>(
                                   read_area.data()),
                                 read_area.size());
 
                 dump_file.close();
             }
-            catch (XKLib::Exception& e)
+            catch (Asura::Exception& e)
             {
                 std::cerr << e.msg() << "\n";
                 std::cerr << strerror(errno) << "\n";
             }
         }
     }
-    catch (XKLib::Exception& e)
+    catch (Asura::Exception& e)
     {
         std::cerr << e.msg() << "\n";
         std::cerr << strerror(errno) << "\n";

@@ -1,9 +1,9 @@
-#ifndef XKLIB_BUILTINS_H
-#define XKLIB_BUILTINS_H
+#ifndef ASURA_BUILTINS_H
+#define ASURA_BUILTINS_H
 
 #include "types.h"
 
-namespace XKLib
+namespace Asura
 {
     class Builtins
     {

@@ -1,9 +1,9 @@
-#ifndef XKLIB_MEMORYAREA_H
-#define XKLIB_MEMORYAREA_H
+#ifndef ASURA_MEMORYAREA_H
+#define ASURA_MEMORYAREA_H
 
 #include "types.h"
 
-namespace XKLib
+namespace Asura
 {
     /* memory area protection flags */
 #ifdef WINDOWS

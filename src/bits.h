@@ -1,10 +1,10 @@
-#ifndef XKLIB_BITS_H
-#define XKLIB_BITS_H
+#ifndef ASURA_BITS_H
+#define ASURA_BITS_H
 
 #include "exception.h"
 #include "types.h"
 
-namespace XKLib
+namespace Asura
 {
     template <const std::size_t P>
     constexpr auto read_bit(const auto data)

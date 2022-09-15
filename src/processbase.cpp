@@ -2,7 +2,7 @@
 
 #include "processbase.h"
 
-using namespace XKLib;
+using namespace Asura;
 
 auto ProcessBase::self() -> ProcessBase
 {

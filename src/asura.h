@@ -1,5 +1,5 @@
-#ifndef XKLIB_H
-#define XKLIB_H
+#ifndef ASURA_H
+#define ASURA_H
 
 #include "pch.h"
 

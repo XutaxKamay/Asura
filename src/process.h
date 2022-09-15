@@ -1,5 +1,5 @@
-#ifndef XKLIB_PROCESS_H
-#define XKLIB_PROCESS_H
+#ifndef ASURA_PROCESS_H
+#define ASURA_PROCESS_H
 
 #include "exception.h"
 #include "memoryarea.h"
@@ -11,7 +11,7 @@
 #include "processmemorymap.h"
 #include "runnabletask.h"
 
-namespace XKLib
+namespace Asura
 {
     class Process : public ProcessBase
     {

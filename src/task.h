@@ -1,10 +1,10 @@
-#ifndef XKLIB_TASK_H
-#define XKLIB_TASK_H
+#ifndef ASURA_TASK_H
+#define ASURA_TASK_H
 
 #include "memoryutils.h"
 #include "processbase.h"
 
-namespace XKLib
+namespace Asura
 {
     class Task;
 

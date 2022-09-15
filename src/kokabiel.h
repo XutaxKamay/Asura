@@ -1,12 +1,12 @@
-#ifndef XKLIB_KOKABIEL_H
-#define XKLIB_KOKABIEL_H
+#ifndef ASURA_KOKABIEL_H
+#define ASURA_KOKABIEL_H
 
 #include "memoryarea.h"
 #include "memoryutils.h"
 #include "process.h"
 #include "processmemoryarea.h"
 
-namespace XKLib
+namespace Asura
 {
     template <typename T>
     struct Elf_auxv
@@ -109,7 +109,7 @@ namespace XKLib
         if (_elf.get_type() != ELFIO::ET_DYN
             and _elf.get_type() != ELFIO::ET_EXEC)
         {
-            XKLIB_EXCEPTION("Elf must be dynamic library or "
+            ASURA_EXCEPTION("Elf must be dynamic library or "
                             "executable");
         }
 
@@ -161,13 +161,13 @@ namespace XKLib
               injectionInfo.process_memory_map.allocArea(
                 injectionInfo.loaded_segments.begin()->start,
                 _image_size,
-                XKLib::MemoryArea::ProtectionFlags::RW));
+                Asura::MemoryArea::ProtectionFlags::RW));
 
             if (image_base == 0
                 or (image_base
                     != injectionInfo.loaded_segments.begin()->start))
             {
-                XKLIB_EXCEPTION("Could not allocate image");
+                ASURA_EXCEPTION("Could not allocate image");
             }
         }
         else
@@ -176,11 +176,11 @@ namespace XKLib
               injectionInfo.process_memory_map.allocArea(
                 0,
                 _image_size,
-                XKLib::MemoryArea::ProtectionFlags::RW));
+                Asura::MemoryArea::ProtectionFlags::RW));
 
             if (image_base == 0)
             {
-                XKLIB_EXCEPTION("Could not allocate image");
+                ASURA_EXCEPTION("Could not allocate image");
             }
         }
 
@@ -221,7 +221,7 @@ namespace XKLib
                       .get_symbols_num()
                     > 1)
                 {
-                    XKLIB_EXCEPTION("Should not get any dynamic symbols "
+                    ASURA_EXCEPTION("Should not get any dynamic symbols "
                                     "inside the elf, it is not supported "
                                     "yet.");
                 }
@@ -304,11 +304,11 @@ namespace XKLib
           nullptr,
           injectionInfo.allocated_mem.env_data.bytes.size()
             + MemoryUtils::GetPageSize(),
-          XKLib::MemoryArea::ProtectionFlags::RW));
+          Asura::MemoryArea::ProtectionFlags::RW));
 
         if (injectionInfo.allocated_mem.env_data.start == 0)
         {
-            XKLIB_EXCEPTION("Couldn't allocate memory for cmd line "
+            ASURA_EXCEPTION("Couldn't allocate memory for cmd line "
                             "data");
         }
 
@@ -519,7 +519,7 @@ namespace XKLib
           std::uintptr_t>(injectionInfo.process_memory_map.allocArea(
           nullptr,
           injectionInfo.allocated_mem.shellcode.bytes.size(),
-          XKLib::MemoryArea::ProtectionFlags::RW));
+          Asura::MemoryArea::ProtectionFlags::RW));
 
         injectionInfo.process_memory_map.write(
           view_as<ptr_t>(injectionInfo.allocated_mem.shellcode.start),
@@ -528,7 +528,7 @@ namespace XKLib
         injectionInfo.process_memory_map.protectMemoryArea(
           injectionInfo.allocated_mem.shellcode.start,
           injectionInfo.allocated_mem.shellcode.bytes.size(),
-          XKLib::MemoryArea::ProtectionFlags::RX);
+          Asura::MemoryArea::ProtectionFlags::RX);
 
         runnableTask.routineAddress() = view_as<ptr_t>(
           injectionInfo.allocated_mem.shellcode.start);

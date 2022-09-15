@@ -3,7 +3,7 @@
 #include "exception.h"
 #include "memoryarea.h"
 
-using namespace XKLib;
+using namespace Asura;
 
 auto MemoryArea::ProtectionFlags::ToOwn(const mapf_t flags) -> mapf_t
 {
@@ -134,7 +134,7 @@ auto MemoryArea::operator==(const MemoryArea& area) const -> bool
     return begin() == area.begin() and end() == area.end();
 }
 
-auto XKLib::MemoryArea::name() const -> const std::string&
+auto Asura::MemoryArea::name() const -> const std::string&
 {
     return _name;
 }
@@ -149,7 +149,7 @@ auto MemoryArea::setSize(const std::size_t size) -> void
     _size = size;
 }
 
-auto XKLib::MemoryArea::setName(const std::string& name) -> void
+auto Asura::MemoryArea::setName(const std::string& name) -> void
 {
     _name = name;
 }

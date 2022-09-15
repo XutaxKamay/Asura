@@ -1,10 +1,10 @@
-#ifndef XKLIB_ELF_H
-#define XKLIB_ELF_H
+#ifndef ASURA_ELF_H
+#define ASURA_ELF_H
 
 #include "exception.h"
 #include "types.h"
 
-namespace XKLib
+namespace Asura
 {
     namespace ELF
     {
@@ -313,7 +313,7 @@ namespace XKLib
                         {
                             if (symbol_table)
                             {
-                                XKLIB_EXCEPTION(
+                                ASURA_EXCEPTION(
                                   "Can't contain more than one "
                                   "symbol table in PT_DYNAMIC");
                             }
@@ -342,7 +342,7 @@ namespace XKLib
                         {
                             if (string_table)
                             {
-                                XKLIB_EXCEPTION(
+                                ASURA_EXCEPTION(
                                   "Can't contain more than one "
                                   "string table in PT_DYNAMIC");
                             }
@@ -395,7 +395,7 @@ namespace XKLib
                             }
                             else
                             {
-                                XKLIB_EXCEPTION(
+                                ASURA_EXCEPTION(
                                   "Couldn't find enough information "
                                   "about "
                                   "ELF => "

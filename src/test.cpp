@@ -3,9 +3,9 @@
 #include "test.h"
 #include <cstdarg>
 
-using namespace XKLib;
+using namespace Asura;
 
-#define ConsoleOutput(format) std::cout << "[XKLib] -> " << format
+#define ConsoleOutput(format) std::cout << "[Asura] -> " << format
 
 #ifndef WINDOWS
 auto vfunc_hook(ptr_t thisptr) -> void
@@ -24,7 +24,7 @@ auto rogue() -> void
     std::cout << "Hehe" << std::endl;
 }
 
-auto XKLib::Test::run() -> void
+auto Asura::Test::run() -> void
 {
     ConsoleOutput("Starting test") << std::endl;
 
@@ -778,12 +778,12 @@ auto XKLib::Test::run() -> void
     // std::getchar();
 }
 
-void XKLib::Test::API::func1()
+void Asura::Test::API::func1()
 {
     std::cout << "func1" << std::endl;
 }
 
-auto XKLib::Test::API::func2(const char* str, ...) -> std::vector<int>
+auto Asura::Test::API::func2(const char* str, ...) -> std::vector<int>
 {
     va_list parameterInfos;
     va_start(parameterInfos, str);

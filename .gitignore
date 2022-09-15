@@ -9,4 +9,5 @@
 !.gitmodules
 !.gitignore
 !meson.build
-!XKLib
+!meson_options.txt
+!Asura

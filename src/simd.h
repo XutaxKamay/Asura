@@ -1,17 +1,17 @@
-#ifndef XKLIB_SIMD_H
-#define XKLIB_SIMD_H
+#ifndef ASURA_SIMD_H
+#define ASURA_SIMD_H
 
 #include "types.h"
 
-#define XKLIB_SIMD_THROW_ERROR                                           \
+#define ASURA_SIMD_THROW_ERROR                                           \
     #error "SSE/SSE2/AVX2/AVX512BW only supported"
 
 #if defined(__SSE__) or defined(__SSE2__) or defined(__AVX2__)           \
   or defined(__AVX512BW__)
-    #define XKLIB_HAS_SIMD
+    #define ASURA_HAS_SIMD
 #endif
 
-namespace XKLib
+namespace Asura
 {
     class SIMD
     {

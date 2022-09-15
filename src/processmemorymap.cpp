@@ -4,7 +4,7 @@
 #include "processbase.h"
 #include "processmemorymap.h"
 
-using namespace XKLib;
+using namespace Asura;
 
 ProcessMemoryMap::ProcessMemoryMap()
  : _process_base(-1)
@@ -34,7 +34,7 @@ auto ProcessMemoryMap::refresh() -> void
 
     if (not file_memory_map.is_open())
     {
-        XKLIB_EXCEPTION("Couldn't open /proc/"
+        ASURA_EXCEPTION("Couldn't open /proc/"
                         + std::to_string(_process_base.id()) + "/maps");
     }
 
@@ -94,22 +94,22 @@ auto ProcessMemoryMap::refresh() -> void
                 }
                 else
                 {
-                    XKLIB_EXCEPTION("Could not find memory protections");
+                    ASURA_EXCEPTION("Could not find memory protections");
                 }
             }
             else
             {
-                XKLIB_EXCEPTION("Could not find end address");
+                ASURA_EXCEPTION("Could not find end address");
             }
         }
         else
         {
-            XKLIB_EXCEPTION("Could not find start address");
+            ASURA_EXCEPTION("Could not find start address");
         }
 
         if (prot.size() != 4)
         {
-            XKLIB_EXCEPTION("Memory protection should have matched 4 "
+            ASURA_EXCEPTION("Memory protection should have matched 4 "
                             "characters");
         }
 
@@ -154,7 +154,7 @@ auto ProcessMemoryMap::refresh() -> void
 
     if (process_handle == nullptr)
     {
-        XKLIB_EXCEPTION("Couldn't open process from pid: "
+        ASURA_EXCEPTION("Couldn't open process from pid: "
                         + std::to_string(_process_base.id()));
     }
 

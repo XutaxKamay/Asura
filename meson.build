@@ -1,6 +1,6 @@
-project('xklib', 'cpp')
+project('asura', 'cpp')
 
-xklib_srcs = [
+asura_srcs = [
     'src/bits.cpp',
     'src/buffer.cpp',
     'src/circularbuffer.cpp',
@@ -30,7 +30,7 @@ xklib_srcs = [
     'src/types.cpp',
     'src/writebuffer.cpp',
     'src/xkc.cpp',
-    'src/xklib.cpp'
+    'src/asura.cpp'
 ]
 
 test_srcs = [
@@ -38,7 +38,7 @@ test_srcs = [
     'src/test.cpp'
 ]
 
-srcs = xklib_srcs + test_srcs
+srcs = asura_srcs + test_srcs
 
 include_dirs = [
     'src/vendor/ELFIO',
@@ -62,7 +62,7 @@ endif
 
 largs = ['-static-libgcc', '-static-libstdc++']
 
-library('xklib', sources : xklib_srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : common_args, link_args : largs)
+library('asura', sources : asura_srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : common_args, link_args : largs)
 
 executable('test.out', sources : srcs, cpp_pch : 'src/pch.h', include_directories : include_dirs, cpp_args : common_args, link_args : largs)
 

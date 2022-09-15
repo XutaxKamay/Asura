@@ -2,7 +2,7 @@
 
 #include "networkwritebuffer.h"
 
-XKLib::NetworkWriteBuffer::NetworkWriteBuffer(XKLib::data_t data,
+Asura::NetworkWriteBuffer::NetworkWriteBuffer(Asura::data_t data,
                                               std::size_t maxSize,
                                               std::size_t writtenBits)
  : Buffer(data, maxSize),
@@ -10,17 +10,17 @@ XKLib::NetworkWriteBuffer::NetworkWriteBuffer(XKLib::data_t data,
 {
 }
 
-void XKLib::NetworkWriteBuffer::writeBit(bool value)
+void Asura::NetworkWriteBuffer::writeBit(bool value)
 {
     if (_written_bits / CHAR_BIT >= maxSize())
     {
-        XKLIB_EXCEPTION("Filled buffer");
+        ASURA_EXCEPTION("Filled buffer");
     }
 
     write_bit(data(), _written_bits++, value);
 }
 
-void XKLib::NetworkWriteBuffer::pos(std::size_t toBit)
+void Asura::NetworkWriteBuffer::pos(std::size_t toBit)
 {
     _written_bits = toBit;
 }

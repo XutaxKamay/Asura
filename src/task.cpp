@@ -3,7 +3,7 @@
 #include "exception.h"
 #include "task.h"
 
-using namespace XKLib;
+using namespace Asura;
 
 auto Task::list(ProcessBase processBase) -> tasks_t
 {
@@ -17,7 +17,7 @@ auto Task::list(ProcessBase processBase) -> tasks_t
       0);
 
     if (thread_handle_snapshot == INVALID_HANDLE_VALUE)
-        XKLIB_EXCEPTION("Could not get snapshot handle for "
+        ASURA_EXCEPTION("Could not get snapshot handle for "
                         "getting the task list");
 
     te32.dwSize = sizeof(THREADENTRY32);
@@ -101,7 +101,7 @@ auto Task::wait() const -> void
 
     if (not thread_handle)
     {
-        XKLIB_EXCEPTION("Don't have permissions to wait "
+        ASURA_EXCEPTION("Don't have permissions to wait "
                         "for task termination");
     }
 
@@ -125,13 +125,13 @@ auto Task::kill() const -> void
 
     if (not thread_handle)
     {
-        XKLIB_EXCEPTION("Don't have permissions to terminate "
+        ASURA_EXCEPTION("Don't have permissions to terminate "
                         "task");
     }
 
     if (not TerminateThread(thread_handle, view_as<DWORD>(EXIT_CODE)))
     {
-        XKLIB_EXCEPTION("Could not terminate task");
+        ASURA_EXCEPTION("Could not terminate task");
     }
 
     CloseHandle(thread_handle);
@@ -140,7 +140,7 @@ auto Task::kill() const -> void
 
     if (ret != 0)
     {
-        XKLIB_EXCEPTION("Could not terminate task");
+        ASURA_EXCEPTION("Could not terminate task");
     }
 #endif
 }

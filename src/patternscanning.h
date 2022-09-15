@@ -1,9 +1,9 @@
-#ifndef XKLIB_PATTERNSCANNING_H
-#define XKLIB_PATTERNSCANNING_H
+#ifndef ASURA_PATTERNSCANNING_H
+#define ASURA_PATTERNSCANNING_H
 
 #include "process.h"
 
-namespace XKLib
+namespace Asura
 {
     class PatternByte;
 

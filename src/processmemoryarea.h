@@ -1,11 +1,11 @@
-#ifndef XKLIB_PROCESSMEMORYAREA_H
-#define XKLIB_PROCESSMEMORYAREA_H
+#ifndef ASURA_PROCESSMEMORYAREA_H
+#define ASURA_PROCESSMEMORYAREA_H
 
 #include "memoryarea.h"
 #include "memoryutils.h"
 #include "processbase.h"
 
-namespace XKLib
+namespace Asura
 {
     class ProcessMemoryArea : public MemoryArea
     {

@@ -1,10 +1,10 @@
-#ifndef XKLIB_VIRTUALTABLETOOLS_H
-#define XKLIB_VIRTUALTABLETOOLS_H
+#ifndef ASURA_VIRTUALTABLETOOLS_H
+#define ASURA_VIRTUALTABLETOOLS_H
 
 #include "buffer.h"
 #include "process.h"
 
-namespace XKLib
+namespace Asura
 {
     /**
      * A class can have multiple vtables,

@@ -5,17 +5,17 @@
 
 #include "kokabiel.h"
 
-XKLib::Kokabiel::Kokabiel(const std::string& fileName)
+Asura::Kokabiel::Kokabiel(const std::string& fileName)
 {
     if (not _elf.load(fileName))
     {
-        XKLIB_EXCEPTION("Couldn't load " + fileName);
+        ASURA_EXCEPTION("Couldn't load " + fileName);
     }
 
     loadSegments();
 }
 
-auto XKLib::Kokabiel::loadSegments() -> void
+auto Asura::Kokabiel::loadSegments() -> void
 {
     /* copy segments */
     for (const auto& segment : _elf.segments)
@@ -46,15 +46,15 @@ auto XKLib::Kokabiel::loadSegments() -> void
 
             const auto seg_flags = segment->get_flags();
 
-            loadable_segment.flags = ((seg_flags & ELFIO::PF_R) ? XKLib::
+            loadable_segment.flags = ((seg_flags & ELFIO::PF_R) ? Asura::
                                           MemoryArea::ProtectionFlags::R :
                                                                   0)
                                      | ((seg_flags & ELFIO::PF_W) ?
-                                          XKLib::MemoryArea::
+                                          Asura::MemoryArea::
                                             ProtectionFlags::W :
                                           0)
                                      | ((seg_flags & ELFIO::PF_X) ?
-                                          XKLib::MemoryArea::
+                                          Asura::MemoryArea::
                                             ProtectionFlags::X :
                                           0);
 
@@ -64,7 +64,7 @@ auto XKLib::Kokabiel::loadSegments() -> void
 
     if (_loadable_segments.empty())
     {
-        XKLIB_EXCEPTION("No loadable segments inside the elf file");
+        ASURA_EXCEPTION("No loadable segments inside the elf file");
     }
 
     /* sort segments */
@@ -81,7 +81,7 @@ auto XKLib::Kokabiel::loadSegments() -> void
                   - _loadable_segments.begin()->start;
 }
 
-auto XKLib::Kokabiel::freeInjection(InjectionInfo& injectionInfo) const
+auto Asura::Kokabiel::freeInjection(InjectionInfo& injectionInfo) const
   -> void
 {
     injectionInfo.process_memory_map.freeArea(

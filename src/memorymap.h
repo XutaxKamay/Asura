@@ -1,10 +1,10 @@
-#ifndef XKLIB_MEMORYMAP_H
-#define XKLIB_MEMORYMAP_H
+#ifndef ASURA_MEMORYMAP_H
+#define ASURA_MEMORYMAP_H
 
 #include "memoryarea.h"
 #include "memoryutils.h"
 
-namespace XKLib
+namespace Asura
 {
     class ProcessMemoryMap;
 

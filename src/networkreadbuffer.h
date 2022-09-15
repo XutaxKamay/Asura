@@ -1,9 +1,9 @@
-#ifndef XKLIB_NETWORKREADBUFFER_H
-#define XKLIB_NETWORKREADBUFFER_H
+#ifndef ASURA_NETWORKREADBUFFER_H
+#define ASURA_NETWORKREADBUFFER_H
 
 #include "readbuffer.h"
 
-namespace XKLib
+namespace Asura
 {
     class NetworkReadBuffer : public Buffer
     {

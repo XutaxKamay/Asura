@@ -1,7 +1,7 @@
-#ifndef XKLIB_CUSTOM_LINUX_SYSCALLS_H
-#define XKLIB_CUSTOM_LINUX_SYSCALLS_H
+#ifndef ASURA_CUSTOM_LINUX_SYSCALLS_H
+#define ASURA_CUSTOM_LINUX_SYSCALLS_H
 
-namespace XKLib
+namespace Asura
 {
 #ifdef __linux__
     constexpr auto __NR_custom_start   = 451;

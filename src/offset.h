@@ -1,9 +1,9 @@
-#ifndef XKLIB_OFFSET_H
-#define XKLIB_OFFSET_H
+#ifndef ASURA_OFFSET_H
+#define ASURA_OFFSET_H
 
 #include "memoryutils.h"
 
-namespace XKLib
+namespace Asura
 {
     struct Offset
     {

@@ -2,7 +2,7 @@
 
 #include "writebuffer.h"
 
-using namespace XKLib;
+using namespace Asura;
 
 WriteBuffer::WriteBuffer(data_t data,
                          std::size_t maxSize,
@@ -39,7 +39,7 @@ auto WriteBuffer::addData(ptr_t data, std::size_t size) -> void
 {
     if (_written_size >= maxSize())
     {
-        XKLIB_EXCEPTION("Filled buffer");
+        ASURA_EXCEPTION("Filled buffer");
     }
 
     std::copy(view_as<data_t>(data),

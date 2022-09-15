@@ -1,9 +1,9 @@
-#ifndef XKLIB_PATTERNBYTE_H
-#define XKLIB_PATTERNBYTE_H
+#ifndef ASURA_PATTERNBYTE_H
+#define ASURA_PATTERNBYTE_H
 
 #include "simd.h"
 
-namespace XKLib
+namespace Asura
 {
     class Process;
 

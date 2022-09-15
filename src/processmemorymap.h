@@ -1,12 +1,12 @@
-#ifndef XKLIB_PROCESSMEMORYMAP_H
-#define XKLIB_PROCESSMEMORYMAP_H
+#ifndef ASURA_PROCESSMEMORYMAP_H
+#define ASURA_PROCESSMEMORYMAP_H
 
 #include "memorymap.h"
 #include "memoryutils.h"
 #include "processbase.h"
 #include "processmemoryarea.h"
 
-namespace XKLib
+namespace Asura
 {
     class ProcessMemoryArea;
 
@@ -202,7 +202,7 @@ namespace XKLib
 
             if (not area)
             {
-                XKLIB_EXCEPTION("Could not find area");
+                ASURA_EXCEPTION("Could not find area");
             }
 
             const auto flags = area->protectionFlags().cachedValue();

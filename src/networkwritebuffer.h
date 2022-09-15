@@ -1,9 +1,9 @@
-#ifndef XKLIB_NETWORKWRITEDBUFFER_H
-#define XKLIB_NETWORKWRITEDBUFFER_H
+#ifndef ASURA_NETWORKWRITEDBUFFER_H
+#define ASURA_NETWORKWRITEDBUFFER_H
 
 #include "writebuffer.h"
 
-namespace XKLib
+namespace Asura
 {
     class NetworkWriteBuffer : public Buffer
     {

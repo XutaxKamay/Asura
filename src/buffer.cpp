@@ -2,9 +2,9 @@
 
 #include "buffer.h"
 
-using namespace XKLib;
+using namespace Asura;
 
-auto XKLib::get_variable_type_str(const TypeSize typeSize) -> std::string
+auto Asura::get_variable_type_str(const TypeSize typeSize) -> std::string
 {
     static const std::string strings[] = { "safesize (32 bits)",
                                            "8 bits signed",
@@ -67,7 +67,7 @@ auto Buffer::operator[](const std::size_t size) const -> const auto&
 {
     if (not _data and size >= _max_size)
     {
-        XKLIB_EXCEPTION("Out of bounds.");
+        ASURA_EXCEPTION("Out of bounds.");
     }
 
     return *shift<data_t>(size);
@@ -95,7 +95,7 @@ auto Buffer::operator[](const std::size_t size) -> auto&
 {
     if (not _data and size >= _max_size)
     {
-        XKLIB_EXCEPTION("Out of bounds.");
+        ASURA_EXCEPTION("Out of bounds.");
     }
 
     return *shift<data_t>(size);

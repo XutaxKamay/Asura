@@ -1,5 +1,5 @@
-#ifndef XKLIB_DETOURX86_H
-#define XKLIB_DETOURX86_H
+#ifndef ASURA_DETOURX86_H
+#define ASURA_DETOURX86_H
 
 #include "process.h"
 
@@ -12,7 +12,7 @@ enum CallingConventions
 };
 #endif
 
-namespace XKLib
+namespace Asura
 {
     namespace X86_JMP
     {

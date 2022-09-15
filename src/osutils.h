@@ -1,5 +1,5 @@
-#ifndef XKLIB_OSUTILS_H
-#define XKLIB_OSUTILS_H
+#ifndef ASURA_OSUTILS_H
+#define ASURA_OSUTILS_H
 
 #include "elf.h"
 #include "exception.h"
@@ -7,7 +7,7 @@
 #include "pe.h"
 #include "process.h"
 
-namespace XKLib
+namespace Asura
 {
     class OSUtils
     {
@@ -58,7 +58,7 @@ namespace XKLib
                     }
                     else
                     {
-                        XKLIB_EXCEPTION("Can't parse PE 64 bit files on "
+                        ASURA_EXCEPTION("Can't parse PE 64 bit files on "
                                         "32 bit");
                     }
                 }
@@ -80,14 +80,14 @@ namespace XKLib
                     }
                     else
                     {
-                        XKLIB_EXCEPTION("Can't parse PE 64 bit files on "
+                        ASURA_EXCEPTION("Can't parse PE 64 bit files on "
                                         "32 bit");
                     }
                 }
 
                 default:
                 {
-                    XKLIB_EXCEPTION(
+                    ASURA_EXCEPTION(
                       "Unknown PE Machine: "
                       + std::to_string(
                         nt_parent_headers->FileHeader.Machine));
@@ -128,14 +128,14 @@ namespace XKLib
                     }
                     else
                     {
-                        XKLIB_EXCEPTION("Can't parse ELF 64 bit files on "
+                        ASURA_EXCEPTION("Can't parse ELF 64 bit files on "
                                         "32 bit");
                     }
                 }
 
                 default:
                 {
-                    XKLIB_EXCEPTION(
+                    ASURA_EXCEPTION(
                       "Unknown ELF Class: "
                       + std::to_string(
                         elf_parent_header->e_ident[ELF::EI_CLASS]));
@@ -201,7 +201,7 @@ namespace XKLib
                 }
                 else
                 {
-                    XKLIB_EXCEPTION("Could not find any compatible file "
+                    ASURA_EXCEPTION("Could not find any compatible file "
                                     "format for "
                                     + found_module->path());
                 }
@@ -214,7 +214,7 @@ namespace XKLib
 
                 if (not file.is_open())
                 {
-                    XKLIB_EXCEPTION("Couldn't open file "
+                    ASURA_EXCEPTION("Couldn't open file "
                                     + found_module->path());
                     return {};
                 }

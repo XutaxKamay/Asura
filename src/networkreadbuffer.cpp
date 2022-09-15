@@ -2,7 +2,7 @@
 
 #include "networkreadbuffer.h"
 
-XKLib::NetworkReadBuffer::NetworkReadBuffer(const data_t data,
+Asura::NetworkReadBuffer::NetworkReadBuffer(const data_t data,
                                             const std::size_t maxSize,
                                             const std::size_t readBits)
  : Buffer(data, maxSize),
@@ -10,17 +10,17 @@ XKLib::NetworkReadBuffer::NetworkReadBuffer(const data_t data,
 {
 }
 
-auto XKLib::NetworkReadBuffer::readBit() -> bool
+auto Asura::NetworkReadBuffer::readBit() -> bool
 {
     if (_read_bits / CHAR_BIT >= maxSize())
     {
-        XKLIB_EXCEPTION("Filled buffer");
+        ASURA_EXCEPTION("Filled buffer");
     }
 
     return read_bit(data(), _read_bits++);
 }
 
-void XKLib::NetworkReadBuffer::pos(const std::size_t toBit)
+void Asura::NetworkReadBuffer::pos(const std::size_t toBit)
 {
     _read_bits = toBit;
 }

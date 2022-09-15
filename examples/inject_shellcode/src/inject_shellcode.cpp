@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "xklib.h"
+#include "asura.h"
 
 namespace error_code
 {
@@ -26,7 +26,7 @@ int main(int argc, char** argv)
     {
         std::string game_pid(argv[1]);
 
-        auto process = XKLib::Process(std::stoi(game_pid));
+        auto process = Asura::Process(std::stoi(game_pid));
         auto mmap    = process.mmap();
 
         std::ifstream shellcode_bin(argv[2],
@@ -45,12 +45,12 @@ int main(int argc, char** argv)
         const auto shellcode_start = mmap.allocArea(
           nullptr,
           shellcode_size,
-          XKLib::MemoryArea::ProtectionFlags::RWX);
+          Asura::MemoryArea::ProtectionFlags::RWX);
 
         std::cout << "Allocated memory for shellcode at: "
                   << reinterpret_cast<void*>(shellcode_start) << "\n";
 
-        XKLib::bytes_t bytes;
+        Asura::bytes_t bytes;
         bytes.resize(shellcode_size);
 
         shellcode_bin.read(reinterpret_cast<char*>(bytes.data()),
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 
         mmap.freeArea(shellcode_start, shellcode_size);
     }
-    catch (XKLib::Exception& e)
+    catch (Asura::Exception& e)
     {
         std::cerr << e.msg() << "\n";
         std::cerr << strerror(errno) << "\n";

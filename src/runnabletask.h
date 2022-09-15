@@ -1,12 +1,12 @@
-#ifndef XKLIB_RUNNABLETASK_H
-#define XKLIB_RUNNABLETASK_H
+#ifndef ASURA_RUNNABLETASK_H
+#define ASURA_RUNNABLETASK_H
 
 #include "buffer.h"
 #include "exception.h"
 #include "memoryutils.h"
 #include "task.h"
 
-namespace XKLib
+namespace Asura
 {
     template <std::size_t N>
     class RunnableTask : public Task
@@ -71,12 +71,12 @@ namespace XKLib
 #ifdef WINDOWS
         if (not _thread_handle)
         {
-            XKLIB_EXCEPTION("Thread did not start yet");
+            ASURA_EXCEPTION("Thread did not start yet");
         }
 
         if (not TerminateThread(_thread_handle, EXIT_CODE))
         {
-            XKLIB_EXCEPTION("Could not terminate task");
+            ASURA_EXCEPTION("Could not terminate task");
         }
 
         CloseHandle(_thread_handle);
@@ -85,7 +85,7 @@ namespace XKLib
 
         if (ret != 0)
         {
-            XKLIB_EXCEPTION("Could not terminate task "
+            ASURA_EXCEPTION("Could not terminate task "
                             + std::to_string(_id));
         }
 #endif
@@ -97,7 +97,7 @@ namespace XKLib
 #ifdef WINDOWS
         if (not _thread_handle)
         {
-            XKLIB_EXCEPTION("Task did not start yet");
+            ASURA_EXCEPTION("Task did not start yet");
         }
 
         WaitForSingleObject(_thread_handle, INFINITE);
@@ -109,7 +109,7 @@ namespace XKLib
 
         if (ret < 0)
         {
-            XKLIB_EXCEPTION("Could not wait for task "
+            ASURA_EXCEPTION("Could not wait for task "
                             + std::to_string(_id));
         }
 #endif
@@ -140,7 +140,7 @@ namespace XKLib
 
         if (not process_handle)
         {
-            XKLIB_EXCEPTION("Could not get permissions to create a "
+            ASURA_EXCEPTION("Could not get permissions to create a "
                             "new "
                             "task");
         }
@@ -157,7 +157,7 @@ namespace XKLib
         if (_thread_handle == nullptr)
         {
             _id = INVALID_ID;
-            XKLIB_EXCEPTION("Could not create task");
+            ASURA_EXCEPTION("Could not create task");
         }
 
         CloseHandle(process_handle);
@@ -182,7 +182,7 @@ namespace XKLib
 
         if (_id <= INVALID_ID)
         {
-            XKLIB_EXCEPTION("Could not create task");
+            ASURA_EXCEPTION("Could not create task");
         }
 #endif
     }

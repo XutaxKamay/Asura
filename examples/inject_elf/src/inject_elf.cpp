@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "xklib.h"
+#include "asura.h"
 #include <unistd.h>
 
 namespace error_code
@@ -26,12 +26,12 @@ int main(int argc, char** argv)
     {
         std::string game_pid(argv[1]);
 
-        auto process = XKLib::Process(std::stoi(game_pid));
+        auto process = Asura::Process(std::stoi(game_pid));
         auto mmap    = process.mmap();
 
-        XKLib::Kokabiel kok(argv[2]);
+        Asura::Kokabiel kok(argv[2]);
 
-        XKLib::Kokabiel::InjectionInfo injection_info;
+        Asura::Kokabiel::InjectionInfo injection_info;
 
         auto task = process.createTask(nullptr);
 
@@ -39,8 +39,8 @@ int main(int argc, char** argv)
                   << "Injecting with base stack: " << task.baseStack()
                   << "\n";
 
-        kok.inject<XKLib::Process::TASK_STACK_SIZE,
-                   XKLib::Kokabiel::arch::X86>(mmap,
+        kok.inject<Asura::Process::TASK_STACK_SIZE,
+                   Asura::Kokabiel::arch::X86>(mmap,
                                                { "kokabiel" },
                                                { "kokabiel" },
                                                task,
@@ -63,7 +63,7 @@ int main(int argc, char** argv)
 
         task.freeStack();
     }
-    catch (XKLib::Exception& e)
+    catch (Asura::Exception& e)
     {
         std::cerr << e.msg() << "\n";
         std::cerr << strerror(errno) << "\n";

@@ -1,10 +1,10 @@
-#ifndef XKLIB_BUFFER_H
-#define XKLIB_BUFFER_H
+#ifndef ASURA_BUFFER_H
+#define ASURA_BUFFER_H
 
 #include "bits.h"
 #include "types.h"
 
-namespace XKLib
+namespace Asura
 {
 #ifdef DEBUG
     inline std::vector<ptr_t> tracking_memory_allocs;
@@ -147,7 +147,7 @@ namespace XKLib
         {
             if (not _data and size >= _max_size)
             {
-                XKLIB_EXCEPTION("Out of bounds.");
+                ASURA_EXCEPTION("Out of bounds.");
             }
 
             return view_as<T>(view_as<std::uintptr_t>(_data) + size);

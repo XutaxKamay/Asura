@@ -1,9 +1,9 @@
-#ifndef XKLIB_TEST_H
-#define XKLIB_TEST_H
+#ifndef ASURA_TEST_H
+#define ASURA_TEST_H
 
-#include "xklib.h"
+#include "asura.h"
 
-namespace XKLib
+namespace Asura
 {
     class Test
     {

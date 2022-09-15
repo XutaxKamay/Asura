@@ -1,10 +1,10 @@
-#ifndef XKLIB_READBUFFER_H
-#define XKLIB_READBUFFER_H
+#ifndef ASURA_READBUFFER_H
+#define ASURA_READBUFFER_H
 
 #include "buffer.h"
 #include "exception.h"
 
-namespace XKLib
+namespace Asura
 {
     class ReadBuffer : public Buffer
     {
@@ -27,7 +27,7 @@ namespace XKLib
         {
             if (_read_size >= maxSize())
             {
-                XKLIB_EXCEPTION("Filled buffer");
+                ASURA_EXCEPTION("Filled buffer");
             }
 
             auto type = *this->shift<TypeSize*>(_read_size);
@@ -40,7 +40,7 @@ namespace XKLib
                  * Blame programmer for not writing the buffer
                  * correctly.
                  */
-                XKLIB_EXCEPTION(
+                ASURA_EXCEPTION(
                   std::string("Expected type: " + get_variable_type_str(T)
                               + "when type is instead "
                               + get_variable_type_str(type)));

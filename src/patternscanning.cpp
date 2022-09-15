@@ -7,7 +7,7 @@
 #include "patternscanning.h"
 #include "simd.h"
 
-auto XKLib::PatternScanning::searchInProcess(
+auto Asura::PatternScanning::searchInProcess(
   PatternByte& pattern,
   const Process& process,
   const std::function<
@@ -39,7 +39,7 @@ auto XKLib::PatternScanning::searchInProcess(
     }
 }
 
-auto XKLib::PatternScanning::searchInProcessWithAreaName(
+auto Asura::PatternScanning::searchInProcessWithAreaName(
   PatternByte& pattern,
   const Process& process,
   const std::string& areaName,
@@ -65,7 +65,7 @@ auto XKLib::PatternScanning::searchInProcessWithAreaName(
     }
 }
 
-auto XKLib::PatternScanning::searchV1(PatternByte& pattern,
+auto Asura::PatternScanning::searchV1(PatternByte& pattern,
                                       const data_t data,
                                       const std::size_t size,
                                       const ptr_t baseAddress) -> bool
@@ -73,7 +73,7 @@ auto XKLib::PatternScanning::searchV1(PatternByte& pattern,
     if (size < sizeof(SIMD::value_t)
         or (size % sizeof(SIMD::value_t) != 0))
     {
-        XKLIB_EXCEPTION("Size must be aligned to "
+        ASURA_EXCEPTION("Size must be aligned to "
                         + std::to_string(sizeof(SIMD::value_t))
                         + " bytes");
     }
@@ -150,7 +150,7 @@ auto XKLib::PatternScanning::searchV1(PatternByte& pattern,
     return matches.size() != old_matches_size;
 }
 
-auto XKLib::PatternScanning::searchV2(PatternByte& pattern,
+auto Asura::PatternScanning::searchV2(PatternByte& pattern,
                                       const data_t data,
                                       const std::size_t size,
                                       const ptr_t baseAddress) -> bool
@@ -193,7 +193,7 @@ auto XKLib::PatternScanning::searchV2(PatternByte& pattern,
     return matches.size() != old_matches_size;
 }
 
-auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
+auto Asura::PatternScanning::searchV3(PatternByte& pattern,
                                       const data_t data,
                                       const std::size_t size,
                                       const ptr_t baseAddress) -> bool
@@ -201,7 +201,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
     if (size < sizeof(SIMD::value_t)
         or (size % sizeof(SIMD::value_t) != 0))
     {
-        XKLIB_EXCEPTION("Size must be aligned to "
+        ASURA_EXCEPTION("Size must be aligned to "
                         + std::to_string(sizeof(SIMD::value_t))
                         + " bytes");
     }
@@ -451,7 +451,7 @@ auto XKLib::PatternScanning::searchV3(PatternByte& pattern,
     return matches.size() != old_matches_size;
 }
 
-auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
+auto Asura::PatternScanning::searchV4(PatternByte& pattern,
                                       const data_t data,
                                       const std::size_t size,
                                       const ptr_t baseAddress) -> bool
@@ -459,7 +459,7 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
     if (size < sizeof(SIMD::value_t)
         or (size % sizeof(SIMD::value_t) != 0))
     {
-        XKLIB_EXCEPTION("Size must be aligned to "
+        ASURA_EXCEPTION("Size must be aligned to "
                         + std::to_string(sizeof(SIMD::value_t))
                         + " bytes");
     }
@@ -597,7 +597,7 @@ auto XKLib::PatternScanning::searchV4(PatternByte& pattern,
     return matches.size() != old_matches_size;
 }
 
-auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
+auto Asura::PatternScanning::searchAlignedV1(PatternByte& pattern,
                                              const data_t alignedData,
                                              const std::size_t size,
                                              const ptr_t baseAddress)
@@ -606,7 +606,7 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
     if (size < sizeof(SIMD::value_t)
         or (size % sizeof(SIMD::value_t) != 0))
     {
-        XKLIB_EXCEPTION("Size must be aligned to "
+        ASURA_EXCEPTION("Size must be aligned to "
                         + std::to_string(sizeof(SIMD::value_t))
                         + " bytes");
     }
@@ -614,7 +614,7 @@ auto XKLib::PatternScanning::searchAlignedV1(PatternByte& pattern,
     if ((view_as<std::uintptr_t>(alignedData) % sizeof(SIMD::value_t))
         != 0)
     {
-        XKLIB_EXCEPTION("Buffer is not aligned to "
+        ASURA_EXCEPTION("Buffer is not aligned to "
                         + std::to_string(sizeof(SIMD::value_t))
                         + " bytes");
     }

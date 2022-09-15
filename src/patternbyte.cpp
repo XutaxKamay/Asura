@@ -6,12 +6,12 @@
 #include "patternscanning.h"
 #include "process.h"
 
-XKLib::PatternByte::Value::Value(int value)
+Asura::PatternByte::Value::Value(int value)
  : value(value)
 {
 }
 
-auto XKLib::PatternByte::Value::str() -> std::string
+auto Asura::PatternByte::Value::str() -> std::string
 {
     if (value == UNKNOWN)
     {
@@ -25,7 +25,7 @@ auto XKLib::PatternByte::Value::str() -> std::string
     }
 }
 
-XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
+Asura::PatternByte::PatternByte(const std::vector<Value> bytes_,
                                 const std::string areaName,
                                 const std::vector<ptr_t> matches)
  : _bytes(std::move(bytes_)),
@@ -34,7 +34,7 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
 {
     if (not isValid())
     {
-        XKLIB_EXCEPTION("Invalid pattern.");
+        ASURA_EXCEPTION("Invalid pattern.");
     }
 
     /**
@@ -52,7 +52,7 @@ XKLib::PatternByte::PatternByte(const std::vector<Value> bytes_,
     setupSIMDMaskValues();
 }
 
-auto XKLib::PatternByte::setupOrganizedValues() -> void
+auto Asura::PatternByte::setupOrganizedValues() -> void
 {
     /* index of the byte in the pattern */
     std::size_t index = 0;
@@ -103,7 +103,7 @@ auto XKLib::PatternByte::setupOrganizedValues() -> void
     }
 }
 
-auto XKLib::PatternByte::setupSIMDMaskValues(
+auto Asura::PatternByte::setupSIMDMaskValues(
   simd_masks_values_t& simdMasksValues,
   std::vector<Value>& bytes) -> void
 {
@@ -175,7 +175,7 @@ auto XKLib::PatternByte::setupSIMDMaskValues(
     }
 }
 
-auto XKLib::PatternByte::setupSIMDMaskValues() -> void
+auto Asura::PatternByte::setupSIMDMaskValues() -> void
 {
     setupSIMDMaskValues(_simd_masks_values, _bytes);
     setupHorspoolTable(_horspool_skip_table, _simd_masks_values, _bytes);
@@ -193,7 +193,7 @@ auto XKLib::PatternByte::setupSIMDMaskValues() -> void
         {
             if (sktest[i][j] != _horspool_skip_table[i][j])
             {
-                XKLIB_EXCEPTION("Fix your algorithm kamay");
+                ASURA_EXCEPTION("Fix your algorithm kamay");
             }
         }
     }
@@ -217,7 +217,7 @@ auto XKLib::PatternByte::setupSIMDMaskValues() -> void
     }
 }
 
-auto XKLib::PatternByte::setupHorspoolTable(
+auto Asura::PatternByte::setupHorspoolTable(
   horspool_table_t& horspoolTable,
   simd_masks_values_t& simdMasksValues,
   std::vector<Value>& bytes) -> void
@@ -371,12 +371,12 @@ auto XKLib::PatternByte::setupHorspoolTable(
     }
 }
 
-auto XKLib::PatternByte::bytes() const -> const std::vector<Value>&
+auto Asura::PatternByte::bytes() const -> const std::vector<Value>&
 {
     return _bytes;
 }
 
-auto XKLib::PatternByte::isValid() const -> bool
+auto Asura::PatternByte::isValid() const -> bool
 {
     if (_bytes.size() == 0)
     {
@@ -400,41 +400,41 @@ auto XKLib::PatternByte::isValid() const -> bool
     return true;
 }
 
-auto XKLib::PatternByte::areaName() const -> const std::string&
+auto Asura::PatternByte::areaName() const -> const std::string&
 {
     return _area_name;
 }
 
-auto XKLib::PatternByte::vecOrganizedValues() const
+auto Asura::PatternByte::vecOrganizedValues() const
   -> const std::vector<OrganizedValues>&
 {
     return _vec_organized_values;
 }
 
-auto XKLib::PatternByte::simdMasksValues() const
+auto Asura::PatternByte::simdMasksValues() const
   -> const simd_masks_values_t&
 {
     return _simd_masks_values;
 }
 
-auto XKLib::PatternByte::horspoolSkipTable() -> const
+auto Asura::PatternByte::horspoolSkipTable() -> const
   decltype(_horspool_skip_table)&
 {
     return _horspool_skip_table;
 }
 
-auto XKLib::PatternByte::shiftedSIMDMasksValues() -> const
+auto Asura::PatternByte::shiftedSIMDMasksValues() -> const
   decltype(_shifted_simd_masks_values)&
 {
     return _shifted_simd_masks_values;
 }
 
-auto XKLib::PatternByte::matches() -> std::vector<ptr_t>&
+auto Asura::PatternByte::matches() -> std::vector<ptr_t>&
 {
     return _matches;
 }
 
-auto XKLib::PatternByte::scan(const Process& process) -> void
+auto Asura::PatternByte::scan(const Process& process) -> void
 {
     PatternScanning::searchInProcess(*this, process);
 }

@@ -1,9 +1,9 @@
-#ifndef XKLIB_WRITEBUFFER_H
-#define XKLIB_WRITEBUFFER_H
+#ifndef ASURA_WRITEBUFFER_H
+#define ASURA_WRITEBUFFER_H
 
 #include "buffer.h"
 
-namespace XKLib
+namespace Asura
 {
     /**
      * Write types and data to the buffer.

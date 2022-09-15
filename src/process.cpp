@@ -5,7 +5,7 @@
 #include "processmemoryarea.h"
 #include "types.h"
 
-using namespace XKLib;
+using namespace Asura;
 
 Process::Module::Module(ptr_t baseAddress,
                         const std::string& name,
@@ -46,7 +46,7 @@ auto Process::Module::path() -> std::string&
     return _path;
 }
 
-auto XKLib::Process::find(const std::string& name) -> XKLib::Process
+auto Asura::Process::find(const std::string& name) -> Asura::Process
 {
     Process process;
 
@@ -118,13 +118,13 @@ end:
 #endif
     if (process.id() == INVALID_PID)
     {
-        XKLIB_EXCEPTION("Couldn't find process: " + name);
+        ASURA_EXCEPTION("Couldn't find process: " + name);
     }
 
     return process;
 }
 
-auto XKLib::Process::name(const process_id_t pid)
+auto Asura::Process::name(const process_id_t pid)
   -> std::tuple<std::string, bool>
 {
     std::string result;
@@ -143,7 +143,7 @@ auto XKLib::Process::name(const process_id_t pid)
         /* could be a kernel thread */
         found = false;
 
-        /* XKLIB_EXCEPTION("Could not read symlink."); */
+        /* ASURA_EXCEPTION("Could not read symlink."); */
     }
     else
     {
@@ -160,7 +160,7 @@ auto XKLib::Process::name(const process_id_t pid)
 
     if (not process_handle)
     {
-        XKLIB_EXCEPTION("Could not get process handle.");
+        ASURA_EXCEPTION("Could not get process handle.");
     }
 
     const auto real_size = GetModuleFileNameExA(process_handle,

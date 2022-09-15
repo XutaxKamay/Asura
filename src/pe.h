@@ -1,10 +1,10 @@
-#ifndef XKLIB_PE_H
-#define XKLIB_PE_H
+#ifndef ASURA_PE_H
+#define ASURA_PE_H
 
 #include "exception.h"
 #include "types.h"
 
-namespace XKLib
+namespace Asura
 {
     namespace PE
     {
@@ -318,7 +318,7 @@ namespace XKLib
 
                             if (handleForwardedFunction == nullptr)
                             {
-                                XKLIB_EXCEPTION("Pointer required for: "
+                                ASURA_EXCEPTION("Pointer required for: "
                                                 + forward_func_name);
                             }
 
@@ -327,7 +327,7 @@ namespace XKLib
                         }
                         else
                         {
-                            XKLIB_EXCEPTION("Should never happen (but "
+                            ASURA_EXCEPTION("Should never happen (but "
                                             "still "
                                             "happens?): "
                                             + forward_func_name);

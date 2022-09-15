@@ -1,5 +1,5 @@
-#ifndef XKLIB_MEMORYUTILS_H
-#define XKLIB_MEMORYUTILS_H
+#ifndef ASURA_MEMORYUTILS_H
+#define ASURA_MEMORYUTILS_H
 
 #include "exception.h"
 #include "memoryarea.h"
@@ -7,7 +7,7 @@
 
 #include "custom_linux_syscalls.h"
 
-namespace XKLib
+namespace Asura
 {
     /**
      * Memory utils, mainly used for making compabilities between Linux
@@ -54,7 +54,7 @@ namespace XKLib
 
             if (process_handle == nullptr)
             {
-                XKLIB_EXCEPTION("Couldn't open process");
+                ASURA_EXCEPTION("Couldn't open process");
             }
 
             DWORD dwOldFlags;
@@ -67,7 +67,7 @@ namespace XKLib
 
             if (not ret)
             {
-                XKLIB_EXCEPTION("VirtualProtectEx failed");
+                ASURA_EXCEPTION("VirtualProtectEx failed");
             }
 
             CloseHandle(process_handle);
@@ -81,7 +81,7 @@ namespace XKLib
 
             if (ret < 0)
             {
-                XKLIB_EXCEPTION("System call rmprotect failed");
+                ASURA_EXCEPTION("System call rmprotect failed");
             }
 #endif
         }
@@ -101,7 +101,7 @@ namespace XKLib
 
             if (process_handle == nullptr)
             {
-                XKLIB_EXCEPTION("Couldn't open process");
+                ASURA_EXCEPTION("Couldn't open process");
             }
 
             const auto ret = VirtualAllocEx(
@@ -155,7 +155,7 @@ namespace XKLib
 
             if (process_handle == nullptr)
             {
-                XKLIB_EXCEPTION("Couldn't open process");
+                ASURA_EXCEPTION("Couldn't open process");
             }
 
             const auto ret = VirtualFreeEx(process_handle,
@@ -165,7 +165,7 @@ namespace XKLib
 
             if (not ret)
             {
-                XKLIB_EXCEPTION("VirtualFreeEx failed");
+                ASURA_EXCEPTION("VirtualFreeEx failed");
             }
 
             CloseHandle(process_handle);
@@ -177,7 +177,7 @@ namespace XKLib
 
             if (ret < 0)
             {
-                XKLIB_EXCEPTION(+"System call rmunmap failed");
+                ASURA_EXCEPTION(+"System call rmunmap failed");
             }
 #endif
         }
@@ -207,7 +207,7 @@ namespace XKLib
                 std::stringstream ss;
                 ss << std::hex << address;
 
-                XKLIB_EXCEPTION("process_vm_readv failed with: address: "
+                ASURA_EXCEPTION("process_vm_readv failed with: address: "
                                 + ss.str()
                                 + ", size: " + std::to_string(size)
                                 + ", ret: " + std::to_string(ret));
@@ -226,7 +226,7 @@ namespace XKLib
                 std::stringstream ss;
                 ss << std::hex << address;
 
-                XKLIB_EXCEPTION("ReadProcessMemory failed with: address: "
+                ASURA_EXCEPTION("ReadProcessMemory failed with: address: "
                                 + ss.str()
                                 + ", size: " + std::to_string(size)
                                 + ", ret: " + std::to_string(ret));
@@ -263,7 +263,7 @@ namespace XKLib
                 std::stringstream ss;
                 ss << std::hex << address;
 
-                XKLIB_EXCEPTION("process_vm_readv failed with: address: "
+                ASURA_EXCEPTION("process_vm_readv failed with: address: "
                                 + ss.str()
                                 + ", size: " + std::to_string(size)
                                 + ", ret: " + std::to_string(ret));
@@ -279,7 +279,7 @@ namespace XKLib
 
             if (not ret)
             {
-                XKLIB_EXCEPTION("ReadProcessMemory failed with "
+                ASURA_EXCEPTION("ReadProcessMemory failed with "
                                 + std::to_string(address) + " and size: "
                                 + std::to_string(size * sizeof(A)));
             }
@@ -313,7 +313,7 @@ namespace XKLib
                 std::stringstream ss;
                 ss << std::hex << address;
 
-                XKLIB_EXCEPTION("process_vm_writev failed with: address: "
+                ASURA_EXCEPTION("process_vm_writev failed with: address: "
                                 + ss.str() + ", size: "
                                 + std::to_string(bytes.size())
                                 + ", ret: " + std::to_string(ret));
@@ -330,7 +330,7 @@ namespace XKLib
 
             if (process_handle == nullptr)
             {
-                XKLIB_EXCEPTION("Couldn't open process");
+                ASURA_EXCEPTION("Couldn't open process");
             }
 
             const auto ret = WriteProcessMemory(process_handle,
@@ -344,7 +344,7 @@ namespace XKLib
                 std::stringstream ss;
                 ss << std::hex << address;
 
-                XKLIB_EXCEPTION(
+                ASURA_EXCEPTION(
                   "WriteProcessMemory failed with: address: " + ss.str()
                   + ", size: " + std::to_string(bytes.size())
                   + ", ret: " + std::to_string(ret));
@@ -361,6 +361,6 @@ namespace XKLib
         static std::once_flag _get_page_size_once_flag;
     };
 
-} // namespace XKLib
+} // namespace Asura
 
 #endif // MEMORYUTILS_H

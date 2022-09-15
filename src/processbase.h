@@ -1,9 +1,9 @@
-#ifndef XKLIB_PROCESSBASE_H
-#define XKLIB_PROCESSBASE_H
+#ifndef ASURA_PROCESSBASE_H
+#define ASURA_PROCESSBASE_H
 
 #include "types.h"
 
-namespace XKLib
+namespace Asura
 {
     class Process;
     class Task;

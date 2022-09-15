@@ -1,13 +1,13 @@
-#ifndef XKLIB_TYPES_H
-#define XKLIB_TYPES_H
+#ifndef ASURA_TYPES_H
+#define ASURA_TYPES_H
 
 #define _MAKE_STRING(x) #x
 #define MAKE_STRING(x)  _MAKE_STRING(x)
 
 #define CURRENT_CONTEXT                                                  \
-    "[XKLib][" __FILE__ ":" MAKE_STRING(__LINE__) "] -> "
+    "[Asura][" __FILE__ ":" MAKE_STRING(__LINE__) "] -> "
 
-namespace XKLib
+namespace Asura
 {
     using ptr_t   = void*;
     using byte_t  = unsigned char;

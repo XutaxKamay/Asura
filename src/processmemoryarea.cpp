@@ -3,7 +3,7 @@
 #include "processbase.h"
 #include "processmemoryarea.h"
 
-using namespace XKLib;
+using namespace Asura;
 
 ProcessMemoryArea::ModifiableProtectionFlags::ModifiableProtectionFlags(
   ProcessMemoryArea* const pma)
@@ -97,7 +97,7 @@ auto ProcessMemoryArea::write(const bytes_t& bytes,
                                         begin<std::size_t>() + shift);
 }
 
-auto XKLib::ProcessMemoryArea::isDeniedByOS() const -> bool
+auto Asura::ProcessMemoryArea::isDeniedByOS() const -> bool
 {
 #ifndef WIN32
     return name() == "[vvar]";
@@ -106,13 +106,13 @@ auto XKLib::ProcessMemoryArea::isDeniedByOS() const -> bool
 #endif
 }
 
-auto XKLib::ProcessMemoryArea::isReadable() const -> bool
+auto Asura::ProcessMemoryArea::isReadable() const -> bool
 {
     return (_protection_flags.cachedValue() & ProtectionFlags::R)
            and not isDeniedByOS();
 }
 
-auto XKLib::ProcessMemoryArea::isWritable() const -> bool
+auto Asura::ProcessMemoryArea::isWritable() const -> bool
 {
     return (_protection_flags.cachedValue() & ProtectionFlags::W)
            and not isDeniedByOS();

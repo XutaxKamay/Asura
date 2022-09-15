@@ -2,7 +2,7 @@
 
 #include "readbuffer.h"
 
-using namespace XKLib;
+using namespace Asura;
 
 ReadBuffer::ReadBuffer(data_t data,
                        std::size_t maxSize,
